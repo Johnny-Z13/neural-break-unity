@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using TMPro;
 
 namespace NeuralBreak.UI
@@ -36,6 +37,9 @@ namespace NeuralBreak.UI
         {
             _canvas = GetComponent<Canvas>();
             _canvasRect = GetComponent<RectTransform>();
+
+            // Ensure EventSystem exists for UI navigation (keyboard/mouse/gamepad)
+            EnsureEventSystem();
 
             // Try to load a font if not assigned
             if (_fontAsset == null)
@@ -607,6 +611,71 @@ namespace NeuralBreak.UI
 
         #endregion
 
+        #region EventSystem Setup
+
+        /// <summary>
+        /// Ensure EventSystem exists for keyboard/mouse/gamepad UI navigation
+        /// </summary>
+        private void EnsureEventSystem()
+        {
+            if (EventSystem.current != null)
+            {
+                Debug.Log("[UIBuilder] EventSystem already exists");
+                EnsureInputModule(EventSystem.current.gameObject);
+                return;
+            }
+
+            // Create EventSystem
+            var eventSystemGO = new GameObject("EventSystem");
+            var eventSystem = eventSystemGO.AddComponent<EventSystem>();
+
+            EnsureInputModule(eventSystemGO);
+
+            Debug.Log("[UIBuilder] Created EventSystem with InputSystemUIInputModule");
+        }
+
+        private void EnsureInputModule(GameObject eventSystemGO)
+        {
+            // Check for new Input System module
+            var inputModule = eventSystemGO.GetComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
+            if (inputModule == null)
+            {
+                // Remove old StandaloneInputModule if present
+                var oldModule = eventSystemGO.GetComponent<StandaloneInputModule>();
+                if (oldModule != null)
+                {
+                    Destroy(oldModule);
+                }
+
+                // Add new Input System module
+                inputModule = eventSystemGO.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
+            }
+
+            // Try to find and assign our GameInput actions asset
+            var inputAsset = Resources.Load<UnityEngine.InputSystem.InputActionAsset>("Input/GameInput");
+            if (inputAsset == null)
+            {
+                // Try loading from _Project folder
+                inputAsset = Resources.Load<UnityEngine.InputSystem.InputActionAsset>("GameInput");
+            }
+
+            if (inputAsset != null)
+            {
+                // Find the UI action map
+                var uiMap = inputAsset.FindActionMap("UI");
+                if (uiMap != null)
+                {
+                    // The InputSystemUIInputModule will work with default bindings
+                    // Submit = South button (A/X), Cancel = East button (B/Circle)
+                    Debug.Log("[UIBuilder] Found UI action map in GameInput");
+                }
+            }
+
+            Debug.Log("[UIBuilder] InputSystemUIInputModule configured for keyboard/mouse/gamepad navigation");
+        }
+
+        #endregion
+
         #region UI Helpers
 
         private RectTransform CreateUIObject(string name, Transform parent)
@@ -670,7 +739,13 @@ namespace NeuralBreak.UI
             colors.highlightedColor = _primaryColor * 0.8f;
             colors.pressedColor = _primaryColor;
             colors.selectedColor = _primaryColor * 0.6f;
+            colors.fadeDuration = 0.1f;
             btn.colors = colors;
+
+            // Enable automatic navigation (keyboard/gamepad)
+            var nav = btn.navigation;
+            nav.mode = Navigation.Mode.Automatic;
+            btn.navigation = nav;
 
             // Button text
             CreateText(btnRect, "Text", text, 24, _textColor, TextAlignmentOptions.Center, FontStyles.Bold);

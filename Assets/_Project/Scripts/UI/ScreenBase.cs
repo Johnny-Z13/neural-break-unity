@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 
 namespace NeuralBreak.UI
 {
@@ -13,6 +14,7 @@ namespace NeuralBreak.UI
         [Header("Screen Settings")]
         [SerializeField] protected GameObject _screenRoot;
         [SerializeField] protected Selectable _firstSelected;
+        [SerializeField] protected bool _allowCancelToClose = false;
 
         [Header("Animation")]
         [SerializeField] protected float _fadeTime = 0.15f;
@@ -37,6 +39,30 @@ namespace NeuralBreak.UI
             }
         }
 
+        protected virtual void Update()
+        {
+            // Handle cancel input (B button / Escape) to close screen
+            if (_isVisible && _allowCancelToClose)
+            {
+                if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+                {
+                    OnCancelPressed();
+                }
+                else if (Gamepad.current != null && Gamepad.current.buttonEast.wasPressedThisFrame)
+                {
+                    OnCancelPressed();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Called when cancel is pressed (B/Escape) - override to handle
+        /// </summary>
+        protected virtual void OnCancelPressed()
+        {
+            Hide();
+        }
+
         /// <summary>
         /// Show this screen
         /// </summary>
@@ -49,13 +75,23 @@ namespace NeuralBreak.UI
                 _screenRoot.SetActive(true);
             }
 
-            // Select first button for keyboard/gamepad
-            if (_firstSelected != null)
-            {
-                EventSystem.current?.SetSelectedGameObject(_firstSelected.gameObject);
-            }
+            // Select first button for keyboard/gamepad navigation
+            SelectFirstElement();
 
             OnShow();
+        }
+
+        /// <summary>
+        /// Select the first UI element for keyboard/gamepad navigation
+        /// </summary>
+        protected void SelectFirstElement()
+        {
+            if (_firstSelected != null && EventSystem.current != null)
+            {
+                // Clear selection first to ensure fresh selection
+                EventSystem.current.SetSelectedGameObject(null);
+                EventSystem.current.SetSelectedGameObject(_firstSelected.gameObject);
+            }
         }
 
         /// <summary>

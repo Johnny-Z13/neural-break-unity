@@ -15,16 +15,13 @@ namespace NeuralBreak.Combat
         [Header("Settings")]
         [SerializeField] private float _baseRadius = 0.05f; // TypeScript BASE_RADIUS = 0.05
 
-        // Config-driven properties
-        private float Speed => ConfigProvider.Weapon.projectileSpeed;
-        private float Lifetime => ConfigProvider.Weapon.projectileLifetime;
-
         [Header("Visuals")]
         [SerializeField] private SpriteRenderer _spriteRenderer;
         [SerializeField] private TrailRenderer _trailRenderer;
 
-        // Runtime state
+        // Runtime state - FIXED AT SPAWN TIME (each bullet is independent)
         private Vector2 _direction;
+        private float _speed; // Stored at spawn - never changes
         private int _damage;
         private int _powerLevel;
         private float _lifeTimer;
@@ -47,18 +44,17 @@ namespace NeuralBreak.Combat
         {
             if (!_isActive) return;
 
-            // Homing behavior
+            // Homing behavior (only thing that can change direction)
             if (_isHoming)
             {
                 UpdateHoming();
+                // Update rotation only for homing projectiles since direction changes
+                float homingAngle = Mathf.Atan2(_direction.y, _direction.x) * Mathf.Rad2Deg;
+                transform.rotation = Quaternion.Euler(0, 0, homingAngle - 90f);
             }
 
-            // Move
-            transform.Translate(_direction * Speed * Time.deltaTime, Space.World);
-
-            // Update rotation to match direction
-            float angle = Mathf.Atan2(_direction.y, _direction.x) * Mathf.Rad2Deg;
-            transform.rotation = Quaternion.Euler(0, 0, angle - 90f);
+            // Move using stored speed and direction (fixed at spawn)
+            transform.position += (Vector3)(_direction * _speed * Time.deltaTime);
 
             // Lifetime check
             _lifeTimer -= Time.deltaTime;
@@ -110,23 +106,36 @@ namespace NeuralBreak.Combat
         }
 
         /// <summary>
-        /// Initialize projectile when spawned from pool
+        /// Initialize projectile when spawned from pool.
+        /// All values are FIXED at spawn time - each projectile is fully independent.
         /// </summary>
         public void Initialize(Vector2 position, Vector2 direction, int damage, int powerLevel,
             System.Action<Projectile> returnToPool, bool isPiercing = false, bool isHoming = false)
         {
+            // Unparent to ensure projectile moves independently in world space
+            transform.SetParent(null);
+
+            // Set position and direction (FIXED - won't change unless homing)
             transform.position = position;
             _direction = direction.normalized;
+
+            // Store speed at spawn time (FIXED - each bullet has its own speed)
+            _speed = ConfigProvider.Weapon.projectileSpeed;
+
+            // Store damage at spawn time (FIXED)
             _damage = damage;
             _powerLevel = powerLevel;
             _returnToPool = returnToPool;
-            _lifeTimer = Lifetime;
+
+            // Store lifetime at spawn time (FIXED)
+            _lifeTimer = ConfigProvider.Weapon.projectileLifetime;
+
             _isActive = true;
             _isPiercing = isPiercing;
             _isHoming = isHoming;
             _pierceCount = 0;
 
-            // Rotate to face direction
+            // Set rotation ONCE at spawn (won't update unless homing)
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
             transform.rotation = Quaternion.Euler(0, 0, angle - 90f);
 

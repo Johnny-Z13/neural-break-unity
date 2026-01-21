@@ -9,6 +9,7 @@ namespace NeuralBreak.UI
 {
     /// <summary>
     /// Pause menu with Resume, Restart, Quit buttons, and settings controls.
+    /// Supports keyboard/mouse and gamepad navigation.
     /// </summary>
     public class PauseScreen : ScreenBase
     {
@@ -39,6 +40,9 @@ namespace NeuralBreak.UI
 
         protected override void Awake()
         {
+            // Allow B/Escape to resume game
+            _allowCancelToClose = true;
+
             base.Awake();
 
             // Wire up button events
@@ -99,6 +103,14 @@ namespace NeuralBreak.UI
 
             // Refresh UI from current settings
             LoadSettings();
+        }
+
+        /// <summary>
+        /// Handle B/Escape - resume game instead of just hiding
+        /// </summary>
+        protected override void OnCancelPressed()
+        {
+            OnResumeClicked();
         }
 
         private void LoadSettings()
