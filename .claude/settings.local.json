@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "mcp__unityMCP__manage_scene",
+      "Bash(findstr:*)",
+      "Bash(wc:*)",
+      "Bash(ls:*)",
+      "Bash(tree:*)",
+      "WebSearch",
+      "mcp__unityMCP__read_console",
+      "mcp__unityMCP__refresh_unity",
+      "mcp__unityMCP__manage_editor",
+      "mcp__unityMCP__debug_request_context",
+      "mcp__unityMCP__manage_asset",
+      "mcp__unityMCP__manage_material",
+      "mcp__unityMCP__manage_gameobject",
+      "mcp__unityMCP__manage_components",
+      "mcp__unityMCP__manage_prefabs",
+      "mcp__unityMCP__batch_execute",
+      "mcp__unityMCP__create_script",
+      "Bash(timeout /t 3 /nobreak)",
+      "mcp__unityMCP__find_gameobjects",
+      "Bash(timeout /t 5 /nobreak)",
+      "Bash(timeout:*)",
+      "Bash(ping:*)",
+      "mcp__unityMCP__validate_script",
+      "mcp__unityMCP__execute_menu_item",
+      "Bash(npm i:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(exit 0)"
+    ]
+  }
+}
