@@ -32,7 +32,9 @@ namespace NeuralBreak.Entities
         [Header("Visual")]
         [SerializeField] private SpriteRenderer _spriteRenderer;
         [SerializeField] private ScanDroneVisuals _visuals;
+#pragma warning disable CS0414 // Reserved for rotation animation feature
         [SerializeField] private float _rotationSpeed = 90f; // degrees per second
+#pragma warning restore CS0414
 
         [Header("Feel Feedbacks")]
         [SerializeField] private MMF_Player _fireFeedback;

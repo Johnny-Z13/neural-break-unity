@@ -15,7 +15,8 @@ namespace NeuralBreak.Entities
         [SerializeField] private Color _coreColor = new Color(1f, 1f, 1f, 0.9f); // White
 
         [Header("Scale")]
-        [SerializeField] private float _radius = 0.56f;
+        [SerializeField] private float _radius = 0.56f; // Visual component radius
+        [SerializeField] private float _scale = 0.75f; // Overall transform scale (25% smaller = 0.75)
 
         // Visual components
         private Transform _body;
@@ -97,9 +98,9 @@ namespace NeuralBreak.Entities
 
             _time += Time.deltaTime;
 
-            // Pulse scale
+            // Pulse scale (incorporate _scale so it actually affects size)
             float pulse = 1f + Mathf.Sin(_time * 4f) * 0.08f;
-            transform.localScale = Vector3.one * pulse;
+            transform.localScale = Vector3.one * _scale * pulse;
 
             // Rotate wireframe
             if (_wireframe != null)

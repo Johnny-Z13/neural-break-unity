@@ -275,6 +275,12 @@ namespace NeuralBreak.Core
             // Setup ShipCustomization
             SetupShipCustomization();
 
+            // Setup EnemyDeathVFX
+            SetupEnemyDeathVFX();
+
+            // Setup UIFeedbacks (FEEL integration)
+            SetupUIFeedbacks();
+
             Debug.Log("[GameSetup] Scene references configured!");
         }
 
@@ -650,6 +656,30 @@ namespace NeuralBreak.Core
                 var customGO = new GameObject("ShipCustomization");
                 customGO.AddComponent<Entities.ShipCustomization>();
                 Debug.Log("[GameSetup] ShipCustomization created");
+            }
+        }
+
+        private void SetupEnemyDeathVFX()
+        {
+            // Create EnemyDeathVFX if not exists
+            var existing = FindFirstObjectByType<Graphics.EnemyDeathVFX>();
+            if (existing == null)
+            {
+                var vfxGO = new GameObject("EnemyDeathVFX");
+                vfxGO.AddComponent<Graphics.EnemyDeathVFX>();
+                Debug.Log("[GameSetup] EnemyDeathVFX created");
+            }
+        }
+
+        private void SetupUIFeedbacks()
+        {
+            // Create UIFeedbacks if not exists (FEEL integration for UI juice)
+            var existing = FindFirstObjectByType<UI.UIFeedbacks>();
+            if (existing == null)
+            {
+                var feedbacksGO = new GameObject("UIFeedbacks");
+                feedbacksGO.AddComponent<UI.UIFeedbacks>();
+                Debug.Log("[GameSetup] UIFeedbacks created (FEEL integration)");
             }
         }
     }

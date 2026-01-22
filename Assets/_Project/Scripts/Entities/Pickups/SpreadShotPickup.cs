@@ -18,9 +18,41 @@ namespace NeuralBreak.Entities
 
         [Header("Spread Shot Settings")]
         [SerializeField] private float _duration = 10f;
-        [SerializeField] private Color _pickupColor = new Color(0.4f, 1f, 0.6f); // Light green
+        [SerializeField] private Color _pickupColor = new Color(0f, 0.87f, 0.33f, 0.9f); // Jade #00DD55
+
+        [Header("Visual")]
+        [SerializeField] private PowerUpVisuals _visuals;
+        private bool _visualsGenerated;
 
         protected override Color GetPickupColor() => _pickupColor;
+
+        public override void Initialize(Vector2 position, Transform playerTarget, System.Action<PickupBase> returnCallback)
+        {
+            base.Initialize(position, playerTarget, returnCallback);
+
+            if (!_visualsGenerated)
+            {
+                EnsureVisuals();
+                _visualsGenerated = true;
+            }
+        }
+
+        private void EnsureVisuals()
+        {
+            if (_visuals == null)
+            {
+                _visuals = GetComponentInChildren<PowerUpVisuals>();
+            }
+
+            if (_visuals == null)
+            {
+                var visualsGO = new GameObject("Visuals");
+                visualsGO.transform.SetParent(transform, false);
+                visualsGO.transform.localPosition = Vector3.zero;
+                _visuals = visualsGO.AddComponent<PowerUpVisuals>();
+                _visuals.SetLetter('S'); // S for Spread
+            }
+        }
 
         protected override void ApplyEffect(GameObject player)
         {

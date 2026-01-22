@@ -40,6 +40,7 @@ namespace NeuralBreak.Entities
         [Header("Visual")]
         [SerializeField] private SpriteRenderer _spriteRenderer;
         [SerializeField] private SpriteRenderer _innerGlow;
+        [SerializeField] private VoidSphereVisuals _visuals;
         [SerializeField] private Color _voidColor = new Color(0.2f, 0f, 0.4f); // Deep purple
         [SerializeField] private Color _glowColor = new Color(0.6f, 0f, 1f); // Purple glow
 
@@ -54,6 +55,7 @@ namespace NeuralBreak.Entities
         private float _pulsatePhase;
         private float _chargeTimer;
         private bool _isCharging;
+        private bool _visualsGenerated;
 
         protected override void OnInitialize()
         {
@@ -63,6 +65,29 @@ namespace NeuralBreak.Entities
             _isFiringBurst = false;
             _pulsatePhase = Random.Range(0f, Mathf.PI * 2f);
             _isCharging = false;
+
+            // Generate procedural visuals if not yet done
+            if (!_visualsGenerated)
+            {
+                EnsureVisuals();
+                _visualsGenerated = true;
+            }
+        }
+
+        private void EnsureVisuals()
+        {
+            if (_visuals == null)
+            {
+                _visuals = GetComponentInChildren<VoidSphereVisuals>();
+            }
+
+            if (_visuals == null)
+            {
+                var visualsGO = new GameObject("Visuals");
+                visualsGO.transform.SetParent(transform, false);
+                visualsGO.transform.localPosition = Vector3.zero;
+                _visuals = visualsGO.AddComponent<VoidSphereVisuals>();
+            }
         }
 
         protected override void UpdateAI()

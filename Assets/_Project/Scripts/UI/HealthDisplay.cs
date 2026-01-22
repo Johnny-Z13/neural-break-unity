@@ -16,11 +16,16 @@ namespace NeuralBreak.UI
         [SerializeField] private TextMeshProUGUI _healthText;
         [SerializeField] private Gradient _healthGradient;
 
-        [Header("Shield Icons")]
+        [Header("Shield Icons (Uses UITheme)")]
         [SerializeField] private Transform _shieldContainer;
         [SerializeField] private Image[] _shieldIcons;
-        [SerializeField] private Color _shieldActiveColor = new Color(0.2f, 0.8f, 1f, 1f);
-        [SerializeField] private Color _shieldInactiveColor = new Color(0.2f, 0.2f, 0.2f, 0.5f);
+        [SerializeField] private bool _useThemeColors = true;
+
+        private Color ShieldActiveColor => _useThemeColors ? UITheme.ShieldActive : _customShieldActiveColor;
+        private Color ShieldInactiveColor => _useThemeColors ? UITheme.ShieldInactive : _customShieldInactiveColor;
+
+        [SerializeField] private Color _customShieldActiveColor = new Color(0.2f, 0.8f, 1f, 1f);
+        [SerializeField] private Color _customShieldInactiveColor = new Color(0.2f, 0.2f, 0.2f, 0.5f);
 
         [Header("Animation")]
         [SerializeField] private float _smoothSpeed = 10f;
@@ -34,22 +39,10 @@ namespace NeuralBreak.UI
 
         private void Awake()
         {
-            // Initialize default gradient if not set
-            if (_healthGradient == null)
+            // Initialize gradient from UITheme if not set
+            if (_healthGradient == null || _useThemeColors)
             {
-                _healthGradient = new Gradient();
-                var colorKeys = new GradientColorKey[]
-                {
-                    new GradientColorKey(Color.red, 0f),
-                    new GradientColorKey(Color.yellow, 0.3f),
-                    new GradientColorKey(Color.green, 1f)
-                };
-                var alphaKeys = new GradientAlphaKey[]
-                {
-                    new GradientAlphaKey(1f, 0f),
-                    new GradientAlphaKey(1f, 1f)
-                };
-                _healthGradient.SetKeys(colorKeys, alphaKeys);
+                _healthGradient = UITheme.HealthGradient;
             }
 
             _currentFillAmount = 1f;
@@ -104,7 +97,7 @@ namespace NeuralBreak.UI
                 if (_shieldIcons[i] == null) continue;
 
                 bool isActive = i < currentShields;
-                _shieldIcons[i].color = isActive ? _shieldActiveColor : _shieldInactiveColor;
+                _shieldIcons[i].color = isActive ? ShieldActiveColor : ShieldInactiveColor;
                 _shieldIcons[i].gameObject.SetActive(i < maxShields);
             }
         }
@@ -130,7 +123,7 @@ namespace NeuralBreak.UI
                 {
                     if (icon != null)
                     {
-                        icon.color = _shieldInactiveColor;
+                        icon.color = ShieldInactiveColor;
                     }
                 }
             }

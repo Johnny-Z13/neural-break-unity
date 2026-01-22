@@ -621,6 +621,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Testing.DebugGameTest
   _spawnTestEnemy: 1
   _spawnDelay: 1
+  _testModeEnabled: 1
+  _testModeSpawnInterval: 0.5
+  _testModeSpawnAllOnStart: 1
 --- !u!4 &467544449
 Transform:
   m_ObjectHideFlags: 0
@@ -1169,10 +1172,11 @@ MonoBehaviour:
   _uiManager: {fileID: 305620130}
   _hudController: {fileID: 0}
   _fontAsset: {fileID: 11400000, guid: 3944eaaf70beffa4097d8c293604125e, type: 2}
-  _backgroundColor: {r: 0.05, g: 0.05, b: 0.1, a: 0.9}
-  _primaryColor: {r: 0, g: 1, b: 1, a: 1}
-  _accentColor: {r: 1, g: 0.3, b: 0.5, a: 1}
-  _textColor: {r: 1, g: 1, b: 1, a: 1}
+  _useThemeColors: 1
+  _customBackgroundColor: {r: 0.05, g: 0.05, b: 0.1, a: 0.9}
+  _customPrimaryColor: {r: 0, g: 1, b: 1, a: 1}
+  _customAccentColor: {r: 1, g: 0.3, b: 0.5, a: 1}
+  _customTextColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &1137795344
 GameObject:
   m_ObjectHideFlags: 0

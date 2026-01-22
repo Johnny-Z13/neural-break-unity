@@ -17,22 +17,38 @@ namespace NeuralBreak.Entities
 
         [Header("Invulnerable Settings")]
         [SerializeField] private float _invulnerabilityDuration = 7f;
-        [SerializeField] private Color _pickupColor = new Color(0.7f, 1f, 0.7f); // Bright pale green
-        [SerializeField] private bool _useRainbowEffect = true;
-        [SerializeField] private float _rainbowSpeed = 3f;
+        [SerializeField] private Color _pickupColor = new Color(0f, 1f, 0f, 0.9f); // Bright green #00FF00
+
+        [Header("Visual")]
+        [SerializeField] private InvulnerableVisuals _visuals;
+        private bool _visualsGenerated;
 
         protected override Color GetPickupColor() => _pickupColor;
 
-        protected override void UpdateVisuals()
+        public override void Initialize(Vector2 position, Transform playerTarget, System.Action<PickupBase> returnCallback)
         {
-            base.UpdateVisuals();
+            base.Initialize(position, playerTarget, returnCallback);
 
-            // Rainbow color effect for this special pickup
-            if (_useRainbowEffect && _spriteRenderer != null)
+            if (!_visualsGenerated)
             {
-                float hue = (Time.time * _rainbowSpeed) % 1f;
-                Color rainbow = Color.HSVToRGB(hue, 0.8f, 1f);
-                _spriteRenderer.color = rainbow;
+                EnsureVisuals();
+                _visualsGenerated = true;
+            }
+        }
+
+        private void EnsureVisuals()
+        {
+            if (_visuals == null)
+            {
+                _visuals = GetComponentInChildren<InvulnerableVisuals>();
+            }
+
+            if (_visuals == null)
+            {
+                var visualsGO = new GameObject("Visuals");
+                visualsGO.transform.SetParent(transform, false);
+                visualsGO.transform.localPosition = Vector3.zero;
+                _visuals = visualsGO.AddComponent<InvulnerableVisuals>();
             }
         }
 

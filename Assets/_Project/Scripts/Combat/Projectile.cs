@@ -10,6 +10,8 @@ namespace NeuralBreak.Combat
     /// All values driven by ConfigProvider - no magic numbers.
     /// Based on TypeScript Projectile.ts.
     /// </summary>
+    [RequireComponent(typeof(Rigidbody2D))]
+    [RequireComponent(typeof(CircleCollider2D))]
     public class Projectile : MonoBehaviour
     {
         [Header("Settings")]
@@ -18,6 +20,10 @@ namespace NeuralBreak.Combat
         [Header("Visuals")]
         [SerializeField] private SpriteRenderer _spriteRenderer;
         [SerializeField] private TrailRenderer _trailRenderer;
+
+        // Physics
+        private Rigidbody2D _rb;
+        private CircleCollider2D _collider;
 
         // Runtime state - FIXED AT SPAWN TIME (each bullet is independent)
         private Vector2 _direction;
@@ -39,6 +45,28 @@ namespace NeuralBreak.Combat
         public bool IsPiercing => _isPiercing;
         public bool IsHoming => _isHoming;
         public float Radius => _baseRadius * (1f + _powerLevel * 0.06f); // Scale with power level
+
+        private void Awake()
+        {
+            // Setup Rigidbody2D for trigger collision detection
+            _rb = GetComponent<Rigidbody2D>();
+            if (_rb == null)
+            {
+                _rb = gameObject.AddComponent<Rigidbody2D>();
+            }
+            _rb.gravityScale = 0f;
+            _rb.bodyType = RigidbodyType2D.Kinematic; // We control movement manually
+            _rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+
+            // Setup collider as trigger
+            _collider = GetComponent<CircleCollider2D>();
+            if (_collider == null)
+            {
+                _collider = gameObject.AddComponent<CircleCollider2D>();
+            }
+            _collider.isTrigger = true;
+            _collider.radius = _baseRadius;
+        }
 
         private void Update()
         {
@@ -141,7 +169,8 @@ namespace NeuralBreak.Combat
 
             // Scale with power level - TypeScript formula: baseRadius * (1 + powerLevel * 0.06)
             // Visual scale is larger than collision for visibility
-            float visualScale = (_baseRadius + powerLevel * 0.006f) * 10f; // 10x for visibility in Unity units
+            // Reduced by 80% (multiply by 0.2) per user request
+            float visualScale = (_baseRadius + powerLevel * 0.006f) * 10f * 0.2f; // 10x base, then 80% reduction
             transform.localScale = Vector3.one * visualScale;
 
             // Visual indication for special projectiles

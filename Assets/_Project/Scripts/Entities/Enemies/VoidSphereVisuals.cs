@@ -16,7 +16,7 @@ namespace NeuralBreak.Entities
         [SerializeField] private Color _particleColor = new Color(1f, 0f, 1f, 0.8f); // Magenta
 
         [Header("Scale")]
-        [SerializeField] private float _coreRadius = 1.2f; // Large!
+        [SerializeField] private float _coreRadius = 2.4f; // Extra Large!
 
         // Components
         private Transform _core;

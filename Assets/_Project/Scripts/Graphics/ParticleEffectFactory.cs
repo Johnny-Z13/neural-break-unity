@@ -9,6 +9,75 @@ namespace NeuralBreak.Graphics
     /// </summary>
     public static class ParticleEffectFactory
     {
+
+        /// <summary>
+        /// Get or create a URP-compatible particle material
+        /// </summary>
+        private static Material GetParticleMaterial(Color color)
+        {
+            // Try URP particle shader first
+            Shader shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
+            if (shader == null)
+            {
+                // Fallback to Sprites/Default which works in both pipelines
+                shader = Shader.Find("Sprites/Default");
+            }
+            if (shader == null)
+            {
+                // Final fallback
+                shader = Shader.Find("Particles/Standard Unlit");
+            }
+
+            if (shader != null)
+            {
+                Material mat = new Material(shader);
+
+                // Set the base color - CRITICAL for URP particles to be visible
+                mat.SetColor("_BaseColor", color);
+                mat.SetColor("_Color", color);
+
+                // Configure for additive blending
+                mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.One);
+                mat.SetInt("_ZWrite", 0);
+                mat.renderQueue = 3000; // Transparent queue
+
+                // URP specific settings
+                if (mat.HasProperty("_Surface"))
+                {
+                    mat.SetFloat("_Surface", 1); // Transparent
+                    mat.SetFloat("_Blend", 1); // Additive
+                }
+
+                // Enable color from particle system
+                mat.EnableKeyword("_COLOROVERLAY_ON");
+                mat.EnableKeyword("_COLORCOLOR_ON");
+
+                return mat;
+            }
+            else
+            {
+                Debug.LogWarning("[ParticleEffectFactory] Could not find particle shader!");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Apply the correct material to a particle system renderer
+        /// </summary>
+        private static void SetupRenderer(ParticleSystemRenderer renderer, Color color)
+        {
+            if (renderer == null) return;
+
+            Material mat = GetParticleMaterial(color);
+            if (mat != null)
+            {
+                renderer.material = mat;
+            }
+            renderer.renderMode = ParticleSystemRenderMode.Billboard;
+            renderer.sortingOrder = 100;
+        }
+
         /// <summary>
         /// Create a burst explosion effect with multiple layers for visual polish
         /// </summary>
@@ -68,8 +137,7 @@ namespace NeuralBreak.Graphics
             sizeOverLifetime.size = new ParticleSystem.MinMaxCurve(1f, sizeCurve);
 
             // Renderer
-            var renderer = go.GetComponent<ParticleSystemRenderer>();
-            renderer.renderMode = ParticleSystemRenderMode.Billboard;
+            SetupRenderer(go.GetComponent<ParticleSystemRenderer>(), color);
 
             // Add sub-emitter for flash/glow core
             AddExplosionFlash(go, size, color);
@@ -134,8 +202,7 @@ namespace NeuralBreak.Graphics
             curve.AddKey(1f, 0.2f);
             sizeOverLifetime.size = new ParticleSystem.MinMaxCurve(1f, curve);
 
-            var renderer = flashGO.GetComponent<ParticleSystemRenderer>();
-            renderer.renderMode = ParticleSystemRenderMode.Billboard;
+            SetupRenderer(flashGO.GetComponent<ParticleSystemRenderer>(), color);
         }
 
         /// <summary>
@@ -193,8 +260,7 @@ namespace NeuralBreak.Graphics
             curve.AddKey(1f, 0.3f);
             sizeOverLifetime.size = new ParticleSystem.MinMaxCurve(1f, curve);
 
-            var renderer = ringGO.GetComponent<ParticleSystemRenderer>();
-            renderer.renderMode = ParticleSystemRenderMode.Billboard;
+            SetupRenderer(ringGO.GetComponent<ParticleSystemRenderer>(), color);
         }
 
         /// <summary>
@@ -244,8 +310,7 @@ namespace NeuralBreak.Graphics
             );
             colorOverLifetime.color = gradient;
 
-            var renderer = sparksGO.GetComponent<ParticleSystemRenderer>();
-            renderer.renderMode = ParticleSystemRenderMode.Billboard;
+            SetupRenderer(sparksGO.GetComponent<ParticleSystemRenderer>(), color);
         }
 
         /// <summary>
@@ -298,15 +363,14 @@ namespace NeuralBreak.Graphics
             colorOverLifetime.color = gradient;
 
             // Renderer
-            var renderer = go.GetComponent<ParticleSystemRenderer>();
-            renderer.renderMode = ParticleSystemRenderMode.Billboard;
+            SetupRenderer(go.GetComponent<ParticleSystemRenderer>(), color);
 
             go.SetActive(false);
             return ps;
         }
 
         /// <summary>
-        /// Create a pickup collect effect (sparkles rising up)
+        /// Create a pickup collect effect with sparkles, burst ring, and rising particles
         /// </summary>
         public static ParticleSystem CreatePickupEffect(Transform parent, string name, Color color)
         {
@@ -314,52 +378,247 @@ namespace NeuralBreak.Graphics
             go.transform.SetParent(parent);
             go.transform.localPosition = Vector3.zero;
 
+            // Main particle system - sparkle burst outward
             ParticleSystem ps = go.AddComponent<ParticleSystem>();
-            // Stop immediately to prevent warnings when modifying properties
             ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
 
             var main = ps.main;
-            main.duration = 0.5f;
+            main.duration = 0.6f;
             main.loop = false;
-            main.startLifetime = new ParticleSystem.MinMaxCurve(0.4f, 0.8f);
-            main.startSpeed = new ParticleSystem.MinMaxCurve(1f, 3f);
-            main.startSize = new ParticleSystem.MinMaxCurve(0.1f, 0.25f);
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.3f, 0.6f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(3f, 6f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.08f, 0.18f);
             main.startColor = color;
-            main.gravityModifier = -0.5f; // Float upward
+            main.gravityModifier = 0f;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
             main.playOnAwake = false;
-            main.maxParticles = 50;
+            main.maxParticles = 40;
 
-            // Emission
+            // Emission - burst
             var emission = ps.emission;
             emission.enabled = true;
             emission.rateOverTime = 0;
             emission.SetBursts(new ParticleSystem.Burst[] {
-                new ParticleSystem.Burst(0f, 15, 25)
+                new ParticleSystem.Burst(0f, 20)
             });
 
-            // Shape
+            // Shape - sphere for omni-directional burst
             var shape = ps.shape;
             shape.enabled = true;
-            shape.shapeType = ParticleSystemShapeType.Circle;
-            shape.radius = 0.5f;
+            shape.shapeType = ParticleSystemShapeType.Sphere;
+            shape.radius = 0.15f;
 
-            // Color over lifetime - sparkle
+            // Color over lifetime - bright flash then fade with color
             var colorOverLifetime = ps.colorOverLifetime;
             colorOverLifetime.enabled = true;
             Gradient gradient = new Gradient();
             gradient.SetKeys(
-                new GradientColorKey[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(color, 0.3f), new GradientColorKey(color, 0.7f) },
-                new GradientAlphaKey[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.2f), new GradientAlphaKey(0f, 1f) }
+                new GradientColorKey[] {
+                    new GradientColorKey(Color.white, 0f),
+                    new GradientColorKey(color, 0.2f),
+                    new GradientColorKey(color * 0.7f, 0.7f)
+                },
+                new GradientAlphaKey[] {
+                    new GradientAlphaKey(1f, 0f),
+                    new GradientAlphaKey(0.9f, 0.3f),
+                    new GradientAlphaKey(0f, 1f)
+                }
             );
             colorOverLifetime.color = gradient;
 
+            // Size over lifetime - shrink
+            var sizeOverLifetime = ps.sizeOverLifetime;
+            sizeOverLifetime.enabled = true;
+            AnimationCurve sizeCurve = new AnimationCurve();
+            sizeCurve.AddKey(0f, 1f);
+            sizeCurve.AddKey(0.3f, 0.8f);
+            sizeCurve.AddKey(1f, 0f);
+            sizeOverLifetime.size = new ParticleSystem.MinMaxCurve(1f, sizeCurve);
+
             // Renderer
-            var renderer = go.GetComponent<ParticleSystemRenderer>();
-            renderer.renderMode = ParticleSystemRenderMode.Billboard;
+            SetupRenderer(go.GetComponent<ParticleSystemRenderer>(), color);
+
+            // Add sub-effects
+            AddPickupFlash(go, color);
+            AddPickupRing(go, color);
+            AddPickupSparkles(go, color);
 
             go.SetActive(false);
             return ps;
+        }
+
+        /// <summary>
+        /// Add a bright central flash for pickup
+        /// </summary>
+        private static void AddPickupFlash(GameObject parent, Color color)
+        {
+            GameObject flashGO = new GameObject("Flash");
+            flashGO.transform.SetParent(parent.transform);
+            flashGO.transform.localPosition = Vector3.zero;
+
+            ParticleSystem ps = flashGO.AddComponent<ParticleSystem>();
+            ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+            var main = ps.main;
+            main.duration = 0.2f;
+            main.loop = false;
+            main.startLifetime = 0.2f;
+            main.startSpeed = 0f;
+            main.startSize = 1.2f;
+            main.startColor = Color.white;
+            main.gravityModifier = 0f;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.playOnAwake = false;
+            main.maxParticles = 1;
+
+            var emission = ps.emission;
+            emission.enabled = true;
+            emission.rateOverTime = 0;
+            emission.SetBursts(new ParticleSystem.Burst[] { new ParticleSystem.Burst(0f, 1) });
+
+            var shape = ps.shape;
+            shape.enabled = false;
+
+            // Rapid color transition and fade
+            var colorOverLifetime = ps.colorOverLifetime;
+            colorOverLifetime.enabled = true;
+            Gradient gradient = new Gradient();
+            gradient.SetKeys(
+                new GradientColorKey[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(color, 0.3f) },
+                new GradientAlphaKey[] { new GradientAlphaKey(0.8f, 0f), new GradientAlphaKey(0f, 1f) }
+            );
+            colorOverLifetime.color = gradient;
+
+            // Quick expand then fade
+            var sizeOverLifetime = ps.sizeOverLifetime;
+            sizeOverLifetime.enabled = true;
+            AnimationCurve curve = new AnimationCurve();
+            curve.AddKey(0f, 0.5f);
+            curve.AddKey(0.2f, 1f);
+            curve.AddKey(1f, 1.5f);
+            sizeOverLifetime.size = new ParticleSystem.MinMaxCurve(1f, curve);
+
+            SetupRenderer(flashGO.GetComponent<ParticleSystemRenderer>(), Color.white);
+        }
+
+        /// <summary>
+        /// Add an expanding ring for pickup
+        /// </summary>
+        private static void AddPickupRing(GameObject parent, Color color)
+        {
+            GameObject ringGO = new GameObject("Ring");
+            ringGO.transform.SetParent(parent.transform);
+            ringGO.transform.localPosition = Vector3.zero;
+
+            ParticleSystem ps = ringGO.AddComponent<ParticleSystem>();
+            ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+            var main = ps.main;
+            main.duration = 0.4f;
+            main.loop = false;
+            main.startLifetime = 0.4f;
+            main.startSpeed = 8f;
+            main.startSize = 0.06f;
+            main.startColor = color;
+            main.gravityModifier = 0f;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.playOnAwake = false;
+            main.maxParticles = 20;
+
+            var emission = ps.emission;
+            emission.enabled = true;
+            emission.rateOverTime = 0;
+            emission.SetBursts(new ParticleSystem.Burst[] { new ParticleSystem.Burst(0f, 16) });
+
+            // Circle shape for expanding ring in XY plane
+            var shape = ps.shape;
+            shape.enabled = true;
+            shape.shapeType = ParticleSystemShapeType.Circle;
+            shape.radius = 0.1f;
+            shape.arc = 360f;
+            shape.rotation = Vector3.zero; // Emit in XY plane
+
+            // Fade out
+            var colorOverLifetime = ps.colorOverLifetime;
+            colorOverLifetime.enabled = true;
+            Gradient gradient = new Gradient();
+            gradient.SetKeys(
+                new GradientColorKey[] { new GradientColorKey(color, 0f), new GradientColorKey(color, 0.5f) },
+                new GradientAlphaKey[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0f, 1f) }
+            );
+            colorOverLifetime.color = gradient;
+
+            SetupRenderer(ringGO.GetComponent<ParticleSystemRenderer>(), color);
+        }
+
+        /// <summary>
+        /// Add rising sparkle particles for pickup
+        /// </summary>
+        private static void AddPickupSparkles(GameObject parent, Color color)
+        {
+            GameObject sparklesGO = new GameObject("Sparkles");
+            sparklesGO.transform.SetParent(parent.transform);
+            sparklesGO.transform.localPosition = Vector3.zero;
+
+            ParticleSystem ps = sparklesGO.AddComponent<ParticleSystem>();
+            ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+            var main = ps.main;
+            main.duration = 0.8f;
+            main.loop = false;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.5f, 0.8f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(0.5f, 2f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.04f, 0.1f);
+            main.startColor = color;
+            main.gravityModifier = -1.5f; // Float upward
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.playOnAwake = false;
+            main.maxParticles = 20;
+
+            var emission = ps.emission;
+            emission.enabled = true;
+            emission.rateOverTime = 0;
+            emission.SetBursts(new ParticleSystem.Burst[] {
+                new ParticleSystem.Burst(0.05f, 8),
+                new ParticleSystem.Burst(0.15f, 6)
+            });
+
+            // Emit from small area
+            var shape = ps.shape;
+            shape.enabled = true;
+            shape.shapeType = ParticleSystemShapeType.Circle;
+            shape.radius = 0.3f;
+            shape.rotation = Vector3.zero;
+
+            // Twinkle effect
+            var colorOverLifetime = ps.colorOverLifetime;
+            colorOverLifetime.enabled = true;
+            Gradient gradient = new Gradient();
+            gradient.SetKeys(
+                new GradientColorKey[] {
+                    new GradientColorKey(Color.white, 0f),
+                    new GradientColorKey(color, 0.2f),
+                    new GradientColorKey(color * 1.2f, 0.5f),
+                    new GradientColorKey(color, 0.8f)
+                },
+                new GradientAlphaKey[] {
+                    new GradientAlphaKey(0f, 0f),
+                    new GradientAlphaKey(1f, 0.15f),
+                    new GradientAlphaKey(0.8f, 0.5f),
+                    new GradientAlphaKey(0f, 1f)
+                }
+            );
+            colorOverLifetime.color = gradient;
+
+            // Shrink over time
+            var sizeOverLifetime = ps.sizeOverLifetime;
+            sizeOverLifetime.enabled = true;
+            AnimationCurve sizeCurve = new AnimationCurve();
+            sizeCurve.AddKey(0f, 1f);
+            sizeCurve.AddKey(1f, 0f);
+            sizeOverLifetime.size = new ParticleSystem.MinMaxCurve(1f, sizeCurve);
+
+            SetupRenderer(sparklesGO.GetComponent<ParticleSystemRenderer>(), color);
         }
 
         /// <summary>
@@ -415,8 +674,7 @@ namespace NeuralBreak.Graphics
             sizeOverLifetime.size = new ParticleSystem.MinMaxCurve(1f, sizeCurve);
 
             // Renderer
-            var renderer = go.GetComponent<ParticleSystemRenderer>();
-            renderer.renderMode = ParticleSystemRenderMode.Billboard;
+            SetupRenderer(go.GetComponent<ParticleSystemRenderer>(), color);
 
             return ps;
         }

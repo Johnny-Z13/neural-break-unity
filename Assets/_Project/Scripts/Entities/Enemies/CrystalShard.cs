@@ -41,6 +41,7 @@ namespace NeuralBreak.Entities
         [Header("Visual")]
         [SerializeField] private SpriteRenderer _coreRenderer;
         [SerializeField] private GameObject _shardPrefab;
+        [SerializeField] private CrystalShardVisuals _visuals;
         [SerializeField] private Color _crystalColor = new Color(0.4f, 0.8f, 1f); // Ice blue
         [SerializeField] private Color _coreColor = new Color(0.2f, 0.4f, 0.8f); // Darker blue
 
@@ -58,6 +59,7 @@ namespace NeuralBreak.Entities
         private float _burstTimer;
         private bool _isFiring;
         private int _nextFiringShard;
+        private bool _visualsGenerated;
 
         protected override void OnInitialize()
         {
@@ -69,6 +71,29 @@ namespace NeuralBreak.Entities
             _nextFiringShard = 0;
 
             CreateShards();
+
+            // Generate procedural visuals if not yet done
+            if (!_visualsGenerated)
+            {
+                EnsureVisuals();
+                _visualsGenerated = true;
+            }
+        }
+
+        private void EnsureVisuals()
+        {
+            if (_visuals == null)
+            {
+                _visuals = GetComponentInChildren<CrystalShardVisuals>();
+            }
+
+            if (_visuals == null)
+            {
+                var visualsGO = new GameObject("Visuals");
+                visualsGO.transform.SetParent(transform, false);
+                visualsGO.transform.localPosition = Vector3.zero;
+                _visuals = visualsGO.AddComponent<CrystalShardVisuals>();
+            }
         }
 
         private void CreateShards()

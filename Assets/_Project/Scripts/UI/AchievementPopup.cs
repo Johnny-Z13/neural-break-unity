@@ -19,11 +19,17 @@ namespace NeuralBreak.UI
         [SerializeField] private float _slideOutDuration = 0.3f;
         [SerializeField] private float _slideDistance = 200f;
 
-        [Header("Colors")]
-        [SerializeField] private Color _backgroundColor = new Color(0.1f, 0.1f, 0.15f, 0.95f);
-        [SerializeField] private Color _borderColor = new Color(1f, 0.8f, 0.2f);
-        [SerializeField] private Color _titleColor = new Color(1f, 0.8f, 0.2f);
-        [SerializeField] private Color _textColor = Color.white;
+        [Header("Colors (Uses UITheme)")]
+        [SerializeField] private bool _useThemeColors = true;
+
+        private Color BackgroundColor => _useThemeColors ? UITheme.BackgroundDark : _customBackgroundColor;
+        private Color BorderColor => _useThemeColors ? UITheme.Warning : _customBorderColor;
+        private Color TitleColor => _useThemeColors ? UITheme.Warning : _customTitleColor;
+        private Color TextColor => _useThemeColors ? UITheme.TextPrimary : Color.white;
+
+        [SerializeField] private Color _customBackgroundColor = new Color(0.1f, 0.1f, 0.15f, 0.95f);
+        [SerializeField] private Color _customBorderColor = new Color(1f, 0.8f, 0.2f);
+        [SerializeField] private Color _customTitleColor = new Color(1f, 0.8f, 0.2f);
 
         // UI Components
         private Canvas _canvas;
@@ -60,7 +66,7 @@ namespace NeuralBreak.UI
             canvasGO.transform.SetParent(transform);
             _canvas = canvasGO.AddComponent<Canvas>();
             _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            _canvas.sortingOrder = 250;
+            _canvas.sortingOrder = UITheme.SortOrder.Achievements;
 
             var scaler = canvasGO.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -92,7 +98,7 @@ namespace NeuralBreak.UI
             bgRect.offsetMax = Vector2.zero;
 
             var bgImage = bgGO.AddComponent<Image>();
-            bgImage.color = _backgroundColor;
+            bgImage.color = BackgroundColor;
 
             // Border
             var borderGO = new GameObject("Border");
@@ -105,7 +111,7 @@ namespace NeuralBreak.UI
             borderRect.sizeDelta = new Vector2(4, 0);
 
             var borderImage = borderGO.AddComponent<Image>();
-            borderImage.color = _borderColor;
+            borderImage.color = BorderColor;
 
             // Icon
             var iconGO = new GameObject("Icon");
@@ -119,7 +125,7 @@ namespace NeuralBreak.UI
 
             _iconImage = iconGO.AddComponent<Image>();
             _iconImage.sprite = CreateTrophySprite();
-            _iconImage.color = _borderColor;
+            _iconImage.color = BorderColor;
 
             // Title "ACHIEVEMENT UNLOCKED"
             var titleGO = new GameObject("Title");
@@ -135,7 +141,7 @@ namespace NeuralBreak.UI
             _titleText.text = "ACHIEVEMENT UNLOCKED";
             _titleText.fontSize = 14;
             _titleText.fontStyle = FontStyles.Bold;
-            _titleText.color = _titleColor;
+            _titleText.color = TitleColor;
             _titleText.alignment = TextAlignmentOptions.Left;
 
             // Achievement name
@@ -152,7 +158,7 @@ namespace NeuralBreak.UI
             _nameText.text = "First Blood";
             _nameText.fontSize = 18;
             _nameText.fontStyle = FontStyles.Bold;
-            _nameText.color = _textColor;
+            _nameText.color = TextColor;
             _nameText.alignment = TextAlignmentOptions.Left;
 
             // Description

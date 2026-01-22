@@ -15,7 +15,7 @@ namespace NeuralBreak.Input
 
         [Header("Input Settings")]
         [SerializeField] private float _gamepadDeadzone = 0.15f;
-        [SerializeField] private bool _autoFireWhenAiming = true;
+        [SerializeField] private bool _autoFireWhenAiming = false; // Disabled - require explicit fire input
 
         [Header("Mouse Settings")]
         [SerializeField] private bool _useMouseForAim = true;
@@ -91,6 +91,13 @@ namespace NeuralBreak.Input
 
         private void OnEnable()
         {
+            // Reset input state to prevent auto-firing on game start
+            FireHeld = false;
+            ThrustHeld = false;
+            MoveInput = Vector2.zero;
+            AimInput = Vector2.zero;
+            HasAimInput = false;
+
             if (_inputActionsAsset != null)
             {
                 _inputActionsAsset.Enable();

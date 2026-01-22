@@ -14,9 +14,13 @@ namespace NeuralBreak.Entities
         [SerializeField] private float _swayAmplitude = 0.5f;
         [SerializeField] private float _swayFrequency = 3f;
 
+        [Header("Visual")]
+        [SerializeField] private DataMiteVisuals _visuals;
+
         // Sway oscillation
         private float _swayOffset;
         private float _swayTimer;
+        private bool _visualsGenerated;
 
         public override EnemyType EnemyType => EnemyType.DataMite;
 
@@ -25,6 +29,29 @@ namespace NeuralBreak.Entities
             // Randomize sway offset so mites don't all sway in sync
             _swayOffset = Random.Range(0f, Mathf.PI * 2f);
             _swayTimer = 0f;
+
+            // Generate procedural visuals if not yet done
+            if (!_visualsGenerated)
+            {
+                EnsureVisuals();
+                _visualsGenerated = true;
+            }
+        }
+
+        private void EnsureVisuals()
+        {
+            if (_visuals == null)
+            {
+                _visuals = GetComponentInChildren<DataMiteVisuals>();
+            }
+
+            if (_visuals == null)
+            {
+                var visualsGO = new GameObject("Visuals");
+                visualsGO.transform.SetParent(transform, false);
+                visualsGO.transform.localPosition = Vector3.zero;
+                _visuals = visualsGO.AddComponent<DataMiteVisuals>();
+            }
         }
 
         protected override void UpdateAI()
@@ -56,27 +83,7 @@ namespace NeuralBreak.Entities
         protected override void OnStateChanged(EnemyState newState)
         {
             base.OnStateChanged(newState);
-
-            // Visual feedback for states
-            var renderer = GetComponent<SpriteRenderer>();
-            if (renderer != null)
-            {
-                switch (newState)
-                {
-                    case EnemyState.Spawning:
-                        // Fade in during spawn
-                        renderer.color = new Color(1f, 0.5f, 0f, 0.5f);
-                        break;
-                    case EnemyState.Alive:
-                        // Full color when alive
-                        renderer.color = new Color(1f, 0.5f, 0f, 1f); // Orange
-                        break;
-                    case EnemyState.Dying:
-                        // Flash white on death
-                        renderer.color = Color.white;
-                        break;
-                }
-            }
+            // Visuals handle their own appearance via DataMiteVisuals
         }
     }
 }

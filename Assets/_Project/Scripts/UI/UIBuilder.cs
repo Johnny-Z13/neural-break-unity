@@ -18,11 +18,19 @@ namespace NeuralBreak.UI
         [Header("Font")]
         [SerializeField] private TMP_FontAsset _fontAsset; // Assign in inspector or loaded at runtime
 
-        [Header("Colors")]
-        [SerializeField] private Color _backgroundColor = new Color(0.05f, 0.05f, 0.1f, 0.9f);
-        [SerializeField] private Color _primaryColor = new Color(0f, 1f, 1f, 1f); // Cyan
-        [SerializeField] private Color _accentColor = new Color(1f, 0.3f, 0.5f, 1f); // Pink
-        [SerializeField] private Color _textColor = Color.white;
+        [Header("Colors (Uses UITheme if not overridden)")]
+        [SerializeField] private bool _useThemeColors = true;
+
+        // These are now derived from UITheme unless overridden
+        private Color _backgroundColor => _useThemeColors ? UITheme.BackgroundDark : _customBackgroundColor;
+        private Color _primaryColor => _useThemeColors ? UITheme.Primary : _customPrimaryColor;
+        private Color _accentColor => _useThemeColors ? UITheme.Accent : _customAccentColor;
+        private Color _textColor => _useThemeColors ? UITheme.TextPrimary : _customTextColor;
+
+        [SerializeField] private Color _customBackgroundColor = new Color(0.05f, 0.05f, 0.1f, 0.9f);
+        [SerializeField] private Color _customPrimaryColor = new Color(0f, 1f, 1f, 1f);
+        [SerializeField] private Color _customAccentColor = new Color(1f, 0.3f, 0.5f, 1f);
+        [SerializeField] private Color _customTextColor = Color.white;
 
         private Canvas _canvas;
         private RectTransform _canvasRect;

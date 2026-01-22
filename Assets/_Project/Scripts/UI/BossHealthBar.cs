@@ -26,12 +26,20 @@ namespace NeuralBreak.UI
         [SerializeField] private float _warningPulseSpeed = 8f;
         [SerializeField] private float _healthLerpSpeed = 5f;
 
-        [Header("Colors")]
-        [SerializeField] private Color _healthColor = new Color(1f, 0.2f, 0.2f);
-        [SerializeField] private Color _healthBackgroundColor = new Color(0.3f, 0f, 0f, 0.8f);
-        [SerializeField] private Color _warningColor = new Color(1f, 0f, 0f);
-        [SerializeField] private Color _phase2Color = new Color(1f, 0.5f, 0f);
-        [SerializeField] private Color _phase3Color = new Color(1f, 0f, 0.5f);
+        [Header("Colors (Uses UITheme)")]
+        [SerializeField] private bool _useThemeColors = true;
+
+        private Color HealthColor => _useThemeColors ? UITheme.Danger : _customHealthColor;
+        private Color HealthBackgroundColor => _useThemeColors ? UITheme.DangerDark.WithAlpha(0.8f) : _customHealthBackgroundColor;
+        private Color WarningColor => _useThemeColors ? UITheme.Danger : _customWarningColor;
+        private Color Phase2Color => _useThemeColors ? UITheme.Warning : _customPhase2Color;
+        private Color Phase3Color => _useThemeColors ? UITheme.Accent : _customPhase3Color;
+
+        [SerializeField] private Color _customHealthColor = new Color(1f, 0.2f, 0.2f);
+        [SerializeField] private Color _customHealthBackgroundColor = new Color(0.3f, 0f, 0f, 0.8f);
+        [SerializeField] private Color _customWarningColor = new Color(1f, 0f, 0f);
+        [SerializeField] private Color _customPhase2Color = new Color(1f, 0.5f, 0f);
+        [SerializeField] private Color _customPhase3Color = new Color(1f, 0f, 0.5f);
 
         private float _targetHealthPercent = 1f;
         private float _displayedHealthPercent = 1f;
@@ -75,7 +83,7 @@ namespace NeuralBreak.UI
                 var canvasGO = new GameObject("BossHealthCanvas");
                 canvas = canvasGO.AddComponent<Canvas>();
                 canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                canvas.sortingOrder = 90;
+                canvas.sortingOrder = UITheme.SortOrder.BossHealth;
                 canvasGO.AddComponent<CanvasScaler>();
                 transform.SetParent(canvasGO.transform);
             }
@@ -110,7 +118,7 @@ namespace NeuralBreak.UI
                 _warningText = warningGO.AddComponent<TextMeshProUGUI>();
                 _warningText.text = "WARNING";
                 _warningText.fontSize = 36;
-                _warningText.color = _warningColor;
+                _warningText.color = WarningColor;
                 _warningText.alignment = TextAlignmentOptions.Center;
                 _warningText.fontStyle = FontStyles.Bold;
             }
@@ -146,7 +154,7 @@ namespace NeuralBreak.UI
                 bgRect.anchoredPosition = new Vector2(0, 10);
 
                 _healthBarBackground = bgGO.AddComponent<Image>();
-                _healthBarBackground.color = _healthBackgroundColor;
+                _healthBarBackground.color = HealthBackgroundColor;
             }
 
             // Create health bar fill
@@ -162,7 +170,7 @@ namespace NeuralBreak.UI
                 fillRect.pivot = new Vector2(0f, 0.5f);
 
                 _healthBarFill = fillGO.AddComponent<Image>();
-                _healthBarFill.color = _healthColor;
+                _healthBarFill.color = HealthColor;
                 _healthBarFill.type = Image.Type.Filled;
                 _healthBarFill.fillMethod = Image.FillMethod.Horizontal;
                 _healthBarFill.fillOrigin = 0;
@@ -183,15 +191,15 @@ namespace NeuralBreak.UI
             Color targetColor;
             if (_targetHealthPercent > 0.67f)
             {
-                targetColor = _healthColor;
+                targetColor = HealthColor;
             }
             else if (_targetHealthPercent > 0.34f)
             {
-                targetColor = _phase2Color;
+                targetColor = Phase2Color;
             }
             else
             {
-                targetColor = _phase3Color;
+                targetColor = Phase3Color;
             }
             _healthBarFill.color = Color.Lerp(_healthBarFill.color, targetColor, Time.unscaledDeltaTime * 3f);
         }
@@ -279,7 +287,7 @@ namespace NeuralBreak.UI
 
                 // Pulse warning
                 float pulse = Mathf.Sin(elapsed * _warningPulseSpeed) * 0.5f + 0.5f;
-                Color c = _warningColor;
+                Color c = WarningColor;
                 c.a = 0.5f + pulse * 0.5f;
                 _warningText.color = c;
                 _warningText.transform.localScale = Vector3.one * (1f + pulse * 0.2f);
@@ -293,7 +301,7 @@ namespace NeuralBreak.UI
             {
                 warningElapsed += Time.unscaledDeltaTime;
                 float pulse = Mathf.Sin(warningElapsed * _warningPulseSpeed) * 0.5f + 0.5f;
-                Color c = _warningColor;
+                Color c = WarningColor;
                 c.a = 0.5f + pulse * 0.5f;
                 _warningText.color = c;
                 _warningText.transform.localScale = Vector3.one * (1f + pulse * 0.2f);

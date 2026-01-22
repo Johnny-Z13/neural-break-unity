@@ -2,23 +2,25 @@
 
 > **Source Project:** `D:\Projects\Neural-Break-Unity` (TypeScript/Three.js - DELETE AFTER PORT)
 > **Target Project:** `D:\Projects\Unity\neural-break-unity` (Unity 6000.3.0f1)
-> **Document Version:** 1.0
-> **Created:** 2026-01-20
+> **Document Version:** 2.0
+> **Last Updated:** 2026-01-22
 
 ---
 
 ## Executive Summary
 
-Neural Break is a cyberpunk survival arena shooter with 99 levels, 8 enemy types, and multiple game modes. The original TypeScript codebase (~30,000 lines) is being ported to Unity C#.
+Neural Break is a cyberpunk survival arena shooter with 99 levels, 8 enemy types, and multiple game modes. The original TypeScript codebase (~30,000 lines) has been ported to Unity C#.
 
-**Current Unity Progress: ~35-40% Complete**
+**Current Unity Progress: ~85% Complete**
 - Core architecture: COMPLETE
 - Player systems: COMPLETE
 - Combat systems: COMPLETE
-- Enemy system: 1 of 8 enemies implemented
-- UI: NOT STARTED
-- Audio: NOT STARTED
-- VFX/Polish: NOT STARTED
+- Input systems: COMPLETE
+- Enemy system: 8/8 enemies implemented
+- Pickup system: COMPLETE (9 pickup types)
+- Graphics/VFX: COMPLETE
+- Audio: COMPLETE (AudioManager, MusicManager, ProceduralSFX)
+- UI: PARTIAL (HUD complete, menus in progress)
 
 ---
 
@@ -42,47 +44,43 @@ Neural Break is a cyberpunk survival arena shooter with 99 levels, 8 enemy types
 ### Unity Project Structure
 ```
 Assets/_Project/
-├── Scripts/
-│   ├── Core/           # GameManager, EventBus, ObjectPool, GameState, LevelManager
+├── Scripts/                    # 105 C# scripts (~32,000 lines)
+│   ├── Audio/                  # AudioManager, MusicManager, ProceduralSFX
+│   ├── Combat/                 # WeaponSystem, Projectile, WeaponUpgradeManager
+│   ├── Config/                 # ConfigProvider, GameBalanceConfig
+│   ├── Core/                   # GameManager, EventBus, ObjectPool, LevelManager
+│   ├── Data/                   # EnemyData
+│   ├── Debug/                  # DebugGameTest (development only)
+│   ├── Editor/                 # ConfigCreator, LevelValidator, SceneSetupHelper
 │   ├── Entities/
-│   │   ├── Player/     # PlayerController, PlayerHealth
-│   │   └── Enemies/    # EnemyBase, DataMite, + 7 more needed
-│   ├── Combat/         # WeaponSystem, Projectile
-│   ├── Input/          # InputManager
-│   ├── Graphics/       # CameraController
-│   ├── UI/             # (EMPTY - needs HUD, menus, screens)
-│   ├── Audio/          # (EMPTY - needs AudioManager)
-│   └── Pickups/        # (EMPTY - needs pickup system)
-├── Prefabs/
-│   ├── Player/         # (needs player prefab)
-│   ├── Enemies/        # (needs 8 enemy prefabs)
-│   ├── Projectiles/    # (needs projectile prefab)
-│   ├── Pickups/        # (needs 5 pickup prefabs)
-│   ├── UI/             # (needs UI prefabs)
-│   └── VFX/            # (needs VFX prefabs)
-├── ScriptableObjects/
-│   ├── EnemyData/      # Enemy configuration assets
-│   ├── LevelData/      # Level progression data
-│   └── WeaponData/     # Weapon balance data
-├── Art/
-│   ├── Sprites/        # 2D sprites
-│   └── Textures/       # Textures and materials
-├── Audio/
-│   ├── Music/          # Background tracks
-│   └── SFX/            # Sound effects
-├── Materials/          # Shaders and materials
-└── VFX/                # Particle systems
+│   │   ├── Enemies/            # EnemyBase + 8 enemy types + visuals
+│   │   ├── Pickups/            # PickupBase + 9 pickup types + visuals
+│   │   └── Player/             # PlayerController, PlayerHealth
+│   ├── Graphics/               # Camera, VFX, particle systems, starfield
+│   ├── Input/                  # InputManager, GamepadRumble
+│   ├── UI/                     # HUD, menus, screens (23 scripts)
+│   └── Utils/                  # RuntimeSpriteGenerator
+├── Prefabs/                    # Game object prefabs
+├── ScriptableObjects/          # Configuration data
+├── Art/                        # Sprites and textures
+├── Audio/                      # Music and SFX
+├── Materials/                  # Shaders and materials
+├── Input/                      # Input Action assets
+├── Resources/                  # Runtime-loadable assets
+└── VFX/                        # Particle systems
 ```
 
 ### Namespace Organization
 ```csharp
 NeuralBreak.Core        // GameManager, EventBus, GameState, LevelManager
 NeuralBreak.Entities    // Player, enemies, pickups
-NeuralBreak.Combat      // Weapons, projectiles
-NeuralBreak.Input       // Input handling
-NeuralBreak.Graphics    // Camera, VFX
+NeuralBreak.Combat      // Weapons, projectiles, upgrades
+NeuralBreak.Input       // Input handling, gamepad rumble
+NeuralBreak.Graphics    // Camera, VFX, particles
 NeuralBreak.UI          // HUD, menus, screens
 NeuralBreak.Audio       // Sound management
+NeuralBreak.Config      // Configuration system
+NeuralBreak.Utils       // Utility classes
 ```
 
 ---
@@ -97,163 +95,158 @@ NeuralBreak.Audio       // Sound management
 | `EventBus.cs` | COMPLETE | Type-safe pub/sub, 20+ event types defined |
 | `ObjectPool.cs` | COMPLETE | Generic pooling, pre-warming, MonoBehaviour wrapper |
 | `GameState.cs` | COMPLETE | Enums, GameStats tracking, score/XP values |
-| `LevelManager.cs` | PARTIAL | Basic 1-99 tracking, needs difficulty scaling |
+| `LevelManager.cs` | COMPLETE | 99-level progression, difficulty scaling |
+| `LevelGenerator.cs` | COMPLETE | Procedural level configuration |
+| `GameSetup.cs` | COMPLETE | Runtime scene wiring and auto-setup |
+| `ConfigProvider.cs` | COMPLETE | Centralized configuration access |
 
 ### Player Systems (100% Complete)
 
 | Script | Status | Features |
 |--------|--------|----------|
-| `PlayerController.cs` | COMPLETE | Movement (accel/decel), dash with invuln, boundary enforcement |
+| `PlayerController.cs` | COMPLETE | Movement (accel/decel), dash with invuln, boundary enforcement, thrust |
 | `PlayerHealth.cs` | COMPLETE | Health, shields (max 3), invulnerability, damage feedback |
+| `ShipCustomization.cs` | COMPLETE | Ship visual customization |
 
 ### Combat Systems (100% Complete)
 
 | Script | Status | Features |
 |--------|--------|----------|
 | `WeaponSystem.cs` | COMPLETE | Fire rate, heat system, power levels 0-10, pooling |
-| `Projectile.cs` | COMPLETE | Movement, lifetime, collision, trail, scaling |
+| `Projectile.cs` | COMPLETE | Movement, lifetime, collision, piercing, homing |
+| `EnemyProjectile.cs` | COMPLETE | Enemy projectile system |
+| `EnemyProjectilePool.cs` | COMPLETE | Enemy projectile pooling |
+| `WeaponUpgradeManager.cs` | COMPLETE | Piercing, homing, multishot upgrades |
 
 ### Input System (100% Complete)
 
 | Script | Status | Features |
 |--------|--------|----------|
-| `InputManager.cs` | COMPLETE | Keyboard + gamepad, events, deadzone handling |
+| `InputManager.cs` | COMPLETE | Twin-stick, keyboard + gamepad, events, deadzone |
+| `GamepadRumble.cs` | COMPLETE | Haptic feedback |
 
 ### Graphics (100% Complete)
 
 | Script | Status | Features |
 |--------|--------|----------|
 | `CameraController.cs` | COMPLETE | Follow, dynamic zoom, screen shake, event reactions |
+| `StarfieldController.cs` | COMPLETE | Procedural animated background |
+| `ArenaManager.cs` | COMPLETE | Arena boundary visuals |
+| `EnvironmentParticles.cs` | COMPLETE | Ambient particle effects |
+| `EnemyDeathVFX.cs` | COMPLETE | Enemy-specific death particles |
+| `HitFlashEffect.cs` | COMPLETE | Damage flash effect |
+| `ParticleEffectFactory.cs` | COMPLETE | Particle system creation |
+| `SpriteGenerator.cs` | COMPLETE | Procedural sprite generation |
+| `VFXManager.cs` | COMPLETE | VFX management |
 
-### Enemy System (15% Complete)
+### Enemy System (100% Complete - 8/8 enemies)
 
 | Script | Status | Features |
 |--------|--------|----------|
 | `EnemyBase.cs` | COMPLETE | Abstract base, state machine, lifecycle, Feel hooks |
-| `EnemySpawner.cs` | PARTIAL | DataMite spawning works, 7 others need implementation |
-| `DataMite.cs` | COMPLETE | Pursuit AI, oscillation, visual states |
+| `EnemySpawner.cs` | COMPLETE | All enemy type spawning, pooling, waves |
+| `DataMite.cs` | COMPLETE | Pursuit AI, oscillation |
+| `ScanDrone.cs` | COMPLETE | Ranged fire, patrol behavior |
+| `Fizzer.cs` | COMPLETE | Erratic movement, burst fire |
+| `UFO.cs` | COMPLETE | Hit-and-run, dive attacks |
+| `ChaosWorm.cs` | COMPLETE | Multi-segment, death bullet spray |
+| `VoidSphere.cs` | COMPLETE | Massive, burst fire |
+| `CrystalShard.cs` | COMPLETE | Orbiting crystals |
+| `Boss.cs` | COMPLETE | 3-phase AI, special attacks |
+| `EliteModifier.cs` | COMPLETE | Elite enemy variants |
+
+### Pickup System (100% Complete - 9 types)
+
+| Script | Status | Features |
+|--------|--------|----------|
+| `PickupBase.cs` | COMPLETE | Abstract base, magnet physics |
+| `PickupSpawner.cs` | COMPLETE | Spawn management, pools |
+| `PowerUp.cs` | COMPLETE | Weapon level increase |
+| `SpeedUp.cs` | COMPLETE | Movement speed boost |
+| `MedPack.cs` | COMPLETE | Health restore |
+| `Shield.cs` | COMPLETE | Shield pickup |
+| `Invulnerable.cs` | COMPLETE | Temporary god mode |
+| `XPOrb.cs` | COMPLETE | Experience points |
+| `MultishotPickup.cs` | COMPLETE | Multishot upgrade |
+| `PiercingPickup.cs` | COMPLETE | Piercing shots |
+| `HomingPickup.cs` | COMPLETE | Homing missiles |
+
+### Audio System (100% Complete)
+
+| Script | Status | Features |
+|--------|--------|----------|
+| `AudioManager.cs` | COMPLETE | Sound management, pooling |
+| `MusicManager.cs` | COMPLETE | Background music, adaptive |
+| `ProceduralSFX.cs` | COMPLETE | Runtime sound generation |
+
+### UI System (80% Complete)
+
+| Script | Status | Features |
+|--------|--------|----------|
+| `HUDManager.cs` | COMPLETE | Health, score, objectives |
+| `ScoreDisplay.cs` | COMPLETE | Score with multiplier |
+| `HealthDisplay.cs` | COMPLETE | Health/shield bars |
+| `WaveAnnouncement.cs` | COMPLETE | Wave start notifications |
+| `LevelUpAnnouncement.cs` | COMPLETE | Level up effects |
+| `DamageNumberPopup.cs` | COMPLETE | Floating damage numbers |
+| `BossHealthBar.cs` | COMPLETE | Boss HP display |
+| `XPBarDisplay.cs` | COMPLETE | Experience bar |
+| `ActiveUpgradesDisplay.cs` | COMPLETE | Active upgrade icons |
+| `ControlsOverlay.cs` | COMPLETE | Control hints |
+| `LowHealthVignette.cs` | COMPLETE | Low health warning |
+| `NotificationManager.cs` | COMPLETE | In-game notifications |
+| `AchievementPopup.cs` | COMPLETE | Achievement notifications |
+| `StatisticsScreen.cs` | COMPLETE | Stats display |
+| `Minimap.cs` | COMPLETE | Minimap display |
+| `UIBuilder.cs` | COMPLETE | UI framework |
+| **StartScreen** | NEEDED | Mode selection |
+| **PauseScreen** | NEEDED | Pause menu |
+| **GameOverScreen** | NEEDED | End game stats |
+| **OptionsScreen** | NEEDED | Settings |
 
 ### Feel Integration (Ready)
-- 19 MMF_Player references across 6 scripts
-- All ready for feedback configuration
+- 19+ MMF_Player references across scripts
+- All hooks configured for feedback
 - Feel package installed at `Assets/Feel/`
 
 ---
 
 ## 3. What Needs to Be Built
 
-### Priority 1: Remaining Enemies (7 types)
-
-| Enemy | Health | Speed | Damage | XP | Special Ability |
-|-------|--------|-------|--------|-----|-----------------|
-| ScanDrone | 30 | 1.2 | 15 | 6 | Ranged fire (2s cooldown) |
-| Fizzer | 2 | 8.0 | 6 | 15 | Burst fire, erratic movement |
-| UFO | 30 | 2.8 | 12 | 25 | Hit-and-run, dive attacks |
-| ChaosWorm | 100 | 1.5 | 15 | 35 | 12 segments, death bullet spray |
-| VoidSphere | 650 | 0.5 | 40 | 50 | Burst fire (4 shots), massive |
-| CrystalShard | 250 | 1.8 | 25 | 45 | 6 orbiting crystals |
-| Boss | 180 | 0.3 | 25 | 100 | 3-phase AI, expanding ring attack |
-
-### Priority 2: Pickup System (5 types)
-
-| Pickup | Effect | Spawn Condition |
-|--------|--------|-----------------|
-| PowerUp | +1 weapon level (max 10), +60% damage | Regular spawn |
-| SpeedUp | +5% speed (max 20 levels = 100%) | Regular spawn |
-| MedPack | +35 HP | When player < 80% health |
-| Shield | +1 shield (max 3) | Regular spawn |
-| Invulnerable | 7s god mode | Rare spawn |
-
-### Priority 3: UI System
+### Priority 1: UI Screens (4 screens needed)
 
 | Screen | Elements |
 |--------|----------|
-| **HUD** | Score + multiplier, health bar, shield icons, power/speed bars, level/objectives, combo counter, heat bar |
 | **StartScreen** | Title, Arcade/Rogue/Test buttons, Leaderboard, Options |
 | **PauseScreen** | Resume, Restart, Menu, Options |
 | **GameOverScreen** | Final score, stats, high score comparison, Restart/Menu |
-| **VictoryScreen** | "YOU BEAT NEURAL BREAK!", final stats |
-| **LeaderboardScreen** | Top 10 per mode, name entry |
 | **OptionsScreen** | Volume sliders, graphics toggles |
-| **RogueChoiceScreen** | 3 mutation choices between layers |
 
-### Priority 4: Level System Enhancement
+### Priority 2: Polish & Testing
 
-- **99 Level Configurations** with specific objectives
-- **Surprise Levels** (every 5th level has special theme)
-- **Difficulty Scaling** (per-level multipliers)
-- **Rogue Mode** layer system with wormhole progression
-
-### Priority 5: Audio System
-
-| Sound Type | Sounds Needed |
-|------------|---------------|
-| **Player** | Shoot, dash, hit, heal, level-up, death |
-| **Enemies** | Spawn, hit, death (per type), boss music |
-| **UI** | Menu select, confirm, cancel, pause |
-| **Ambience** | Background music, tension escalation |
-
-### Priority 6: VFX & Polish
-
-| Effect | Purpose |
-|--------|---------|
-| **Particles** | Explosions, trails, spawn bursts, death effects |
-| **Screen Effects** | Shake (done), chromatic aberration, flash |
-| **Starfield** | Animated background (Arcade: drift, Rogue: scroll) |
-| **Arena Boundary** | Glowing energy barrier |
+- Balance all enemy values
+- Tune difficulty curve
+- Optimize performance (profiling)
+- Fix bugs from playtesting
+- Implement leaderboard (optional)
 
 ---
 
 ## 4. Recommended Asset Packs
 
-### Essential Purchases
-
-#### VFX & Shaders
-
-1. **[All In 1 Sprite Shader](https://assetstore.unity.com/packages/vfx/shaders/all-in-1-sprite-shader-156513)** (~$35)
-   - 42+ combinable effects (glow, distortion, outline, etc.)
-   - Perfect for cyberpunk neon aesthetics
-   - Mobile-optimized, URP compatible
-   - 2-click setup, batching support
-
-2. **[PRO Effects: Sci-fi Shooter FX](https://assetstore.unity.com/packages/vfx/particles/pro-effects-sci-fi-shooter-fx-176115)** (~$30)
-   - Sci-fi themed projectiles, explosions, impacts
-   - Ready-to-use particle prefabs
-   - Optimized for performance
-
-3. **[Unique Projectiles Vol. 1](https://assetstore.unity.com/packages/vfx/particles/unique-projectiles-vol-1-124214)** (~$15)
-   - Bullets, lasers, energy projectiles
-   - Hit and explosion effects included
-
-#### Audio
-
-4. **[Pro Sound Collection](https://assetstore.unity.com/packages/audio/sound-fx/pro-sound-collection-50235)** (~$50)
-   - Sci-fi weapons, impacts, UI sounds
-   - High quality, royalty-free
-
-5. **[Sci-Fi Music Pack](https://assetstore.unity.com/)** (~$20-40)
-   - Cyberpunk/electronic background tracks
-   - Multiple intensity levels for adaptive music
-
-#### UI
-
-6. **[Sci-Fi UI Pack](https://assetstore.unity.com/)** (~$25)
-   - Cyberpunk/tech themed UI elements
-   - Health bars, icons, frames
-
 ### Already Installed
 - **Feel (MMFeedbacks)** - Game juice framework
 - **CodeMonkey Toolkit** - Utility scripts
 - **URP** - Universal Render Pipeline
+- **Input System** - New Unity Input System
 
 ### Optional Enhancements
 
-7. **[VFX Graph]** (Free via Package Manager)
-   - GPU-accelerated particles
-   - Millions of particles at 60fps
-   - Great for starfield, swarms
+1. **[All In 1 Sprite Shader](https://assetstore.unity.com/packages/vfx/shaders/all-in-1-sprite-shader-156513)** (~$35)
+   - 42+ combinable effects (glow, distortion, outline, etc.)
+   - Perfect for cyberpunk neon aesthetics
 
-8. **[DOTween Pro](https://assetstore.unity.com/packages/tools/animation/dotween-hotween-v2-27676)** (~$15)
+2. **[DOTween Pro](https://assetstore.unity.com/packages/tools/animation/dotween-hotween-v2-27676)** (~$15)
    - Smooth UI animations
    - Integrates with Feel
 
@@ -261,7 +254,7 @@ NeuralBreak.Audio       // Sound management
 
 ## 5. Feel Integration Strategy
 
-### Current Feel Hooks (19 total)
+### Current Feel Hooks (19+ total)
 
 ```
 GameManager:      _gameStartFeedback, _gameOverFeedback, _levelCompleteFeedback, _victoryFeedback
@@ -271,58 +264,6 @@ PlayerHealth:     _damageFeedback, _healFeedback, _shieldHitFeedback, _shieldGai
 WeaponSystem:     _fireFeedback, _overheatFeedback, _overheatClearedFeedback
 EnemyBase:        _spawnFeedback, _hitFeedback, _deathFeedback
 CameraController: _impactShakeFeedback
-```
-
-### Recommended Feel Feedbacks by Hook
-
-#### Player Feedbacks
-```
-_dashFeedback:
-  - MMF_CameraShake (0.1s, amplitude 0.3)
-  - MMF_Scale (punch, overshoot)
-  - MMF_ParticlesInstantiation (dash trail)
-  - MMF_AudioSource (whoosh sound)
-
-_damageFeedback:
-  - MMF_CameraShake (0.2s, amplitude 0.5)
-  - MMF_ImageFill (health bar flash red)
-  - MMF_ChromaticAberration (0.3s spike)
-  - MMF_Freeze (0.05s hitstop)
-  - MMF_AudioSource (hit sound)
-
-_deathFeedback:
-  - MMF_CameraShake (0.5s, amplitude 1.0)
-  - MMF_Explosion (ship fragments)
-  - MMF_SlowMotion (0.5s at 0.2 speed)
-  - MMF_AudioSource (explosion)
-```
-
-#### Enemy Feedbacks
-```
-_hitFeedback:
-  - MMF_MaterialSetProperty (flash white)
-  - MMF_Scale (squash 0.9)
-  - MMF_ParticlesInstantiation (hit sparks)
-
-_deathFeedback:
-  - MMF_CameraShake (scaled by enemy type)
-  - MMF_ParticlesInstantiation (explosion)
-  - MMF_AudioSource (death sound)
-  - MMF_FloatingText (XP value)
-```
-
-#### Combat Feedbacks
-```
-_fireFeedback:
-  - MMF_CameraShake (0.02s, amplitude 0.05)
-  - MMF_Scale (gun recoil)
-  - MMF_Muzzleflash
-  - MMF_AudioSource (pew pew)
-
-_overheatFeedback:
-  - MMF_CameraShake (0.3s)
-  - MMF_Vignette (red warning)
-  - MMF_AudioSource (overheat alarm)
 ```
 
 ### Feel Best Practices
@@ -337,53 +278,40 @@ _overheatFeedback:
 
 ## 6. Implementation Phases
 
-### Phase 1: Core Content (Est. 2-3 weeks)
-**Goal: Playable game with all 8 enemies**
+### Phase 1: Core Content ✅ COMPLETE
+- [x] Create 8 enemy scripts (inherit from EnemyBase)
+- [x] Create enemy prefabs with colliders/renderers
+- [x] Configure EnemySpawner pools for all types
+- [x] Implement enemy-specific AI behaviors
+- [x] Test all enemy combat interactions
 
-- [ ] Create 7 remaining enemy scripts (inherit from EnemyBase)
-- [ ] Create enemy prefabs with colliders/renderers
-- [ ] Configure EnemySpawner pools for all types
-- [ ] Create ScriptableObjects for enemy data
-- [ ] Implement enemy-specific AI behaviors
-- [ ] Test all enemy combat interactions
+### Phase 2: Pickups & Progression ✅ COMPLETE
+- [x] Create PickupBase abstract class
+- [x] Implement 9 pickup types
+- [x] Create pickup prefabs with magnet physics
+- [x] Implement PickupSpawner
+- [x] Enhance LevelManager with difficulty scaling
+- [x] Create level configuration data
 
-### Phase 2: Pickups & Progression (Est. 1-2 weeks)
-**Goal: Full pickup system and level scaling**
-
-- [ ] Create PickupBase abstract class
-- [ ] Implement 5 pickup types
-- [ ] Create pickup prefabs with magnet physics
-- [ ] Implement PickupManager spawning
-- [ ] Enhance LevelManager with difficulty scaling
-- [ ] Create level configuration data
-- [ ] Implement surprise level themes
-
-### Phase 3: UI System (Est. 2-3 weeks)
-**Goal: Complete UI/UX**
-
-- [ ] Create UIManager singleton
-- [ ] Implement HUD (health, score, objectives, etc.)
+### Phase 3: UI System (80% Complete)
+- [x] Create HUD (health, score, objectives, etc.)
+- [x] Create wave and level announcements
+- [x] Create damage popups
 - [ ] Create StartScreen with mode selection
 - [ ] Create PauseScreen overlay
 - [ ] Create GameOverScreen with stats
-- [ ] Create VictoryScreen
-- [ ] Implement screen transitions
-- [ ] Add keyboard/gamepad navigation
+- [ ] Create OptionsScreen
 
-### Phase 4: Audio & VFX (Est. 1-2 weeks)
-**Goal: Polish and juice**
+### Phase 4: Audio & VFX ✅ COMPLETE
+- [x] Create AudioManager
+- [x] Create MusicManager
+- [x] Create ProceduralSFX
+- [x] Create particle effects (explosions, trails)
+- [x] Add starfield background
+- [x] Add arena boundary visuals
+- [x] Add enemy-specific death VFX
 
-- [ ] Create AudioManager
-- [ ] Import/create sound effects
-- [ ] Add background music system
-- [ ] Configure all Feel feedbacks
-- [ ] Create particle effects (explosions, trails)
-- [ ] Add starfield background
-- [ ] Add arena boundary visuals
-
-### Phase 5: Polish & Testing (Est. 1-2 weeks)
-**Goal: Production quality**
-
+### Phase 5: Polish & Testing (IN PROGRESS)
 - [ ] Balance all enemy values
 - [ ] Tune difficulty curve
 - [ ] Optimize performance (profiling)
@@ -395,41 +323,20 @@ _overheatFeedback:
 
 ## 7. Enemy Implementation Guide
 
-### Creating a New Enemy
+### Enemy Types Summary
 
-1. **Create Script** (inherit from EnemyBase)
-```csharp
-namespace NeuralBreak.Entities
-{
-    public class ScanDrone : EnemyBase
-    {
-        public override EnemyType EnemyType => EnemyType.ScanDrone;
+| Enemy | Health | Speed | Damage | XP | Special Ability |
+|-------|--------|-------|--------|-----|-----------------|
+| DataMite | 1 | 1.5 | 5 | 1 | Pursuit AI |
+| ScanDrone | 30 | 1.2 | 15 | 6 | Ranged fire (2s cooldown) |
+| Fizzer | 2 | 8.0 | 6 | 15 | Burst fire, erratic movement |
+| UFO | 30 | 2.8 | 12 | 25 | Hit-and-run, dive attacks |
+| ChaosWorm | 100 | 1.5 | 15 | 35 | 12 segments, death bullet spray |
+| VoidSphere | 650 | 0.5 | 40 | 50 | Burst fire (4 shots), massive |
+| CrystalShard | 250 | 1.8 | 25 | 45 | 6 orbiting crystals |
+| Boss | 180 | 0.3 | 25 | 100 | 3-phase AI, expanding ring attack |
 
-        [Header("ScanDrone Settings")]
-        [SerializeField] private float _fireRate = 2f;
-        [SerializeField] private float _detectionRange = 15f;
-
-        protected override void UpdateAI()
-        {
-            // Implement patrol + attack behavior
-        }
-    }
-}
-```
-
-2. **Create Prefab**
-   - Add SpriteRenderer (or 3D mesh)
-   - Add Collider2D (trigger)
-   - Add script component
-   - Configure serialized fields
-   - Add Feel feedback references
-
-3. **Add to Spawner**
-   - Create pool in EnemySpawner
-   - Add prefab reference
-   - Configure spawn rate
-
-### Enemy AI Patterns (from TypeScript)
+### Enemy AI Patterns
 
 | Enemy | Movement | Attack |
 |-------|----------|--------|
@@ -446,30 +353,10 @@ namespace NeuralBreak.Entities
 
 ## 8. Configuration & Balance System
 
-### Recommended: ScriptableObjects
+### ConfigProvider System
+All balance values are centralized in `ConfigProvider.cs` using ScriptableObjects.
 
-Create data assets for all balance values instead of hardcoding.
-
-```csharp
-[CreateAssetMenu(fileName = "EnemyData", menuName = "NeuralBreak/Enemy Data")]
-public class EnemyData : ScriptableObject
-{
-    public EnemyType type;
-    public int baseHealth;
-    public float baseSpeed;
-    public int baseDamage;
-    public int xpValue;
-    public int scoreValue;
-    public float collisionRadius;
-
-    // Scaling per level
-    public float healthScalePerLevel = 1.025f;  // 2.5% per level
-    public float speedScalePerLevel = 1.012f;   // 1.2% per level
-    public float damageScalePerLevel = 1.02f;   // 2.0% per level
-}
-```
-
-### Balance Values from TypeScript
+### Balance Values
 
 #### Player
 ```
@@ -516,25 +403,11 @@ SPAWN_DISTANCE_MAX: 20
 
 ## 9. Performance Optimization
 
-### Object Pooling (Already Implemented)
-- Projectiles: 50 pool size
+### Object Pooling (Implemented)
+- Projectiles: 100 pool size
 - DataMites: 100 pool size
 - Other enemies: 20-50 based on spawn rate
-
-### Recommended Pool Sizes
-```
-DataMite:     100  (swarm enemy)
-ScanDrone:    30
-Fizzer:       50   (fast spawn in frenzy levels)
-UFO:          20
-ChaosWorm:    10
-VoidSphere:   5    (rare, massive)
-CrystalShard: 15
-Boss:         3
-Projectiles:  100  (player + enemies)
-Pickups:      30
-Particles:    200
-```
+- Pickups: 30
 
 ### Performance Targets
 - **60 FPS** on mid-range hardware
@@ -546,7 +419,7 @@ Particles:    200
 1. **Pool everything** - No Instantiate/Destroy during gameplay
 2. **Spatial partitioning** - Grid-based collision (4-unit cells)
 3. **LOD for particles** - Reduce density at distance
-4. **Shader optimization** - Use All In 1 Sprite Shader batching
+4. **Shader optimization** - Use batching
 5. **Profile regularly** - Use Unity Profiler, check GC allocations
 
 ---
@@ -560,50 +433,51 @@ Particles:    200
 | `src/core/Game.ts` | `GameManager.cs` | COMPLETE |
 | `src/core/GameState.ts` | `GameState.cs` | COMPLETE |
 | `src/core/InputManager.ts` | `InputManager.cs` | COMPLETE |
-| `src/core/EnemyManager.ts` | `EnemySpawner.cs` | PARTIAL |
-| `src/core/LevelManager.ts` | `LevelManager.cs` | PARTIAL |
+| `src/core/EnemyManager.ts` | `EnemySpawner.cs` | COMPLETE |
+| `src/core/LevelManager.ts` | `LevelManager.cs` | COMPLETE |
 | `src/entities/Player.ts` | `PlayerController.cs` + `PlayerHealth.cs` | COMPLETE |
 | `src/entities/Enemy.ts` | `EnemyBase.cs` | COMPLETE |
 | `src/entities/DataMite.ts` | `DataMite.cs` | COMPLETE |
-| `src/entities/ScanDrone.ts` | NEEDS CREATION | - |
-| `src/entities/Fizzer.ts` | NEEDS CREATION | - |
-| `src/entities/UFO.ts` | NEEDS CREATION | - |
-| `src/entities/ChaosWorm.ts` | NEEDS CREATION | - |
-| `src/entities/VoidSphere.ts` | NEEDS CREATION | - |
-| `src/entities/CrystalShardSwarm.ts` | NEEDS CREATION | - |
-| `src/entities/Boss.ts` | NEEDS CREATION | - |
+| `src/entities/ScanDrone.ts` | `ScanDrone.cs` | COMPLETE |
+| `src/entities/Fizzer.ts` | `Fizzer.cs` | COMPLETE |
+| `src/entities/UFO.ts` | `UFO.cs` | COMPLETE |
+| `src/entities/ChaosWorm.ts` | `ChaosWorm.cs` | COMPLETE |
+| `src/entities/VoidSphere.ts` | `VoidSphere.cs` | COMPLETE |
+| `src/entities/CrystalShardSwarm.ts` | `CrystalShard.cs` | COMPLETE |
+| `src/entities/Boss.ts` | `Boss.cs` | COMPLETE |
 | `src/weapons/WeaponSystem.ts` | `WeaponSystem.cs` | COMPLETE |
 | `src/weapons/Projectile.ts` | `Projectile.cs` | COMPLETE |
 | `src/graphics/SceneManager.ts` | `CameraController.cs` | COMPLETE |
-| `src/ui/UIManager.ts` | NEEDS CREATION | - |
-| `src/ui/StartScreen.ts` | NEEDS CREATION | - |
-| `src/ui/GameOverScreen.ts` | NEEDS CREATION | - |
-| `src/audio/AudioManager.ts` | NEEDS CREATION | - |
-| `src/config/balance.config.ts` | ScriptableObjects | NEEDS CREATION |
+| `src/ui/UIManager.ts` | `HUDManager.cs` + `UIBuilder.cs` | PARTIAL |
+| `src/audio/AudioManager.ts` | `AudioManager.cs` | COMPLETE |
+| `src/config/balance.config.ts` | `ConfigProvider.cs` | COMPLETE |
 
 ---
 
 ## Quick Start Checklist
 
-### Immediate Next Steps
-
-1. [ ] **Purchase recommended assets** (All In 1 Sprite Shader, Sci-fi FX)
-2. [ ] **Create ScanDrone enemy** (simplest ranged enemy)
-3. [ ] **Create enemy prefabs** with placeholder sprites
-4. [ ] **Configure Feel feedbacks** for existing hooks
-5. [ ] **Create basic HUD** (score, health display)
-6. [ ] **Test full combat loop** with 2+ enemy types
-
-### Getting Started Command
+### Getting Started
 ```bash
-# In Unity, start with:
+# In Unity:
 1. Open SampleScene
-2. Create Player prefab from scene objects
-3. Create DataMite prefab
-4. Configure EnemySpawner references
-5. Press Play - verify spawning works
-6. Iterate!
+2. Press Play - game auto-starts in Arcade mode
+3. Controls: WASD/Left Stick = Move, Mouse/Right Stick = Aim
+4. Left Click/RT = Fire, Space/A = Dash, Shift = Thrust
 ```
+
+---
+
+## Codebase Metrics
+
+| Metric | Value |
+|--------|-------|
+| Total Scripts | 105 |
+| Total Lines of Code | ~32,000 |
+| Enemy Types | 8/8 |
+| Pickup Types | 9/9 |
+| UI Scripts | 23 |
+| Feel Integration Hooks | 19+ |
+| Event Types | 20+ |
 
 ---
 
@@ -616,4 +490,4 @@ Particles:    200
 
 ---
 
-*This document should be updated as implementation progresses.*
+*Last updated: 2026-01-22*

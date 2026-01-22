@@ -37,6 +37,7 @@ namespace NeuralBreak.Entities
         [Header("Visual")]
         [SerializeField] private SpriteRenderer _headRenderer;
         [SerializeField] private GameObject _segmentPrefab;
+        [SerializeField] private ChaosWormVisuals _visuals;
         [SerializeField] private Color _wormColor = new Color(0.8f, 0.2f, 0.5f); // Purple-pink
 
         [Header("Feel Feedbacks")]
@@ -56,6 +57,7 @@ namespace NeuralBreak.Entities
         private bool _isDeathAnimating;
         private float _deathTimer;
         private int _currentDeathSegment;
+        private bool _visualsGenerated;
 
         protected override void OnInitialize()
         {
@@ -78,6 +80,29 @@ namespace NeuralBreak.Entities
 
             // Create segments
             CreateSegments();
+
+            // Generate procedural visuals for head if not yet done
+            if (!_visualsGenerated)
+            {
+                EnsureVisuals();
+                _visualsGenerated = true;
+            }
+        }
+
+        private void EnsureVisuals()
+        {
+            if (_visuals == null)
+            {
+                _visuals = GetComponentInChildren<ChaosWormVisuals>();
+            }
+
+            if (_visuals == null)
+            {
+                var visualsGO = new GameObject("HeadVisuals");
+                visualsGO.transform.SetParent(transform, false);
+                visualsGO.transform.localPosition = Vector3.zero;
+                _visuals = visualsGO.AddComponent<ChaosWormVisuals>();
+            }
         }
 
         private void CreateSegments()

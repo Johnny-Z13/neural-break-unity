@@ -29,7 +29,11 @@
       "Bash(npm i:*)",
       "Bash(grep:*)",
       "Bash(find:*)",
-      "Bash(exit 0)"
+      "Bash(exit 0)",
+      "WebFetch(domain:docs.google.com)",
+      "Bash(for dir in D:\\\\Projects\\\\Unity\\\\neural-break-unity\\\\Assets\\\\_Project\\\\Scripts\\\\*)",
+      "Bash(for dir in */)",
+      "Skill(frontend-design)"
     ]
   }
 }

@@ -167,6 +167,7 @@ MonoBehaviour:
   _deathDamageAmount: 30
   _coreRenderer: {fileID: 0}
   _shardPrefab: {fileID: 0}
+  _visuals: {fileID: 0}
   _crystalColor: {r: 0.4, g: 0.8, b: 1, a: 1}
   _coreColor: {r: 0.2, g: 0.4, b: 0.8, a: 1}
   _burstFeedback: {fileID: 0}

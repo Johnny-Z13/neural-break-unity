@@ -17,16 +17,24 @@ namespace NeuralBreak.UI
         [SerializeField] private float _levelUpFlashDuration = 0.5f;
         [SerializeField] private int _levelUpFlashCount = 3;
 
-        [Header("Colors")]
-        [SerializeField] private Color _barColor = new Color(0.4f, 0.8f, 1f);
-        [SerializeField] private Color _barBackgroundColor = new Color(0.1f, 0.1f, 0.15f);
-        [SerializeField] private Color _levelUpColor = new Color(1f, 1f, 0.4f);
-        [SerializeField] private Color _levelTextColor = Color.white;
+        [Header("Colors (Uses UITheme)")]
+        [SerializeField] private bool _useThemeColors = true;
+
+        private Color BarColor => _useThemeColors ? UITheme.Primary : _customBarColor;
+        private Color BarBackgroundColor => _useThemeColors ? UITheme.BarBackground : _customBarBackgroundColor;
+        private Color LevelUpFlashColor => _useThemeColors ? UITheme.Good : _customLevelUpColor;
+        private Color LevelTextColor => _useThemeColors ? UITheme.TextPrimary : Color.white;
+
+        [SerializeField] private Color _customBarColor = new Color(0.4f, 0.8f, 1f);
+        [SerializeField] private Color _customBarBackgroundColor = new Color(0.1f, 0.1f, 0.15f);
+        [SerializeField] private Color _customLevelUpColor = new Color(1f, 1f, 0.4f);
 
         [Header("Layout")]
         [SerializeField] private float _barWidth = 200f;
         [SerializeField] private float _barHeight = 12f;
+#pragma warning disable CS0414 // Reserved for rounded corners feature
         [SerializeField] private float _cornerRadius = 4f;
+#pragma warning restore CS0414
 
         // UI Components
         private Canvas _canvas;
@@ -90,7 +98,7 @@ namespace NeuralBreak.UI
             canvasGO.transform.SetParent(transform);
             _canvas = canvasGO.AddComponent<Canvas>();
             _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            _canvas.sortingOrder = 90;
+            _canvas.sortingOrder = UITheme.SortOrder.XPBar;
 
             var scaler = canvasGO.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -122,7 +130,7 @@ namespace NeuralBreak.UI
             _levelText.text = "LV 1";
             _levelText.fontSize = 16;
             _levelText.fontStyle = FontStyles.Bold;
-            _levelText.color = _levelTextColor;
+            _levelText.color = LevelTextColor;
             _levelText.alignment = TextAlignmentOptions.MidlineRight;
 
             // Bar container
@@ -145,7 +153,7 @@ namespace NeuralBreak.UI
             bgRect.offsetMax = Vector2.zero;
 
             _backgroundBar = bgGO.AddComponent<Image>();
-            _backgroundBar.color = _barBackgroundColor;
+            _backgroundBar.color = BarBackgroundColor;
             _backgroundBar.sprite = CreateRoundedRectSprite();
             _backgroundBar.type = Image.Type.Sliced;
 
@@ -160,7 +168,7 @@ namespace NeuralBreak.UI
             fillRect.offsetMax = new Vector2(-2, -2);
 
             _fillBar = fillGO.AddComponent<Image>();
-            _fillBar.color = _barColor;
+            _fillBar.color = BarColor;
             _fillBar.sprite = CreateRoundedRectSprite();
             _fillBar.type = Image.Type.Sliced;
 
@@ -259,8 +267,8 @@ namespace NeuralBreak.UI
             UpdateFillBar(0);
             _levelText.text = "LV 1";
             _xpText.text = "0/10";
-            _levelText.color = _levelTextColor;
-            _fillBar.color = _barColor;
+            _levelText.color = LevelTextColor;
+            _fillBar.color = BarColor;
         }
 
         private void UpdateDisplay(int currentXP, int xpForLevel, int level)
@@ -287,16 +295,16 @@ namespace NeuralBreak.UI
             for (int i = 0; i < _levelUpFlashCount; i++)
             {
                 // Flash on
-                _fillBar.color = _levelUpColor;
-                _levelText.color = _levelUpColor;
+                _fillBar.color = LevelUpFlashColor;
+                _levelText.color = LevelUpFlashColor;
                 _backgroundBar.color = new Color(0.3f, 0.3f, 0.2f);
 
                 yield return new WaitForSecondsRealtime(_levelUpFlashDuration / (_levelUpFlashCount * 2));
 
                 // Flash off
-                _fillBar.color = _barColor;
-                _levelText.color = _levelTextColor;
-                _backgroundBar.color = _barBackgroundColor;
+                _fillBar.color = BarColor;
+                _levelText.color = LevelTextColor;
+                _backgroundBar.color = BarBackgroundColor;
 
                 yield return new WaitForSecondsRealtime(_levelUpFlashDuration / (_levelUpFlashCount * 2));
             }

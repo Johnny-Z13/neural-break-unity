@@ -248,6 +248,15 @@ namespace NeuralBreak.Graphics
             var main = effect.main;
             main.startColor = color;
 
+            // Update material color for URP compatibility
+            var renderer = effect.GetComponent<ParticleSystemRenderer>();
+            if (renderer != null && renderer.material != null)
+            {
+                Color emissiveColor = color * 3f; // Match emission intensity
+                renderer.material.SetColor("_BaseColor", emissiveColor);
+                renderer.material.SetColor("_Color", emissiveColor);
+            }
+
             effect.gameObject.SetActive(true);
             effect.Play();
 

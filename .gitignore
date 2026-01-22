@@ -168,3 +168,10 @@ UnityCrashHandler32.exe
 
 # Shader cache
 [Aa]ssets/Plugins/Sirenix/
+
+# Third-party Asset Store packages (don't redistribute)
+Assets/PampelGames/
+Assets/PampelGames.meta
+
+# Debug screenshots (optional)
+# Assets/Screenshots/

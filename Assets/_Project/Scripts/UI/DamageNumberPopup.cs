@@ -24,26 +24,26 @@ namespace NeuralBreak.UI
         [SerializeField] private bool _showDamageNumbers = true;
         [SerializeField] private bool _showKillText = true;
 
-        [Header("Normal Hit")]
-        [SerializeField] private float _normalFontSize = 18f;
-        [SerializeField] private Color _normalColor = Color.white;
+        [Header("Normal Hit (Uses UITheme.DamageStyle)")]
+        [SerializeField] private float _normalFontSize = 16f;
+        [SerializeField] private Color _normalColor = default;
 
         [Header("Big Hit (High Damage)")]
-        [SerializeField] private float _bigHitFontSize = 26f;
-        [SerializeField] private Color _bigHitColor = new Color(1f, 0.8f, 0.2f);
+        [SerializeField] private float _bigHitFontSize = 24f;
+        [SerializeField] private Color _bigHitColor = default;
         [SerializeField] private int _bigHitThreshold = 20;
 
         [Header("Kill Shot")]
-        [SerializeField] private float _killFontSize = 32f;
-        [SerializeField] private Color _killColor = new Color(1f, 0.3f, 0.3f);
+        [SerializeField] private float _killFontSize = 28f;
+        [SerializeField] private Color _killColor = default;
 
         [Header("Heal")]
-        [SerializeField] private float _healFontSize = 22f;
-        [SerializeField] private Color _healColor = new Color(0.3f, 1f, 0.4f);
+        [SerializeField] private float _healFontSize = 20f;
+        [SerializeField] private Color _healColor = default;
 
         [Header("XP Gain")]
-        [SerializeField] private float _xpFontSize = 16f;
-        [SerializeField] private Color _xpColor = new Color(0.5f, 0.8f, 1f);
+        [SerializeField] private float _xpFontSize = 14f;
+        [SerializeField] private Color _xpColor = default;
 
         [Header("Pool Settings")]
         [SerializeField] private int _poolSize = 30;
@@ -70,8 +70,21 @@ namespace NeuralBreak.UI
             }
             Instance = this;
 
+            // Apply UITheme colors if not set
+            ApplyThemeColors();
+
             CreateCanvas();
             CreatePool();
+        }
+
+        private void ApplyThemeColors()
+        {
+            // Use UITheme.DamageStyle colors as defaults
+            if (_normalColor == default) _normalColor = UITheme.DamageStyle.NormalColor;
+            if (_bigHitColor == default) _bigHitColor = UITheme.DamageStyle.BigHitColor;
+            if (_killColor == default) _killColor = UITheme.DamageStyle.CriticalColor;
+            if (_healColor == default) _healColor = UITheme.DamageStyle.HealColor;
+            if (_xpColor == default) _xpColor = UITheme.DamageStyle.XPColor;
         }
 
         private void Start()
@@ -79,7 +92,7 @@ namespace NeuralBreak.UI
             EventBus.Subscribe<EnemyDamagedEvent>(OnEnemyDamaged);
             EventBus.Subscribe<EnemyKilledEvent>(OnEnemyKilled);
             EventBus.Subscribe<PlayerHealedEvent>(OnPlayerHealed);
-            EventBus.Subscribe<PlayerLevelUpEvent>(OnPlayerLevelUp);
+            // NOTE: Level-up is handled by LevelUpAnnouncement - removed duplicate
         }
 
         private void OnDestroy()
@@ -87,7 +100,6 @@ namespace NeuralBreak.UI
             EventBus.Unsubscribe<EnemyDamagedEvent>(OnEnemyDamaged);
             EventBus.Unsubscribe<EnemyKilledEvent>(OnEnemyKilled);
             EventBus.Unsubscribe<PlayerHealedEvent>(OnPlayerHealed);
-            EventBus.Unsubscribe<PlayerLevelUpEvent>(OnPlayerLevelUp);
 
             if (Instance == this)
             {
@@ -135,7 +147,7 @@ namespace NeuralBreak.UI
             dmgText.text = dmgText.gameObject.AddComponent<TextMeshProUGUI>();
             dmgText.text.alignment = TextAlignmentOptions.Center;
             dmgText.text.fontStyle = FontStyles.Bold;
-            dmgText.text.enableWordWrapping = false;
+            dmgText.text.textWrappingMode = TMPro.TextWrappingModes.NoWrap;
 
             // Add outline
             var outline = dmgText.gameObject.AddComponent<Outline>();
@@ -187,19 +199,8 @@ namespace NeuralBreak.UI
             );
         }
 
-        private void OnPlayerLevelUp(PlayerLevelUpEvent evt)
-        {
-            var player = FindFirstObjectByType<Entities.PlayerController>();
-            if (player == null) return;
-
-            ShowNumber(
-                player.transform.position + Vector3.up * 0.5f,
-                $"LEVEL {evt.newLevel}!",
-                _killFontSize,
-                new Color(1f, 0.9f, 0.3f),
-                1.5f
-            );
-        }
+        // Level-up notification removed - handled by LevelUpAnnouncement.cs
+        // This prevents duplicate center-screen notifications
 
         public void ShowNumber(Vector3 worldPosition, string text, float fontSize, Color color, float scale = 1f)
         {

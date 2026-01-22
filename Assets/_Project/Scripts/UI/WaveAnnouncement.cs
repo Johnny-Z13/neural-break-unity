@@ -22,12 +22,17 @@ namespace NeuralBreak.UI
         [Header("Layout")]
         [SerializeField] private float _slideDistance = 300f;
 
-        [Header("Colors")]
-        [SerializeField] private Color _levelTextColor = new Color(1f, 0.9f, 0.3f);
-        [SerializeField] private Color _nameTextColor = Color.white;
-        [SerializeField] private Color _objectiveColor = new Color(0.7f, 0.7f, 0.7f);
-        [SerializeField] private Color _warningColor = new Color(1f, 0.3f, 0.3f);
-        [SerializeField] private Color _bossColor = new Color(1f, 0.2f, 0.4f);
+        [Header("Colors (Uses UITheme)")]
+        [SerializeField] private bool _useThemeColors = true;
+
+        // Derived from UITheme
+        private Color _levelTextColor => _useThemeColors ? UITheme.Warning : _customLevelColor;
+        private Color _nameTextColor => _useThemeColors ? UITheme.TextPrimary : Color.white;
+        private Color _objectiveColor => _useThemeColors ? UITheme.TextSecondary : new Color(0.7f, 0.7f, 0.7f);
+        private Color _warningColor => _useThemeColors ? UITheme.Danger : new Color(1f, 0.3f, 0.3f);
+        private Color _bossColor => _useThemeColors ? UITheme.Accent : new Color(1f, 0.2f, 0.4f);
+
+        [SerializeField] private Color _customLevelColor = new Color(1f, 0.9f, 0.3f);
 
         // UI Components
         private Canvas _canvas;
@@ -81,7 +86,7 @@ namespace NeuralBreak.UI
             canvasGO.transform.SetParent(transform);
             _canvas = canvasGO.AddComponent<Canvas>();
             _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            _canvas.sortingOrder = 180;
+            _canvas.sortingOrder = UITheme.SortOrder.Announcements;
 
             var scaler = canvasGO.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -94,14 +99,14 @@ namespace NeuralBreak.UI
             _canvasGroup.blocksRaycasts = false;
             _canvasGroup.interactable = false;
 
-            // Container
+            // Container (positioned at bottom of top third - doesn't occlude player)
             var containerGO = new GameObject("Container");
             containerGO.transform.SetParent(canvasGO.transform);
             _container = containerGO.AddComponent<RectTransform>();
             _container.anchorMin = new Vector2(0.5f, 0.5f);
             _container.anchorMax = new Vector2(0.5f, 0.5f);
             _container.pivot = new Vector2(0.5f, 0.5f);
-            _container.anchoredPosition = Vector2.zero;
+            _container.anchoredPosition = new Vector2(0, 220); // Top third (was 0)
             _container.sizeDelta = new Vector2(600, 150);
 
             // Background bar
@@ -292,10 +297,11 @@ namespace NeuralBreak.UI
                 _backgroundBar.color = new Color(0, 0, 0, 0.7f);
             }
 
-            // Start off-screen (left)
-            Vector2 startPos = new Vector2(-_slideDistance, 0);
-            Vector2 centerPos = Vector2.zero;
-            Vector2 endPos = new Vector2(_slideDistance, 0);
+            // Start off-screen (left) - Y position matches container anchor offset
+            float yPos = 220f; // Match container position in top third
+            Vector2 startPos = new Vector2(-_slideDistance, yPos);
+            Vector2 centerPos = new Vector2(0, yPos);
+            Vector2 endPos = new Vector2(_slideDistance, yPos);
 
             _container.anchoredPosition = startPos;
             _canvasGroup.alpha = 0;

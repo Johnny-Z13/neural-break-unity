@@ -35,16 +35,8 @@ namespace NeuralBreak.UI
         [SerializeField] private bool _animateScore = true;
         [SerializeField] private float _comboPunchScale = 1.2f;
 
-        // Milestone thresholds and messages
-        private static readonly (int threshold, string message, Color color)[] ComboMilestones = new[]
-        {
-            (5, "NICE!", new Color(1f, 1f, 0.3f)),
-            (10, "GREAT!", new Color(1f, 0.8f, 0.2f)),
-            (15, "AWESOME!", new Color(1f, 0.5f, 0.2f)),
-            (20, "INCREDIBLE!", new Color(1f, 0.3f, 0.3f)),
-            (30, "UNSTOPPABLE!", new Color(1f, 0.2f, 0.5f)),
-            (50, "GODLIKE!", new Color(1f, 0f, 1f)),
-        };
+        // Milestone thresholds and messages - use UITheme for consistency
+        private static (int threshold, string message, Color color)[] ComboMilestones => UITheme.ComboMilestones;
 
         // State
         private int _currentScore;

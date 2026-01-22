@@ -15,8 +15,16 @@ namespace NeuralBreak.Testing
         [SerializeField] private bool _spawnTestEnemy = false; // Disabled - enemies spawn naturally
         [SerializeField] private float _spawnDelay = 3f; // Increased delay
 
+        [Header("Test Mode - Spawn All Enemy Types")]
+        [SerializeField] private bool _testModeEnabled = true;
+        [SerializeField] private float _testModeSpawnInterval = 0.5f;
+        [SerializeField] private bool _testModeSpawnAllOnStart = true;
+
         private bool _hasSpawned = false;
         private float _timer = 0f;
+        private bool _testModeSpawned = false;
+        private float _testModeTimer = 0f;
+        private int _testModeEnemyIndex = 0;
 
         private void Awake()
         {
@@ -30,6 +38,13 @@ namespace NeuralBreak.Testing
 
         private void Update()
         {
+            // Test mode: spawn all enemy types quickly
+            if (_testModeEnabled && !_testModeSpawned)
+            {
+                UpdateTestMode();
+            }
+
+            // Legacy single enemy spawn
             if (!_spawnTestEnemy || _hasSpawned) return;
 
             _timer += Time.deltaTime;
@@ -40,6 +55,92 @@ namespace NeuralBreak.Testing
                 SpawnTestEnemy();
                 _hasSpawned = true;
             }
+        }
+
+        private void UpdateTestMode()
+        {
+            if (GameManager.Instance == null || !GameManager.Instance.IsPlaying) return;
+
+            var spawner = FindFirstObjectByType<EnemySpawner>();
+            if (spawner == null) return;
+
+            // Spawn all at once on start
+            if (_testModeSpawnAllOnStart && _testModeEnemyIndex == 0)
+            {
+                SpawnAllEnemyTypes(spawner);
+                _testModeSpawned = true;
+                return;
+            }
+
+            // Or spawn one by one with interval
+            _testModeTimer += Time.deltaTime;
+            if (_testModeTimer >= _testModeSpawnInterval)
+            {
+                _testModeTimer = 0f;
+                SpawnNextEnemyType(spawner);
+            }
+        }
+
+        private void SpawnAllEnemyTypes(EnemySpawner spawner)
+        {
+            UnityEngine.Debug.Log("[DebugGameTest] TEST MODE: Spawning all enemy types!");
+
+            // Spawn one of each type in a circle around player
+            EnemyType[] allTypes = new EnemyType[]
+            {
+                EnemyType.DataMite,
+                EnemyType.ScanDrone,
+                EnemyType.Fizzer,
+                EnemyType.UFO,
+                EnemyType.ChaosWorm,
+                EnemyType.VoidSphere,
+                EnemyType.CrystalShard
+                // Boss excluded from auto-spawn for safety
+            };
+
+            float radius = 6f;
+            for (int i = 0; i < allTypes.Length; i++)
+            {
+                float angle = (i / (float)allTypes.Length) * Mathf.PI * 2f;
+                Vector2 pos = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
+
+                var enemy = spawner.SpawnEnemyOfType(allTypes[i], pos);
+                if (enemy != null)
+                {
+                    UnityEngine.Debug.Log($"[DebugGameTest] Spawned {allTypes[i]} at {pos}");
+                }
+            }
+
+            UnityEngine.Debug.Log($"[DebugGameTest] TEST MODE: Spawned {allTypes.Length} enemy types");
+        }
+
+        private void SpawnNextEnemyType(EnemySpawner spawner)
+        {
+            EnemyType[] allTypes = new EnemyType[]
+            {
+                EnemyType.DataMite,
+                EnemyType.ScanDrone,
+                EnemyType.Fizzer,
+                EnemyType.UFO,
+                EnemyType.ChaosWorm,
+                EnemyType.VoidSphere,
+                EnemyType.CrystalShard
+            };
+
+            if (_testModeEnemyIndex >= allTypes.Length)
+            {
+                _testModeSpawned = true;
+                return;
+            }
+
+            float angle = (_testModeEnemyIndex / (float)allTypes.Length) * Mathf.PI * 2f;
+            Vector2 pos = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * 6f;
+
+            var type = allTypes[_testModeEnemyIndex];
+            var enemy = spawner.SpawnEnemyOfType(type, pos);
+            UnityEngine.Debug.Log($"[DebugGameTest] TEST MODE: Spawned {type}");
+
+            _testModeEnemyIndex++;
         }
 
         private void SpawnTestEnemy()

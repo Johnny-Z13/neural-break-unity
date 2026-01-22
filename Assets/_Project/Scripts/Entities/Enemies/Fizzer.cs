@@ -37,6 +37,7 @@ namespace NeuralBreak.Entities
         [Header("Visual")]
         [SerializeField] private SpriteRenderer _spriteRenderer;
         [SerializeField] private TrailRenderer _trailRenderer;
+        [SerializeField] private FizzerVisuals _visuals;
         [SerializeField] private Color _electricColor = new Color(0.2f, 0.8f, 1f); // Electric cyan-blue
 
         [Header("Feel Feedbacks")]
@@ -52,6 +53,7 @@ namespace NeuralBreak.Entities
         // Attack state
         private float _burstTimer;
         private bool _isFiringBurst;
+        private bool _visualsGenerated;
 
         protected override void OnInitialize()
         {
@@ -69,6 +71,29 @@ namespace NeuralBreak.Entities
             {
                 _trailRenderer.startColor = _electricColor;
                 _trailRenderer.endColor = new Color(_electricColor.r, _electricColor.g, _electricColor.b, 0f);
+            }
+
+            // Generate procedural visuals if not yet done
+            if (!_visualsGenerated)
+            {
+                EnsureVisuals();
+                _visualsGenerated = true;
+            }
+        }
+
+        private void EnsureVisuals()
+        {
+            if (_visuals == null)
+            {
+                _visuals = GetComponentInChildren<FizzerVisuals>();
+            }
+
+            if (_visuals == null)
+            {
+                var visualsGO = new GameObject("Visuals");
+                visualsGO.transform.SetParent(transform, false);
+                visualsGO.transform.localPosition = Vector3.zero;
+                _visuals = visualsGO.AddComponent<FizzerVisuals>();
             }
         }
 

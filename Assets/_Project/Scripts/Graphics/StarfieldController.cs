@@ -197,7 +197,11 @@ namespace NeuralBreak.Graphics
                 }
                 else if (renderer.material == null)
                 {
-                    renderer.material = new Material(Shader.Find("Particles/Standard Unlit"));
+                    // Try URP particle shader first, fall back to legacy
+                    Shader shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
+                    if (shader == null) shader = Shader.Find("Particles/Standard Unlit");
+                    if (shader == null) shader = Shader.Find("Sprites/Default");
+                    renderer.material = new Material(shader);
                 }
             }
 
@@ -209,11 +213,16 @@ namespace NeuralBreak.Graphics
         /// </summary>
         private Material CreateStarMaterial()
         {
-            // Use the built-in Sprites/Default shader which works reliably
-            Shader shader = Shader.Find("Sprites/Default");
+            // Try URP particle shader first for proper transparency
+            Shader shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
             if (shader == null)
             {
-                // Fallback to legacy particle shader
+                // Fallback to Sprites/Default which works in both pipelines
+                shader = Shader.Find("Sprites/Default");
+            }
+            if (shader == null)
+            {
+                // Final fallback to legacy particle shader
                 shader = Shader.Find("Particles/Standard Unlit");
             }
             if (shader == null)
@@ -350,6 +359,8 @@ namespace NeuralBreak.Graphics
 
         private void Update()
         {
+            if (_stars == null) return;
+
             _time += Time.deltaTime;
 
             for (int i = 0; i < _stars.Length; i++)

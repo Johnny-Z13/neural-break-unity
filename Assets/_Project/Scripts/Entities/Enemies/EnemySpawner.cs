@@ -345,6 +345,13 @@ namespace NeuralBreak.Entities
         private void DoSpawn<T>(ObjectPool<T> pool, System.Action<EnemyBase> returnCallback, Vector2 spawnPos) where T : EnemyBase
         {
             T enemy = pool.Get(spawnPos, Quaternion.identity);
+
+            // Ensure enemy tag is set (required for collision detection)
+            if (!enemy.gameObject.CompareTag("Enemy"))
+            {
+                enemy.gameObject.tag = "Enemy";
+            }
+
             enemy.Initialize(spawnPos, _playerTarget, returnCallback);
             _activeEnemies.Add(enemy);
         }

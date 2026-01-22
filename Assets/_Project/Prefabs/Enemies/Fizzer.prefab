@@ -276,6 +276,7 @@ MonoBehaviour:
   _deathDamageAmount: 15
   _spriteRenderer: {fileID: 0}
   _trailRenderer: {fileID: 0}
+  _visuals: {fileID: 0}
   _electricColor: {r: 0.2, g: 1, b: 0.5, a: 1}
   _burstFeedback: {fileID: 0}
   _electricDeathFeedback: {fileID: 0}

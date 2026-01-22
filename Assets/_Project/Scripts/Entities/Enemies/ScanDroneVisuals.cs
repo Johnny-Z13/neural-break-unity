@@ -29,7 +29,7 @@ namespace NeuralBreak.Entities
         [SerializeField] private float _alertPulseSpeed = 12f;
 
         [Header("Scale")]
-        [SerializeField] private float _scale = 0.5f;
+        [SerializeField] private float _scale = 1.5f; // Twice as big
 
         // Visual components
         private Transform _hexBody;
@@ -518,8 +518,8 @@ namespace NeuralBreak.Entities
             float pulseSpeed = _isAlerted ? _alertPulseSpeed : _pulseSpeed;
             float pulse = 1f + Mathf.Sin(_time * pulseSpeed) * (_isAlerted ? 0.15f : 0.05f);
 
-            // Overall scale pulse
-            transform.localScale = Vector3.one * pulse;
+            // Overall scale pulse (incorporate _scale so it actually affects size)
+            transform.localScale = Vector3.one * _scale * pulse;
 
             // Rotate radar dish
             float radarSpeed = _isAlerted ? _radarRotationSpeed * 4f : _radarRotationSpeed;

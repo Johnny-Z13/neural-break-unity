@@ -144,6 +144,7 @@ namespace NeuralBreak.Entities
             if (circleCollider != null)
             {
                 circleCollider.radius = _collisionRadius;
+                circleCollider.isTrigger = true; // Must be trigger for OnTriggerEnter2D
             }
 
             // Scale visual to match collision radius (visual is typically 2x the collision)
@@ -217,6 +218,44 @@ namespace NeuralBreak.Entities
 
             // Override in subclasses for AI behavior
             UpdateAI();
+
+            // Apply separation from other enemies to prevent overlap
+            ApplyEnemySeparation();
+        }
+
+        /// <summary>
+        /// Push away from nearby enemies to prevent overlapping
+        /// </summary>
+        protected virtual void ApplyEnemySeparation()
+        {
+            float separationRadius = _collisionRadius * 2.5f;
+            float separationStrength = 3f;
+            Vector2 separationForce = Vector2.zero;
+
+            var colliders = Physics2D.OverlapCircleAll(transform.position, separationRadius);
+            foreach (var col in colliders)
+            {
+                if (col.gameObject == gameObject) continue;
+
+                var otherEnemy = col.GetComponent<EnemyBase>();
+                if (otherEnemy == null || !otherEnemy.IsActive) continue;
+
+                Vector2 toThis = (Vector2)transform.position - (Vector2)otherEnemy.transform.position;
+                float distance = toThis.magnitude;
+                float minDist = _collisionRadius + otherEnemy.CollisionRadius;
+
+                if (distance < minDist && distance > 0.01f)
+                {
+                    // Push apart based on overlap amount
+                    float overlap = minDist - distance;
+                    separationForce += toThis.normalized * overlap * separationStrength;
+                }
+            }
+
+            if (separationForce.sqrMagnitude > 0.01f)
+            {
+                transform.position += (Vector3)(separationForce * Time.deltaTime);
+            }
         }
 
         protected virtual void UpdateDying()
@@ -361,6 +400,43 @@ namespace NeuralBreak.Entities
                 {
                     playerHealth.TakeDamage(_damage, transform.position);
                 }
+            }
+        }
+
+        protected virtual void OnTriggerStay2D(Collider2D other)
+        {
+            if (!IsActive) return;
+
+            // Enemy-to-enemy soft collision (separation)
+            if (other.CompareTag("Enemy"))
+            {
+                var otherEnemy = other.GetComponent<EnemyBase>();
+                if (otherEnemy != null && otherEnemy.IsActive)
+                {
+                    ApplyEnemySeparation(otherEnemy);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Push enemies apart when overlapping (soft collision)
+        /// </summary>
+        protected virtual void ApplyEnemySeparation(EnemyBase other)
+        {
+            Vector2 toOther = (Vector2)(other.transform.position - transform.position);
+            float distance = toOther.magnitude;
+            float minDistance = _collisionRadius + other.CollisionRadius;
+
+            // Only push if overlapping
+            if (distance < minDistance && distance > 0.001f)
+            {
+                // Push strength based on overlap amount
+                float overlap = minDistance - distance;
+                float separationStrength = 2f; // Adjust for feel
+                Vector2 pushDir = -toOther.normalized;
+
+                // Move this enemy away (other enemy will handle its own push)
+                transform.position += (Vector3)(pushDir * overlap * separationStrength * 0.5f * Time.deltaTime);
             }
         }
 

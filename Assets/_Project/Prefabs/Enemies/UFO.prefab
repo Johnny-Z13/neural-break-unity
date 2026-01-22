@@ -153,22 +153,31 @@ MonoBehaviour:
   _spawnFeedback: {fileID: 0}
   _hitFeedback: {fileID: 0}
   _deathFeedback: {fileID: 0}
-  _diveSpeed: 5
-  _retreatSpeed: 3
-  _orbitRadius: 8
-  _diveDistance: 4
-  _retreatDistance: 12
+  _dashSpeed: 12
+  _normalSpeed: 3
+  _strafeSpeed: 6
+  _preferredDistance: 7
+  _minDistance: 4
+  _maxDistance: 12
+  _dashCooldown: 2
+  _dashDuration: 0.3
+  _hoverDuration: 1.5
+  _strafeDuration: 2
   _fireRate: 2
+  _burstCount: 3
+  _burstDelay: 0.15
   _projectileSpeed: 8
   _projectileDamage: 14
   _deathDamageRadius: 3
   _deathDamageAmount: 25
   _spriteRenderer: {fileID: 0}
   _domeLight: {fileID: 0}
+  _visuals: {fileID: 0}
   _ufoColor: {r: 0.7, g: 0.7, b: 0.8, a: 1}
   _domeColor: {r: 0.3, g: 0.8, b: 1, a: 1}
   _wobbleSpeed: 2
   _wobbleAmount: 5
-  _diveFeedback: {fileID: 0}
+  _tiltAmount: 15
+  _dashFeedback: {fileID: 0}
   _fireFeedback: {fileID: 0}
-  _retreatFeedback: {fileID: 0}
+  _hoverFeedback: {fileID: 0}

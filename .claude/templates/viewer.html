@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algorithmic Art Viewer</title>
+    
+    <!-- p5.js from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    
+    <!-- Google Fonts - Anthropic branding -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ========================================
+           FIXED: Anthropic Branding & Layout
+           Do not modify this section
+           ======================================== */
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #faf9f7 0%, #f5f3ef 100%);
+            min-height: 100vh;
+            color: #1a1a1a;
+        }
+        
+        /* Header */
+        .header {
+            background: white;
+            border-bottom: 1px solid #e5e3df;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-family: 'Lora', serif;
+            font-size: 1.5rem;
+            font-weight: 400;
+            color: #1a1a1a;
+        }
+        
+        .header .subtitle {
+            font-size: 0.875rem;
+            color: #666;
+            margin-left: 12px;
+        }
+        
+        /* Main Layout */
+        .container {
+            display: flex;
+            min-height: calc(100vh - 65px);
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 320px;
+            background: white;
+            border-right: 1px solid #e5e3df;
+            padding: 24px;
+            overflow-y: auto;
+        }
+        
+        .sidebar h2 {
+            font-family: 'Lora', serif;
+            font-size: 1.125rem;
+            font-weight: 400;
+            margin-bottom: 16px;
+            color: #1a1a1a;
+            border-bottom: 1px solid #e5e3df;
+            padding-bottom: 8px;
+        }
+        
+        .section {
+            margin-bottom: 32px;
+        }
+        
+        /* Control Groups */
+        .control-group {
+            margin-bottom: 16px;
+        }
+        
+        .control-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: #333;
+        }
+        
+        .control-group input[type="range"] {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            background: #e5e3df;
+            border-radius: 3px;
+            outline: none;
+        }
+        
+        .control-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #c96442;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .control-group input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: #c96442;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .value-display {
+            font-size: 0.75rem;
+            color: #666;
+            float: right;
+            margin-top: -20px;
+        }
+        
+        .control-group input[type="number"],
+        .control-group input[type="text"] {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #e5e3df;
+            border-radius: 6px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.875rem;
+        }
+        
+        .control-group input[type="color"] {
+            width: 100%;
+            height: 36px;
+            border: 1px solid #e5e3df;
+            border-radius: 6px;
+            cursor: pointer;
+            padding: 2px;
+        }
+        
+        /* Seed Controls */
+        .seed-display {
+            font-family: monospace;
+            font-size: 1.25rem;
+            text-align: center;
+            padding: 12px;
+            background: #faf9f7;
+            border-radius: 6px;
+            margin-bottom: 12px;
+        }
+        
+        .seed-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .seed-jump {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .seed-jump input {
+            flex: 1;
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary {
+            background: #c96442;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #b5593b;
+        }
+        
+        .btn-secondary {
+            background: #e5e3df;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #d5d3cf;
+        }
+        
+        .btn-full {
+            width: 100%;
+            margin-bottom: 8px;
+        }
+        
+        /* Canvas Area */
+        .canvas-area {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+        }
+        
+        #canvas-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+        
+        #canvas-container canvas {
+            display: block;
+        }
+        
+        /* ========================================
+           END FIXED SECTION
+           ======================================== */
+    </style>
+</head>
+<body>
+    <!-- FIXED: Header -->
+    <header class="header">
+        <div style="display: flex; align-items: baseline;">
+            <h1>Algorithmic Art</h1>
+            <!-- VARIABLE: Update the subtitle for your artwork -->
+            <span class="subtitle">Generative Composition</span>
+        </div>
+    </header>
+    
+    <div class="container">
+        <!-- FIXED: Sidebar Structure -->
+        <aside class="sidebar">
+            
+            <!-- FIXED: Seed Section -->
+            <div class="section">
+                <h2>Seed</h2>
+                <div class="seed-display" id="seed-display">12345</div>
+                <div class="seed-buttons">
+                    <button class="btn btn-secondary" onclick="prevSeed()">← Prev</button>
+                    <button class="btn btn-secondary" onclick="randomSeed_()">Random</button>
+                    <button class="btn btn-secondary" onclick="nextSeed()">Next →</button>
+                </div>
+                <div class="seed-jump">
+                    <input type="number" id="seed-input" placeholder="Enter seed...">
+                    <button class="btn btn-primary" onclick="jumpToSeed()">Go</button>
+                </div>
+            </div>
+            
+            <!-- ========================================
+                 VARIABLE: Parameters Section
+                 Customize these controls for your artwork
+                 ======================================== -->
+            <div class="section">
+                <h2>Parameters</h2>
+                
+                <!-- Example parameter - REPLACE with your own -->
+                <div class="control-group">
+                    <label>Particle Count</label>
+                    <input type="range" id="particleCount" min="100" max="5000" step="100" value="1000" 
+                           oninput="updateParam('particleCount', this.value)">
+                    <span class="value-display" id="particleCount-value">1000</span>
+                </div>
+                
+                <!-- Example parameter - REPLACE with your own -->
+                <div class="control-group">
+                    <label>Noise Scale</label>
+                    <input type="range" id="noiseScale" min="0.001" max="0.02" step="0.001" value="0.005" 
+                           oninput="updateParam('noiseScale', this.value)">
+                    <span class="value-display" id="noiseScale-value">0.005</span>
+                </div>
+                
+                <!-- Add more parameters as needed for your algorithm -->
+                
+            </div>
+            <!-- END VARIABLE: Parameters Section -->
+            
+            <!-- ========================================
+                 OPTIONAL: Colors Section
+                 Include if your art needs adjustable colors
+                 Remove if using fixed colors
+                 ======================================== -->
+            <div class="section">
+                <h2>Colors</h2>
+                
+                <div class="control-group">
+                    <label>Background</label>
+                    <input type="color" id="bgColor" value="#0a0a0f" 
+                           oninput="updateParam('bgColor', this.value)">
+                </div>
+                
+                <div class="control-group">
+                    <label>Accent Color</label>
+                    <input type="color" id="accentColor" value="#c96442" 
+                           oninput="updateParam('accentColor', this.value)">
+                </div>
+                
+            </div>
+            <!-- END OPTIONAL: Colors Section -->
+            
+            <!-- FIXED: Actions Section -->
+            <div class="section">
+                <h2>Actions</h2>
+                <button class="btn btn-primary btn-full" onclick="regenerate()">Regenerate</button>
+                <button class="btn btn-secondary btn-full" onclick="resetParams()">Reset to Defaults</button>
+                <button class="btn btn-secondary btn-full" onclick="downloadPNG()">Download PNG</button>
+            </div>
+            
+        </aside>
+        
+        <!-- FIXED: Canvas Area -->
+        <main class="canvas-area">
+            <div id="canvas-container"></div>
+        </main>
+    </div>
+    
+    <script>
+        /* ========================================
+           VARIABLE: Parameters Object
+           Define your algorithm's parameters here
+           ======================================== */
+        
+        let params = {
+            seed: 12345,
+            // REPLACE these with your algorithm's parameters
+            particleCount: 1000,
+            noiseScale: 0.005,
+            bgColor: '#0a0a0f',
+            accentColor: '#c96442'
+        };
+        
+        // Store defaults for reset
+        const defaultParams = JSON.parse(JSON.stringify(params));
+        
+        /* ========================================
+           FIXED: Seed Control Functions
+           ======================================== */
+        
+        function updateSeedDisplay() {
+            document.getElementById('seed-display').textContent = params.seed;
+        }
+        
+        function prevSeed() {
+            params.seed = Math.max(1, params.seed - 1);
+            updateSeedDisplay();
+            regenerate();
+        }
+        
+        function nextSeed() {
+            params.seed++;
+            updateSeedDisplay();
+            regenerate();
+        }
+        
+        function randomSeed_() {
+            params.seed = Math.floor(Math.random() * 100000);
+            updateSeedDisplay();
+            regenerate();
+        }
+        
+        function jumpToSeed() {
+            const input = document.getElementById('seed-input');
+            const val = parseInt(input.value);
+            if (!isNaN(val) && val > 0) {
+                params.seed = val;
+                updateSeedDisplay();
+                regenerate();
+            }
+            input.value = '';
+        }
+        
+        /* ========================================
+           FIXED: Parameter Update & Reset
+           ======================================== */
+        
+        function updateParam(name, value) {
+            // Handle numeric vs string values
+            if (name === 'bgColor' || name === 'accentColor') {
+                params[name] = value;
+            } else {
+                params[name] = parseFloat(value);
+            }
+            
+            // Update display
+            const display = document.getElementById(name + '-value');
+            if (display) {
+                display.textContent = value;
+            }
+            
+            regenerate();
+        }
+        
+        function resetParams() {
+            params = JSON.parse(JSON.stringify(defaultParams));
+            
+            // Update all UI controls
+            for (let key in params) {
+                const el = document.getElementById(key);
+                if (el) {
+                    el.value = params[key];
+                }
+                const display = document.getElementById(key + '-value');
+                if (display) {
+                    display.textContent = params[key];
+                }
+            }
+            
+            updateSeedDisplay();
+            regenerate();
+        }
+        
+        function regenerate() {
+            // Clear and redraw
+            clear();
+            randomSeed(params.seed);
+            noiseSeed(params.seed);
+            setup();
+        }
+        
+        function downloadPNG() {
+            saveCanvas('algorithmic-art-' + params.seed, 'png');
+        }
+        
+        /* ========================================
+           VARIABLE: p5.js Algorithm
+           Replace everything below with your algorithm
+           ======================================== */
+        
+        // Example: Simple flow field (REPLACE THIS)
+        let particles = [];
+        
+        function setup() {
+            let canvas = createCanvas(800, 800);
+            canvas.parent('canvas-container');
+            
+            // Apply seeds
+            randomSeed(params.seed);
+            noiseSeed(params.seed);
+            
+            // Initialize
+            background(params.bgColor);
+            particles = [];
+            
+            for (let i = 0; i < params.particleCount; i++) {
+                particles.push({
+                    x: random(width),
+                    y: random(height),
+                    px: 0,
+                    py: 0
+                });
+                particles[i].px = particles[i].x;
+                particles[i].py = particles[i].y;
+            }
+            
+            // Draw
+            noStroke();
+            for (let frame = 0; frame < 200; frame++) {
+                for (let p of particles) {
+                    let angle = noise(p.x * params.noiseScale, p.y * params.noiseScale) * TWO_PI * 2;
+                    
+                    p.px = p.x;
+                    p.py = p.y;
+                    p.x += cos(angle) * 2;
+                    p.y += sin(angle) * 2;
+                    
+                    // Wrap
+                    if (p.x < 0) p.x = width;
+                    if (p.x > width) p.x = 0;
+                    if (p.y < 0) p.y = height;
+                    if (p.y > height) p.y = 0;
+                    
+                    // Draw
+                    let col = color(params.accentColor);
+                    col.setAlpha(10);
+                    stroke(col);
+                    line(p.px, p.py, p.x, p.y);
+                }
+            }
+            
+            noLoop();
+        }
+        
+        function draw() {
+            // Static artwork - nothing in draw
+        }
+        
+        /* ========================================
+           END VARIABLE SECTION
+           ======================================== */
+    </script>
+</body>
+</html>

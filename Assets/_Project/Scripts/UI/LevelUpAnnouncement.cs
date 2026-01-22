@@ -20,9 +20,14 @@ namespace NeuralBreak.UI
         [SerializeField] private float _pulseFrequency = 8f;
         [SerializeField] private float _pulseAmplitude = 0.05f;
 
-        [Header("Colors")]
-        [SerializeField] private Color _levelUpColor = new Color(1f, 0.9f, 0.3f);
-        [SerializeField] private Color _glowColor = new Color(1f, 0.8f, 0.2f, 0.5f);
+        [Header("Colors (Uses UITheme)")]
+        [SerializeField] private bool _useThemeColors = true;
+
+        private Color LevelUpColor => _useThemeColors ? UITheme.Good : _customLevelUpColor;
+        private Color GlowColor => _useThemeColors ? UITheme.GoodGlow : _customGlowColor;
+
+        [SerializeField] private Color _customLevelUpColor = new Color(1f, 0.9f, 0.3f);
+        [SerializeField] private Color _customGlowColor = new Color(1f, 0.8f, 0.2f, 0.5f);
 
         // UI Components
         private Canvas _canvas;
@@ -60,7 +65,7 @@ namespace NeuralBreak.UI
             canvasGO.transform.SetParent(transform);
             _canvas = canvasGO.AddComponent<Canvas>();
             _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            _canvas.sortingOrder = 200; // High priority
+            _canvas.sortingOrder = UITheme.SortOrder.LevelUp;
 
             var scaler = canvasGO.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -73,14 +78,14 @@ namespace NeuralBreak.UI
             _canvasGroup.blocksRaycasts = false;
             _canvasGroup.interactable = false;
 
-            // Container (centered)
+            // Container (positioned at bottom of top third - doesn't occlude player)
             var containerGO = new GameObject("Container");
             containerGO.transform.SetParent(canvasGO.transform);
             _container = containerGO.AddComponent<RectTransform>();
             _container.anchorMin = new Vector2(0.5f, 0.5f);
             _container.anchorMax = new Vector2(0.5f, 0.5f);
             _container.pivot = new Vector2(0.5f, 0.5f);
-            _container.anchoredPosition = new Vector2(0, 50);
+            _container.anchoredPosition = new Vector2(0, 250); // Top third (was 50)
             _container.sizeDelta = new Vector2(400, 150);
 
             // Glow background
@@ -93,7 +98,7 @@ namespace NeuralBreak.UI
             glowRect.offsetMax = new Vector2(100, 50);
 
             _glowImage = glowGO.AddComponent<Image>();
-            _glowImage.color = _glowColor;
+            _glowImage.color = GlowColor;
             _glowImage.sprite = CreateGlowSprite();
 
             // "LEVEL UP!" text
@@ -107,19 +112,19 @@ namespace NeuralBreak.UI
             levelUpRect.sizeDelta = new Vector2(400, 60);
 
             _levelUpText = levelUpGO.AddComponent<TextMeshProUGUI>();
-            _levelUpText.text = "LEVEL UP!";
+            _levelUpText.text = "POWER UP!";
             _levelUpText.fontSize = 48;
             _levelUpText.fontStyle = FontStyles.Bold;
-            _levelUpText.color = _levelUpColor;
+            _levelUpText.color = LevelUpColor;
             _levelUpText.alignment = TextAlignmentOptions.Center;
-            _levelUpText.enableWordWrapping = false;
+            _levelUpText.textWrappingMode = TMPro.TextWrappingModes.NoWrap;
 
             // Add outline
             var outline = levelUpGO.AddComponent<Outline>();
             outline.effectColor = new Color(0, 0, 0, 0.5f);
             outline.effectDistance = new Vector2(2, -2);
 
-            // Level number text
+            // Power level number text
             var levelNumGO = new GameObject("LevelNumberText");
             levelNumGO.transform.SetParent(_container);
             var levelNumRect = levelNumGO.AddComponent<RectTransform>();
@@ -127,12 +132,12 @@ namespace NeuralBreak.UI
             levelNumRect.anchorMax = new Vector2(0.5f, 0.5f);
             levelNumRect.pivot = new Vector2(0.5f, 0.5f);
             levelNumRect.anchoredPosition = new Vector2(0, -30);
-            levelNumRect.sizeDelta = new Vector2(200, 50);
+            levelNumRect.sizeDelta = new Vector2(250, 50);
 
             _levelNumberText = levelNumGO.AddComponent<TextMeshProUGUI>();
-            _levelNumberText.text = "Level 2";
+            _levelNumberText.text = "POWER = 2";
             _levelNumberText.fontSize = 32;
-            _levelNumberText.fontStyle = FontStyles.Normal;
+            _levelNumberText.fontStyle = FontStyles.Bold;
             _levelNumberText.color = Color.white;
             _levelNumberText.alignment = TextAlignmentOptions.Center;
         }
@@ -180,7 +185,7 @@ namespace NeuralBreak.UI
 
         private IEnumerator AnnouncementCoroutine(int level)
         {
-            _levelNumberText.text = $"Level {level}";
+            _levelNumberText.text = $"POWER = {level}";
             _container.localScale = Vector3.zero;
             _canvasGroup.alpha = 0;
 
@@ -213,8 +218,8 @@ namespace NeuralBreak.UI
                 _container.localScale = Vector3.one * _maxScale * pulse;
 
                 // Glow pulse
-                Color glowC = _glowColor;
-                glowC.a = _glowColor.a * (0.7f + Mathf.Sin(elapsed * _pulseFrequency * 0.5f) * 0.3f);
+                Color glowC = GlowColor;
+                glowC.a = GlowColor.a * (0.7f + Mathf.Sin(elapsed * _pulseFrequency * 0.5f) * 0.3f);
                 _glowImage.color = glowC;
 
                 yield return null;

@@ -19,14 +19,24 @@ namespace NeuralBreak.UI
         [SerializeField] private float _updateInterval = 0.1f;
         [SerializeField] private bool _rotateWithPlayer = false;
 
-        [Header("Colors")]
-        [SerializeField] private Color _backgroundColor = new Color(0f, 0f, 0f, 0.6f);
-        [SerializeField] private Color _borderColor = new Color(0.3f, 0.8f, 1f, 0.8f);
-        [SerializeField] private Color _playerColor = new Color(0.3f, 1f, 0.4f);
-        [SerializeField] private Color _enemyColor = new Color(1f, 0.3f, 0.3f);
-        [SerializeField] private Color _eliteColor = new Color(1f, 0.6f, 0.1f);
-        [SerializeField] private Color _bossColor = new Color(1f, 0.2f, 1f);
-        [SerializeField] private Color _pickupColor = new Color(1f, 1f, 0.3f);
+        [Header("Colors (Uses UITheme)")]
+        [SerializeField] private bool _useThemeColors = true;
+
+        private Color BackgroundColor => _useThemeColors ? UITheme.MinimapBackground : _customBackgroundColor;
+        private Color BorderColor => _useThemeColors ? UITheme.MinimapBorder : _customBorderColor;
+        private Color PlayerColor => _useThemeColors ? UITheme.MinimapPlayer : _customPlayerColor;
+        private Color EnemyColor => _useThemeColors ? UITheme.MinimapEnemy : _customEnemyColor;
+        private Color EliteColor => _useThemeColors ? UITheme.MinimapElite : _customEliteColor;
+        private Color BossColor => _useThemeColors ? UITheme.MinimapBoss : _customBossColor;
+        private Color PickupColor => _useThemeColors ? UITheme.MinimapPickup : _customPickupColor;
+
+        [SerializeField] private Color _customBackgroundColor = new Color(0f, 0f, 0f, 0.6f);
+        [SerializeField] private Color _customBorderColor = new Color(0.3f, 0.8f, 1f, 0.8f);
+        [SerializeField] private Color _customPlayerColor = new Color(0.3f, 1f, 0.4f);
+        [SerializeField] private Color _customEnemyColor = new Color(1f, 0.3f, 0.3f);
+        [SerializeField] private Color _customEliteColor = new Color(1f, 0.6f, 0.1f);
+        [SerializeField] private Color _customBossColor = new Color(1f, 0.2f, 1f);
+        [SerializeField] private Color _customPickupColor = new Color(1f, 1f, 0.3f);
 
         [Header("Blip Sizes")]
         [SerializeField] private float _playerBlipSize = 8f;
@@ -94,7 +104,7 @@ namespace NeuralBreak.UI
             canvasGO.transform.SetParent(transform);
             _canvas = canvasGO.AddComponent<Canvas>();
             _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            _canvas.sortingOrder = 80;
+            _canvas.sortingOrder = UITheme.SortOrder.Minimap;
 
             var scaler = canvasGO.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -123,7 +133,7 @@ namespace NeuralBreak.UI
 
             _backgroundImage = bgGO.AddComponent<Image>();
             _backgroundImage.sprite = CreateCircleSprite(64);
-            _backgroundImage.color = _backgroundColor;
+            _backgroundImage.color = BackgroundColor;
 
             // Border
             var borderGO = new GameObject("Border");
@@ -136,7 +146,7 @@ namespace NeuralBreak.UI
 
             _borderImage = borderGO.AddComponent<Image>();
             _borderImage.sprite = CreateRingSprite(64, 0.9f);
-            _borderImage.color = _borderColor;
+            _borderImage.color = BorderColor;
 
             // Player blip (center, always visible)
             var playerGO = new GameObject("PlayerBlip");
@@ -150,16 +160,16 @@ namespace NeuralBreak.UI
 
             var playerImage = playerGO.AddComponent<Image>();
             playerImage.sprite = CreateTriangleSprite();
-            playerImage.color = _playerColor;
+            playerImage.color = PlayerColor;
 
             // Pre-create blip pools
             for (int i = 0; i < 50; i++)
             {
-                _enemyBlipPool.Add(CreateBlip("EnemyBlip", _enemyBlipSize, _enemyColor));
+                _enemyBlipPool.Add(CreateBlip("EnemyBlip", _enemyBlipSize, EnemyColor));
             }
             for (int i = 0; i < 20; i++)
             {
-                _pickupBlipPool.Add(CreateBlip("PickupBlip", _pickupBlipSize, _pickupColor));
+                _pickupBlipPool.Add(CreateBlip("PickupBlip", _pickupBlipSize, PickupColor));
             }
         }
 
@@ -220,7 +230,7 @@ namespace NeuralBreak.UI
                 // Get or create blip
                 if (_activeEnemyBlips >= _enemyBlipPool.Count)
                 {
-                    _enemyBlipPool.Add(CreateBlip("EnemyBlip", _enemyBlipSize, _enemyColor));
+                    _enemyBlipPool.Add(CreateBlip("EnemyBlip", _enemyBlipSize, EnemyColor));
                 }
 
                 var blip = _enemyBlipPool[_activeEnemyBlips];
@@ -236,17 +246,17 @@ namespace NeuralBreak.UI
 
                 if (enemy.EnemyType == EnemyType.Boss)
                 {
-                    blipImage.color = _bossColor;
+                    blipImage.color = BossColor;
                     blip.sizeDelta = new Vector2(_bossBlipSize, _bossBlipSize);
                 }
                 else if (eliteMod != null && eliteMod.IsElite)
                 {
-                    blipImage.color = _eliteColor;
+                    blipImage.color = EliteColor;
                     blip.sizeDelta = new Vector2(_enemyBlipSize * 1.5f, _enemyBlipSize * 1.5f);
                 }
                 else
                 {
-                    blipImage.color = _enemyColor;
+                    blipImage.color = EnemyColor;
                     blip.sizeDelta = new Vector2(_enemyBlipSize, _enemyBlipSize);
                 }
 
@@ -274,7 +284,7 @@ namespace NeuralBreak.UI
 
                 if (_activePickupBlips >= _pickupBlipPool.Count)
                 {
-                    _pickupBlipPool.Add(CreateBlip("PickupBlip", _pickupBlipSize, _pickupColor));
+                    _pickupBlipPool.Add(CreateBlip("PickupBlip", _pickupBlipSize, PickupColor));
                 }
 
                 var blip = _pickupBlipPool[_activePickupBlips];

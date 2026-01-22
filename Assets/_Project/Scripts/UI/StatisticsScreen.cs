@@ -15,7 +15,9 @@ namespace NeuralBreak.UI
         [Header("Settings")]
         [SerializeField] private float _fadeInDuration = 0.5f;
         [SerializeField] private float _statRevealDelay = 0.15f;
+#pragma warning disable CS0414 // Reserved for animated stat count-up feature
         [SerializeField] private float _countUpSpeed = 0.5f;
+#pragma warning restore CS0414
 
         [Header("Colors")]
         [SerializeField] private Color _backgroundColor = new Color(0f, 0f, 0f, 0.9f);
@@ -68,8 +70,9 @@ namespace NeuralBreak.UI
         {
             if (_isVisible && _statsRevealed)
             {
-                // Any key/click to continue
-                if (UnityEngine.Input.anyKeyDown || UnityEngine.Input.GetMouseButtonDown(0))
+                // Any key/click to continue (using Input System)
+                if (UnityEngine.InputSystem.Keyboard.current != null && UnityEngine.InputSystem.Keyboard.current.anyKey.wasPressedThisFrame ||
+                    UnityEngine.InputSystem.Mouse.current != null && UnityEngine.InputSystem.Mouse.current.leftButton.wasPressedThisFrame)
                 {
                     Hide();
                 }
