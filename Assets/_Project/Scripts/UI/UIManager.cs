@@ -10,7 +10,6 @@ namespace NeuralBreak.UI
     /// </summary>
     public class UIManager : MonoBehaviour
     {
-        public static UIManager Instance { get; private set; }
 
         [Header("Screen References")]
         [SerializeField] private ScreenBase _startScreen;

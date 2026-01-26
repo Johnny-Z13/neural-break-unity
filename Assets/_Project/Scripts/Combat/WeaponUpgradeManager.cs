@@ -10,7 +10,6 @@ namespace NeuralBreak.Combat
     /// </summary>
     public class WeaponUpgradeManager : MonoBehaviour
     {
-        public static WeaponUpgradeManager Instance { get; private set; }
 
         [Header("Default Durations")]
         [SerializeField] private float _spreadShotDuration = 10f;
@@ -44,20 +43,12 @@ namespace NeuralBreak.Combat
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
+            // No singleton pattern - just a regular component
         }
 
         private void OnDestroy()
         {
-            if (Instance == this)
-            {
-                Instance = null;
-            }
+            EventBus.Unsubscribe<GameStartedEvent>(OnGameStarted);
         }
 
         private void Start()

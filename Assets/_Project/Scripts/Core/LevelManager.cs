@@ -1,5 +1,6 @@
 using UnityEngine;
 using NeuralBreak.Entities;
+using NeuralBreak.Utils;
 
 namespace NeuralBreak.Core
 {
@@ -50,9 +51,10 @@ namespace NeuralBreak.Core
 
         private void Start()
         {
+            // EnemySpawner reference should be set in Inspector via GameSetup
             if (_enemySpawner == null)
             {
-                _enemySpawner = FindFirstObjectByType<EnemySpawner>();
+                Debug.LogError("[LevelManager] EnemySpawner reference not set! Assign in Inspector or via GameSetup.");
             }
 
             SubscribeToEvents();
@@ -88,7 +90,35 @@ namespace NeuralBreak.Core
 
         private void OnGameStarted(GameStartedEvent evt)
         {
-            StartNewGame();
+            LogHelper.Log($"[LevelManager] ========== OnGameStarted received! Mode = {evt.mode} ==========");
+
+            // Delay by one frame to ensure EnemySpawner finishes its OnGameStarted first
+            StartCoroutine(StartGameAfterFrame(evt.mode));
+        }
+
+        private System.Collections.IEnumerator StartGameAfterFrame(GameMode mode)
+        {
+            yield return null; // Wait one frame
+
+            LogHelper.Log($"[LevelManager] Starting game after frame delay, mode = {mode}");
+
+            // Route to appropriate mode based on event
+            switch (mode)
+            {
+                case GameMode.Test:
+                    LogHelper.Log("[LevelManager] Routing to StartTestMode()");
+                    StartTestMode();
+                    break;
+                case GameMode.Rogue:
+                    LogHelper.Log("[LevelManager] Routing to StartRogueMode()");
+                    StartRogueMode();
+                    break;
+                case GameMode.Arcade:
+                default:
+                    LogHelper.Log("[LevelManager] Routing to StartNewGame() (Arcade)");
+                    StartNewGame();
+                    break;
+            }
         }
 
         private void OnEnemyKilled(EnemyKilledEvent evt)
@@ -101,10 +131,11 @@ namespace NeuralBreak.Core
         #region Public API
 
         /// <summary>
-        /// Start a new game at level 1
+        /// Start a new game at level 1 (ARCADE MODE)
         /// </summary>
         public void StartNewGame()
         {
+            LogHelper.Log("[LevelManager] ========== STARTING ARCADE MODE ==========");
             _currentLevel = 1;
             _totalElapsedTime = 0;
             _rogueCurrentLayer = 1;
@@ -117,7 +148,7 @@ namespace NeuralBreak.Core
                 levelName = CurrentLevelName
             });
 
-            Debug.Log($"[LevelManager] Started new game at Level {_currentLevel}: {CurrentLevelName}");
+            LogHelper.Log($"[LevelManager] ARCADE MODE - Level {_currentLevel}: {CurrentLevelName}");
         }
 
         /// <summary>
@@ -136,18 +167,19 @@ namespace NeuralBreak.Core
                 levelName = CurrentLevelName
             });
 
-            Debug.Log($"[LevelManager] Started at Level {_currentLevel}: {CurrentLevelName}");
+            LogHelper.Log($"[LevelManager] Started at Level {_currentLevel}: {CurrentLevelName}");
         }
 
         /// <summary>
-        /// Start test mode (endless with all enemies)
+        /// Start test mode (endless with all enemies) - Level 999
         /// </summary>
         public void StartTestMode()
         {
+            LogHelper.Log("[LevelManager] ========== STARTING TEST MODE ==========");
             _currentLevel = 999;
             _totalElapsedTime = 0;
             ResetProgress();
-            LoadLevelConfig(999);
+            LoadLevelConfig(999);  // This loads level 999 = TEST MODE
 
             EventBus.Publish(new LevelStartedEvent
             {
@@ -155,19 +187,20 @@ namespace NeuralBreak.Core
                 levelName = CurrentLevelName
             });
 
-            Debug.Log("[LevelManager] Started TEST MODE - All enemies enabled");
+            LogHelper.Log($"[LevelManager] TEST MODE - Level {_currentLevel}: {CurrentLevelName}");
         }
 
         /// <summary>
-        /// Start rogue mode
+        /// Start rogue mode - Level 998
         /// </summary>
         public void StartRogueMode()
         {
+            LogHelper.Log("[LevelManager] ========== STARTING ROGUE MODE ==========");
             _currentLevel = 998;
             _rogueCurrentLayer = 1;
             _totalElapsedTime = 0;
             ResetProgress();
-            LoadRogueLayerConfig(_rogueCurrentLayer);
+            LoadRogueLayerConfig(_rogueCurrentLayer);  // This loads level 998 = ROGUE MODE
 
             EventBus.Publish(new LevelStartedEvent
             {
@@ -175,7 +208,7 @@ namespace NeuralBreak.Core
                 levelName = CurrentLevelName
             });
 
-            Debug.Log("[LevelManager] Started ROGUE MODE - Layer 1");
+            LogHelper.Log($"[LevelManager] ROGUE MODE - Level {_currentLevel} Layer {_rogueCurrentLayer}: {CurrentLevelName}");
         }
 
         /// <summary>
@@ -204,7 +237,7 @@ namespace NeuralBreak.Core
                 levelName = CurrentLevelName
             });
 
-            Debug.Log($"[LevelManager] Advanced to Level {_currentLevel}: {CurrentLevelName}");
+            LogHelper.Log($"[LevelManager] Advanced to Level {_currentLevel}: {CurrentLevelName}");
         }
 
         /// <summary>
@@ -222,7 +255,7 @@ namespace NeuralBreak.Core
                 levelName = CurrentLevelName
             });
 
-            Debug.Log($"[LevelManager] Advanced to Rogue Layer {_rogueCurrentLayer}: {CurrentLevelName}");
+            LogHelper.Log($"[LevelManager] Advanced to Rogue Layer {_rogueCurrentLayer}: {CurrentLevelName}");
         }
 
         /// <summary>
@@ -315,7 +348,7 @@ namespace NeuralBreak.Core
                 _objectivesComplete = true;
                 _isTransitioning = true;
 
-                Debug.Log($"[LevelManager] Level {_currentLevel} objectives complete!");
+                LogHelper.Log($"[LevelManager] Level {_currentLevel} objectives complete!");
 
                 // Publish level completed event
                 EventBus.Publish(new LevelCompletedEvent
@@ -351,6 +384,8 @@ namespace NeuralBreak.Core
         private void LoadLevelConfig(int level)
         {
             _currentConfig = LevelGenerator.GetLevelConfig(level);
+            LogHelper.Log($"[LevelManager] LoadLevelConfig({level}) -> {_currentConfig.name}");
+            LogHelper.Log($"[LevelManager] Spawn Rates: DataMite={_currentConfig.spawnRates.dataMiteRate}, ScanDrone={_currentConfig.spawnRates.scanDroneRate}, ChaosWorm={_currentConfig.spawnRates.chaosWormRate}, Boss={_currentConfig.spawnRates.bossRate}");
             ApplySpawnRates(_currentConfig.spawnRates);
         }
 
@@ -364,9 +399,12 @@ namespace NeuralBreak.Core
         {
             if (_enemySpawner == null)
             {
-                Debug.LogWarning("[LevelManager] No EnemySpawner assigned!");
+                Debug.LogError("[LevelManager] No EnemySpawner reference set! Cannot apply spawn rates.");
                 return;
             }
+
+            LogHelper.Log($"[LevelManager] ApplySpawnRates called for {_currentConfig.name}");
+            LogHelper.Log($"[LevelManager] Setting DataMite={rates.dataMiteRate}, ScanDrone={rates.scanDroneRate}, ChaosWorm={rates.chaosWormRate}");
 
             _enemySpawner.SetSpawnRates(
                 rates.dataMiteRate,
@@ -379,7 +417,7 @@ namespace NeuralBreak.Core
                 rates.bossRate
             );
 
-            Debug.Log($"[LevelManager] Applied spawn rates for {_currentConfig.name}");
+            LogHelper.Log($"[LevelManager] Applied spawn rates for {_currentConfig.name}");
         }
 
         #endregion
@@ -391,20 +429,20 @@ namespace NeuralBreak.Core
         {
             if (_currentConfig == null)
             {
-                Debug.Log("[LevelManager] No level loaded");
+                LogHelper.Log("[LevelManager] No level loaded");
                 return;
             }
 
-            Debug.Log($"[LevelManager] Level {_currentLevel}: {_currentConfig.name}");
-            Debug.Log($"  Progress: {GetLevelProgressPercent():F1}%");
-            Debug.Log($"  DataMites: {_currentProgress.dataMites}/{_currentConfig.objectives.dataMites}");
-            Debug.Log($"  ScanDrones: {_currentProgress.scanDrones}/{_currentConfig.objectives.scanDrones}");
-            Debug.Log($"  ChaosWorms: {_currentProgress.chaosWorms}/{_currentConfig.objectives.chaosWorms}");
-            Debug.Log($"  VoidSpheres: {_currentProgress.voidSpheres}/{_currentConfig.objectives.voidSpheres}");
-            Debug.Log($"  CrystalShards: {_currentProgress.crystalShards}/{_currentConfig.objectives.crystalShards}");
-            Debug.Log($"  Fizzers: {_currentProgress.fizzers}/{_currentConfig.objectives.fizzers}");
-            Debug.Log($"  UFOs: {_currentProgress.ufos}/{_currentConfig.objectives.ufos}");
-            Debug.Log($"  Bosses: {_currentProgress.bosses}/{_currentConfig.objectives.bosses}");
+            LogHelper.Log($"[LevelManager] Level {_currentLevel}: {_currentConfig.name}");
+            LogHelper.Log($"  Progress: {GetLevelProgressPercent():F1}%");
+            LogHelper.Log($"  DataMites: {_currentProgress.dataMites}/{_currentConfig.objectives.dataMites}");
+            LogHelper.Log($"  ScanDrones: {_currentProgress.scanDrones}/{_currentConfig.objectives.scanDrones}");
+            LogHelper.Log($"  ChaosWorms: {_currentProgress.chaosWorms}/{_currentConfig.objectives.chaosWorms}");
+            LogHelper.Log($"  VoidSpheres: {_currentProgress.voidSpheres}/{_currentConfig.objectives.voidSpheres}");
+            LogHelper.Log($"  CrystalShards: {_currentProgress.crystalShards}/{_currentConfig.objectives.crystalShards}");
+            LogHelper.Log($"  Fizzers: {_currentProgress.fizzers}/{_currentConfig.objectives.fizzers}");
+            LogHelper.Log($"  UFOs: {_currentProgress.ufos}/{_currentConfig.objectives.ufos}");
+            LogHelper.Log($"  Bosses: {_currentProgress.bosses}/{_currentConfig.objectives.bosses}");
         }
 
         [ContextMenu("Debug: Start Level 1")]

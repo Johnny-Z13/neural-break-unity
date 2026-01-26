@@ -1,15 +1,16 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using NeuralBreak.Core;
 
 namespace NeuralBreak.Graphics
 {
     /// <summary>
     /// UI overlay for screen flash effects (damage, pickup, etc).
+    /// Now uses EventBus instead of singleton pattern.
     /// </summary>
     public class ScreenFlash : MonoBehaviour
     {
-        public static ScreenFlash Instance { get; private set; }
 
         [Header("Settings")]
         [SerializeField] private float _defaultDuration = 0.1f;
@@ -22,22 +23,33 @@ namespace NeuralBreak.Graphics
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
-
             SetupFlashUI();
+        }
+
+        private void Start()
+        {
+            // Subscribe to flash request events
+            EventBus.Subscribe<ScreenFlashRequestEvent>(OnScreenFlashRequest);
+            EventBus.Subscribe<DamageFlashRequestEvent>(OnDamageFlashRequest);
+            EventBus.Subscribe<HealFlashRequestEvent>(OnHealFlashRequest);
+            EventBus.Subscribe<PickupFlashRequestEvent>(OnPickupFlashRequest);
+
+            // Auto-respond to gameplay events
+            EventBus.Subscribe<PlayerDamagedEvent>(OnPlayerDamaged);
+            EventBus.Subscribe<PlayerHealedEvent>(OnPlayerHealed);
+            EventBus.Subscribe<PickupCollectedEvent>(OnPickupCollected);
         }
 
         private void OnDestroy()
         {
-            if (Instance == this)
-            {
-                Instance = null;
-            }
+            EventBus.Unsubscribe<ScreenFlashRequestEvent>(OnScreenFlashRequest);
+            EventBus.Unsubscribe<DamageFlashRequestEvent>(OnDamageFlashRequest);
+            EventBus.Unsubscribe<HealFlashRequestEvent>(OnHealFlashRequest);
+            EventBus.Unsubscribe<PickupFlashRequestEvent>(OnPickupFlashRequest);
+
+            EventBus.Unsubscribe<PlayerDamagedEvent>(OnPlayerDamaged);
+            EventBus.Unsubscribe<PlayerHealedEvent>(OnPlayerHealed);
+            EventBus.Unsubscribe<PickupCollectedEvent>(OnPickupCollected);
         }
 
         private void SetupFlashUI()
@@ -139,5 +151,44 @@ namespace NeuralBreak.Graphics
             _flashImage.gameObject.SetActive(false);
             _flashCoroutine = null;
         }
+
+        #region Event Handlers
+
+        private void OnScreenFlashRequest(ScreenFlashRequestEvent evt)
+        {
+            Flash(evt.color, evt.duration);
+        }
+
+        private void OnDamageFlashRequest(DamageFlashRequestEvent evt)
+        {
+            DamageFlash(evt.intensity);
+        }
+
+        private void OnHealFlashRequest(HealFlashRequestEvent evt)
+        {
+            HealFlash(evt.intensity);
+        }
+
+        private void OnPickupFlashRequest(PickupFlashRequestEvent evt)
+        {
+            PickupFlash(evt.intensity);
+        }
+
+        private void OnPlayerDamaged(PlayerDamagedEvent evt)
+        {
+            DamageFlash();
+        }
+
+        private void OnPlayerHealed(PlayerHealedEvent evt)
+        {
+            HealFlash();
+        }
+
+        private void OnPickupCollected(PickupCollectedEvent evt)
+        {
+            PickupFlash();
+        }
+
+        #endregion
     }
 }

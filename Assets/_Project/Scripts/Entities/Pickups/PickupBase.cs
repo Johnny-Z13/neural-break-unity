@@ -57,6 +57,24 @@ namespace NeuralBreak.Entities
         /// </summary>
         public virtual void Initialize(Vector2 position, Transform playerTarget, System.Action<PickupBase> returnCallback)
         {
+            if (playerTarget == null)
+            {
+                Debug.LogError("[PickupBase] Cannot initialize - playerTarget is null!");
+                return;
+            }
+
+            if (returnCallback == null)
+            {
+                Debug.LogError("[PickupBase] Cannot initialize - returnCallback is null!");
+                return;
+            }
+
+            if (_lifetime <= 0)
+            {
+                Debug.LogWarning($"[PickupBase] Invalid lifetime: {_lifetime}. Using default of 30s.");
+                _lifetime = 30f;
+            }
+
             transform.position = position;
             _startPosition = position;
             _playerTarget = playerTarget;
@@ -187,11 +205,29 @@ namespace NeuralBreak.Entities
 
         protected virtual void Collect()
         {
-            if (_isCollected) return;
+            if (_isCollected)
+            {
+                Debug.LogWarning($"[PickupBase] Pickup {PickupType} already collected!");
+                return;
+            }
+
+            if (_playerTarget == null)
+            {
+                Debug.LogError("[PickupBase] Cannot collect - playerTarget is null!");
+                return;
+            }
+
             _isCollected = true;
 
-            // Apply the pickup effect
-            ApplyEffect(_playerTarget.gameObject);
+            try
+            {
+                // Apply the pickup effect
+                ApplyEffect(_playerTarget.gameObject);
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"[PickupBase] Error applying pickup effect for {PickupType}: {ex.Message}");
+            }
 
             // Play feedback
             _collectFeedback?.PlayFeedbacks();
@@ -230,6 +266,12 @@ namespace NeuralBreak.Entities
         protected virtual void OnTriggerEnter2D(Collider2D other)
         {
             if (_isCollected) return;
+
+            if (other == null)
+            {
+                Debug.LogWarning("[PickupBase] OnTriggerEnter2D - other collider is null!");
+                return;
+            }
 
             if (other.CompareTag("Player"))
             {

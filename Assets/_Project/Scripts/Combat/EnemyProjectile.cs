@@ -127,7 +127,7 @@ namespace NeuralBreak.Combat
                 ReturnToPool();
             }
             // Check wall/boundary collision
-            else if (other.CompareTag("Boundary"))
+            else if (other.gameObject.CompareTag("Boundary"))
             {
                 ReturnToPool();
             }

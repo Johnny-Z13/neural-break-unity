@@ -66,11 +66,27 @@ namespace NeuralBreak.Entities
             _burstTimer = _burstCooldown * Random.Range(0.3f, 0.7f); // Random initial delay
             _isFiringBurst = false;
 
-            // Set trail color
+            // Setup trail renderer with material and color
             if (_trailRenderer != null)
             {
+                // Load trail material if not assigned
+                if (_trailRenderer.sharedMaterial == null)
+                {
+                    var trailMaterial = Resources.Load<Material>("Materials/VFX/FizzerTrail");
+                    if (trailMaterial != null)
+                    {
+                        _trailRenderer.sharedMaterial = trailMaterial;
+                    }
+                    else
+                    {
+                        Debug.LogWarning("[Fizzer] FizzerTrail material not found in Resources!");
+                    }
+                }
+
                 _trailRenderer.startColor = _electricColor;
                 _trailRenderer.endColor = new Color(_electricColor.r, _electricColor.g, _electricColor.b, 0f);
+                _trailRenderer.time = 0.3f;
+                _trailRenderer.widthMultiplier = 0.2f;
             }
 
             // Generate procedural visuals if not yet done

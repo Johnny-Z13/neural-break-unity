@@ -14,7 +14,6 @@ namespace NeuralBreak.UI
     /// </summary>
     public class DamageNumberPopup : MonoBehaviour
     {
-        public static DamageNumberPopup Instance { get; private set; }
 
         [Header("Settings")]
         [SerializeField] private float _floatDistance = 50f;
@@ -52,6 +51,9 @@ namespace NeuralBreak.UI
         private Canvas _canvas;
         private Queue<DamageText> _pool = new Queue<DamageText>();
         private List<DamageText> _activeTexts = new List<DamageText>();
+
+        // Cached references
+        private Transform _playerTransform;
 
         private class DamageText
         {
@@ -92,7 +94,14 @@ namespace NeuralBreak.UI
             EventBus.Subscribe<EnemyDamagedEvent>(OnEnemyDamaged);
             EventBus.Subscribe<EnemyKilledEvent>(OnEnemyKilled);
             EventBus.Subscribe<PlayerHealedEvent>(OnPlayerHealed);
+            EventBus.Subscribe<GameStartedEvent>(OnGameStarted);
             // NOTE: Level-up is handled by LevelUpAnnouncement - removed duplicate
+        }
+
+        private void OnGameStarted(GameStartedEvent evt)
+        {
+            // Clear cached player reference on new game
+            _playerTransform = null;
         }
 
         private void OnDestroy()
@@ -100,6 +109,7 @@ namespace NeuralBreak.UI
             EventBus.Unsubscribe<EnemyDamagedEvent>(OnEnemyDamaged);
             EventBus.Unsubscribe<EnemyKilledEvent>(OnEnemyKilled);
             EventBus.Unsubscribe<PlayerHealedEvent>(OnPlayerHealed);
+            EventBus.Unsubscribe<GameStartedEvent>(OnGameStarted);
 
             if (Instance == this)
             {
@@ -187,11 +197,20 @@ namespace NeuralBreak.UI
 
         private void OnPlayerHealed(PlayerHealedEvent evt)
         {
-            var player = FindFirstObjectByType<Entities.PlayerController>();
-            if (player == null) return;
+            // Cache player transform on first use
+            if (_playerTransform == null)
+            {
+                var playerGO = GameObject.FindGameObjectWithTag("Player");
+                if (playerGO != null)
+                {
+                    _playerTransform = playerGO.transform;
+                }
+            }
+
+            if (_playerTransform == null) return;
 
             ShowNumber(
-                player.transform.position,
+                _playerTransform.position,
                 $"+{evt.amount}",
                 _healFontSize,
                 _healColor,

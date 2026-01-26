@@ -9,7 +9,6 @@ namespace NeuralBreak.Core
     /// </summary>
     public class HighScoreManager : MonoBehaviour
     {
-        public static HighScoreManager Instance { get; private set; }
 
         private const string PREF_HIGH_SCORE = "NeuralBreak_HighScore";
         private const string PREF_BEST_LEVEL = "NeuralBreak_BestLevel";
@@ -38,14 +37,7 @@ namespace NeuralBreak.Core
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
             DontDestroyOnLoad(gameObject);
-
             LoadHighScores();
         }
 
@@ -59,11 +51,6 @@ namespace NeuralBreak.Core
         {
             EventBus.Unsubscribe<GameOverEvent>(OnGameOver);
             EventBus.Unsubscribe<VictoryEvent>(OnVictory);
-
-            if (Instance == this)
-            {
-                Instance = null;
-            }
         }
 
         private void LoadHighScores()

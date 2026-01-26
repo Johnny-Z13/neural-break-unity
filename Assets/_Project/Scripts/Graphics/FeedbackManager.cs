@@ -11,7 +11,6 @@ namespace NeuralBreak.Graphics
     /// </summary>
     public class FeedbackManager : MonoBehaviour
     {
-        public static FeedbackManager Instance { get; private set; }
 
         [Header("Camera Shake")]
         [SerializeField] private float _smallShakeIntensity = 0.5f;
@@ -65,9 +64,19 @@ namespace NeuralBreak.Graphics
 
         private void Start()
         {
+            // Cache camera controller via GameObject.Find
             if (_cameraController == null)
             {
-                _cameraController = FindFirstObjectByType<CameraController>();
+                var camGO = GameObject.Find("MainCamera");
+                if (camGO != null)
+                {
+                    _cameraController = camGO.GetComponent<CameraController>();
+                }
+
+                if (_cameraController == null)
+                {
+                    Debug.LogWarning("[FeedbackManager] CameraController not found! Camera shake effects will not work.");
+                }
             }
 
             SubscribeToEvents();

@@ -404,14 +404,18 @@ namespace NeuralBreak.Entities
         {
             _wobblePhase += Time.deltaTime * _wobbleSpeed;
 
-            // Calculate movement direction for tilt
-            Vector2 velocity = ((Vector2)transform.position - _lastPosition) / Time.deltaTime;
-            float targetTilt = -velocity.x * _tiltAmount;
-            _tiltPhase = Mathf.Lerp(_tiltPhase, targetTilt, Time.deltaTime * 5f);
+            // Calculate movement direction for tilt (with safety check)
+            if (Time.deltaTime > 0.0001f)
+            {
+                Vector2 velocity = ((Vector2)transform.position - _lastPosition) / Time.deltaTime;
+                float targetTilt = Mathf.Clamp(-velocity.x * _tiltAmount, -45f, 45f); // Clamp to reasonable angle
+                _tiltPhase = Mathf.Lerp(_tiltPhase, targetTilt, Time.deltaTime * 5f);
+            }
 
             // Combine wobble and tilt
             float wobble = Mathf.Sin(_wobblePhase) * _wobbleAmount;
-            transform.rotation = Quaternion.Euler(0, 0, wobble + _tiltPhase);
+            float finalAngle = Mathf.Clamp(wobble + _tiltPhase, -90f, 90f); // Clamp final angle
+            transform.rotation = Quaternion.Euler(0, 0, finalAngle);
         }
 
         public override void Kill()

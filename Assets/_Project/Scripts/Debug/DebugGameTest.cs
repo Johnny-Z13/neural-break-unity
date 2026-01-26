@@ -16,9 +16,9 @@ namespace NeuralBreak.Testing
         [SerializeField] private float _spawnDelay = 3f; // Increased delay
 
         [Header("Test Mode - Spawn All Enemy Types")]
-        [SerializeField] private bool _testModeEnabled = true;
+        [SerializeField] private bool _testModeEnabled = false; // DISABLED - use GameMode.Test instead
         [SerializeField] private float _testModeSpawnInterval = 0.5f;
-        [SerializeField] private bool _testModeSpawnAllOnStart = true;
+        [SerializeField] private bool _testModeSpawnAllOnStart = false; // DISABLED - use GameMode.Test instead
 
         private bool _hasSpawned = false;
         private float _timer = 0f;
@@ -173,6 +173,9 @@ namespace NeuralBreak.Testing
             }
         }
 
+        // DISABLED: This was overlapping with game UI
+        // If you need debug info, use the Unity Profiler or Console logs instead
+        /*
         private void OnGUI()
         {
             // Show debug info on screen
@@ -208,5 +211,6 @@ namespace NeuralBreak.Testing
                 GUI.Label(new Rect(10, 130, 400, 20), $"Weapon: Heat={weapon.Heat:F0} | HasPrefab: {hasPrefab}");
             }
         }
+        */
     }
 }

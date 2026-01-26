@@ -46,6 +46,9 @@ namespace NeuralBreak.Graphics
         private float _shakeTimer;
         private Vector3 _shakeOffset;
 
+        // Cached for zero-allocation updates
+        private Vector3 _cachedShakeOffset;
+
         // Zoom state
         private float _targetSize;
         private float _currentIntensity;
@@ -243,7 +246,11 @@ namespace NeuralBreak.Graphics
                 float y = (Mathf.PerlinNoise(0f, Time.time * 20f) - 0.5f) * 2f;
 
                 float currentIntensity = _shakeIntensity * (_shakeTimer / _shakeDuration);
-                _shakeOffset = new Vector3(x, y, 0) * currentIntensity * _maxShakeOffset;
+
+                // Zero-allocation: use cached Vector3 and Set() method
+                float offsetMagnitude = currentIntensity * _maxShakeOffset;
+                _cachedShakeOffset.Set(x * offsetMagnitude, y * offsetMagnitude, 0f);
+                _shakeOffset = _cachedShakeOffset;
 
                 // Decay
                 _shakeIntensity *= _shakeDecay;

@@ -24,7 +24,6 @@ namespace NeuralBreak.Graphics
     /// </summary>
     public class ArenaManager : MonoBehaviour
     {
-        public static ArenaManager Instance { get; private set; }
 
         [Header("Settings")]
         [SerializeField] private ArenaTheme _currentTheme = ArenaTheme.Cyber;
@@ -64,6 +63,9 @@ namespace NeuralBreak.Graphics
         private GameObject _gridObject;
         private LineRenderer[] _gridLines;
         private Coroutine _transitionCoroutine;
+
+        // Cached references
+        private StarfieldController _starfield;
 
         public ArenaTheme CurrentTheme => _currentTheme;
         public Color PrimaryColor => ThemeColors[(int)_currentTheme].primary;
@@ -281,8 +283,16 @@ namespace NeuralBreak.Graphics
             }
 
             // Notify starfield if exists
-            var starfield = FindFirstObjectByType<StarfieldController>();
-            if (starfield != null)
+            if (_starfield == null)
+            {
+                var starfieldGO = GameObject.Find("Starfield");
+                if (starfieldGO != null)
+                {
+                    _starfield = starfieldGO.GetComponent<StarfieldController>();
+                }
+            }
+
+            if (_starfield != null)
             {
                 // Could update starfield colors here
             }

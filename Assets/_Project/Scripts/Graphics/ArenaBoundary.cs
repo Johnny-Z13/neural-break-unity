@@ -37,19 +37,31 @@ namespace NeuralBreak.Graphics
             // Get arena radius from config
             _radius = ConfigProvider.Player?.arenaRadius ?? 30f;
 
-            // Find player
-            var player = FindFirstObjectByType<Entities.PlayerController>();
-            if (player != null)
-            {
-                _playerTransform = player.transform;
-            }
+            // Subscribe to game events
+            EventBus.Subscribe<GameStartedEvent>(OnGameStarted);
 
             // Generate circle points
             GenerateCircle();
         }
 
+        private void OnGameStarted(GameStartedEvent evt)
+        {
+            // Clear cached player reference on new game
+            _playerTransform = null;
+        }
+
         private void Update()
         {
+            // Cache player transform on first use
+            if (_playerTransform == null)
+            {
+                var playerGO = GameObject.FindGameObjectWithTag("Player");
+                if (playerGO != null)
+                {
+                    _playerTransform = playerGO.transform;
+                }
+            }
+
             // Pulse when player is near boundary
             if (_playerTransform != null)
             {
@@ -119,6 +131,8 @@ namespace NeuralBreak.Graphics
 
         private void OnDestroy()
         {
+            EventBus.Unsubscribe<GameStartedEvent>(OnGameStarted);
+
             if (_lineMaterial != null)
             {
                 Destroy(_lineMaterial);

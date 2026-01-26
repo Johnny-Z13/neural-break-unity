@@ -31,6 +31,10 @@ namespace NeuralBreak.UI
         [SerializeField] private Toggle _screenShakeToggle;
         [SerializeField] private Toggle _spawnWarningsToggle;
 
+        // Cached references
+        private CameraController _cameraController;
+        private Graphics.SpawnWarningIndicator _warningIndicator;
+
         // PlayerPrefs keys
         private const string PREF_MASTER_VOL = "NeuralBreak_MasterVolume";
         private const string PREF_SFX_VOL = "NeuralBreak_SFXVolume";
@@ -202,10 +206,20 @@ namespace NeuralBreak.UI
         private void OnScreenShakeToggled(bool enabled)
         {
             PlayerPrefs.SetInt(PREF_SCREEN_SHAKE, enabled ? 1 : 0);
-            var cameraController = FindFirstObjectByType<CameraController>();
-            if (cameraController != null)
+
+            // Cache reference on first use
+            if (_cameraController == null)
             {
-                cameraController.SetShakeEnabled(enabled);
+                var camGO = GameObject.Find("MainCamera");
+                if (camGO != null)
+                {
+                    _cameraController = camGO.GetComponent<CameraController>();
+                }
+            }
+
+            if (_cameraController != null)
+            {
+                _cameraController.SetShakeEnabled(enabled);
             }
             SaveSettings();
         }
@@ -213,10 +227,20 @@ namespace NeuralBreak.UI
         private void OnSpawnWarningsToggled(bool enabled)
         {
             PlayerPrefs.SetInt(PREF_SPAWN_WARNINGS, enabled ? 1 : 0);
-            var warningIndicator = FindFirstObjectByType<Graphics.SpawnWarningIndicator>();
-            if (warningIndicator != null)
+
+            // Cache reference on first use
+            if (_warningIndicator == null)
             {
-                warningIndicator.SetWarningsEnabled(enabled);
+                var warningGO = GameObject.Find("SpawnWarningIndicator");
+                if (warningGO != null)
+                {
+                    _warningIndicator = warningGO.GetComponent<Graphics.SpawnWarningIndicator>();
+                }
+            }
+
+            if (_warningIndicator != null)
+            {
+                _warningIndicator.SetWarningsEnabled(enabled);
             }
             SaveSettings();
         }

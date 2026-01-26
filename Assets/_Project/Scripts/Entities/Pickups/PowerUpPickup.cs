@@ -57,24 +57,28 @@ namespace NeuralBreak.Entities
         {
             // Find weapon system on player
             WeaponSystem weapon = player.GetComponent<WeaponSystem>();
+            if (weapon == null)
+            {
+                weapon = player.GetComponentInChildren<WeaponSystem>();
+            }
+
             if (weapon != null)
             {
+                // Increase power level
                 weapon.AddPowerLevel(_powerIncrease);
                 Debug.Log($"[PowerUp] Weapon power increased by {_powerIncrease}");
+
+                // Also activate spread shot upgrade
+                WeaponUpgradeManager upgradeManager = WeaponUpgradeManager.Instance;
+                if (upgradeManager != null)
+                {
+                    upgradeManager.ActivateUpgrade(PickupType.SpreadShot);
+                    Debug.Log($"[PowerUp] Spread shot activated! (3-gun)");
+                }
             }
             else
             {
-                // Try to find it in children
-                weapon = player.GetComponentInChildren<WeaponSystem>();
-                if (weapon != null)
-                {
-                    weapon.AddPowerLevel(_powerIncrease);
-                    Debug.Log($"[PowerUp] Weapon power increased by {_powerIncrease}");
-                }
-                else
-                {
-                    Debug.LogWarning("[PowerUp] No WeaponSystem found on player!");
-                }
+                Debug.LogWarning("[PowerUp] No WeaponSystem found on player!");
             }
         }
     }

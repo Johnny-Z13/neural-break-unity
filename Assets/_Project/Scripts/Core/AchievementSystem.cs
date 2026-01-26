@@ -76,7 +76,6 @@ namespace NeuralBreak.Core
     /// </summary>
     public class AchievementSystem : MonoBehaviour
     {
-        public static AchievementSystem Instance { get; private set; }
 
         [Header("Settings")]
         [SerializeField] private bool _saveToPrefs = true;

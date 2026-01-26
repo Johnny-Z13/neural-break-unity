@@ -11,7 +11,6 @@ namespace NeuralBreak.UI
     /// </summary>
     public class Minimap : MonoBehaviour
     {
-        public static Minimap Instance { get; private set; }
 
         [Header("Settings")]
         [SerializeField] private float _mapRadius = 15f;
@@ -73,16 +72,20 @@ namespace NeuralBreak.UI
 
         private void Start()
         {
-            // Find player
-            var player = FindFirstObjectByType<PlayerController>();
-            if (player != null)
-            {
-                _playerTransform = player.transform;
-            }
+            // Subscribe to player spawn event
+            EventBus.Subscribe<GameStartedEvent>(OnGameStarted);
+        }
+
+        private void OnGameStarted(GameStartedEvent evt)
+        {
+            // Player reference will be set when we first update
+            _playerTransform = null;
         }
 
         private void OnDestroy()
         {
+            EventBus.Unsubscribe<GameStartedEvent>(OnGameStarted);
+
             if (Instance == this)
             {
                 Instance = null;
@@ -193,12 +196,14 @@ namespace NeuralBreak.UI
 
         private void UpdateMinimap()
         {
+            // Cache player transform on first use
             if (_playerTransform == null)
             {
-                var player = FindFirstObjectByType<PlayerController>();
-                if (player != null)
+                // Try to find player via GameObject.FindGameObjectWithTag
+                var playerGO = GameObject.FindGameObjectWithTag("Player");
+                if (playerGO != null)
                 {
-                    _playerTransform = player.transform;
+                    _playerTransform = playerGO.transform;
                 }
                 else
                 {

@@ -29,12 +29,79 @@ namespace NeuralBreak.Config
         }
 
         /// <summary>
-        /// Shortcut accessors for common configs
+        /// Shortcut accessors for common configs with null checks
         /// </summary>
-        public static PlayerConfig Player => Balance?.player;
-        public static WeaponConfig Weapon => Balance?.weapon;
-        public static ComboConfig Combo => Balance?.combo;
-        public static SpawnConfig Spawning => Balance?.spawning;
+        public static PlayerConfig Player
+        {
+            get
+            {
+                if (Balance == null)
+                {
+                    Debug.LogError("[ConfigProvider] Balance is null! Call Initialize() first.");
+                    return null;
+                }
+                if (Balance.player == null)
+                {
+                    Debug.LogError("[ConfigProvider] PlayerConfig is null in Balance!");
+                    return null;
+                }
+                return Balance.player;
+            }
+        }
+
+        public static WeaponConfig Weapon
+        {
+            get
+            {
+                if (Balance == null)
+                {
+                    Debug.LogError("[ConfigProvider] Balance is null! Call Initialize() first.");
+                    return null;
+                }
+                if (Balance.weapon == null)
+                {
+                    Debug.LogError("[ConfigProvider] WeaponConfig is null in Balance!");
+                    return null;
+                }
+                return Balance.weapon;
+            }
+        }
+
+        public static ComboConfig Combo
+        {
+            get
+            {
+                if (Balance == null)
+                {
+                    Debug.LogError("[ConfigProvider] Balance is null! Call Initialize() first.");
+                    return null;
+                }
+                if (Balance.combo == null)
+                {
+                    Debug.LogError("[ConfigProvider] ComboConfig is null in Balance!");
+                    return null;
+                }
+                return Balance.combo;
+            }
+        }
+
+        public static SpawnConfig Spawning
+        {
+            get
+            {
+                if (Balance == null)
+                {
+                    Debug.LogError("[ConfigProvider] Balance is null! Call Initialize() first.");
+                    return null;
+                }
+                if (Balance.spawning == null)
+                {
+                    Debug.LogError("[ConfigProvider] SpawnConfig is null in Balance!");
+                    return null;
+                }
+                return Balance.spawning;
+            }
+        }
 
         /// <summary>
         /// Initialize the config provider.
@@ -44,17 +111,32 @@ namespace NeuralBreak.Config
         {
             if (_initialized) return;
 
-            _balance = Resources.Load<GameBalanceConfig>("Config/GameBalanceConfig");
-
-            if (_balance == null)
+            try
             {
-                Debug.LogWarning("[ConfigProvider] GameBalanceConfig not found in Resources/Config/. Using defaults.");
-                _balance = ScriptableObject.CreateInstance<GameBalanceConfig>();
-                SetDefaults(_balance);
-            }
+                _balance = Resources.Load<GameBalanceConfig>("Config/GameBalanceConfig");
 
-            _initialized = true;
-            Debug.Log("[ConfigProvider] Configuration loaded successfully.");
+                if (_balance == null)
+                {
+                    Debug.LogWarning("[ConfigProvider] GameBalanceConfig not found in Resources/Config/. Using defaults.");
+                    _balance = ScriptableObject.CreateInstance<GameBalanceConfig>();
+
+                    if (_balance == null)
+                    {
+                        Debug.LogError("[ConfigProvider] Failed to create default config instance!");
+                        return;
+                    }
+
+                    SetDefaults(_balance);
+                }
+
+                _initialized = true;
+                Debug.Log("[ConfigProvider] Configuration loaded successfully.");
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"[ConfigProvider] Failed to initialize config: {ex.Message}");
+                _initialized = false;
+            }
         }
 
         /// <summary>
@@ -72,6 +154,11 @@ namespace NeuralBreak.Config
         /// </summary>
         private static void SetDefaults(GameBalanceConfig config)
         {
+            if (config == null)
+            {
+                Debug.LogError("[ConfigProvider] Cannot set defaults - config is null!");
+                return;
+            }
             // Player defaults - matching TypeScript BALANCE_CONFIG
             config.player = new PlayerConfig
             {
@@ -81,7 +168,7 @@ namespace NeuralBreak.Config
                 dashSpeed = 32f,
                 dashDuration = 0.45f,  // FIXED: was 0.15, TS is 0.45
                 dashCooldown = 2.5f,
-                maxHealth = 130,
+                maxHealth = 100,       // User requested: 100 health
                 startingShields = 0,
                 maxShields = 3,
                 spawnInvulnerabilityDuration = 2f,

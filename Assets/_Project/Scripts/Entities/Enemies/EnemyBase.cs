@@ -72,6 +72,18 @@ namespace NeuralBreak.Entities
         public virtual void Initialize(Vector2 position, Transform playerTarget,
             System.Action<EnemyBase> returnToPool)
         {
+            if (playerTarget == null)
+            {
+                Debug.LogError("[EnemyBase] Cannot initialize - playerTarget is null!");
+                return;
+            }
+
+            if (returnToPool == null)
+            {
+                Debug.LogError("[EnemyBase] Cannot initialize - returnToPool callback is null!");
+                return;
+            }
+
             transform.position = position;
             _playerTarget = playerTarget;
             _returnToPool = returnToPool;
@@ -283,9 +295,24 @@ namespace NeuralBreak.Entities
         /// </summary>
         public virtual void TakeDamage(int damage, Vector2 damageSource)
         {
+            if (damage < 0)
+            {
+                Debug.LogError($"[EnemyBase] Invalid damage value: {damage}. Must be >= 0.");
+                return;
+            }
+
             // Can't damage during spawn or already dying
-            if (_state == EnemyState.Spawning && _invulnerableDuringSpawn) return;
-            if (_state != EnemyState.Alive) return;
+            if (_state == EnemyState.Spawning && _invulnerableDuringSpawn)
+            {
+                Debug.LogWarning($"[EnemyBase] Cannot damage {EnemyType} - invulnerable during spawn!");
+                return;
+            }
+
+            if (_state != EnemyState.Alive)
+            {
+                Debug.LogWarning($"[EnemyBase] Cannot damage {EnemyType} - not alive (state: {_state})!");
+                return;
+            }
 
             // Check elite modifier for damage blocking (shields, etc.)
             var eliteModifier = GetComponent<EliteModifier>();
@@ -375,6 +402,13 @@ namespace NeuralBreak.Entities
         {
             if (_state == newState) return;
 
+            // Validate state transitions
+            if (_state == EnemyState.Dead && newState != EnemyState.Spawning)
+            {
+                Debug.LogWarning($"[EnemyBase] Invalid state transition: {_state} -> {newState}. Dead enemies can only transition to Spawning!");
+                return;
+            }
+
             _state = newState;
             OnStateChanged(newState);
         }
@@ -392,6 +426,12 @@ namespace NeuralBreak.Entities
         {
             if (!IsAlive) return;
 
+            if (other == null)
+            {
+                Debug.LogWarning("[EnemyBase] OnTriggerEnter2D - other collider is null!");
+                return;
+            }
+
             // Check player collision
             if (other.CompareTag("Player"))
             {
@@ -399,6 +439,10 @@ namespace NeuralBreak.Entities
                 if (playerHealth != null)
                 {
                     playerHealth.TakeDamage(_damage, transform.position);
+                }
+                else
+                {
+                    Debug.LogWarning($"[EnemyBase] Player object '{other.name}' has no PlayerHealth component!");
                 }
             }
         }

@@ -11,7 +11,6 @@ namespace NeuralBreak.Core
     /// </summary>
     public class PostProcessManager : MonoBehaviour
     {
-        public static PostProcessManager Instance { get; private set; }
 
         [Header("Volume Reference")]
         [SerializeField] private Volume _globalVolume;
@@ -71,10 +70,14 @@ namespace NeuralBreak.Core
 
         private void SetupVolume()
         {
-            // Find or create global volume
+            // Find volume via GameObject if not assigned
             if (_globalVolume == null)
             {
-                _globalVolume = FindFirstObjectByType<Volume>();
+                var volumeGO = GameObject.Find("GlobalVolume");
+                if (volumeGO != null)
+                {
+                    _globalVolume = volumeGO.GetComponent<Volume>();
+                }
             }
 
             if (_globalVolume == null)

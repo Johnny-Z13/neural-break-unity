@@ -33,7 +33,8 @@
       "WebFetch(domain:docs.google.com)",
       "Bash(for dir in D:\\\\Projects\\\\Unity\\\\neural-break-unity\\\\Assets\\\\_Project\\\\Scripts\\\\*)",
       "Bash(for dir in */)",
-      "Skill(frontend-design)"
+      "Skill(frontend-design)",
+      "mcp__ide__getDiagnostics"
     ]
   }
 }

@@ -9,7 +9,6 @@ namespace NeuralBreak.Core
     /// </summary>
     public class PlayerLevelSystem : MonoBehaviour
     {
-        public static PlayerLevelSystem Instance { get; private set; }
 
         [Header("Level Settings")]
         [SerializeField] private int _currentLevel = 1;

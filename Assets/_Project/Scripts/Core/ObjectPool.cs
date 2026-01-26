@@ -32,6 +32,18 @@ namespace NeuralBreak.Core
         public ObjectPool(T prefab, Transform parent, int initialSize = 10,
             Action<T> onGet = null, Action<T> onReturn = null)
         {
+            if (prefab == null)
+            {
+                Debug.LogError("[ObjectPool] Cannot create pool - prefab is null!");
+                return;
+            }
+
+            if (initialSize < 0)
+            {
+                Debug.LogWarning($"[ObjectPool] Invalid initialSize: {initialSize}. Using default of 10.");
+                initialSize = 10;
+            }
+
             _prefab = prefab;
             _parent = parent;
             _initialSize = initialSize;
@@ -46,11 +58,20 @@ namespace NeuralBreak.Core
         /// </summary>
         public void Prewarm()
         {
+            if (_prefab == null)
+            {
+                Debug.LogError("[ObjectPool] Cannot prewarm - prefab is null!");
+                return;
+            }
+
             for (int i = 0; i < _initialSize; i++)
             {
                 T obj = CreateNew();
-                obj.gameObject.SetActive(false);
-                _pool.Enqueue(obj);
+                if (obj != null)
+                {
+                    obj.gameObject.SetActive(false);
+                    _pool.Enqueue(obj);
+                }
             }
         }
 
@@ -59,6 +80,12 @@ namespace NeuralBreak.Core
         /// </summary>
         public T Get()
         {
+            if (_prefab == null)
+            {
+                Debug.LogError("[ObjectPool] Cannot get object - prefab is null!");
+                return null;
+            }
+
             T obj;
 
             if (_pool.Count > 0)
@@ -70,9 +97,23 @@ namespace NeuralBreak.Core
                 obj = CreateNew();
             }
 
+            if (obj == null)
+            {
+                Debug.LogError("[ObjectPool] Failed to get object from pool!");
+                return null;
+            }
+
             obj.gameObject.SetActive(true);
             CountActive++;
-            _onGet?.Invoke(obj);
+
+            try
+            {
+                _onGet?.Invoke(obj);
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"[ObjectPool] Error in onGet callback: {ex.Message}");
+            }
 
             return obj;
         }
@@ -83,7 +124,10 @@ namespace NeuralBreak.Core
         public T Get(Vector3 position, Quaternion rotation)
         {
             T obj = Get();
-            obj.transform.SetPositionAndRotation(position, rotation);
+            if (obj != null)
+            {
+                obj.transform.SetPositionAndRotation(position, rotation);
+            }
             return obj;
         }
 
@@ -92,9 +136,21 @@ namespace NeuralBreak.Core
         /// </summary>
         public void Return(T obj)
         {
-            if (obj == null) return;
+            if (obj == null)
+            {
+                Debug.LogWarning("[ObjectPool] Attempted to return null object to pool!");
+                return;
+            }
 
-            _onReturn?.Invoke(obj);
+            try
+            {
+                _onReturn?.Invoke(obj);
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"[ObjectPool] Error in onReturn callback: {ex.Message}");
+            }
+
             obj.gameObject.SetActive(false);
             _pool.Enqueue(obj);
             CountActive--;
@@ -105,6 +161,12 @@ namespace NeuralBreak.Core
         /// </summary>
         public void ReturnAll(List<T> activeObjects)
         {
+            if (activeObjects == null)
+            {
+                Debug.LogWarning("[ObjectPool] Cannot return all - activeObjects list is null!");
+                return;
+            }
+
             foreach (var obj in activeObjects)
             {
                 Return(obj);

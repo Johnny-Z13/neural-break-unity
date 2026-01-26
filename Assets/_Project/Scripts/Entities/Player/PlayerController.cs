@@ -72,6 +72,13 @@ namespace NeuralBreak.Entities
         private GameObject _aimIndicator;
         private LineRenderer _aimLine;
 
+        // Cached colors to avoid allocations
+        private static readonly Color PlayerColor = new Color(0.2f, 0.9f, 1f);
+        private static readonly Color AimColor = new Color(0.2f, 0.9f, 1f, 0.6f);
+
+        // Cached Vector3 for zero-allocation gizmos
+        private Vector3 _cachedGizmoVector;
+
         // Public accessors
         public Vector2 Position => _rb.position;
         public Vector2 Velocity => _currentVelocity;
@@ -122,9 +129,8 @@ namespace NeuralBreak.Entities
             var sr = GetComponent<SpriteRenderer>();
             if (sr == null) return;
 
-            // Player is a cyan/teal triangle pointing up
-            Color playerColor = new Color(0.2f, 0.9f, 1f);
-            var sprite = Graphics.SpriteGenerator.CreateTriangle(64, playerColor, "Player");
+            // Player is a cyan/teal triangle pointing up - use cached color
+            var sprite = Graphics.SpriteGenerator.CreateTriangle(64, PlayerColor, "Player");
             sr.sprite = sprite;
             sr.color = Color.white;
         }
@@ -202,10 +208,9 @@ namespace NeuralBreak.Entities
             _aimLine.endWidth = 0.02f;
             _aimLine.material = new Material(Shader.Find("Sprites/Default"));
 
-            // Cyan color matching player
-            Color aimColor = new Color(0.2f, 0.9f, 1f, 0.6f);
-            _aimLine.startColor = aimColor;
-            _aimLine.endColor = new Color(aimColor.r, aimColor.g, aimColor.b, 0.1f);
+            // Cyan color matching player - use cached colors
+            _aimLine.startColor = AimColor;
+            _aimLine.endColor = new Color(AimColor.r, AimColor.g, AimColor.b, 0.1f);
             _aimLine.sortingOrder = 5;
 
             _aimLine.useWorldSpace = true;
@@ -591,7 +596,10 @@ namespace NeuralBreak.Entities
             // Draw arena boundary (use config if available, fallback to 25)
             float boundary = ConfigProvider.Player?.arenaRadius ?? 25f;
             Gizmos.color = Color.cyan;
-            Gizmos.DrawWireCube(Vector3.zero, new Vector3(boundary * 2, boundary * 2, 0));
+
+            // Zero-allocation: use cached Vector3 and Set() method
+            _cachedGizmoVector.Set(boundary * 2, boundary * 2, 0);
+            Gizmos.DrawWireCube(Vector3.zero, _cachedGizmoVector);
 
             // Draw move direction (yellow)
             Gizmos.color = Color.yellow;

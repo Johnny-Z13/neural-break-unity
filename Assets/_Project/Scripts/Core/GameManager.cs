@@ -1,6 +1,7 @@
 using UnityEngine;
 using MoreMountains.Feedbacks;
 using NeuralBreak.Entities;
+using NeuralBreak.Utils;
 using System.Collections;
 
 namespace NeuralBreak.Core
@@ -17,7 +18,7 @@ namespace NeuralBreak.Core
         [SerializeField] private GameStateType _currentState = GameStateType.StartScreen;
         [SerializeField] private GameMode _currentMode = GameMode.Arcade;
         [SerializeField] private bool _isPaused;
-        [SerializeField] private bool _autoStartOnPlay = true;
+        [SerializeField] private bool _autoStartOnPlay = false; // DISABLED - let user choose mode via UI
 
         [Header("References")]
         [SerializeField] private PlayerController _player;
@@ -109,7 +110,18 @@ namespace NeuralBreak.Core
 
         public void SetState(GameStateType newState)
         {
-            if (_currentState == newState) return;
+            if (_currentState == newState)
+            {
+                Debug.LogWarning($"[GameManager] Already in state {newState}!");
+                return;
+            }
+
+            // Validate state transitions
+            if (_currentState == GameStateType.GameOver && newState == GameStateType.Playing)
+            {
+                Debug.LogWarning("[GameManager] Cannot transition from GameOver to Playing directly. Use StartGame() instead.");
+                return;
+            }
 
             GameStateType previousState = _currentState;
             _currentState = newState;
@@ -120,11 +132,15 @@ namespace NeuralBreak.Core
                 newState = newState
             });
 
-            Debug.Log($"[GameManager] State changed: {previousState} -> {newState}");
+            LogHelper.Log($"[GameManager] State changed: {previousState} -> {newState}");
         }
 
         public void StartGame(GameMode mode)
         {
+            LogHelper.Log($"[GameManager] ========================================");
+            LogHelper.Log($"[GameManager] STARTING GAME IN {mode} MODE");
+            LogHelper.Log($"[GameManager] ========================================");
+
             _currentMode = mode;
             Stats.Reset();
             _currentCombo = 0;
@@ -134,14 +150,19 @@ namespace NeuralBreak.Core
 
             _gameStartFeedback?.PlayFeedbacks();
 
+            // StartScreen will hide itself when it receives GameStartedEvent
+            LogHelper.Log($"[GameManager] Publishing GameStartedEvent with mode: {mode}");
             EventBus.Publish(new GameStartedEvent { mode = mode });
-
-            Debug.Log($"[GameManager] Game started in {mode} mode");
+            LogHelper.Log($"[GameManager] GameStartedEvent published successfully");
         }
 
         public void PauseGame()
         {
-            if (_currentState != GameStateType.Playing) return;
+            if (_currentState != GameStateType.Playing)
+            {
+                Debug.LogWarning($"[GameManager] Cannot pause - not in Playing state (current: {_currentState})!");
+                return;
+            }
 
             _isPaused = true;
             Time.timeScale = 0f;
@@ -152,7 +173,11 @@ namespace NeuralBreak.Core
 
         public void ResumeGame()
         {
-            if (_currentState != GameStateType.Paused) return;
+            if (_currentState != GameStateType.Paused)
+            {
+                Debug.LogWarning($"[GameManager] Cannot resume - not in Paused state (current: {_currentState})!");
+                return;
+            }
 
             _isPaused = false;
             Time.timeScale = 1f;
@@ -170,7 +195,7 @@ namespace NeuralBreak.Core
 
             EventBus.Publish(new GameOverEvent { finalStats = Stats });
 
-            Debug.Log($"[GameManager] Game Over! Score: {Stats.score}, Level: {Stats.level}");
+            LogHelper.Log($"[GameManager] Game Over! Score: {Stats.score}, Level: {Stats.level}");
         }
 
         public void Victory()
@@ -182,7 +207,7 @@ namespace NeuralBreak.Core
 
             EventBus.Publish(new VictoryEvent { finalStats = Stats });
 
-            Debug.Log("[GameManager] VICTORY! All 99 levels completed!");
+            LogHelper.Log("[GameManager] VICTORY! All 99 levels completed!");
         }
 
         public void ReturnToMenu()
@@ -198,6 +223,18 @@ namespace NeuralBreak.Core
 
         private void OnEnemyKilled(EnemyKilledEvent evt)
         {
+            if (evt.scoreValue < 0)
+            {
+                Debug.LogError($"[GameManager] Invalid score value from {evt.enemyType}: {evt.scoreValue}");
+                return;
+            }
+
+            if (evt.xpValue < 0)
+            {
+                Debug.LogError($"[GameManager] Invalid XP value from {evt.enemyType}: {evt.xpValue}");
+                return;
+            }
+
             // Update kill counts
             Stats.enemiesKilled++;
             UpdateKillCount(evt.enemyType);
@@ -329,6 +366,10 @@ namespace NeuralBreak.Core
             {
                 _enemySpawner.ClearAllEnemies();
             }
+            else
+            {
+                Debug.LogWarning("[GameManager] EnemySpawner reference is null during level transition!");
+            }
 
             // Advance to next level
             if (_levelManager != null)
@@ -338,6 +379,10 @@ namespace NeuralBreak.Core
             else if (LevelManager.Instance != null)
             {
                 LevelManager.Instance.AdvanceLevel();
+            }
+            else
+            {
+                Debug.LogError("[GameManager] No LevelManager available for level transition!");
             }
 
             // Resume spawning

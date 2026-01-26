@@ -26,18 +26,30 @@ namespace NeuralBreak.Core
 
         /// <summary>
         /// Get configuration for a specific level
+        /// CRITICAL: This routes to completely separate configs based on special level numbers
+        /// - Level 999 = TEST MODE (all enemies, slow spawn)
+        /// - Level 998 = ROGUE MODE (procedural layers)
+        /// - Level 1-99 = ARCADE MODE (progressive campaign)
         /// </summary>
         public static LevelConfig GetLevelConfig(int level)
         {
-            // Test mode
+            // TEST MODE - Level 999
             if (level == 999)
+            {
+                Debug.Log("[LevelGenerator] Returning TEST MODE config (level 999)");
                 return GetTestLevelConfig();
+            }
 
-            // Rogue mode (future implementation)
+            // ROGUE MODE - Level 998
             if (level == 998)
+            {
+                Debug.Log("[LevelGenerator] Returning ROGUE MODE config (level 998)");
                 return GetRogueLevelConfig(1);
+            }
 
+            // ARCADE MODE - Levels 1-99
             int clampedLevel = Mathf.Clamp(level, 1, TOTAL_LEVELS);
+            Debug.Log($"[LevelGenerator] Returning ARCADE MODE config (level {clampedLevel})");
 
             // Surprise levels every 5th level
             if (clampedLevel % 5 == 0 && clampedLevel > 0)
@@ -324,17 +336,18 @@ namespace NeuralBreak.Core
                 bosses = hasBosses ? Mathf.Max(1, Mathf.FloorToInt(level * 0.06f)) : 0
             };
 
-            // Calculate spawn rates - faster spawns as level increases
+            // Calculate spawn rates - slower at start, faster as level increases
+            // Higher number = slower spawn (time in seconds between spawns)
             var spawnRates = new SpawnRates
             {
-                dataMiteRate = Mathf.Max(0.3f, 1.5f - level * 0.012f) * spawnScale,
-                scanDroneRate = Mathf.Max(1.5f, 8f - level * 0.07f) * spawnScale,
-                chaosWormRate = hasWorms ? Mathf.Max(8f, 40f - level * 0.35f) * spawnScale : float.PositiveInfinity,
-                voidSphereRate = hasVoidSpheres ? Mathf.Max(12f, 60f - level * 0.5f) * spawnScale : float.PositiveInfinity,
-                crystalShardRate = hasCrystals ? Mathf.Max(10f, 50f - level * 0.45f) * spawnScale : float.PositiveInfinity,
-                fizzerRate = hasFizzers ? Mathf.Max(5f, 25f - level * 0.2f) * spawnScale : float.PositiveInfinity,
-                ufoRate = hasUFOs ? Mathf.Max(10f, 45f - level * 0.4f) * spawnScale : float.PositiveInfinity,
-                bossRate = hasBosses ? Mathf.Max(25f, 90f - level * 0.8f) : float.PositiveInfinity
+                dataMiteRate = Mathf.Max(1.5f, 3.0f - level * 0.015f) * spawnScale,      // Starts at 3s, min 1.5s
+                scanDroneRate = Mathf.Max(6.0f, 12f - level * 0.06f) * spawnScale,       // Starts at 12s, min 6s
+                chaosWormRate = hasWorms ? Mathf.Max(15f, 40f - level * 0.25f) * spawnScale : float.PositiveInfinity,
+                voidSphereRate = hasVoidSpheres ? Mathf.Max(18f, 60f - level * 0.42f) * spawnScale : float.PositiveInfinity,
+                crystalShardRate = hasCrystals ? Mathf.Max(16f, 50f - level * 0.34f) * spawnScale : float.PositiveInfinity,
+                fizzerRate = hasFizzers ? Mathf.Max(10f, 30f - level * 0.2f) * spawnScale : float.PositiveInfinity,
+                ufoRate = hasUFOs ? Mathf.Max(20f, 50f - level * 0.3f) * spawnScale : float.PositiveInfinity,
+                bossRate = hasBosses ? Mathf.Max(45f, 120f - level * 0.75f) : float.PositiveInfinity
             };
 
             return new LevelConfig
@@ -348,6 +361,7 @@ namespace NeuralBreak.Core
 
         /// <summary>
         /// Test level config - endless with all enemy types
+        /// Spawn rates are slower to prevent overcrowding and overlap
         /// </summary>
         public static LevelConfig GetTestLevelConfig()
         {
@@ -368,14 +382,15 @@ namespace NeuralBreak.Core
                 },
                 spawnRates = new SpawnRates
                 {
-                    dataMiteRate = 2.0f,
-                    scanDroneRate = 8.0f,
-                    chaosWormRate = 12.0f,
-                    voidSphereRate = 15.0f,
-                    crystalShardRate = 10.0f,
-                    fizzerRate = 14.0f,
-                    ufoRate = 18.0f,
-                    bossRate = 25.0f
+                    // MUCH slower spawn rates for testing - prevents screen overcrowding
+                    dataMiteRate = 5.0f,       // One every 5 seconds
+                    scanDroneRate = 15.0f,     // One every 15 seconds
+                    chaosWormRate = 25.0f,     // One every 25 seconds
+                    voidSphereRate = 30.0f,    // One every 30 seconds
+                    crystalShardRate = 28.0f,  // One every 28 seconds
+                    fizzerRate = 32.0f,        // One every 32 seconds
+                    ufoRate = 35.0f,           // One every 35 seconds
+                    bossRate = 60.0f           // One every 60 seconds
                 }
             };
         }

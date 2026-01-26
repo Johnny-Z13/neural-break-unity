@@ -5,14 +5,14 @@ using NeuralBreak.Core;
 namespace NeuralBreak.Graphics
 {
     /// <summary>
-    /// 80s Arcade-style flying starfield background.
+    /// 80s Arcade-style flying starfield background coordinator.
     /// Creates a "flying through space" effect with twinkling stars,
     /// motion trails, and nebula clouds.
     /// Based on TypeScript Starfield.ts.
+    /// Refactored to use sub-systems for cleaner separation of concerns.
     /// </summary>
     public class StarfieldController : MonoBehaviour
     {
-        public static StarfieldController Instance { get; private set; }
 
         [Header("Star Configuration")]
         [SerializeField] private int _starCount = 400;
@@ -35,6 +35,7 @@ namespace NeuralBreak.Graphics
         [SerializeField] private Color _yellowWhiteStarColor = new Color(1f, 0.96f, 0.88f);
         [SerializeField] private Color _orangeStarColor = new Color(1f, 0.88f, 0.75f);
         [SerializeField] private Color _cyanStarColor = Color.cyan;
+        [SerializeField] private Color _lightBlueStarColor = new Color(0.75f, 0.75f, 1f);
         [SerializeField] private Color _redStarColor = new Color(1f, 0.75f, 0.75f);
 
         [Header("Nebula")]
@@ -55,20 +56,28 @@ namespace NeuralBreak.Graphics
 
         [Header("References")]
         [SerializeField] private ParticleSystem _starParticles;
-        [SerializeField] private Material _nebulaMaterial;
-        [SerializeField] private Material _gridMaterial;
 
         // Star data
         private Star[] _stars;
         private ParticleSystem.Particle[] _particles;
         private float _time;
 
-        // Nebula objects
-        private GameObject[] _nebulaObjects;
+        // Sub-systems
+        private StarfieldOptimizer _optimizer;
+        private NebulaSystem _nebulaSystem;
+        private StarGridRenderer _gridRenderer;
+        private ScanlineEffect _scanlineEffect;
 
-        // Grid/scanline objects
-        private LineRenderer _gridRenderer;
-        private Material _scanlineMaterial;
+        // Constants for star simulation
+        private const float SPEED_MULTIPLIER = 10f;
+        private const float DEPTH_THRESHOLD = 1f;
+        private const float SCALE_MULTIPLIER = 0.1f;
+        private const float Z_OFFSET_MULTIPLIER = 0.5f;
+        private const float SIZE_MULTIPLIER = 2.5f;
+        private const float MIN_SIZE = 0.01f;
+        private const float TWINKLE_BASE = 0.7f;
+        private const float TWINKLE_AMPLITUDE = 0.3f;
+        private const float TWINKLE_DEPTH_DAMPING = 0.5f;
 
         private struct Star
         {
@@ -90,6 +99,9 @@ namespace NeuralBreak.Graphics
             }
             Instance = this;
             DontDestroyOnLoad(gameObject);
+
+            // Initialize optimizer first
+            _optimizer = new StarfieldOptimizer();
         }
 
         private void Start()
@@ -99,17 +111,30 @@ namespace NeuralBreak.Graphics
 
             if (_enableNebula)
             {
-                CreateNebulae();
+                _nebulaSystem = new NebulaSystem(
+                    transform,
+                    _nebulaCount,
+                    _nebulaSize,
+                    _nebulaIntensity,
+                    _nebulaMoveSpeed,
+                    _starFieldDepth,
+                    _optimizer
+                );
             }
 
             if (_enableGrid)
             {
-                CreateGrid();
+                _gridRenderer = new StarGridRenderer(
+                    transform,
+                    _gridColor,
+                    _gridHorizonY,
+                    _optimizer
+                );
             }
 
             if (_enableScanlines)
             {
-                CreateScanlines();
+                _scanlineEffect = new ScanlineEffect(transform, _scanlineIntensity);
             }
 
             SubscribeToEvents();
@@ -121,12 +146,17 @@ namespace NeuralBreak.Graphics
             {
                 Instance = null;
             }
+
             UnsubscribeFromEvents();
+
+            // Clean up sub-systems
+            _nebulaSystem?.Destroy();
+            _gridRenderer?.Destroy();
+            _scanlineEffect?.Destroy();
         }
 
         private void SubscribeToEvents()
         {
-            // Speed up during gameplay, slow down in menus
             EventBus.Subscribe<GameStartedEvent>(OnGameStarted);
             EventBus.Subscribe<GameOverEvent>(OnGameOver);
             EventBus.Subscribe<LevelCompletedEvent>(OnLevelCompleted);
@@ -139,150 +169,108 @@ namespace NeuralBreak.Graphics
             EventBus.Unsubscribe<LevelCompletedEvent>(OnLevelCompleted);
         }
 
-        private void OnGameStarted(GameStartedEvent evt)
-        {
-            SetSpeed(3f); // Faster during gameplay
-        }
-
-        private void OnGameOver(GameOverEvent evt)
-        {
-            SetSpeed(1f); // Slower in game over
-        }
-
+        private void OnGameStarted(GameStartedEvent evt) => SetSpeed(3f);
+        private void OnGameOver(GameOverEvent evt) => SetSpeed(1f);
         private void OnLevelCompleted(LevelCompletedEvent evt)
         {
-            SetSpeed(5f); // Speed burst on level complete
+            SetSpeed(5f);
             Invoke(nameof(ResetSpeed), 2f);
         }
+        private void ResetSpeed() => SetSpeed(2f);
 
-        private void ResetSpeed()
+        private void Update()
         {
-            SetSpeed(2f);
+            if (_stars == null) return;
+
+            _time += Time.deltaTime;
+
+            // Update stars (allocation-free)
+            for (int i = 0; i < _stars.Length; i++)
+            {
+                UpdateStar(ref _stars[i], Time.deltaTime);
+            }
+
+            UpdateParticles();
+
+            // Update sub-systems
+            _nebulaSystem?.UpdateNebulae(Time.deltaTime);
+            _gridRenderer?.UpdateGrid(Time.deltaTime, _speed);
+            _scanlineEffect?.UpdateScanlines(Time.deltaTime);
         }
+
+        private void UpdateStar(ref Star star, float deltaTime)
+        {
+            star.previousPosition = star.position;
+            star.z -= _speed * SPEED_MULTIPLIER * deltaTime;
+            star.twinklePhase += star.twinkleSpeed * deltaTime;
+
+            if (star.z <= DEPTH_THRESHOLD)
+            {
+                star = CreateStar(false);
+                star.previousPosition = star.position;
+            }
+            else
+            {
+                // Update position (z changes, x/y stay same in field space)
+                _optimizer.UpdateStarPosition(ref star.position, star.position.x, star.position.y, star.z);
+            }
+        }
+
+        private void UpdateParticles()
+        {
+            Camera cam = Camera.main;
+            if (cam == null) return;
+
+            Vector3 camPos = cam.transform.position;
+
+            for (int i = 0; i < _stars.Length; i++)
+            {
+                ref Star star = ref _stars[i];
+
+                // Calculate world position (allocation-free)
+                Vector3 worldPos = _optimizer.CalculateWorldPosition(
+                    star.position,
+                    star.z,
+                    _starFieldDepth,
+                    camPos
+                );
+
+                // Depth-based size and brightness
+                float depthFactor = (_starFieldDepth - star.z) / _starFieldDepth;
+                float size = Mathf.Max(MIN_SIZE, star.baseSize * depthFactor * SIZE_MULTIPLIER);
+
+                // Twinkling effect
+                float twinkle = TWINKLE_BASE +
+                    Mathf.Sin(star.twinklePhase * _twinkleSpeed) * TWINKLE_AMPLITUDE *
+                    (1f - depthFactor * TWINKLE_DEPTH_DAMPING);
+                float brightness = Mathf.Min(1f, depthFactor * twinkle);
+
+                // Trail effect
+                if (_enableTrails && _speed > 1f)
+                {
+                    float trailFactor = Mathf.Min(_trailLength * (_speed / _maxSpeed), 0.5f);
+                    _particles[i].rotation = Mathf.Atan2(star.position.y, star.position.x) * Mathf.Rad2Deg;
+                }
+
+                // Set particle (allocation-free color)
+                _particles[i].position = worldPos;
+                _particles[i].startSize = size;
+                _particles[i].startColor = _optimizer.CalculateParticleColor(star.color, brightness);
+            }
+
+            _starParticles.SetParticles(_particles, _stars.Length);
+        }
+
+        #region Initialization
 
         private void CreateParticleSystem()
         {
             if (_starParticles == null)
             {
-                // Create particle system for stars
-                GameObject psGO = new GameObject("StarParticles");
-                psGO.transform.SetParent(transform);
-                psGO.transform.localPosition = Vector3.zero;
-
-                _starParticles = psGO.AddComponent<ParticleSystem>();
-
-                var main = _starParticles.main;
-                main.loop = true;
-                main.playOnAwake = true;
-                main.maxParticles = _starCount;
-                main.simulationSpace = ParticleSystemSimulationSpace.World;
-                main.startLifetime = float.MaxValue;
-                main.startSpeed = 0;
-                main.startSize = _maxStarSize;
-                main.startColor = Color.white;
-
-                // Disable emission - we'll manually manage particles
-                var emission = _starParticles.emission;
-                emission.enabled = false;
-
-                // Renderer settings
-                var renderer = psGO.GetComponent<ParticleSystemRenderer>();
-                renderer.renderMode = ParticleSystemRenderMode.Billboard;
-
-                // Create additive particle material for glowing stars
-                Material starMaterial = CreateStarMaterial();
-                if (starMaterial != null)
-                {
-                    renderer.material = starMaterial;
-                }
-                else if (renderer.material == null)
-                {
-                    // Try URP particle shader first, fall back to legacy
-                    Shader shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
-                    if (shader == null) shader = Shader.Find("Particles/Standard Unlit");
-                    if (shader == null) shader = Shader.Find("Sprites/Default");
-                    renderer.material = new Material(shader);
-                }
+                _starParticles = StarParticleFactory.CreateStarParticleSystem(transform, _starCount, _maxStarSize);
             }
 
             _particles = new ParticleSystem.Particle[_starCount];
-        }
-
-        /// <summary>
-        /// Create an additive material with a procedural circle texture for glowing stars
-        /// </summary>
-        private Material CreateStarMaterial()
-        {
-            // Try URP particle shader first for proper transparency
-            Shader shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
-            if (shader == null)
-            {
-                // Fallback to Sprites/Default which works in both pipelines
-                shader = Shader.Find("Sprites/Default");
-            }
-            if (shader == null)
-            {
-                // Final fallback to legacy particle shader
-                shader = Shader.Find("Particles/Standard Unlit");
-            }
-            if (shader == null)
-            {
-                Debug.LogError("[Starfield] Could not find any suitable shader!");
-                return null;
-            }
-
-            Material mat = new Material(shader);
-
-            // Create a procedural circle texture (soft glow)
-            Texture2D starTexture = CreateCircleTexture(64);
-            mat.mainTexture = starTexture;
-
-            // For Sprites/Default, just set the color to white
-            mat.color = Color.white;
-
-            Debug.Log($"[Starfield] Created star material with shader: {shader.name}");
-
-            return mat;
-        }
-
-        /// <summary>
-        /// Create a soft circular gradient texture for star particles
-        /// </summary>
-        private Texture2D CreateCircleTexture(int size)
-        {
-            Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
-            texture.filterMode = FilterMode.Bilinear;
-            texture.wrapMode = TextureWrapMode.Clamp;
-
-            float center = size / 2f;
-            float maxDist = center;
-
-            Color[] pixels = new Color[size * size];
-
-            for (int y = 0; y < size; y++)
-            {
-                for (int x = 0; x < size; x++)
-                {
-                    float dx = x - center;
-                    float dy = y - center;
-                    float dist = Mathf.Sqrt(dx * dx + dy * dy);
-
-                    // Soft falloff from center
-                    float alpha = 1f - Mathf.Clamp01(dist / maxDist);
-                    // Apply power curve for softer glow
-                    alpha = Mathf.Pow(alpha, 1.5f);
-
-                    // Bright center, fading edges
-                    float brightness = Mathf.Pow(alpha, 0.5f);
-
-                    pixels[y * size + x] = new Color(brightness, brightness, brightness, alpha);
-                }
-            }
-
-            texture.SetPixels(pixels);
-            texture.Apply();
-
-            return texture;
         }
 
         private void InitializeStars()
@@ -294,9 +282,7 @@ namespace NeuralBreak.Graphics
                 _stars[i] = CreateStar(true);
             }
 
-            // Pre-simulate to avoid spawn-in effect
             PreSimulate(5f);
-
             UpdateParticles();
             _starParticles.Play();
         }
@@ -305,16 +291,9 @@ namespace NeuralBreak.Graphics
         {
             float angle = Random.Range(0f, Mathf.PI * 2f);
             float distance = Random.Range(0f, _starFieldRadius);
+            float z = randomZ ? Random.Range(10f, _starFieldDepth) : _starFieldDepth;
 
-            float z = randomZ
-                ? Random.Range(10f, _starFieldDepth)
-                : _starFieldDepth;
-
-            Vector3 pos = new Vector3(
-                Mathf.Cos(angle) * distance,
-                Mathf.Sin(angle) * distance,
-                z
-            );
+            Vector3 pos = _optimizer.CreateStarPosition(angle, distance, z);
 
             return new Star
             {
@@ -332,14 +311,13 @@ namespace NeuralBreak.Graphics
         {
             float seed = Random.value;
 
-            // Realistic star color distribution
-            if (seed < 0.50f) return _whiteStarColor;           // Most common
-            if (seed < 0.70f) return _blueWhiteStarColor;       // Hot stars
-            if (seed < 0.82f) return _yellowWhiteStarColor;     // Sun-like
-            if (seed < 0.88f) return _orangeStarColor;          // Cooler stars
-            if (seed < 0.92f) return _cyanStarColor;            // Rare accent
-            if (seed < 0.97f) return new Color(0.75f, 0.75f, 1f); // Light blue
-            return _redStarColor;                                // Red giants
+            if (seed < 0.50f) return _whiteStarColor;
+            if (seed < 0.70f) return _blueWhiteStarColor;
+            if (seed < 0.82f) return _yellowWhiteStarColor;
+            if (seed < 0.88f) return _orangeStarColor;
+            if (seed < 0.92f) return _cyanStarColor;
+            if (seed < 0.97f) return _lightBlueStarColor;
+            return _redStarColor;
         }
 
         private void PreSimulate(float seconds)
@@ -357,299 +335,27 @@ namespace NeuralBreak.Graphics
             }
         }
 
-        private void Update()
-        {
-            if (_stars == null) return;
-
-            _time += Time.deltaTime;
-
-            for (int i = 0; i < _stars.Length; i++)
-            {
-                UpdateStar(ref _stars[i], Time.deltaTime);
-            }
-
-            UpdateParticles();
-            UpdateNebulae();
-            UpdateGrid();
-        }
-
-        private void UpdateStar(ref Star star, float deltaTime)
-        {
-            star.previousPosition = star.position;
-            star.z -= _speed * 10f * deltaTime;
-            star.twinklePhase += star.twinkleSpeed * deltaTime;
-
-            if (star.z <= 1f)
-            {
-                // Reset star to back of field
-                star = CreateStar(false);
-                star.previousPosition = star.position;
-            }
-            else
-            {
-                // Update position based on z
-                float scale = _starFieldDepth / star.z;
-                star.position = new Vector3(
-                    star.position.x,
-                    star.position.y,
-                    star.z
-                );
-            }
-        }
-
-        private void UpdateParticles()
-        {
-            Camera cam = Camera.main;
-            if (cam == null) return;
-
-            Vector3 camPos = cam.transform.position;
-
-            for (int i = 0; i < _stars.Length; i++)
-            {
-                ref Star star = ref _stars[i];
-
-                // Calculate screen position based on z depth
-                float scale = _starFieldDepth / Mathf.Max(star.z, 1f);
-
-                // Convert to world position relative to camera
-                Vector3 worldPos = camPos + new Vector3(
-                    star.position.x * scale * 0.1f,
-                    star.position.y * scale * 0.1f,
-                    star.z * 0.5f
-                );
-
-                // Depth-based size and brightness
-                float depthFactor = (_starFieldDepth - star.z) / _starFieldDepth;
-                float size = Mathf.Max(0.01f, star.baseSize * depthFactor * 2.5f);
-
-                // Twinkling effect using configured speed
-                float twinkle = 0.7f + Mathf.Sin(star.twinklePhase * _twinkleSpeed) * 0.3f * (1f - depthFactor * 0.5f);
-                float brightness = Mathf.Min(1f, depthFactor * twinkle);
-
-                // Trail effect - stretch particles based on speed
-                if (_enableTrails && _speed > 1f)
-                {
-                    float trailFactor = Mathf.Min(_trailLength * (_speed / _maxSpeed), 0.5f);
-                    // Use rotation to create trail direction illusion
-                    _particles[i].rotation = Mathf.Atan2(star.position.y, star.position.x) * Mathf.Rad2Deg;
-                }
-
-                // Set particle
-                _particles[i].position = worldPos;
-                _particles[i].startSize = size;
-                _particles[i].startColor = new Color(
-                    star.color.r * brightness,
-                    star.color.g * brightness,
-                    star.color.b * brightness,
-                    brightness
-                );
-            }
-
-            _starParticles.SetParticles(_particles, _stars.Length);
-        }
-
-        private void CreateNebulae()
-        {
-            _nebulaObjects = new GameObject[_nebulaCount];
-
-            for (int i = 0; i < _nebulaCount; i++)
-            {
-                GameObject nebula = GameObject.CreatePrimitive(PrimitiveType.Quad);
-                nebula.name = $"Nebula_{i}";
-                nebula.transform.SetParent(transform);
-
-                // Remove collider
-                Destroy(nebula.GetComponent<Collider>());
-
-                // Position far in background
-                nebula.transform.localPosition = new Vector3(
-                    Random.Range(-20f, 20f),
-                    Random.Range(-10f, 10f),
-                    _starFieldDepth * 0.8f
-                );
-                nebula.transform.localScale = Vector3.one * _nebulaSize;
-
-                // Create nebula material
-                var renderer = nebula.GetComponent<MeshRenderer>();
-                Material mat = new Material(Shader.Find("Sprites/Default"));
-
-                // Generate nebula color
-                float hue = (i * 0.33f + Random.Range(-0.1f, 0.1f)) % 1f;
-                Color nebulaColor = Color.HSVToRGB(hue, 1f, 0.5f);
-                nebulaColor.a = _nebulaIntensity;
-                mat.color = nebulaColor;
-
-                renderer.material = mat;
-                renderer.sortingOrder = -100;
-
-                _nebulaObjects[i] = nebula;
-            }
-        }
-
-        private void UpdateNebulae()
-        {
-            if (_nebulaObjects == null) return;
-
-            for (int i = 0; i < _nebulaObjects.Length; i++)
-            {
-                if (_nebulaObjects[i] == null) continue;
-
-                // Slowly drift nebulae
-                Vector3 pos = _nebulaObjects[i].transform.localPosition;
-                pos.x += Mathf.Sin(_time * _nebulaMoveSpeed + i * 2f) * Time.deltaTime * 0.5f;
-                pos.y += Mathf.Cos(_time * _nebulaMoveSpeed * 0.8f + i * 2f) * Time.deltaTime * 0.3f;
-                _nebulaObjects[i].transform.localPosition = pos;
-
-                // Pulse size
-                float pulse = 1f + Mathf.Sin(_time * 0.2f + i) * 0.1f;
-                _nebulaObjects[i].transform.localScale = Vector3.one * _nebulaSize * pulse;
-
-                // Rotate color hue slowly
-                var renderer = _nebulaObjects[i].GetComponent<MeshRenderer>();
-                if (renderer != null && renderer.material != null)
-                {
-                    float hue = ((i * 0.33f) + _time * 0.02f) % 1f;
-                    Color nebulaColor = Color.HSVToRGB(hue, 1f, 0.5f);
-                    nebulaColor.a = _nebulaIntensity;
-                    renderer.material.color = nebulaColor;
-                }
-            }
-        }
-
-        private void CreateGrid()
-        {
-            // Create a perspective grid floor effect (80s style)
-            GameObject gridObj = new GameObject("Grid");
-            gridObj.transform.SetParent(transform);
-            gridObj.transform.localPosition = new Vector3(0, _gridHorizonY - 15f, 30f);
-            gridObj.transform.localRotation = Quaternion.Euler(75f, 0f, 0f);
-
-            _gridRenderer = gridObj.AddComponent<LineRenderer>();
-            _gridRenderer.material = new Material(Shader.Find("Sprites/Default"));
-            _gridRenderer.startColor = _gridColor;
-            _gridRenderer.endColor = _gridColor;
-            _gridRenderer.startWidth = 0.05f;
-            _gridRenderer.endWidth = 0.05f;
-            _gridRenderer.sortingOrder = -50;
-
-            // Create grid lines
-            int gridLines = 20;
-            float gridSize = 40f;
-            int totalPoints = (gridLines * 2 + 1) * 4;
-            _gridRenderer.positionCount = totalPoints;
-
-            int index = 0;
-            float spacing = gridSize / gridLines;
-
-            // Horizontal lines (perpendicular to camera)
-            for (int i = -gridLines; i <= gridLines; i++)
-            {
-                _gridRenderer.SetPosition(index++, new Vector3(-gridSize, 0, i * spacing));
-                _gridRenderer.SetPosition(index++, new Vector3(gridSize, 0, i * spacing));
-            }
-
-            // Vertical lines (going into distance)
-            for (int i = -gridLines; i <= gridLines; i++)
-            {
-                _gridRenderer.SetPosition(index++, new Vector3(i * spacing, 0, -gridSize));
-                _gridRenderer.SetPosition(index++, new Vector3(i * spacing, 0, gridSize));
-            }
-        }
-
-        private void CreateScanlines()
-        {
-            // Create overlay quad with scanline effect
-            GameObject scanlineObj = new GameObject("Scanlines");
-            scanlineObj.transform.SetParent(transform);
-
-            // Position in front of camera
-            var cam = Camera.main;
-            if (cam != null)
-            {
-                scanlineObj.transform.position = cam.transform.position + cam.transform.forward * 1f;
-                scanlineObj.transform.rotation = cam.transform.rotation;
-            }
-
-            // Create a simple scanline texture
-            Texture2D scanlineTex = new Texture2D(1, 4, TextureFormat.RGBA32, false);
-            scanlineTex.filterMode = FilterMode.Point;
-            scanlineTex.wrapMode = TextureWrapMode.Repeat;
-            scanlineTex.SetPixel(0, 0, new Color(0, 0, 0, _scanlineIntensity));
-            scanlineTex.SetPixel(0, 1, new Color(0, 0, 0, 0));
-            scanlineTex.SetPixel(0, 2, new Color(0, 0, 0, _scanlineIntensity));
-            scanlineTex.SetPixel(0, 3, new Color(0, 0, 0, 0));
-            scanlineTex.Apply();
-
-            _scanlineMaterial = new Material(Shader.Find("Sprites/Default"));
-            _scanlineMaterial.mainTexture = scanlineTex;
-            _scanlineMaterial.mainTextureScale = new Vector2(1, 100);
-
-            // This would need a screen-space quad or post-process to work properly
-            // For now, just mark as created - full implementation needs camera overlay
-        }
-
-        private void UpdateGrid()
-        {
-            if (!_enableGrid || _gridRenderer == null) return;
-
-            // Scroll grid based on speed for motion effect
-            Vector3 pos = _gridRenderer.transform.localPosition;
-            float scrollAmount = _speed * Time.deltaTime * 2f;
-            pos.z = 30f + ((_time * _speed) % 4f);
-            _gridRenderer.transform.localPosition = pos;
-
-            // Fade grid color based on distance from horizon
-            Color c = _gridColor;
-            c.a = _gridColor.a * (0.5f + Mathf.Sin(_time * 0.5f) * 0.2f);
-            _gridRenderer.startColor = c;
-            _gridRenderer.endColor = c;
-        }
+        #endregion
 
         #region Public API
 
-        /// <summary>
-        /// Set starfield speed (clamped to min/max)
-        /// </summary>
-        public void SetSpeed(float speed)
-        {
-            _speed = Mathf.Clamp(speed, _minSpeed, _maxSpeed);
-        }
-
-        /// <summary>
-        /// Get current speed
-        /// </summary>
+        public void SetSpeed(float speed) => _speed = Mathf.Clamp(speed, _minSpeed, _maxSpeed);
         public float GetSpeed() => _speed;
 
-        /// <summary>
-        /// Pause the starfield
-        /// </summary>
         public void Pause()
         {
             enabled = false;
-            if (_starParticles != null)
-            {
-                _starParticles.Pause();
-            }
+            _starParticles?.Pause();
         }
 
-        /// <summary>
-        /// Resume the starfield
-        /// </summary>
         public void Resume()
         {
             enabled = true;
-            if (_starParticles != null)
-            {
-                _starParticles.Play();
-            }
+            _starParticles?.Play();
         }
 
-        /// <summary>
-        /// Reset and reinitialize stars
-        /// </summary>
         public void Reset()
         {
-            // Stop particle system before reinitializing
             if (_starParticles != null && _starParticles.isPlaying)
             {
                 _starParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
@@ -657,14 +363,9 @@ namespace NeuralBreak.Graphics
             InitializeStars();
         }
 
-        /// <summary>
-        /// Set star count (requires reinitialization)
-        /// </summary>
         public void SetStarCount(int count)
         {
             _starCount = Mathf.Max(100, count);
-
-            // Stop particle system before modifying it
             _starParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
 
             var main = _starParticles.main;

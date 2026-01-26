@@ -33,17 +33,8 @@ namespace NeuralBreak.UI
         private bool _isVisible;
         private bool _isFading;
 
-        public static ControlsOverlay Instance { get; private set; }
-
         private void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
-
             CreateUI();
             _canvasGroup.alpha = 0f;
             _container.gameObject.SetActive(false);
@@ -57,10 +48,6 @@ namespace NeuralBreak.UI
         private void OnDestroy()
         {
             EventBus.Unsubscribe<GameStartedEvent>(OnGameStarted);
-            if (Instance == this)
-            {
-                Instance = null;
-            }
         }
 
         private void OnGameStarted(GameStartedEvent evt)

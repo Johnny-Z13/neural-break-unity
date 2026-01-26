@@ -209,6 +209,9 @@ namespace NeuralBreak.Entities
             // Fire from multiple shards
             for (int s = 0; s < _shardsPerBurst; s++)
             {
+                // Safety check: avoid divide by zero
+                if (_shards.Count == 0) break;
+
                 int shardIndex = (_nextFiringShard + s) % _shards.Count;
 
                 // Fire multiple shots from this shard

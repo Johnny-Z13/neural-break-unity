@@ -17,6 +17,12 @@ namespace NeuralBreak.Core
         /// </summary>
         public static void Subscribe<T>(Action<T> handler) where T : struct
         {
+            if (handler == null)
+            {
+                Debug.LogError($"[EventBus] Cannot subscribe to {typeof(T).Name} - handler is null!");
+                return;
+            }
+
             Type eventType = typeof(T);
 
             if (_events.TryGetValue(eventType, out Delegate existing))
@@ -34,6 +40,12 @@ namespace NeuralBreak.Core
         /// </summary>
         public static void Unsubscribe<T>(Action<T> handler) where T : struct
         {
+            if (handler == null)
+            {
+                Debug.LogError($"[EventBus] Cannot unsubscribe from {typeof(T).Name} - handler is null!");
+                return;
+            }
+
             Type eventType = typeof(T);
 
             if (_events.TryGetValue(eventType, out Delegate existing))
@@ -59,7 +71,14 @@ namespace NeuralBreak.Core
 
             if (_events.TryGetValue(eventType, out Delegate handler))
             {
-                (handler as Action<T>)?.Invoke(eventData);
+                try
+                {
+                    (handler as Action<T>)?.Invoke(eventData);
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogError($"[EventBus] Error invoking event {typeof(T).Name}: {ex.Message}\n{ex.StackTrace}");
+                }
             }
         }
 
@@ -345,4 +364,42 @@ namespace NeuralBreak.Core
     {
         public PickupType upgradeType;
     }
+
+    #endregion
+
+    #region Achievement Events
+
+    public struct AchievementUnlockedEvent
+    {
+        public string achievementId;
+        public string achievementName;
+        public string description;
+    }
+
+    #endregion
+
+    #region UI Events
+
+    public struct ScreenFlashRequestEvent
+    {
+        public Color color;
+        public float duration;
+    }
+
+    public struct DamageFlashRequestEvent
+    {
+        public float intensity;
+    }
+
+    public struct HealFlashRequestEvent
+    {
+        public float intensity;
+    }
+
+    public struct PickupFlashRequestEvent
+    {
+        public float intensity;
+    }
+
+    #endregion
 }

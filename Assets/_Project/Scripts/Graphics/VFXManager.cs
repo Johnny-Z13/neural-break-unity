@@ -11,7 +11,6 @@ namespace NeuralBreak.Graphics
     /// </summary>
     public class VFXManager : MonoBehaviour
     {
-        public static VFXManager Instance { get; private set; }
 
         [Header("Explosion Effects")]
         [SerializeField] private ParticleSystem _smallExplosionPrefab;
@@ -41,15 +40,11 @@ namespace NeuralBreak.Graphics
         // Particle pools
         private Dictionary<ParticleSystem, Queue<ParticleSystem>> _particlePools = new Dictionary<ParticleSystem, Queue<ParticleSystem>>();
 
+        // Cached references
+        private Transform _playerTransform;
+
         private void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
-
             InitializePools();
         }
 
@@ -60,10 +55,6 @@ namespace NeuralBreak.Graphics
 
         private void OnDestroy()
         {
-            if (Instance == this)
-            {
-                Instance = null;
-            }
             UnsubscribeFromEvents();
         }
 
@@ -79,6 +70,13 @@ namespace NeuralBreak.Graphics
             EventBus.Subscribe<PickupCollectedEvent>(OnPickupCollected);
             EventBus.Subscribe<ComboChangedEvent>(OnComboChanged);
             EventBus.Subscribe<PowerUpChangedEvent>(OnPowerUpChanged);
+            EventBus.Subscribe<GameStartedEvent>(OnGameStarted);
+        }
+
+        private void OnGameStarted(GameStartedEvent evt)
+        {
+            // Clear cached player reference on new game
+            _playerTransform = null;
         }
 
         private void UnsubscribeFromEvents()
@@ -91,6 +89,7 @@ namespace NeuralBreak.Graphics
             EventBus.Unsubscribe<PickupCollectedEvent>(OnPickupCollected);
             EventBus.Unsubscribe<ComboChangedEvent>(OnComboChanged);
             EventBus.Unsubscribe<PowerUpChangedEvent>(OnPowerUpChanged);
+            EventBus.Unsubscribe<GameStartedEvent>(OnGameStarted);
         }
 
         #endregion
@@ -132,21 +131,19 @@ namespace NeuralBreak.Graphics
 
         private void OnPlayerHealed(PlayerHealedEvent evt)
         {
-            // Find player position
-            var player = FindFirstObjectByType<Entities.PlayerController>();
-            if (player != null)
+            CachePlayerTransform();
+            if (_playerTransform != null)
             {
-                PlayEffect(_healPrefab, player.transform.position, Color.green);
+                PlayEffect(_healPrefab, _playerTransform.position, Color.green);
             }
         }
 
         private void OnShieldChanged(ShieldChangedEvent evt)
         {
-            // Shield hit/gain effect
-            var player = FindFirstObjectByType<Entities.PlayerController>();
-            if (player != null)
+            CachePlayerTransform();
+            if (_playerTransform != null)
             {
-                PlayEffect(_shieldHitPrefab, player.transform.position, Color.cyan);
+                PlayEffect(_shieldHitPrefab, _playerTransform.position, Color.cyan);
             }
         }
 
@@ -167,10 +164,10 @@ namespace NeuralBreak.Graphics
             // Special effect for invulnerable
             if (evt.pickupType == PickupType.Invulnerable)
             {
-                var player = FindFirstObjectByType<Entities.PlayerController>();
-                if (player != null)
+                CachePlayerTransform();
+                if (_playerTransform != null)
                 {
-                    PlayEffect(_invulnerabilityPrefab, player.transform.position, Color.yellow);
+                    PlayEffect(_invulnerabilityPrefab, _playerTransform.position, Color.yellow);
                 }
             }
         }
@@ -180,20 +177,32 @@ namespace NeuralBreak.Graphics
             // Big combo milestones
             if (evt.comboCount > 0 && evt.comboCount % 10 == 0)
             {
-                var player = FindFirstObjectByType<Entities.PlayerController>();
-                if (player != null)
+                CachePlayerTransform();
+                if (_playerTransform != null)
                 {
-                    PlayEffect(_comboEffectPrefab, player.transform.position, Color.magenta);
+                    PlayEffect(_comboEffectPrefab, _playerTransform.position, Color.magenta);
                 }
             }
         }
 
         private void OnPowerUpChanged(PowerUpChangedEvent evt)
         {
-            var player = FindFirstObjectByType<Entities.PlayerController>();
-            if (player != null)
+            CachePlayerTransform();
+            if (_playerTransform != null)
             {
-                PlayEffect(_powerUpPrefab, player.transform.position, new Color(1f, 0.8f, 0f));
+                PlayEffect(_powerUpPrefab, _playerTransform.position, new Color(1f, 0.8f, 0f));
+            }
+        }
+
+        private void CachePlayerTransform()
+        {
+            if (_playerTransform == null)
+            {
+                var playerGO = GameObject.FindGameObjectWithTag("Player");
+                if (playerGO != null)
+                {
+                    _playerTransform = playerGO.transform;
+                }
             }
         }
 

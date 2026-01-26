@@ -20,7 +20,6 @@ namespace NeuralBreak.UI
     /// </summary>
     public class UIFeedbacks : MonoBehaviour
     {
-        public static UIFeedbacks Instance { get; private set; }
 
         [Header("Score Feedbacks")]
         [SerializeField] private MMF_Player _scorePunchFeedback;
@@ -47,13 +46,6 @@ namespace NeuralBreak.UI
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
-
             // Create default feedbacks if not assigned
             CreateDefaultFeedbacks();
         }
@@ -66,10 +58,6 @@ namespace NeuralBreak.UI
 
         private void OnDestroy()
         {
-            if (Instance == this)
-            {
-                Instance = null;
-            }
             UnsubscribeFromEvents();
         }
 
@@ -184,64 +172,9 @@ namespace NeuralBreak.UI
 
         #endregion
 
-        #region Public API
-
-        public static void PlayScorePunch()
-        {
-            if (Instance != null)
-            {
-                Instance.PlayFeedback(Instance._scorePunchFeedback);
-            }
-        }
-
-        public static void PlayComboMilestone()
-        {
-            if (Instance != null)
-            {
-                Instance.PlayFeedback(Instance._comboMilestoneFeedback);
-            }
-        }
-
-        public static void PlayDamage()
-        {
-            if (Instance != null)
-            {
-                Instance.PlayFeedback(Instance._damageFeedback);
-            }
-        }
-
-        public static void PlayHeal()
-        {
-            if (Instance != null)
-            {
-                Instance.PlayFeedback(Instance._healFeedback);
-            }
-        }
-
-        public static void PlayLevelUp()
-        {
-            if (Instance != null)
-            {
-                Instance.PlayFeedback(Instance._levelUpFeedback);
-            }
-        }
-
-        public static void PlayButtonHover()
-        {
-            if (Instance != null)
-            {
-                Instance.PlayFeedback(Instance._buttonHoverFeedback);
-            }
-        }
-
-        public static void PlayButtonClick()
-        {
-            if (Instance != null)
-            {
-                Instance.PlayFeedback(Instance._buttonClickFeedback);
-            }
-        }
-
+        #region Public API (Removed singleton - now use EventBus directly)
+        // All feedback is now triggered via EventBus event subscriptions
+        // No static API needed - this class is a pure event subscriber
         #endregion
 
         #region Helper Methods

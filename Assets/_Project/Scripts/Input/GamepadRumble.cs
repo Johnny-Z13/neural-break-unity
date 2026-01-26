@@ -11,7 +11,6 @@ namespace NeuralBreak.Input
     /// </summary>
     public class GamepadRumble : MonoBehaviour
     {
-        public static GamepadRumble Instance { get; private set; }
 
         [Header("Settings")]
         [SerializeField] private bool _enableRumble = true;

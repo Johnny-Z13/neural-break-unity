@@ -10,21 +10,14 @@ namespace NeuralBreak.Core
     /// </summary>
     public class FeedbackSetup : MonoBehaviour
     {
-        public static FeedbackSetup Instance { get; private set; }
-
         private void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
+            // No singleton pattern - just a regular component
         }
 
         private void OnDestroy()
         {
-            if (Instance == this) Instance = null;
+            // Cleanup if needed
         }
 
         private MMF_Player CreateFeedbackPlayer(string name, Transform parent)

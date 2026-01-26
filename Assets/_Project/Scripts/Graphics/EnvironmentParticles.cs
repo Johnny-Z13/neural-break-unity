@@ -24,7 +24,6 @@ namespace NeuralBreak.Graphics
     /// </summary>
     public class EnvironmentParticles : MonoBehaviour
     {
-        public static EnvironmentParticles Instance { get; private set; }
 
         [Header("Settings")]
         [SerializeField] private EnvironmentParticleType _currentType = EnvironmentParticleType.DataBits;

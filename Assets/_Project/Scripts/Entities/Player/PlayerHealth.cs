@@ -1,6 +1,7 @@
 using UnityEngine;
 using NeuralBreak.Core;
 using NeuralBreak.Config;
+using NeuralBreak.Utils;
 using MoreMountains.Feedbacks;
 
 namespace NeuralBreak.Entities
@@ -69,7 +70,7 @@ namespace NeuralBreak.Entities
             if (SpawnInvulnerabilityDuration > 0)
             {
                 _invulnerabilityTimer = SpawnInvulnerabilityDuration;
-                Debug.Log($"[PlayerHealth] Spawn invulnerability active for {SpawnInvulnerabilityDuration}s");
+                LogHelper.Log($"[PlayerHealth] Spawn invulnerability active for {SpawnInvulnerabilityDuration}s");
             }
 
             // Publish initial health state so HUD can initialize
@@ -108,7 +109,17 @@ namespace NeuralBreak.Entities
         /// </summary>
         public void TakeDamage(int damage, Vector3 damageSource)
         {
-            if (_isDead) return;
+            if (damage < 0)
+            {
+                LogHelper.LogError($"[PlayerHealth] Invalid damage value: {damage}. Must be >= 0.");
+                return;
+            }
+
+            if (_isDead)
+            {
+                LogHelper.LogWarning("[PlayerHealth] Cannot take damage - player is already dead!");
+                return;
+            }
 
             // Check invulnerability states
             if (IsInvulnerable) return;
@@ -131,7 +142,7 @@ namespace NeuralBreak.Entities
                 // Reset combo when hit
                 GameManager.Instance?.ResetCombo();
 
-                Debug.Log($"[PlayerHealth] Shield absorbed hit! Shields: {_currentShields}");
+                LogHelper.Log($"[PlayerHealth] Shield absorbed hit! Shields: {_currentShields}");
                 return;
             }
 
@@ -156,7 +167,7 @@ namespace NeuralBreak.Entities
                 damageSource = damageSource
             });
 
-            Debug.Log($"[PlayerHealth] Took {damage} damage! Health: {_currentHealth}/{_maxHealth}");
+            LogHelper.Log($"[PlayerHealth] Took {damage} damage! Health: {_currentHealth}/{_maxHealth}");
 
             // Check death
             if (_currentHealth <= 0)
@@ -186,7 +197,7 @@ namespace NeuralBreak.Entities
                 position = transform.position
             });
 
-            Debug.Log("[PlayerHealth] Player died!");
+            LogHelper.Log("[PlayerHealth] Player died!");
         }
 
         #endregion
@@ -198,7 +209,17 @@ namespace NeuralBreak.Entities
         /// </summary>
         public void Heal(int amount)
         {
-            if (_isDead) return;
+            if (amount < 0)
+            {
+                LogHelper.LogError($"[PlayerHealth] Invalid heal amount: {amount}. Must be >= 0.");
+                return;
+            }
+
+            if (_isDead)
+            {
+                LogHelper.LogWarning("[PlayerHealth] Cannot heal - player is dead!");
+                return;
+            }
 
             int previousHealth = _currentHealth;
             _currentHealth = Mathf.Min(_currentHealth + amount, _maxHealth);
@@ -215,7 +236,7 @@ namespace NeuralBreak.Entities
                     maxHealth = _maxHealth
                 });
 
-                Debug.Log($"[PlayerHealth] Healed {actualHeal}! Health: {_currentHealth}/{_maxHealth}");
+                LogHelper.Log($"[PlayerHealth] Healed {actualHeal}! Health: {_currentHealth}/{_maxHealth}");
             }
         }
 
@@ -248,7 +269,7 @@ namespace NeuralBreak.Entities
                 maxShields = _maxShields
             });
 
-            Debug.Log($"[PlayerHealth] Shield gained! Shields: {_currentShields}/{_maxShields}");
+            LogHelper.Log($"[PlayerHealth] Shield gained! Shields: {_currentShields}/{_maxShields}");
         }
 
         /// <summary>
@@ -256,7 +277,19 @@ namespace NeuralBreak.Entities
         /// </summary>
         public void SetShields(int amount)
         {
-            _currentShields = Mathf.Clamp(amount, 0, _maxShields);
+            if (amount < 0)
+            {
+                LogHelper.LogWarning($"[PlayerHealth] Invalid shield amount: {amount}. Clamping to 0.");
+                amount = 0;
+            }
+
+            if (amount > _maxShields)
+            {
+                LogHelper.LogWarning($"[PlayerHealth] Shield amount {amount} exceeds max {_maxShields}. Clamping.");
+                amount = _maxShields;
+            }
+
+            _currentShields = amount;
 
             EventBus.Publish(new ShieldChangedEvent
             {
@@ -274,11 +307,17 @@ namespace NeuralBreak.Entities
         /// </summary>
         public void ActivateInvulnerability(float duration = -1f)
         {
+            if (duration == 0f)
+            {
+                LogHelper.LogWarning("[PlayerHealth] Invulnerability duration is 0 - no effect!");
+                return;
+            }
+
             _invulnerabilityTimer = duration > 0 ? duration : InvulnerabilityDuration;
 
             _invulnerabilityFeedback?.PlayFeedbacks();
 
-            Debug.Log($"[PlayerHealth] Invulnerability activated for {_invulnerabilityTimer}s");
+            LogHelper.Log($"[PlayerHealth] Invulnerability activated for {_invulnerabilityTimer}s");
         }
 
         #endregion
@@ -305,8 +344,16 @@ namespace NeuralBreak.Entities
         /// </summary>
         public void IncreaseMaxHealth(int amount)
         {
+            if (amount <= 0)
+            {
+                LogHelper.LogWarning($"[PlayerHealth] Invalid max health increase: {amount}. Must be > 0.");
+                return;
+            }
+
             _maxHealth += amount;
             _currentHealth += amount; // Also heal by that amount
+
+            LogHelper.Log($"[PlayerHealth] Max health increased by {amount}. New max: {_maxHealth}");
         }
 
         #endregion

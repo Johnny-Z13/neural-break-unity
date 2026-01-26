@@ -12,7 +12,6 @@ namespace NeuralBreak.UI
     /// </summary>
     public class WaveAnnouncement : MonoBehaviour
     {
-        public static WaveAnnouncement Instance { get; private set; }
 
         [Header("Timing")]
         [SerializeField] private float _slideInDuration = 0.3f;
@@ -48,13 +47,6 @@ namespace NeuralBreak.UI
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
-
             CreateUI();
         }
 
@@ -72,11 +64,6 @@ namespace NeuralBreak.UI
             EventBus.Unsubscribe<LevelCompletedEvent>(OnLevelCompleted);
             EventBus.Unsubscribe<BossEncounterEvent>(OnBossEncounter);
             EventBus.Unsubscribe<GameStartedEvent>(OnGameStarted);
-
-            if (Instance == this)
-            {
-                Instance = null;
-            }
         }
 
         private void CreateUI()

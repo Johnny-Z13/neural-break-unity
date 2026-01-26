@@ -3,6 +3,7 @@ using NeuralBreak.Core;
 using NeuralBreak.Entities;
 using NeuralBreak.Input;
 using NeuralBreak.Config;
+using NeuralBreak.Utils;
 using MoreMountains.Feedbacks;
 
 namespace NeuralBreak.Combat
@@ -61,7 +62,19 @@ namespace NeuralBreak.Combat
         private void Awake()
         {
             // Initialize projectile pool
-            if (_projectilePrefab != null && _projectileContainer != null)
+            if (_projectilePrefab == null)
+            {
+                LogHelper.LogError("[WeaponSystem] Projectile prefab is not assigned!");
+                return;
+            }
+
+            if (_projectileContainer == null)
+            {
+                LogHelper.LogError("[WeaponSystem] Projectile container is not assigned!");
+                return;
+            }
+
+            try
             {
                 _projectilePool = new ObjectPool<Projectile>(
                     _projectilePrefab,
@@ -69,6 +82,10 @@ namespace NeuralBreak.Combat
                     initialSize: 50,
                     onReturn: proj => proj.OnReturnToPool()
                 );
+            }
+            catch (System.Exception ex)
+            {
+                LogHelper.LogError($"[WeaponSystem] Failed to create projectile pool: {ex.Message}");
             }
         }
 
@@ -105,7 +122,17 @@ namespace NeuralBreak.Combat
 
         private void Fire()
         {
-            if (_player == null || _projectilePool == null) return;
+            if (_player == null)
+            {
+                LogHelper.LogError("[WeaponSystem] Cannot fire - player reference is null!");
+                return;
+            }
+
+            if (_projectilePool == null)
+            {
+                LogHelper.LogError("[WeaponSystem] Cannot fire - projectile pool is null!");
+                return;
+            }
 
             // Get fire direction (player facing direction)
             Vector2 direction = _player.FacingDirection;
@@ -256,7 +283,7 @@ namespace NeuralBreak.Combat
                 cooldownDuration = OverheatCooldown
             });
 
-            Debug.Log("[WeaponSystem] OVERHEATED!");
+            LogHelper.Log("[WeaponSystem] OVERHEATED!");
         }
 
         private void ClearOverheat()
@@ -265,7 +292,7 @@ namespace NeuralBreak.Combat
 
             _overheatClearedFeedback?.PlayFeedbacks();
 
-            Debug.Log("[WeaponSystem] Overheat cleared");
+            LogHelper.Log("[WeaponSystem] Overheat cleared");
         }
 
         #endregion
@@ -277,6 +304,12 @@ namespace NeuralBreak.Combat
         /// </summary>
         public void AddPowerLevel(int amount = 1)
         {
+            if (amount <= 0)
+            {
+                LogHelper.LogWarning($"[WeaponSystem] Invalid power level amount: {amount}. Must be > 0.");
+                return;
+            }
+
             int previousLevel = _powerLevel;
             _powerLevel = Mathf.Min(_powerLevel + amount, ConfigMaxPowerLevel);
 
@@ -287,7 +320,7 @@ namespace NeuralBreak.Combat
                     newLevel = _powerLevel
                 });
 
-                Debug.Log($"[WeaponSystem] Power level: {_powerLevel}");
+                LogHelper.Log($"[WeaponSystem] Power level: {_powerLevel}");
             }
         }
 
@@ -296,7 +329,19 @@ namespace NeuralBreak.Combat
         /// </summary>
         public void SetPowerLevel(int level)
         {
-            _powerLevel = Mathf.Clamp(level, 0, ConfigMaxPowerLevel);
+            if (level < 0)
+            {
+                LogHelper.LogWarning($"[WeaponSystem] Invalid power level: {level}. Clamping to 0.");
+                level = 0;
+            }
+
+            if (level > ConfigMaxPowerLevel)
+            {
+                LogHelper.LogWarning($"[WeaponSystem] Power level {level} exceeds max {ConfigMaxPowerLevel}. Clamping.");
+                level = ConfigMaxPowerLevel;
+            }
+
+            _powerLevel = level;
 
             EventBus.Publish(new PowerUpChangedEvent
             {

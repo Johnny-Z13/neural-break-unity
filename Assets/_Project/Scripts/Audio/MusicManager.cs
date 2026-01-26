@@ -25,7 +25,6 @@ namespace NeuralBreak.Audio
     /// </summary>
     public class MusicManager : MonoBehaviour
     {
-        public static MusicManager Instance { get; private set; }
 
         [Header("Audio Sources")]
         [SerializeField] private AudioSource _sourceA;
@@ -377,14 +376,14 @@ namespace NeuralBreak.Audio
 
                 if (!_isBossFight && _autoSelectByIntensity && GameManager.Instance != null && GameManager.Instance.IsPlaying)
                 {
-                    // Calculate current game intensity based on enemy count, score multiplier, etc.
+                    // Calculate current game intensity based on enemy count
+                    // Use GameObject.FindGameObjectsWithTag for better performance
                     float enemyIntensity = 0f;
-                    var spawner = FindFirstObjectByType<EnemySpawner>();
-                    if (spawner != null)
+                    var enemyObjects = GameObject.FindGameObjectsWithTag("Enemy");
+                    if (enemyObjects != null && enemyObjects.Length > 0)
                     {
                         // More enemies = higher intensity
-                        int enemyCount = FindObjectsByType<Entities.EnemyBase>(FindObjectsSortMode.None).Length;
-                        enemyIntensity = Mathf.Clamp01(enemyCount / 30f);
+                        enemyIntensity = Mathf.Clamp01(enemyObjects.Length / 30f);
                     }
 
                     // Blend level-based and enemy-based intensity

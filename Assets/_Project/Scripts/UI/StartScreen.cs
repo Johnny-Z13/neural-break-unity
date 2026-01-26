@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using NeuralBreak.Core;
+using NeuralBreak.Utils;
 
 namespace NeuralBreak.UI
 {
@@ -78,14 +79,26 @@ namespace NeuralBreak.UI
 
         private void StartGame(GameMode mode)
         {
-            if (GameManager.Instance != null)
+            LogHelper.Log($"[StartScreen] ========================================");
+            LogHelper.Log($"[StartScreen] PLAY BUTTON CLICKED!");
+            LogHelper.Log($"[StartScreen] Launching ARCADE MODE (GameMode.{mode})");
+            LogHelper.Log($"[StartScreen] ========================================");
+
+            if (GameManager.Instance == null)
             {
-                GameManager.Instance.StartGame(mode);
+                LogHelper.LogError("[StartScreen] ERROR: GameManager.Instance is NULL! Cannot start game!");
+                return;
             }
-            else
-            {
-                Debug.LogWarning("[StartScreen] GameManager not found!");
-            }
+
+            LogHelper.Log($"[StartScreen] GameManager found, calling StartGame({mode})");
+
+            // Start the game
+            GameManager.Instance.StartGame(mode);
+
+            LogHelper.Log($"[StartScreen] StartGame() called successfully");
+
+            // Hide this screen
+            Hide();
         }
     }
 }
