@@ -2,6 +2,7 @@ using UnityEngine;
 using NeuralBreak.Entities;
 using NeuralBreak.Combat;
 using NeuralBreak.Graphics;
+using NeuralBreak.Utils;
 
 namespace NeuralBreak.Core
 {

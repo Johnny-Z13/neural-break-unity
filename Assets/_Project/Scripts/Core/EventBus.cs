@@ -282,6 +282,21 @@ namespace NeuralBreak.Core
 
     #endregion
 
+    #region Smart Bomb Events
+
+    public struct SmartBombActivatedEvent
+    {
+        public Vector3 position;
+    }
+
+    public struct SmartBombCountChangedEvent
+    {
+        public int count;
+        public int maxCount;
+    }
+
+    #endregion
+
     #region Spawn Events
 
     public struct EnemySpawnWarningEvent
@@ -353,7 +368,8 @@ namespace NeuralBreak.Core
         Homing
     }
 
-    // Weapon upgrade events
+    #region Weapon Upgrade Events
+
     public struct WeaponUpgradeActivatedEvent
     {
         public PickupType upgradeType;
@@ -363,17 +379,6 @@ namespace NeuralBreak.Core
     public struct WeaponUpgradeExpiredEvent
     {
         public PickupType upgradeType;
-    }
-
-    #endregion
-
-    #region Achievement Events
-
-    public struct AchievementUnlockedEvent
-    {
-        public string achievementId;
-        public string achievementName;
-        public string description;
     }
 
     #endregion

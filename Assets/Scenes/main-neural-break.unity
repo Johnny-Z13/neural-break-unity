@@ -164,6 +164,7 @@ MonoBehaviour:
   _yellowWhiteStarColor: {r: 1, g: 0.96, b: 0.88, a: 1}
   _orangeStarColor: {r: 1, g: 0.88, b: 0.75, a: 1}
   _cyanStarColor: {r: 0, g: 1, b: 1, a: 1}
+  _lightBlueStarColor: {r: 0.75, g: 0.75, b: 1, a: 1}
   _redStarColor: {r: 1, g: 0.75, b: 0.75, a: 1}
   _enableNebula: 1
   _nebulaCount: 3
@@ -176,8 +177,6 @@ MonoBehaviour:
   _enableScanlines: 0
   _scanlineIntensity: 0.1
   _starParticles: {fileID: 0}
-  _nebulaMaterial: {fileID: 0}
-  _gridMaterial: {fileID: 0}
 --- !u!4 &113583238
 Transform:
   m_ObjectHideFlags: 0
@@ -668,7 +667,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4a0a9b4a7dd1c324393e0ca4c318a815, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Combat.EnemyProjectilePool
-  _projectilePrefab: {fileID: 0}
+  _projectilePrefab: {fileID: 2843790199372898552, guid: 530285be5f15f91459459cdd49e40e40, type: 3}
   _poolSize: 200
   _container: {fileID: 0}
 --- !u!4 &578968689
@@ -1187,6 +1186,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1137795346}
   - component: {fileID: 1137795345}
+  - component: {fileID: 1137795348}
+  - component: {fileID: 1137795347}
   m_Layer: 0
   m_Name: GameSetup
   m_TagString: Untagged
@@ -1206,17 +1207,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 79782c24dc20c084e9881d4ffa0feb6f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Core.GameSetup
-  _projectilePrefab: {fileID: 3755074133138808909, guid: 1ae76b4efd5bc3c4fb103700b47e799a, type: 3}
-  _enemyProjectilePrefab: {fileID: 2843790199372898552, guid: 530285be5f15f91459459cdd49e40e40, type: 3}
-  _dataMitePrefab: {fileID: 313079910149442926, guid: a1a0a042603432b4cb04a57b96ec1344, type: 3}
-  _scanDronePrefab: {fileID: 3126298202117424405, guid: c1d61a4bb91e3d449befd7b02234122b, type: 3}
-  _fizzerPrefab: {fileID: 2639399583251356653, guid: 7a5ccf61681f1f74c82a8587d977cbe8, type: 3}
-  _ufoPrefab: {fileID: 7935807895420086156, guid: f9ca9bca145e468428bf987e77ac9034, type: 3}
-  _chaosWormPrefab: {fileID: 70348419382244498, guid: 5e1e8c760542f93428edad79294e622e, type: 3}
-  _voidSpherePrefab: {fileID: 6422687118183549413, guid: 12f8a48c777b24c4996ea1bb022995d7, type: 3}
-  _crystalShardPrefab: {fileID: 1511544208708049196, guid: 4f42af24845c57a469bcd40f00c8022e, type: 3}
-  _bossPrefab: {fileID: 5853621838815248195, guid: 53eedcd397e87a249982627d3fff075c, type: 3}
-  _autoFindOnAwake: 1
+  _referenceWiring: {fileID: 1137795348}
+  _spriteSetup: {fileID: 1137795347}
+  _autoSetupOnAwake: 1
   _autoStartGame: 0
 --- !u!4 &1137795346
 Transform:
@@ -1233,6 +1226,81 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1137795347
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1137795344}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 043103d05d9f6b4479c0e4afa521e22b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Core.PrefabSpriteSetup
+  _player: {fileID: 2107141845}
+  _projectilePrefab: {fileID: 3755074133138808909, guid: 1ae76b4efd5bc3c4fb103700b47e799a, type: 3}
+  _enemyProjectilePrefab: {fileID: 2843790199372898552, guid: 530285be5f15f91459459cdd49e40e40, type: 3}
+  _dataMitePrefab: {fileID: 313079910149442926, guid: a1a0a042603432b4cb04a57b96ec1344, type: 3}
+  _scanDronePrefab: {fileID: 3126298202117424405, guid: c1d61a4bb91e3d449befd7b02234122b, type: 3}
+  _fizzerPrefab: {fileID: 2639399583251356653, guid: 7a5ccf61681f1f74c82a8587d977cbe8, type: 3}
+  _ufoPrefab: {fileID: 7935807895420086156, guid: f9ca9bca145e468428bf987e77ac9034, type: 3}
+  _chaosWormPrefab: {fileID: 70348419382244498, guid: 5e1e8c760542f93428edad79294e622e, type: 3}
+  _voidSpherePrefab: {fileID: 6422687118183549413, guid: 12f8a48c777b24c4996ea1bb022995d7, type: 3}
+  _crystalShardPrefab: {fileID: 1511544208708049196, guid: 4f42af24845c57a469bcd40f00c8022e, type: 3}
+  _bossPrefab: {fileID: 5853621838815248195, guid: 53eedcd397e87a249982627d3fff075c, type: 3}
+--- !u!114 &1137795348
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1137795344}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 195fa82b1fb5c694e9cfd009ebf99d81, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Core.SceneReferenceWiring
+  _player: {fileID: 2107141845}
+  _cameraController: {fileID: 330585548}
+  _enemySpawner: {fileID: 1715311633}
+  _enemyProjectilePool: {fileID: 578968688}
+  _gameManager: {fileID: 1588116111}
+  _levelManager: {fileID: 983163548}
+  _spawnWarningIndicator: {fileID: 0}
+  _lowHealthVignette: {fileID: 0}
+  _highScoreManager: {fileID: 1968209209}
+  _bossHealthBar: {fileID: 0}
+  _controlsOverlay: {fileID: 0}
+  _weaponUpgradeManager: {fileID: 0}
+  _activeUpgradesDisplay: {fileID: 0}
+  _playerLevelSystem: {fileID: 0}
+  _xpBarDisplay: {fileID: 0}
+  _levelUpAnnouncement: {fileID: 0}
+  _damageNumberPopup: {fileID: 0}
+  _waveAnnouncement: {fileID: 0}
+  _statisticsScreen: {fileID: 0}
+  _arenaManager: {fileID: 0}
+  _gamepadRumble: {fileID: 0}
+  _minimap: {fileID: 0}
+  _accessibilityManager: {fileID: 0}
+  _saveSystem: {fileID: 0}
+  _musicManager: {fileID: 774612687}
+  _environmentParticles: {fileID: 0}
+  _shipCustomization: {fileID: 0}
+  _enemyDeathVFX: {fileID: 0}
+  _uiFeedbacks: {fileID: 0}
+  _achievementSystem: {fileID: 0}
+  _projectilePrefab: {fileID: 3755074133138808909, guid: 1ae76b4efd5bc3c4fb103700b47e799a, type: 3}
+  _enemyProjectilePrefab: {fileID: 2843790199372898552, guid: 530285be5f15f91459459cdd49e40e40, type: 3}
+  _dataMitePrefab: {fileID: 313079910149442926, guid: a1a0a042603432b4cb04a57b96ec1344, type: 3}
+  _scanDronePrefab: {fileID: 3126298202117424405, guid: c1d61a4bb91e3d449befd7b02234122b, type: 3}
+  _fizzerPrefab: {fileID: 2639399583251356653, guid: 7a5ccf61681f1f74c82a8587d977cbe8, type: 3}
+  _ufoPrefab: {fileID: 7935807895420086156, guid: f9ca9bca145e468428bf987e77ac9034, type: 3}
+  _chaosWormPrefab: {fileID: 70348419382244498, guid: 5e1e8c760542f93428edad79294e622e, type: 3}
+  _voidSpherePrefab: {fileID: 6422687118183549413, guid: 12f8a48c777b24c4996ea1bb022995d7, type: 3}
+  _crystalShardPrefab: {fileID: 1511544208708049196, guid: 4f42af24845c57a469bcd40f00c8022e, type: 3}
+  _bossPrefab: {fileID: 5853621838815248195, guid: 53eedcd397e87a249982627d3fff075c, type: 3}
 --- !u!1 &1221492667
 GameObject:
   m_ObjectHideFlags: 0
@@ -1803,6 +1871,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1185388566381748, guid: b2c625dd76ff58745b02ee6d43ac6981, type: 3}
   m_PrefabInstance: {fileID: 4989507563906846139}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &2107141845 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5288426245339951891, guid: b2c625dd76ff58745b02ee6d43ac6981, type: 3}
+  m_PrefabInstance: {fileID: 4989507563906846139}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87b8f8e3615caa24a89e86e7e6d8c002, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Entities.PlayerController
 --- !u!1001 &4989507563906846139
 PrefabInstance:
   m_ObjectHideFlags: 0

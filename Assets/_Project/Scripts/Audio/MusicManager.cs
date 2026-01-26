@@ -51,12 +51,6 @@ namespace NeuralBreak.Audio
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
             DontDestroyOnLoad(gameObject);
 
             SetupAudioSources();
@@ -83,10 +77,6 @@ namespace NeuralBreak.Audio
             EventBus.Unsubscribe<BossDefeatedEvent>(OnBossDefeated);
             EventBus.Unsubscribe<LevelStartedEvent>(OnLevelStarted);
 
-            if (Instance == this)
-            {
-                Instance = null;
-            }
         }
 
         private void SetupAudioSources()

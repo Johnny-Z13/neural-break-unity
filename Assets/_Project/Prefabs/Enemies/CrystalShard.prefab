@@ -157,12 +157,7 @@ MonoBehaviour:
   _orbitRadius: 1.5
   _orbitSpeed: 1.5
   _shardScale: 0.4
-  _burstCooldown: 3.5
   _shardsPerBurst: 2
-  _shotsPerShard: 2
-  _shotDelay: 0.15
-  _projectileSpeed: 8
-  _projectileDamage: 10
   _deathDamageRadius: 5
   _deathDamageAmount: 30
   _coreRenderer: {fileID: 0}

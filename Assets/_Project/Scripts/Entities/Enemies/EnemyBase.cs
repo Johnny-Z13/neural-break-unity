@@ -64,6 +64,11 @@ namespace NeuralBreak.Entities
         public int Damage => _damage;
         public abstract EnemyType EnemyType { get; }
 
+        /// <summary>
+        /// Get the config for this enemy type (for subclasses to access shooting params)
+        /// </summary>
+        protected EnemyTypeConfig EnemyConfig => ConfigProvider.Balance?.GetEnemyConfig(EnemyType);
+
         #region Lifecycle
 
         /// <summary>
@@ -115,21 +120,21 @@ namespace NeuralBreak.Entities
         /// </summary>
         protected virtual void EnsureFeedbacks()
         {
-            if (FeedbackSetup.Instance == null) return;
+            if (FindObjectOfType<FeedbackSetup>() == null) return;
 
             if (_hitFeedback == null)
             {
-                _hitFeedback = FeedbackSetup.Instance.CreateHitFeedback(transform);
+                _hitFeedback = FindObjectOfType<FeedbackSetup>().CreateHitFeedback(transform);
             }
 
             if (_spawnFeedback == null)
             {
-                _spawnFeedback = FeedbackSetup.Instance.CreateSpawnFeedback(transform);
+                _spawnFeedback = FindObjectOfType<FeedbackSetup>().CreateSpawnFeedback(transform);
             }
 
             if (_deathFeedback == null)
             {
-                _deathFeedback = FeedbackSetup.Instance.CreateDeathFeedback(transform);
+                _deathFeedback = FindObjectOfType<FeedbackSetup>().CreateDeathFeedback(transform);
             }
         }
 
@@ -436,14 +441,19 @@ namespace NeuralBreak.Entities
             if (other.CompareTag("Player"))
             {
                 var playerHealth = other.GetComponent<PlayerHealth>();
-                if (playerHealth != null)
+                if (playerHealth != null && !playerHealth.IsDead)
                 {
+                    // Player takes damage from enemy contact (only if alive)
                     playerHealth.TakeDamage(_damage, transform.position);
                 }
-                else
+                else if (playerHealth == null)
                 {
                     Debug.LogWarning($"[EnemyBase] Player object '{other.name}' has no PlayerHealth component!");
                 }
+
+                // Enemy dies on contact with player (TypeScript behavior)
+                // This gives the satisfying "ramming" feel where both take damage
+                Kill();
             }
         }
 

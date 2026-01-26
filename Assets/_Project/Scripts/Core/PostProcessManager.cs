@@ -47,12 +47,6 @@ namespace NeuralBreak.Core
         private void Awake()
         {
             // Singleton setup
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
 
             SetupVolume();
             SubscribeToEvents();
@@ -62,10 +56,6 @@ namespace NeuralBreak.Core
         {
             UnsubscribeFromEvents();
 
-            if (Instance == this)
-            {
-                Instance = null;
-            }
         }
 
         private void SetupVolume()

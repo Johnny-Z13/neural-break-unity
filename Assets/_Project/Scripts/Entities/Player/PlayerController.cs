@@ -45,6 +45,7 @@ namespace NeuralBreak.Entities
         private float ThrustSpeedMultiplier => Config.thrustSpeedMultiplier;
         private float ThrustAccelTime => Config.thrustAccelerationTime;
         private float ThrustDecelTime => Config.thrustDecelerationTime;
+        private ControlScheme CurrentControlScheme => Config.controlScheme;
 
         // Components
         private Rigidbody2D _rb;
@@ -56,6 +57,9 @@ namespace NeuralBreak.Entities
         private Vector2 _aimDirection = Vector2.up; // Smoothed for visuals
         private Vector2 _rawAimDirection = Vector2.up; // Instant for shooting
         private float _currentSpeedMultiplier = 1f;
+
+        // Classic rotate controls state
+        private float _currentRotation = 0f; // For ClassicRotate/TankControls
 
         // Dash state
         private bool _isDashing;
@@ -109,6 +113,11 @@ namespace NeuralBreak.Entities
                 _input.OnThrustPressed += OnThrustPressed;
                 _input.OnThrustReleased += OnThrustReleased;
                 _input.SetPlayerTransform(transform);
+                Debug.Log("[PlayerController] InputManager connected successfully");
+            }
+            else
+            {
+                Debug.LogError("[PlayerController] InputManager.Instance is NULL!");
             }
 
             // Apply generated player sprite (triangle pointing up)
@@ -259,15 +268,31 @@ namespace NeuralBreak.Entities
             // Get aim direction from input manager
             Vector2 inputAim = _input.GetAimDirection();
 
-            Vector2 targetAim = _rawAimDirection;
-            if (inputAim.sqrMagnitude > 0.01f)
+            // Different behavior based on control scheme
+            Vector2 targetAim = _rawAimDirection; // Default: maintain last aim
+
+            switch (CurrentControlScheme)
             {
-                targetAim = inputAim.normalized;
-            }
-            else if (_lastMoveDirection.sqrMagnitude > 0.01f)
-            {
-                // Fall back to move direction if no aim input
-                targetAim = _lastMoveDirection;
+                case NeuralBreak.Config.ControlScheme.TwinStick:
+                case NeuralBreak.Config.ControlScheme.FaceMovement:
+                    // Twin-stick: Only update aim when stick is moved
+                    // When stick is centered, maintain last aim direction
+                    if (inputAim.sqrMagnitude > 0.01f)
+                    {
+                        targetAim = inputAim.normalized;
+                    }
+                    // else: keep targetAim = _rawAimDirection (maintain last aim)
+                    break;
+
+                case NeuralBreak.Config.ControlScheme.ClassicRotate:
+                case NeuralBreak.Config.ControlScheme.TankControls:
+                    // These modes handle aim in their movement functions
+                    // TankControls still updates from mouse/stick
+                    if (CurrentControlScheme == NeuralBreak.Config.ControlScheme.TankControls && inputAim.sqrMagnitude > 0.01f)
+                    {
+                        targetAim = inputAim.normalized;
+                    }
+                    break;
             }
 
             // Store RAW aim direction for shooting (instant, no lag)
@@ -304,13 +329,40 @@ namespace NeuralBreak.Entities
         }
 
         /// <summary>
-        /// Rotate player sprite to face aim direction
+        /// Rotate player sprite based on control scheme
         /// </summary>
         private void UpdatePlayerRotation()
         {
-            if (_aimDirection.sqrMagnitude > 0.01f)
+            Vector2 rotationDirection = Vector2.zero;
+
+            switch (CurrentControlScheme)
             {
-                float angle = Mathf.Atan2(_aimDirection.y, _aimDirection.x) * Mathf.Rad2Deg - 90f;
+                case NeuralBreak.Config.ControlScheme.TwinStick:
+                    // Face aim direction (classic twin-stick)
+                    rotationDirection = _aimDirection;
+                    break;
+
+                case NeuralBreak.Config.ControlScheme.FaceMovement:
+                    // Face movement direction (no strafing visual)
+                    rotationDirection = _currentVelocity;
+                    // Fall back to aim direction if stationary
+                    if (rotationDirection.sqrMagnitude < 0.1f)
+                    {
+                        rotationDirection = _aimDirection;
+                    }
+                    break;
+
+                case NeuralBreak.Config.ControlScheme.ClassicRotate:
+                case NeuralBreak.Config.ControlScheme.TankControls:
+                    // Use manual rotation from input
+                    transform.rotation = Quaternion.Euler(0f, 0f, _currentRotation);
+                    return; // Early return, rotation is already set
+            }
+
+            // Apply rotation for TwinStick and FaceMovement modes
+            if (rotationDirection.sqrMagnitude > 0.01f)
+            {
+                float angle = Mathf.Atan2(rotationDirection.y, rotationDirection.x) * Mathf.Rad2Deg - 90f;
                 transform.rotation = Quaternion.Euler(0f, 0f, angle);
             }
         }
@@ -319,8 +371,36 @@ namespace NeuralBreak.Entities
 
         private void UpdateMovement()
         {
-            if (_input == null) return;
+            if (_input == null)
+            {
+                // Try to get InputManager again if it was null
+                _input = InputManager.Instance;
+                if (_input == null) return;
+            }
 
+            // Route to appropriate control scheme
+            switch (CurrentControlScheme)
+            {
+                case NeuralBreak.Config.ControlScheme.TwinStick:
+                case NeuralBreak.Config.ControlScheme.FaceMovement:
+                    UpdateMovement_TwinStick();
+                    break;
+
+                case NeuralBreak.Config.ControlScheme.ClassicRotate:
+                    UpdateMovement_ClassicRotate();
+                    break;
+
+                case NeuralBreak.Config.ControlScheme.TankControls:
+                    UpdateMovement_TankControls();
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Twin-stick movement: WASD moves in any direction
+        /// </summary>
+        private void UpdateMovement_TwinStick()
+        {
             Vector2 inputDir = _input.MoveInput;
             float targetSpeed = BaseSpeed * _currentSpeedMultiplier * _thrustMultiplier;
 
@@ -348,6 +428,102 @@ namespace NeuralBreak.Entities
             }
 
             _rb.linearVelocity = _currentVelocity;
+        }
+
+        /// <summary>
+        /// Classic Asteroids-style rotation: A/D rotates, W/S moves forward/back
+        /// </summary>
+        private void UpdateMovement_ClassicRotate()
+        {
+            Vector2 inputDir = _input.MoveInput;
+            float targetSpeed = BaseSpeed * _currentSpeedMultiplier * _thrustMultiplier;
+
+            // Rotation from left/right input
+            float rotationInput = inputDir.x;
+            float rotationSpeed = 180f; // degrees per second
+            _currentRotation -= rotationInput * rotationSpeed * Time.fixedDeltaTime;
+
+            // Calculate forward direction from rotation
+            float radians = _currentRotation * Mathf.Deg2Rad;
+            Vector2 forward = new Vector2(Mathf.Sin(radians), Mathf.Cos(radians));
+
+            // Movement from forward/back input
+            float thrustInput = inputDir.y;
+
+            if (Mathf.Abs(thrustInput) > 0.01f)
+            {
+                // Move in facing direction
+                Vector2 targetVelocity = forward * thrustInput * targetSpeed;
+                _currentVelocity = Vector2.MoveTowards(
+                    _currentVelocity,
+                    targetVelocity,
+                    Acceleration * Time.fixedDeltaTime
+                );
+
+                _lastMoveDirection = forward;
+            }
+            else
+            {
+                // Decelerate
+                _currentVelocity = Vector2.MoveTowards(
+                    _currentVelocity,
+                    Vector2.zero,
+                    Deceleration * Time.fixedDeltaTime
+                );
+            }
+
+            _rb.linearVelocity = _currentVelocity;
+
+            // Update aim direction to match facing
+            _rawAimDirection = forward;
+            _aimDirection = forward;
+        }
+
+        /// <summary>
+        /// Tank controls: W/S moves forward/back, A/D rotates ship
+        /// </summary>
+        private void UpdateMovement_TankControls()
+        {
+            Vector2 inputDir = _input.MoveInput;
+            float targetSpeed = BaseSpeed * _currentSpeedMultiplier * _thrustMultiplier;
+
+            // Rotation from left/right input
+            float rotationInput = inputDir.x;
+            float rotationSpeed = 120f; // degrees per second (slightly slower than classic)
+            _currentRotation -= rotationInput * rotationSpeed * Time.fixedDeltaTime;
+
+            // Calculate forward direction from rotation
+            float radians = _currentRotation * Mathf.Deg2Rad;
+            Vector2 forward = new Vector2(Mathf.Sin(radians), Mathf.Cos(radians));
+
+            // Movement from forward/back input
+            float moveInput = inputDir.y;
+
+            if (Mathf.Abs(moveInput) > 0.01f)
+            {
+                // Move in facing direction
+                Vector2 targetVelocity = forward * moveInput * targetSpeed;
+                _currentVelocity = Vector2.MoveTowards(
+                    _currentVelocity,
+                    targetVelocity,
+                    Acceleration * Time.fixedDeltaTime
+                );
+
+                _lastMoveDirection = forward;
+            }
+            else
+            {
+                // Decelerate
+                _currentVelocity = Vector2.MoveTowards(
+                    _currentVelocity,
+                    Vector2.zero,
+                    Deceleration * Time.fixedDeltaTime
+                );
+            }
+
+            _rb.linearVelocity = _currentVelocity;
+
+            // Aim is independent for tank controls (can still aim with mouse/right stick)
         }
 
         private void EnforceBoundary()

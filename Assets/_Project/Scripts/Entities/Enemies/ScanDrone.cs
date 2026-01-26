@@ -20,14 +20,16 @@ namespace NeuralBreak.Entities
         [Header("ScanDrone Settings")]
         [SerializeField] private float _detectionRange = 15f;
         [SerializeField] private float _fireRange = 12f;
-        [SerializeField] private float _fireRate = 2f;
-        [SerializeField] private float _projectileSpeed = 7f;
-        [SerializeField] private int _projectileDamage = 15;
 
         [Header("Patrol Settings")]
         [SerializeField] private float _patrolRadius = 10f;
         [SerializeField] private float _patrolSpeed = 0.8f;
         [SerializeField] private float _chaseSpeedMultiplier = 1.5f;
+
+        // Config-driven shooting values
+        private float _fireRate => EnemyConfig?.fireRate ?? 2f;
+        private float _projectileSpeed => EnemyConfig?.projectileSpeed ?? 7f;
+        private int _projectileDamage => EnemyConfig?.projectileDamage ?? 15;
 
         [Header("Visual")]
         [SerializeField] private SpriteRenderer _spriteRenderer;

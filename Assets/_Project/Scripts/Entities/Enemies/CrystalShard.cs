@@ -27,16 +27,18 @@ namespace NeuralBreak.Entities
         [SerializeField] private float _shardScale = 0.4f;
 
         [Header("Attack")]
-        [SerializeField] private float _burstCooldown = 3.5f;
         [SerializeField] private int _shardsPerBurst = 2;
-        [SerializeField] private int _shotsPerShard = 2;
-        [SerializeField] private float _shotDelay = 0.15f;
-        [SerializeField] private float _projectileSpeed = 8f;
-        [SerializeField] private int _projectileDamage = 10;
 
         [Header("Death Explosion")]
         [SerializeField] private float _deathDamageRadius = 5f;
         [SerializeField] private int _deathDamageAmount = 30;
+
+        // Config-driven shooting values
+        private float _burstCooldown => EnemyConfig?.fireRate ?? 3.5f;
+        private int _shotsPerShard => EnemyConfig?.burstCount ?? 2;
+        private float _shotDelay => EnemyConfig?.burstDelay ?? 0.2f;
+        private float _projectileSpeed => EnemyConfig?.projectileSpeed ?? 8f;
+        private int _projectileDamage => EnemyConfig?.projectileDamage ?? 10;
 
         [Header("Visual")]
         [SerializeField] private SpriteRenderer _coreRenderer;

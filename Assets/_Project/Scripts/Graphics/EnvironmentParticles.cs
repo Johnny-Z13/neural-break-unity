@@ -55,12 +55,6 @@ namespace NeuralBreak.Graphics
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
         }
 
         private void Start()
@@ -83,10 +77,6 @@ namespace NeuralBreak.Graphics
             EventBus.Unsubscribe<GameOverEvent>(OnGameOver);
             EventBus.Unsubscribe<BossSpawnedEvent>(OnBossSpawned);
 
-            if (Instance == this)
-            {
-                Instance = null;
-            }
         }
 
         private void Update()
@@ -393,7 +383,7 @@ namespace NeuralBreak.Graphics
         private void OnLevelStarted(LevelStartedEvent evt)
         {
             // Match particle type to arena theme
-            var arena = ArenaManager.Instance;
+            var arena = FindObjectOfType<ArenaManager>();
             if (arena != null)
             {
                 switch (arena.CurrentTheme)

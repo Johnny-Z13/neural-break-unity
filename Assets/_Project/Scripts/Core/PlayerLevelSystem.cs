@@ -35,16 +35,6 @@ namespace NeuralBreak.Core
         public float LevelProgress => (float)_currentXP / XPForCurrentLevel;
         public int TotalXP { get; private set; }
 
-        private void Awake()
-        {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
-        }
-
         private void Start()
         {
             EventBus.Subscribe<EnemyKilledEvent>(OnEnemyKilled);
@@ -55,11 +45,6 @@ namespace NeuralBreak.Core
         {
             EventBus.Unsubscribe<EnemyKilledEvent>(OnEnemyKilled);
             EventBus.Unsubscribe<GameStartedEvent>(OnGameStarted);
-
-            if (Instance == this)
-            {
-                Instance = null;
-            }
         }
 
         private void OnGameStarted(GameStartedEvent evt)

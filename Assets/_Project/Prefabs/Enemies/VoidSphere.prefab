@@ -157,11 +157,6 @@ MonoBehaviour:
   _pulsateAmount: 0.1
   _gravityPullRadius: 6
   _gravityPullStrength: 2
-  _burstCooldown: 3
-  _burstCount: 4
-  _burstDelay: 0.25
-  _projectileSpeed: 5
-  _projectileDamage: 20
   _spreadAngle: 30
   _deathDamageRadius: 8
   _deathDamageAmount: 50

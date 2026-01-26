@@ -60,12 +60,6 @@ namespace NeuralBreak.UI
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
 
             CreateUI();
         }
@@ -86,10 +80,6 @@ namespace NeuralBreak.UI
         {
             EventBus.Unsubscribe<GameStartedEvent>(OnGameStarted);
 
-            if (Instance == this)
-            {
-                Instance = null;
-            }
         }
 
         private void Update()

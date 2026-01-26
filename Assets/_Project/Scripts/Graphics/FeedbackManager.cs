@@ -54,12 +54,6 @@ namespace NeuralBreak.Graphics
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
         }
 
         private void Start()
@@ -84,10 +78,6 @@ namespace NeuralBreak.Graphics
 
         private void OnDestroy()
         {
-            if (Instance == this)
-            {
-                Instance = null;
-            }
             UnsubscribeFromEvents();
 
             // Restore time scale
@@ -272,9 +262,9 @@ namespace NeuralBreak.Graphics
             if (!_enableScreenFlash) return;
 
             // Use ScreenFlash component
-            if (ScreenFlash.Instance != null)
+            if (FindObjectOfType<ScreenFlash>() != null)
             {
-                ScreenFlash.Instance.Flash(color, _flashDuration);
+                FindObjectOfType<ScreenFlash>().Flash(color, _flashDuration);
             }
         }
 

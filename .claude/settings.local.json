@@ -34,7 +34,9 @@
       "Bash(for dir in D:\\\\Projects\\\\Unity\\\\neural-break-unity\\\\Assets\\\\_Project\\\\Scripts\\\\*)",
       "Bash(for dir in */)",
       "Skill(frontend-design)",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "Bash(where claude:*)",
+      "Bash(python remove_instance_props.py:*)"
     ]
   }
 }

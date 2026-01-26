@@ -44,17 +44,17 @@ namespace NeuralBreak.UI
         {
             CreateUI();
 
-            if (PlayerLevelSystem.Instance != null)
+            if (FindObjectOfType<PlayerLevelSystem>() != null)
             {
-                PlayerLevelSystem.Instance.OnLevelUp += OnLevelUp;
+                FindObjectOfType<PlayerLevelSystem>().OnLevelUp += OnLevelUp;
             }
         }
 
         private void OnDestroy()
         {
-            if (PlayerLevelSystem.Instance != null)
+            if (FindObjectOfType<PlayerLevelSystem>() != null)
             {
-                PlayerLevelSystem.Instance.OnLevelUp -= OnLevelUp;
+                FindObjectOfType<PlayerLevelSystem>().OnLevelUp -= OnLevelUp;
             }
         }
 

@@ -28,12 +28,6 @@ namespace NeuralBreak.Entities
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
 
             // Initialize subsystems
             _visualsRenderer = new ShipVisualsRenderer();
@@ -74,10 +68,6 @@ namespace NeuralBreak.Entities
                 _saveSystem.OnSkinUnlocked -= HandleSkinUnlocked;
             }
 
-            if (Instance == this)
-            {
-                Instance = null;
-            }
         }
 
         #region Public API

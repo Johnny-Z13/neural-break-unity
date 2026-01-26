@@ -153,10 +153,7 @@ MonoBehaviour:
   _spawnFeedback: {fileID: 0}
   _hitFeedback: {fileID: 0}
   _deathFeedback: {fileID: 0}
-  _phase1FireRate: 1.5
-  _phase2FireRate: 1.2
-  _projectileSpeed: 6.5
-  _projectileDamage: 18
+  _phase2FireRateMultiplier: 0.8
   _ringAttackCooldown: 3
   _ringExpandSpeed: 2
   _ringDuration: 3

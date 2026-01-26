@@ -47,16 +47,6 @@ namespace NeuralBreak.Input
         private Coroutine _rumbleCoroutine;
         private Gamepad _currentGamepad;
 
-        private void Awake()
-        {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
-        }
-
         private void Start()
         {
             SubscribeToEvents();
@@ -67,10 +57,6 @@ namespace NeuralBreak.Input
             StopRumble();
             UnsubscribeFromEvents();
 
-            if (Instance == this)
-            {
-                Instance = null;
-            }
         }
 
         private void Update()

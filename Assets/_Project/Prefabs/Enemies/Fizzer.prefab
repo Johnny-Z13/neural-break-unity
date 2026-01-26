@@ -267,11 +267,6 @@ MonoBehaviour:
   _directionChangeInterval: 0.15
   _zigzagAmplitude: 3
   _zigzagFrequency: 8
-  _burstCooldown: 3
-  _burstCount: 2
-  _burstDelay: 0.2
-  _projectileSpeed: 9
-  _projectileDamage: 6
   _deathDamageRadius: 2
   _deathDamageAmount: 15
   _spriteRenderer: {fileID: 0}

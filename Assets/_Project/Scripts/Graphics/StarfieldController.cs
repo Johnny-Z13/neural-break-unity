@@ -92,12 +92,6 @@ namespace NeuralBreak.Graphics
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
             DontDestroyOnLoad(gameObject);
 
             // Initialize optimizer first
@@ -142,10 +136,6 @@ namespace NeuralBreak.Graphics
 
         private void OnDestroy()
         {
-            if (Instance == this)
-            {
-                Instance = null;
-            }
 
             UnsubscribeFromEvents();
 

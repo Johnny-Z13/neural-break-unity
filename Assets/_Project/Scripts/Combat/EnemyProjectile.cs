@@ -119,15 +119,19 @@ namespace NeuralBreak.Combat
             if (other.CompareTag("Player"))
             {
                 var playerHealth = other.GetComponent<PlayerHealth>();
-                if (playerHealth != null)
+                if (playerHealth != null && !playerHealth.IsDead)
                 {
+                    // Only damage player if alive
                     playerHealth.TakeDamage(_damage, transform.position);
                 }
 
                 ReturnToPool();
             }
-            // Check wall/boundary collision
-            else if (other.gameObject.CompareTag("Boundary"))
+            // Check wall/boundary collision - use layer or name check instead of tag
+            // to avoid "Tag not defined" errors
+            else if (other.gameObject.layer == LayerMask.NameToLayer("Boundary") ||
+                     other.gameObject.name.Contains("Boundary") ||
+                     other.gameObject.name.Contains("Arena"))
             {
                 ReturnToPool();
             }

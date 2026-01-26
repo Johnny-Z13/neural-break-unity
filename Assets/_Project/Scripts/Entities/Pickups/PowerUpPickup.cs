@@ -69,7 +69,7 @@ namespace NeuralBreak.Entities
                 Debug.Log($"[PowerUp] Weapon power increased by {_powerIncrease}");
 
                 // Also activate spread shot upgrade
-                WeaponUpgradeManager upgradeManager = WeaponUpgradeManager.Instance;
+                WeaponUpgradeManager upgradeManager = FindAnyObjectByType<WeaponUpgradeManager>();
                 if (upgradeManager != null)
                 {
                     upgradeManager.ActivateUpgrade(PickupType.SpreadShot);

@@ -1,5 +1,6 @@
 using UnityEngine;
 using NeuralBreak.Config;
+using NeuralBreak.Core;
 
 namespace NeuralBreak.Graphics
 {

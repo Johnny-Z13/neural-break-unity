@@ -268,31 +268,59 @@ namespace NeuralBreak.UI
 
         private void AddScaleEffect(MMF_Player player, float targetScale, float duration)
         {
-            // Create a scale feedback using MMF_Scale
-            var scaleFeedback = new MMF_Scale();
-            scaleFeedback.Label = "Scale Punch";
-            scaleFeedback.AnimateScaleTarget = player.transform;
-            scaleFeedback.AnimateScaleDuration = duration;
-            scaleFeedback.RemapCurveOne = 0f;
-            scaleFeedback.RemapCurveZero = targetScale;
-            scaleFeedback.Mode = MMF_Scale.Modes.Additive;
-            scaleFeedback.Timing.TimescaleMode = TimescaleModes.Unscaled;
+            if (player == null) return;
 
-            player.AddFeedback(scaleFeedback);
+            try
+            {
+                // Create a scale feedback using MMF_Scale
+                var scaleFeedback = new MMF_Scale();
+                scaleFeedback.Label = "Scale Punch";
+                scaleFeedback.AnimateScaleTarget = player.transform;
+                scaleFeedback.AnimateScaleDuration = duration;
+                scaleFeedback.RemapCurveOne = 0f;
+                scaleFeedback.RemapCurveZero = targetScale;
+                scaleFeedback.Mode = MMF_Scale.Modes.Additive;
+
+                // Safely set timing mode
+                if (scaleFeedback.Timing != null)
+                {
+                    scaleFeedback.Timing.TimescaleMode = TimescaleModes.Unscaled;
+                }
+
+                player.AddFeedback(scaleFeedback);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[UIFeedbacks] Failed to add scale effect: {e.Message}");
+            }
         }
 
         private void AddFlashEffect(MMF_Player player, Color flashColor)
         {
-            // Use MMF_ImageAlpha or similar for flash
-            // For now, create a simple feedback reference
-            var flashFeedback = new MMF_Flicker();
-            flashFeedback.Label = "Color Flash";
-            flashFeedback.FlickerDuration = UITheme.Duration.Fast;
-            flashFeedback.FlickerPeriod = 0.05f;
-            flashFeedback.FlickerColor = flashColor;
-            flashFeedback.Timing.TimescaleMode = TimescaleModes.Unscaled;
+            if (player == null) return;
 
-            player.AddFeedback(flashFeedback);
+            try
+            {
+                // Use MMF_ImageAlpha or similar for flash
+                // For now, create a simple feedback reference
+                var flashFeedback = new MMF_Flicker();
+                flashFeedback.Label = "Color Flash";
+                flashFeedback.FlickerDuration = UITheme.Duration.Fast;
+                flashFeedback.FlickerPeriod = 0.05f;
+                flashFeedback.FlickerColor = flashColor;
+
+                // Safely set timing mode
+                if (flashFeedback.Timing != null)
+                {
+                    flashFeedback.Timing.TimescaleMode = TimescaleModes.Unscaled;
+                }
+
+                player.AddFeedback(flashFeedback);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[UIFeedbacks] Failed to add flash effect: {e.Message}");
+            }
         }
 
         #endregion
@@ -300,19 +328,19 @@ namespace NeuralBreak.UI
         #region Debug
 
         [ContextMenu("Test: Score Punch")]
-        private void TestScorePunch() => PlayScorePunch();
+        private void TestScorePunch() => PlayFeedback(_scorePunchFeedback);
 
         [ContextMenu("Test: Combo Milestone")]
-        private void TestComboMilestone() => PlayComboMilestone();
+        private void TestComboMilestone() => PlayFeedback(_comboMilestoneFeedback);
 
         [ContextMenu("Test: Damage")]
-        private void TestDamage() => PlayDamage();
+        private void TestDamage() => PlayFeedback(_damageFeedback);
 
         [ContextMenu("Test: Heal")]
-        private void TestHeal() => PlayHeal();
+        private void TestHeal() => PlayFeedback(_healFeedback);
 
         [ContextMenu("Test: Level Up")]
-        private void TestLevelUp() => PlayLevelUp();
+        private void TestLevelUp() => PlayFeedback(_levelUpFeedback);
 
         #endregion
     }

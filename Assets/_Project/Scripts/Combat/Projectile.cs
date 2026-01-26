@@ -15,7 +15,7 @@ namespace NeuralBreak.Combat
     public class Projectile : MonoBehaviour
     {
         [Header("Settings")]
-        [SerializeField] private float _baseRadius = 0.05f; // TypeScript BASE_RADIUS = 0.05
+        [SerializeField] private float _baseRadius = 0.15f; // Increased for visibility
 
         [Header("Visuals")]
         [SerializeField] private SpriteRenderer _spriteRenderer;
@@ -66,6 +66,30 @@ namespace NeuralBreak.Combat
             }
             _collider.isTrigger = true;
             _collider.radius = _baseRadius;
+
+            // Get sprite renderer reference if not assigned
+            if (_spriteRenderer == null)
+            {
+                _spriteRenderer = GetComponent<SpriteRenderer>();
+            }
+            
+            // Ensure sprite renderer has a sprite and is visible
+            if (_spriteRenderer != null)
+            {
+                if (_spriteRenderer.sprite == null)
+                {
+                    // Create a default sprite if none exists
+                    _spriteRenderer.sprite = Graphics.SpriteGenerator.CreateCircle(32, new Color(0.2f, 0.9f, 1f), "ProjectileSprite");
+                }
+                _spriteRenderer.sortingOrder = 100; // High sorting order to be visible above everything
+                _spriteRenderer.enabled = true;
+            }
+
+            // Get trail renderer reference if not assigned
+            if (_trailRenderer == null)
+            {
+                _trailRenderer = GetComponent<TrailRenderer>();
+            }
         }
 
         private void Update()
@@ -94,7 +118,7 @@ namespace NeuralBreak.Combat
 
         private void UpdateHoming()
         {
-            var upgradeManager = WeaponUpgradeManager.Instance;
+            var upgradeManager = FindObjectOfType<WeaponUpgradeManager>();
             if (upgradeManager == null) return;
 
             // Find nearest enemy
@@ -167,10 +191,10 @@ namespace NeuralBreak.Combat
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
             transform.rotation = Quaternion.Euler(0, 0, angle - 90f);
 
-            // Scale with power level - TypeScript formula: baseRadius * (1 + powerLevel * 0.06)
-            // Visual scale is larger than collision for visibility
-            // Reduced by 80% (multiply by 0.2) per user request
-            float visualScale = (_baseRadius + powerLevel * 0.006f) * 10f * 0.2f; // 10x base, then 80% reduction
+            // Scale with power level - small but visible projectiles
+            // At power level 0: scale = 0.15 * 3 = 0.45
+            // At power level 10: scale = 0.15 * 1.1 * 3 = 0.495
+            float visualScale = _baseRadius * (1f + powerLevel * 0.1f) * 3f;
             transform.localScale = Vector3.one * visualScale;
 
             // Visual indication for special projectiles

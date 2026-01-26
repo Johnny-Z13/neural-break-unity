@@ -114,9 +114,10 @@ namespace NeuralBreak.Entities
                         break;
                     case UnlockRequirement.Achievement:
                         // Special case - check all achievements
-                        if (AchievementSystem.Instance != null)
+                        var achievementSystem = UnityEngine.Object.FindObjectOfType<AchievementSystem>();
+                        if (achievementSystem != null)
                         {
-                            shouldUnlock = AchievementSystem.Instance.GetUnlockedCount() >= AchievementSystem.Instance.GetTotalCount();
+                            shouldUnlock = achievementSystem.GetUnlockedCount() >= achievementSystem.GetTotalCount();
                         }
                         break;
                 }

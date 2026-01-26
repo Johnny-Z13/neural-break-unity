@@ -56,15 +56,13 @@ namespace NeuralBreak.Entities
 
         protected override void ApplyEffect(GameObject player)
         {
-            if (WeaponUpgradeManager.Instance != null)
+            // Publish event for WeaponUpgradeManager to handle
+            EventBus.Publish(new WeaponUpgradeActivatedEvent
             {
-                WeaponUpgradeManager.Instance.ActivateUpgrade(PickupType.SpreadShot, _duration);
-                Debug.Log($"[SpreadShot] Activated for {_duration} seconds!");
-            }
-            else
-            {
-                Debug.LogWarning("[SpreadShot] WeaponUpgradeManager not found!");
-            }
+                upgradeType = PickupType.SpreadShot,
+                duration = _duration
+            });
+            Debug.Log($"[SpreadShot] Activated for {_duration} seconds!");
         }
     }
 }

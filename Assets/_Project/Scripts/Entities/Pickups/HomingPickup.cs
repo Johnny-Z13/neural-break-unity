@@ -56,9 +56,9 @@ namespace NeuralBreak.Entities
 
         protected override void ApplyEffect(GameObject player)
         {
-            if (WeaponUpgradeManager.Instance != null)
+            if (FindObjectOfType<WeaponUpgradeManager>() != null)
             {
-                WeaponUpgradeManager.Instance.ActivateUpgrade(PickupType.Homing, _duration);
+                FindObjectOfType<WeaponUpgradeManager>().ActivateUpgrade(PickupType.Homing, _duration);
                 Debug.Log($"[Homing] Activated for {_duration} seconds!");
             }
             else

@@ -65,12 +65,6 @@ namespace NeuralBreak.UI
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
 
             // Apply UITheme colors if not set
             ApplyThemeColors();
@@ -111,10 +105,6 @@ namespace NeuralBreak.UI
             EventBus.Unsubscribe<PlayerHealedEvent>(OnPlayerHealed);
             EventBus.Unsubscribe<GameStartedEvent>(OnGameStarted);
 
-            if (Instance == this)
-            {
-                Instance = null;
-            }
         }
 
         private void CreateCanvas()

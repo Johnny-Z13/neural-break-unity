@@ -26,12 +26,6 @@ namespace NeuralBreak.UI
         private void Awake()
         {
             // Singleton setup
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
 
             // Subscribe to events
             EventBus.Subscribe<GameStateChangedEvent>(OnGameStateChanged);
@@ -41,10 +35,6 @@ namespace NeuralBreak.UI
         {
             EventBus.Unsubscribe<GameStateChangedEvent>(OnGameStateChanged);
 
-            if (Instance == this)
-            {
-                Instance = null;
-            }
         }
 
         private void Start()

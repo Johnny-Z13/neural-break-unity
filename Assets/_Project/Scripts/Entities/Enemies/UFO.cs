@@ -32,16 +32,16 @@ namespace NeuralBreak.Entities
         [SerializeField] private float _hoverDuration = 1.5f;
         [SerializeField] private float _strafeDuration = 2f;
 
-        [Header("Attack")]
-        [SerializeField] private float _fireRate = 1.5f;
-        [SerializeField] private float _burstCount = 3;
-        [SerializeField] private float _burstDelay = 0.15f;
-        [SerializeField] private float _projectileSpeed = 9f;
-        [SerializeField] private int _projectileDamage = 12;
-
         [Header("Death Explosion")]
         [SerializeField] private float _deathDamageRadius = 3f;
         [SerializeField] private int _deathDamageAmount = 25;
+
+        // Config-driven shooting values
+        private float _fireRate => EnemyConfig?.fireRate ?? 2f;
+        private int _burstCount => EnemyConfig?.burstCount ?? 3;
+        private float _burstDelay => EnemyConfig?.burstDelay ?? 0.15f;
+        private float _projectileSpeed => EnemyConfig?.projectileSpeed ?? 8f;
+        private int _projectileDamage => EnemyConfig?.projectileDamage ?? 14;
 
         [Header("Visual")]
         [SerializeField] private SpriteRenderer _spriteRenderer;
@@ -63,7 +63,6 @@ namespace NeuralBreak.Entities
         private UFOState _ufoState = UFOState.Approaching;
 
         private float _fireTimer;
-        private float _stateTimer;
         private float _dashCooldownTimer;
         private float _figure8Phase;
         private float _strafeDirection;
@@ -72,7 +71,6 @@ namespace NeuralBreak.Entities
         private float _wobblePhase;
         private float _tiltPhase;
         private bool _visualsGenerated;
-        private int _burstShotsFired;
 
         protected override void OnInitialize()
         {
@@ -87,7 +85,6 @@ namespace NeuralBreak.Entities
             _wobblePhase = Random.Range(0f, Mathf.PI * 2f);
             _tiltPhase = 0f;
             _lastPosition = transform.position;
-            _burstShotsFired = 0;
 
             // Generate procedural visuals if not yet done
             if (!_visualsGenerated)

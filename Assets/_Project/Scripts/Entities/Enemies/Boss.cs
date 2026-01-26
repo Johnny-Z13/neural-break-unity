@@ -21,10 +21,7 @@ namespace NeuralBreak.Entities
         public override EnemyType EnemyType => EnemyType.Boss;
 
         [Header("Boss Settings")]
-        [SerializeField] private float _phase1FireRate = 1.5f;
-        [SerializeField] private float _phase2FireRate = 1.2f;
-        [SerializeField] private float _projectileSpeed = 6.5f;
-        [SerializeField] private int _projectileDamage = 18;
+        [SerializeField] private float _phase2FireRateMultiplier = 0.8f; // Phase 2 is 80% of phase 1 rate
 
         [Header("Phase 3 Ring Attack")]
         [SerializeField] private float _ringAttackCooldown = 3f;
@@ -37,6 +34,12 @@ namespace NeuralBreak.Entities
         [SerializeField] private float _deathDamageRadius = 12f;
         [SerializeField] private int _deathDamageAmount = 75;
         [SerializeField] private int _deathBulletCount = 24;
+
+        // Config-driven shooting values
+        private float _phase1FireRate => EnemyConfig?.fireRate ?? 1.5f;
+        private float _phase2FireRate => _phase1FireRate * _phase2FireRateMultiplier;
+        private float _projectileSpeed => EnemyConfig?.projectileSpeed ?? 6.5f;
+        private int _projectileDamage => EnemyConfig?.projectileDamage ?? 18;
 
         [Header("Visual")]
         [SerializeField] private SpriteRenderer _bodyRenderer;

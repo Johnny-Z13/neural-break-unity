@@ -299,9 +299,7 @@ namespace NeuralBreak.UI
                 stats.totalXP.ToString("N0"),
                 stats.damageTaken.ToString("N0"),
                 stats.bossesKilled.ToString(),
-                AchievementSystem.Instance != null
-                    ? $"{AchievementSystem.Instance.GetUnlockedCount()}/{AchievementSystem.Instance.GetTotalCount()}"
-                    : "0/0"
+                GetAchievementProgress()
             };
 
             // Reveal each row with delay
@@ -357,6 +355,16 @@ namespace NeuralBreak.UI
             int mins = Mathf.FloorToInt(seconds / 60f);
             int secs = Mathf.FloorToInt(seconds % 60f);
             return $"{mins}:{secs:D2}";
+        }
+
+        private string GetAchievementProgress()
+        {
+            var achievementSystem = FindAnyObjectByType<AchievementSystem>();
+            if (achievementSystem != null)
+            {
+                return $"{achievementSystem.GetUnlockedCount()}/{achievementSystem.GetTotalCount()}";
+            }
+            return "0/0";
         }
 
         #region Debug

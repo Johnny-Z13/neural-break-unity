@@ -16,7 +16,7 @@ namespace NeuralBreak.Utils
         [Conditional("UNITY_EDITOR")]
         public static void Log(string message)
         {
-            Debug.Log(message);
+            UnityEngine.Debug.Log(message);
         }
 
         /// <summary>
@@ -25,7 +25,7 @@ namespace NeuralBreak.Utils
         [Conditional("UNITY_EDITOR")]
         public static void Log(string message, Object context)
         {
-            Debug.Log(message, context);
+            UnityEngine.Debug.Log(message, context);
         }
 
         /// <summary>
@@ -35,7 +35,7 @@ namespace NeuralBreak.Utils
         [Conditional("UNITY_EDITOR")]
         public static void LogWarning(string message)
         {
-            Debug.LogWarning(message);
+            UnityEngine.Debug.LogWarning(message);
         }
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace NeuralBreak.Utils
         [Conditional("UNITY_EDITOR")]
         public static void LogWarning(string message, Object context)
         {
-            Debug.LogWarning(message, context);
+            UnityEngine.Debug.LogWarning(message, context);
         }
 
         /// <summary>
@@ -53,7 +53,7 @@ namespace NeuralBreak.Utils
         /// </summary>
         public static void LogError(string message)
         {
-            Debug.LogError(message);
+            UnityEngine.Debug.LogError(message);
         }
 
         /// <summary>
@@ -61,7 +61,7 @@ namespace NeuralBreak.Utils
         /// </summary>
         public static void LogError(string message, Object context)
         {
-            Debug.LogError(message, context);
+            UnityEngine.Debug.LogError(message, context);
         }
     }
 }

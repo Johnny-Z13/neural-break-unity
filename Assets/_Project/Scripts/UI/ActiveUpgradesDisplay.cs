@@ -232,14 +232,14 @@ namespace NeuralBreak.UI
 
         private void Update()
         {
-            if (WeaponUpgradeManager.Instance == null) return;
+            if (FindObjectOfType<WeaponUpgradeManager>() == null) return;
 
             foreach (var kvp in _icons)
             {
                 PickupType type = kvp.Key;
                 UpgradeIcon icon = kvp.Value;
 
-                float remaining = WeaponUpgradeManager.Instance.GetRemainingTime(type);
+                float remaining = FindObjectOfType<WeaponUpgradeManager>().GetRemainingTime(type);
 
                 if (remaining > 0)
                 {

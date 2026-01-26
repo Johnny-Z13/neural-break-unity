@@ -97,12 +97,6 @@ namespace NeuralBreak.Core
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
 
             InitializeAchievements();
             LoadProgress();
@@ -117,10 +111,6 @@ namespace NeuralBreak.Core
         {
             UnsubscribeFromEvents();
 
-            if (Instance == this)
-            {
-                Instance = null;
-            }
         }
 
         private void InitializeAchievements()
@@ -310,13 +300,14 @@ namespace NeuralBreak.Core
             _sessionUpgradesUsed++;
 
             // Check if 3 upgrades active at once
-            if (Combat.WeaponUpgradeManager.Instance != null)
+            var upgradeManager = FindObjectOfType<Combat.WeaponUpgradeManager>();
+            if (upgradeManager != null)
             {
                 int activeCount = 0;
-                if (Combat.WeaponUpgradeManager.Instance.HasSpreadShot) activeCount++;
-                if (Combat.WeaponUpgradeManager.Instance.HasPiercing) activeCount++;
-                if (Combat.WeaponUpgradeManager.Instance.HasRapidFire) activeCount++;
-                if (Combat.WeaponUpgradeManager.Instance.HasHoming) activeCount++;
+                if (upgradeManager.HasSpreadShot) activeCount++;
+                if (upgradeManager.HasPiercing) activeCount++;
+                if (upgradeManager.HasRapidFire) activeCount++;
+                if (upgradeManager.HasHoming) activeCount++;
 
                 if (activeCount >= 3)
                 {

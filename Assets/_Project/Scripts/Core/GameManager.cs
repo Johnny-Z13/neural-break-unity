@@ -12,6 +12,7 @@ namespace NeuralBreak.Core
     /// </summary>
     public class GameManager : MonoBehaviour
     {
+        // Trigger Recompile
         public static GameManager Instance { get; private set; }
 
         [Header("Game State")]
@@ -68,7 +69,7 @@ namespace NeuralBreak.Core
 
         private void EnsureFeedbackSetup()
         {
-            if (FeedbackSetup.Instance == null)
+            if (FindObjectOfType<FeedbackSetup>() == null)
             {
                 var feedbackGO = new GameObject("FeedbackSetup");
                 feedbackGO.AddComponent<FeedbackSetup>();

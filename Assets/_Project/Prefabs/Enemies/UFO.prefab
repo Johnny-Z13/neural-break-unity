@@ -163,11 +163,6 @@ MonoBehaviour:
   _dashDuration: 0.3
   _hoverDuration: 1.5
   _strafeDuration: 2
-  _fireRate: 2
-  _burstCount: 3
-  _burstDelay: 0.15
-  _projectileSpeed: 8
-  _projectileDamage: 14
   _deathDamageRadius: 3
   _deathDamageAmount: 25
   _spriteRenderer: {fileID: 0}

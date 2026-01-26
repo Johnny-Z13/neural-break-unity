@@ -67,9 +67,12 @@ namespace NeuralBreak.Core
         /// </summary>
         public void WireSceneReferences()
         {
+            // Auto-find required references if not assigned in Inspector
+            AutoFindRequiredReferences();
+
             if (_player == null)
             {
-                Debug.LogError("[SceneReferenceWiring] Player reference is missing! Drag PlayerController from hierarchy.");
+                Debug.LogError("[SceneReferenceWiring] Player reference is missing! Could not find PlayerController in scene.");
                 return;
             }
 
@@ -272,5 +275,71 @@ namespace NeuralBreak.Core
                 Debug.Log("[SceneReferenceWiring] AchievementSystem created");
             }
         }
+
+        /// <summary>
+        /// Auto-finds required references at runtime if not assigned in Inspector.
+        /// </summary>
+        private void AutoFindRequiredReferences()
+        {
+            // Find required scene objects
+            if (_player == null) _player = UnityEngine.Object.FindFirstObjectByType<PlayerController>();
+            if (_cameraController == null) _cameraController = UnityEngine.Object.FindFirstObjectByType<CameraController>();
+            if (_enemySpawner == null) _enemySpawner = UnityEngine.Object.FindFirstObjectByType<EnemySpawner>();
+            if (_enemyProjectilePool == null) _enemyProjectilePool = UnityEngine.Object.FindFirstObjectByType<EnemyProjectilePool>();
+            if (_gameManager == null) _gameManager = UnityEngine.Object.FindFirstObjectByType<GameManager>();
+            if (_levelManager == null) _levelManager = UnityEngine.Object.FindFirstObjectByType<LevelManager>();
+
+            // Log what was found
+            if (_player != null) Debug.Log("[SceneReferenceWiring] Auto-found Player");
+            if (_cameraController != null) Debug.Log("[SceneReferenceWiring] Auto-found CameraController");
+            if (_enemySpawner != null) Debug.Log("[SceneReferenceWiring] Auto-found EnemySpawner");
+            if (_enemyProjectilePool != null) Debug.Log("[SceneReferenceWiring] Auto-found EnemyProjectilePool");
+            if (_gameManager != null) Debug.Log("[SceneReferenceWiring] Auto-found GameManager");
+            if (_levelManager != null) Debug.Log("[SceneReferenceWiring] Auto-found LevelManager");
+        }
+
+        #region Editor Helper
+
+        [ContextMenu("Auto-Find All Scene References")]
+        private void AutoFindAllReferences()
+        {
+            // Find required scene objects
+            if (_player == null) _player = UnityEngine.Object.FindFirstObjectByType<PlayerController>();
+            if (_cameraController == null) _cameraController = UnityEngine.Object.FindFirstObjectByType<CameraController>();
+            if (_enemySpawner == null) _enemySpawner = UnityEngine.Object.FindFirstObjectByType<EnemySpawner>();
+            if (_enemyProjectilePool == null) _enemyProjectilePool = UnityEngine.Object.FindFirstObjectByType<EnemyProjectilePool>();
+            if (_gameManager == null) _gameManager = UnityEngine.Object.FindFirstObjectByType<GameManager>();
+            if (_levelManager == null) _levelManager = UnityEngine.Object.FindFirstObjectByType<LevelManager>();
+
+            // Find optional scene objects
+            if (_spawnWarningIndicator == null) _spawnWarningIndicator = UnityEngine.Object.FindFirstObjectByType<SpawnWarningIndicator>();
+            if (_lowHealthVignette == null) _lowHealthVignette = UnityEngine.Object.FindFirstObjectByType<LowHealthVignette>();
+            if (_highScoreManager == null) _highScoreManager = UnityEngine.Object.FindFirstObjectByType<HighScoreManager>();
+            if (_bossHealthBar == null) _bossHealthBar = UnityEngine.Object.FindFirstObjectByType<BossHealthBar>();
+            if (_controlsOverlay == null) _controlsOverlay = UnityEngine.Object.FindFirstObjectByType<ControlsOverlay>();
+            if (_weaponUpgradeManager == null) _weaponUpgradeManager = UnityEngine.Object.FindFirstObjectByType<Combat.WeaponUpgradeManager>();
+            if (_activeUpgradesDisplay == null) _activeUpgradesDisplay = UnityEngine.Object.FindFirstObjectByType<ActiveUpgradesDisplay>();
+            if (_playerLevelSystem == null) _playerLevelSystem = UnityEngine.Object.FindFirstObjectByType<PlayerLevelSystem>();
+            if (_xpBarDisplay == null) _xpBarDisplay = UnityEngine.Object.FindFirstObjectByType<UI.XPBarDisplay>();
+            if (_levelUpAnnouncement == null) _levelUpAnnouncement = UnityEngine.Object.FindFirstObjectByType<UI.LevelUpAnnouncement>();
+            if (_damageNumberPopup == null) _damageNumberPopup = UnityEngine.Object.FindFirstObjectByType<UI.DamageNumberPopup>();
+            if (_waveAnnouncement == null) _waveAnnouncement = UnityEngine.Object.FindFirstObjectByType<UI.WaveAnnouncement>();
+            if (_statisticsScreen == null) _statisticsScreen = UnityEngine.Object.FindFirstObjectByType<UI.StatisticsScreen>();
+            if (_arenaManager == null) _arenaManager = UnityEngine.Object.FindFirstObjectByType<Graphics.ArenaManager>();
+            if (_gamepadRumble == null) _gamepadRumble = UnityEngine.Object.FindFirstObjectByType<Input.GamepadRumble>();
+            if (_minimap == null) _minimap = UnityEngine.Object.FindFirstObjectByType<UI.Minimap>();
+            if (_accessibilityManager == null) _accessibilityManager = UnityEngine.Object.FindFirstObjectByType<AccessibilityManager>();
+            if (_saveSystem == null) _saveSystem = UnityEngine.Object.FindFirstObjectByType<SaveSystem>();
+            if (_musicManager == null) _musicManager = UnityEngine.Object.FindFirstObjectByType<Audio.MusicManager>();
+            if (_environmentParticles == null) _environmentParticles = UnityEngine.Object.FindFirstObjectByType<Graphics.EnvironmentParticles>();
+            if (_shipCustomization == null) _shipCustomization = UnityEngine.Object.FindFirstObjectByType<Entities.ShipCustomization>();
+            if (_enemyDeathVFX == null) _enemyDeathVFX = UnityEngine.Object.FindFirstObjectByType<Graphics.EnemyDeathVFX>();
+            if (_uiFeedbacks == null) _uiFeedbacks = UnityEngine.Object.FindFirstObjectByType<UI.UIFeedbacks>();
+            if (_achievementSystem == null) _achievementSystem = UnityEngine.Object.FindFirstObjectByType<AchievementSystem>();
+
+            Debug.Log("[SceneReferenceWiring] Auto-find complete! Check Inspector for results.");
+        }
+
+        #endregion
     }
 }

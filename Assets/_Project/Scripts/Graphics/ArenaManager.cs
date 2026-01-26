@@ -75,12 +75,6 @@ namespace NeuralBreak.Graphics
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
         }
 
         private void Start()
@@ -103,10 +97,6 @@ namespace NeuralBreak.Graphics
             EventBus.Unsubscribe<LevelStartedEvent>(OnLevelStarted);
             EventBus.Unsubscribe<GameStartedEvent>(OnGameStarted);
 
-            if (Instance == this)
-            {
-                Instance = null;
-            }
         }
 
         private void CreateBackground()

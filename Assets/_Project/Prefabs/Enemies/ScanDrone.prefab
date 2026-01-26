@@ -155,9 +155,6 @@ MonoBehaviour:
   _deathFeedback: {fileID: 0}
   _detectionRange: 15
   _fireRange: 12
-  _fireRate: 2
-  _projectileSpeed: 7
-  _projectileDamage: 15
   _patrolRadius: 10
   _patrolSpeed: 0.8
   _chaseSpeedMultiplier: 1.5

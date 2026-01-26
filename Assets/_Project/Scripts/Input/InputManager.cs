@@ -29,6 +29,7 @@ namespace NeuralBreak.Input
         private InputAction _attackAction;
         private InputAction _thrustAction;
         private InputAction _dashAction;
+        private InputAction _smartBombAction;
         private InputAction _submitAction;
         private InputAction _cancelAction;
 
@@ -51,6 +52,7 @@ namespace NeuralBreak.Input
         public event Action OnThrustPressed;
         public event Action OnThrustReleased;
         public event Action OnDashPressed;
+        public event Action OnSmartBombPressed;
         public event Action OnPausePressed;
         public event Action OnConfirmPressed;
         public event Action OnCancelPressed;
@@ -67,6 +69,10 @@ namespace NeuralBreak.Input
                 return;
             }
             Instance = this;
+
+            // Initialize aim direction to up (12 o'clock)
+            AimDirection = Vector2.up;
+            AimInput = Vector2.up;
 
             SetupInputActions();
         }
@@ -85,6 +91,7 @@ namespace NeuralBreak.Input
             _attackAction = _inputActionsAsset.FindAction("Player/Attack");
             _thrustAction = _inputActionsAsset.FindAction("Player/Thrust");
             _dashAction = _inputActionsAsset.FindAction("Player/Dash");
+            _smartBombAction = _inputActionsAsset.FindAction("Player/SmartBomb");
             _submitAction = _inputActionsAsset.FindAction("UI/Submit");
             _cancelAction = _inputActionsAsset.FindAction("UI/Cancel");
         }
@@ -133,6 +140,11 @@ namespace NeuralBreak.Input
                 _dashAction.performed += OnDashPerformed;
             }
 
+            if (_smartBombAction != null)
+            {
+                _smartBombAction.performed += OnSmartBombPerformed;
+            }
+
             if (_submitAction != null)
             {
                 _submitAction.performed += OnSubmit;
@@ -176,6 +188,11 @@ namespace NeuralBreak.Input
                 _dashAction.performed -= OnDashPerformed;
             }
 
+            if (_smartBombAction != null)
+            {
+                _smartBombAction.performed -= OnSmartBombPerformed;
+            }
+
             if (_submitAction != null)
             {
                 _submitAction.performed -= OnSubmit;
@@ -194,6 +211,17 @@ namespace NeuralBreak.Input
 
         private void Update()
         {
+            // Auto-find player transform if not set
+            if (_playerTransform == null)
+            {
+                var player = UnityEngine.Object.FindFirstObjectByType<NeuralBreak.Entities.PlayerController>();
+                if (player != null)
+                {
+                    _playerTransform = player.transform;
+                    Debug.Log("[InputManager] Auto-found player transform");
+                }
+            }
+
             // Handle keyboard inputs directly
             HandleKeyboardInput();
 
@@ -214,7 +242,11 @@ namespace NeuralBreak.Input
         private void HandleKeyboardInput()
         {
             var keyboard = Keyboard.current;
-            if (keyboard == null) return;
+            if (keyboard == null)
+            {
+                Debug.LogWarning("[InputManager] No keyboard detected!");
+                return;
+            }
 
             // WASD movement fallback (if no input action asset)
             if (_moveAction == null)
@@ -224,6 +256,11 @@ namespace NeuralBreak.Input
                 if (keyboard.sKey.isPressed) move.y -= 1;
                 if (keyboard.aKey.isPressed) move.x -= 1;
                 if (keyboard.dKey.isPressed) move.x += 1;
+                
+                if (move != Vector2.zero)
+                {
+                    Debug.Log($"[InputManager] WASD input detected: {move}");
+                }
                 MoveInput = move.normalized;
             }
 
@@ -240,6 +277,17 @@ namespace NeuralBreak.Input
                 {
                     ThrustHeld = false;
                     OnThrustReleased?.Invoke();
+                }
+            }
+
+            // Fire (Mouse left button - hold to fire)
+            if (_attackAction == null)
+            {
+                var mouse = Mouse.current;
+                if (mouse != null)
+                {
+                    bool mouseHeld = mouse.leftButton.isPressed;
+                    FireHeld = mouseHeld;
                 }
             }
 
@@ -297,7 +345,9 @@ namespace NeuralBreak.Input
         /// </summary>
         private void UpdateAimDirection()
         {
-            Vector2 aimDir = Vector2.up; // Default aim direction
+            // Start with current aim direction (maintain last aim when no input)
+            Vector2 aimDir = AimDirection;
+            bool hasNewInput = false;
 
             // Check for gamepad right stick input
             var gamepad = Gamepad.current;
@@ -309,6 +359,7 @@ namespace NeuralBreak.Input
                     aimDir = rightStick.normalized;
                     HasAimInput = true;
                     IsUsingGamepad = true;
+                    hasNewInput = true;
 
                     // Auto-fire when aiming with right stick
                     if (_autoFireWhenAiming && !FireHeld)
@@ -326,6 +377,7 @@ namespace NeuralBreak.Input
                         OnFireReleased?.Invoke();
                     }
                     HasAimInput = false;
+                    // Don't update aimDir - maintain last direction
                 }
             }
 
@@ -348,6 +400,7 @@ namespace NeuralBreak.Input
                         {
                             aimDir = toMouse.normalized;
                             HasAimInput = true;
+                            hasNewInput = true;
                         }
                     }
                 }
@@ -368,9 +421,12 @@ namespace NeuralBreak.Input
                 }
             }
 
-            // Store normalized aim direction
-            AimDirection = aimDir.normalized;
-            AimInput = aimDir;
+            // Only update AimDirection if we have new input or if it's uninitialized
+            if (hasNewInput || AimDirection.sqrMagnitude < 0.01f)
+            {
+                AimDirection = aimDir.normalized;
+                AimInput = aimDir;
+            }
         }
 
         #region Input Callbacks
@@ -421,6 +477,11 @@ namespace NeuralBreak.Input
         {
             DashPressed = true;
             OnDashPressed?.Invoke();
+        }
+
+        private void OnSmartBombPerformed(InputAction.CallbackContext context)
+        {
+            OnSmartBombPressed?.Invoke();
         }
 
         private void OnSubmit(InputAction.CallbackContext context)

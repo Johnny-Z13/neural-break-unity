@@ -135,9 +135,10 @@ namespace NeuralBreak.Core
             }
 
             // Update achievement data
-            if (AchievementSystem.Instance != null)
+            var achievementSystem = FindAnyObjectByType<AchievementSystem>();
+            if (achievementSystem != null)
             {
-                CurrentSave.unlockedAchievements = new List<string>(AchievementSystem.Instance.GetUnlockedAchievementIds());
+                CurrentSave.unlockedAchievements = new List<string>(achievementSystem.GetUnlockedAchievementIds());
             }
 
             try

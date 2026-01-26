@@ -56,9 +56,9 @@ namespace NeuralBreak.Entities
 
         protected override void ApplyEffect(GameObject player)
         {
-            if (WeaponUpgradeManager.Instance != null)
+            if (FindObjectOfType<WeaponUpgradeManager>() != null)
             {
-                WeaponUpgradeManager.Instance.ActivateUpgrade(PickupType.Piercing, _duration);
+                FindObjectOfType<WeaponUpgradeManager>().ActivateUpgrade(PickupType.Piercing, _duration);
                 Debug.Log($"[Piercing] Activated for {_duration} seconds!");
             }
             else

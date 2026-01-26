@@ -52,19 +52,19 @@ namespace NeuralBreak.UI
 
         private void Start()
         {
-            if (HighScoreManager.Instance != null)
+            if (FindObjectOfType<HighScoreManager>() != null)
             {
-                HighScoreManager.Instance.OnNewHighScore += OnNewHighScore;
-                HighScoreManager.Instance.OnNewHighScoreFloat += OnNewHighScoreFloat;
+                FindObjectOfType<HighScoreManager>().OnNewHighScore += OnNewHighScore;
+                FindObjectOfType<HighScoreManager>().OnNewHighScoreFloat += OnNewHighScoreFloat;
             }
         }
 
         private void OnDestroy()
         {
-            if (HighScoreManager.Instance != null)
+            if (FindObjectOfType<HighScoreManager>() != null)
             {
-                HighScoreManager.Instance.OnNewHighScore -= OnNewHighScore;
-                HighScoreManager.Instance.OnNewHighScoreFloat -= OnNewHighScoreFloat;
+                FindObjectOfType<HighScoreManager>().OnNewHighScore -= OnNewHighScore;
+                FindObjectOfType<HighScoreManager>().OnNewHighScoreFloat -= OnNewHighScoreFloat;
             }
         }
 
@@ -307,9 +307,8 @@ namespace NeuralBreak.UI
 
         private void UpdateValues()
         {
-            if (HighScoreManager.Instance == null) return;
-
-            var mgr = HighScoreManager.Instance;
+            var mgr = FindAnyObjectByType<HighScoreManager>();
+            if (mgr == null) return;
 
             // Update values
             SetRowValue(0, FormatNumber(mgr.HighScore), HighScoreType.Score);
