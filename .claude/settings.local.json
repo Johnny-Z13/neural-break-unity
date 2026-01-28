@@ -48,7 +48,8 @@
       "Bash(cmd /c \"dir /ad C:\\\\Users\\\\%USERNAME%\\\\AppData\\\\Local\\\\Unity 2>nul || echo No Unity folder\")",
       "Bash(cmd /c \"if exist C:\\\\Users\\\\%USERNAME%\\\\AppData\\\\Local\\\\Unity \\(dir C:\\\\Users\\\\%USERNAME%\\\\AppData\\\\Local\\\\Unity\\) else \\(echo No Local Unity folder\\)\")",
       "Bash(cmd /c \"dir /ad C:\\\\Users\")",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
