@@ -26,8 +26,6 @@ MonoBehaviour:
     maxHealth: 130
     startingShields: 0
     maxShields: 3
-    maxPowerUpLevel: 10
-    powerUpDamageMultiplier: 0.6
     maxSpeedLevel: 20
     speedBoostPerLevel: 0.05
     spawnInvulnerabilityDuration: 2
@@ -37,19 +35,7 @@ MonoBehaviour:
     arenaRadius: 29
     boundaryPushStrength: 8
     collisionRadius: 0.5
-  weapon:
-    baseDamage: 12
-    baseFireRate: 0.12
-    projectileSpeed: 22
-    projectileLifetime: 1.7
-    heatEnabled: 1
-    heatPerShot: 0.8
-    heatCooldownRate: 85
-    overheatThreshold: 100
-    overheatCooldownDuration: 0.8
-    maxPowerLevel: 10
-    damagePerLevel: 0.6
-    fireRatePerLevel: 0.05
+    controlScheme: 0
   weaponSystem:
     baseDamage: 12
     baseFireRate: 0.12
@@ -117,6 +103,7 @@ MonoBehaviour:
       beamEnabled: 0
       beamDPS: 50
       beamRange: 15
+      beamDuration: 0.5
   dataMite:
     displayName: Data Mite
     color: {r: 1, g: 0.3, b: 0.3, a: 1}
@@ -408,6 +395,10 @@ MonoBehaviour:
     levelCompleteBonus: 1000
     bossKillMultiplier: 2
     perfectLevelBonus: 500
+  upgradeSystem:
+    showUpgradeEveryNLevels: 1
+    cardsPerSelection: 3
+    allowDuplicates: 0
   spawning:
     minSpawnDistance: 5
     maxSpawnDistance: 28

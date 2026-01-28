@@ -56,9 +56,10 @@ namespace NeuralBreak.Entities
 
         protected override void ApplyEffect(GameObject player)
         {
-            if (FindObjectOfType<WeaponUpgradeManager>() != null)
+            var upgradeManager = FindFirstObjectByType<WeaponUpgradeManager>();
+            if (upgradeManager != null)
             {
-                FindObjectOfType<WeaponUpgradeManager>().ActivateUpgrade(PickupType.RapidFire, _duration);
+                upgradeManager.ActivateUpgrade(PickupType.RapidFire, _duration);
                 Debug.Log($"[RapidFire] Activated for {_duration} seconds!");
             }
             else

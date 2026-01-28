@@ -1,7 +1,8 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 using NeuralBreak.Config;
 
-namespace NeuralBreak.Debug
+namespace NeuralBreak.Tools
 {
     /// <summary>
     /// Debug UI to toggle control schemes at runtime for testing.
@@ -11,32 +12,34 @@ namespace NeuralBreak.Debug
     {
         [Header("Settings")]
         [SerializeField] private bool _showUI = true;
-        [SerializeField] private KeyCode _toggleUIKey = KeyCode.F12;
 
         private Rect _windowRect = new Rect(10, 10, 300, 200);
 
         private void Update()
         {
+            var keyboard = Keyboard.current;
+            if (keyboard == null) return;
+
             // Toggle UI visibility
-            if (Input.GetKeyDown(_toggleUIKey))
+            if (keyboard.f12Key.wasPressedThisFrame)
             {
                 _showUI = !_showUI;
             }
 
             // Quick hotkeys
-            if (Input.GetKeyDown(KeyCode.F1))
+            if (keyboard.f1Key.wasPressedThisFrame)
             {
                 SetControlScheme(ControlScheme.TwinStick);
             }
-            else if (Input.GetKeyDown(KeyCode.F2))
+            else if (keyboard.f2Key.wasPressedThisFrame)
             {
                 SetControlScheme(ControlScheme.FaceMovement);
             }
-            else if (Input.GetKeyDown(KeyCode.F3))
+            else if (keyboard.f3Key.wasPressedThisFrame)
             {
                 SetControlScheme(ControlScheme.ClassicRotate);
             }
-            else if (Input.GetKeyDown(KeyCode.F4))
+            else if (keyboard.f4Key.wasPressedThisFrame)
             {
                 SetControlScheme(ControlScheme.TankControls);
             }
@@ -94,7 +97,7 @@ namespace NeuralBreak.Debug
             GUILayout.Label("  A/D: Rotate, W/S: Move Forward/Back\n  Aim independent (mouse/right stick)", GUI.skin.box);
             GUILayout.Space(10);
 
-            GUILayout.Label($"Press {_toggleUIKey} to hide/show", GUI.skin.box);
+            GUILayout.Label("Press F12 to hide/show", GUI.skin.box);
 
             GUI.DragWindow();
         }
@@ -105,7 +108,7 @@ namespace NeuralBreak.Debug
             if (config != null)
             {
                 config.controlScheme = scheme;
-                UnityEngine.Debug.Log($"[ControlScheme] Switched to: {scheme}");
+                Debug.Log($"[ControlScheme] Switched to: {scheme}");
             }
         }
     }

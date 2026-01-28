@@ -150,9 +150,6 @@ MonoBehaviour:
   _spawnDuration: 0.25
   _invulnerableDuringSpawn: 1
   _deathDuration: 0.5
-  _spawnFeedback: {fileID: 0}
-  _hitFeedback: {fileID: 0}
-  _deathFeedback: {fileID: 0}
   _segmentCount: 12
   _segmentSpacing: 0.6
   _undulationAmplitude: 2
@@ -167,4 +164,3 @@ MonoBehaviour:
   _segmentPrefab: {fileID: 0}
   _visuals: {fileID: 0}
   _wormColor: {r: 0.8, g: 0.2, b: 0.5, a: 1}
-  _segmentDeathFeedback: {fileID: 0}

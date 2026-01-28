@@ -2,7 +2,6 @@ using UnityEngine;
 using NeuralBreak.Core;
 using NeuralBreak.Entities;
 using NeuralBreak.Config;
-using MoreMountains.Feedbacks;
 
 namespace NeuralBreak.Graphics
 {
@@ -47,8 +46,7 @@ namespace NeuralBreak.Graphics
         [SerializeField] private float _maxShakeOffset = 1f;
         [SerializeField] private bool _shakeEnabled = true;
 
-        [Header("Feel Feedbacks")]
-        [SerializeField] private MMF_Player _impactShakeFeedback;
+        // Note: MMFeedbacks removed
 
         // Components
         private Camera _camera;
@@ -330,12 +328,7 @@ namespace NeuralBreak.Graphics
         {
             if (!_shakeEnabled) return;
 
-            // Use Feel feedback if available
-            if (_impactShakeFeedback != null)
-            {
-                _impactShakeFeedback.PlayFeedbacks();
-                return;
-            }
+            // Feedback (Feel removed)
 
             // Manual shake - accumulate intensity
             _shakeIntensity = Mathf.Max(_shakeIntensity, intensity);

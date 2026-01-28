@@ -383,7 +383,7 @@ namespace NeuralBreak.Graphics
         private void OnLevelStarted(LevelStartedEvent evt)
         {
             // Match particle type to arena theme
-            var arena = FindObjectOfType<ArenaManager>();
+            var arena = FindFirstObjectByType<ArenaManager>();
             if (arena != null)
             {
                 switch (arena.CurrentTheme)

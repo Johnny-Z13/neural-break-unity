@@ -47,9 +47,13 @@ namespace NeuralBreak.Graphics.VFX
             noise.damping = true;
 
             // Orbital velocity for swirl effect
+            // NOTE: All orbital axes must be in the same mode to avoid Unity warnings
             var velocity = mainPS.velocityOverLifetime;
             velocity.enabled = true;
-            velocity.orbitalZ = new ParticleSystem.MinMaxCurve(-3f, 3f);
+            // Use constant mode for all axes (avoid TwoConstants/Curve mode mixing)
+            velocity.orbitalX = new ParticleSystem.MinMaxCurve(0f);
+            velocity.orbitalY = new ParticleSystem.MinMaxCurve(0f);
+            velocity.orbitalZ = new ParticleSystem.MinMaxCurve(2f); // Single constant for swirl
 
             VFXHelpers.SetupColorFade(mainPS, coreColor, primaryColor);
             VFXHelpers.SetupShrink(mainPS);

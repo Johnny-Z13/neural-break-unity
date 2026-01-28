@@ -36,7 +36,19 @@
       "Skill(frontend-design)",
       "mcp__ide__getDiagnostics",
       "Bash(where claude:*)",
-      "Bash(python remove_instance_props.py:*)"
+      "Bash(python remove_instance_props.py:*)",
+      "Bash(more:*)",
+      "Bash(cmd /c \"dir %LOCALAPPDATA%\\\\Unity 2>nul || echo No Unity folder in LocalAppData\")",
+      "Bash(powershell -Command \"if \\(Test-Path $env:LOCALAPPDATA\\\\Unity\\\\cache\\) { Remove-Item -Recurse -Force $env:LOCALAPPDATA\\\\Unity\\\\cache; Write-Host ''Deleted Unity cache'' } else { Write-Host ''No cache folder'' }; if \\(Test-Path $env:APPDATA\\\\Unity\\) { Get-ChildItem $env:APPDATA\\\\Unity } else { Write-Host ''No Unity in Roaming'' }\")",
+      "Bash(copy:*)",
+      "Bash(taskkill:*)",
+      "Bash(powershell -Command \"Get-ChildItem -Path ''D:\\\\Projects\\\\Unity\\\\neural-break-unity'' -Directory | Select-Object Name\")",
+      "Bash(powershell -Command \"Remove-Item -Recurse -Force ''D:\\\\Projects\\\\Unity\\\\neural-break-unity\\\\Library'' -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force ''D:\\\\Projects\\\\Unity\\\\neural-break-unity\\\\Temp'' -ErrorAction SilentlyContinue; Remove-Item -Recurse -Force ''D:\\\\Projects\\\\Unity\\\\neural-break-unity\\\\Logs'' -ErrorAction SilentlyContinue; Write-Host ''Deleted Library, Temp, Logs''\")",
+      "Bash(powershell -Command:*)",
+      "Bash(cmd /c \"dir /ad C:\\\\Users\\\\%USERNAME%\\\\AppData\\\\Local\\\\Unity 2>nul || echo No Unity folder\")",
+      "Bash(cmd /c \"if exist C:\\\\Users\\\\%USERNAME%\\\\AppData\\\\Local\\\\Unity \\(dir C:\\\\Users\\\\%USERNAME%\\\\AppData\\\\Local\\\\Unity\\) else \\(echo No Local Unity folder\\)\")",
+      "Bash(cmd /c \"dir /ad C:\\\\Users\")",
+      "Bash(git add:*)"
     ]
   }
 }

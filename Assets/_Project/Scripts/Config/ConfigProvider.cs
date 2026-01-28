@@ -49,7 +49,7 @@ namespace NeuralBreak.Config
             }
         }
 
-        public static WeaponConfig Weapon
+        public static WeaponSystemConfig WeaponSystem
         {
             get
             {
@@ -58,12 +58,12 @@ namespace NeuralBreak.Config
                     Debug.LogError("[ConfigProvider] Balance is null! Call Initialize() first.");
                     return null;
                 }
-                if (Balance.weapon == null)
+                if (Balance.weaponSystem == null)
                 {
-                    Debug.LogError("[ConfigProvider] WeaponConfig is null in Balance!");
+                    Debug.LogError("[ConfigProvider] WeaponSystemConfig is null in Balance!");
                     return null;
                 }
-                return Balance.weapon;
+                return Balance.weaponSystem;
             }
         }
 
@@ -180,19 +180,65 @@ namespace NeuralBreak.Config
             };
 
             // Weapon defaults - matching TypeScript BALANCE_CONFIG
-            config.weapon = new WeaponConfig
+            config.weaponSystem = new WeaponSystemConfig
             {
                 baseDamage = 12,
                 baseFireRate = 0.12f,
-                projectileSpeed = 22f,
-                projectileLifetime = 1.7f, // ~38 range / 22 speed = 1.7s
-                heatPerShot = 0.8f,
-                heatCooldownRate = 85f,    // FIXED: was 15, TS is 85
-                overheatThreshold = 100f,
-                overheatCooldownDuration = 0.8f, // FIXED: was 1.5, TS is 0.8
-                maxPowerLevel = 10,
-                damagePerLevel = 0.6f,     // FIXED: was 0.15, TS is 60% per level
-                fireRatePerLevel = 0.05f
+                baseProjectileSpeed = 22f,
+                projectileLifetime = 1.7f,
+                projectileSize = 0.15f,
+                forwardWeapon = new ForwardWeaponConfig
+                {
+                    pattern = ForwardFirePattern.Single,
+                    doubleSpreadAngle = 15f,
+                    tripleSpreadAngle = 30f,
+                    quadSpreadAngle = 45f,
+                    x5SpreadAngle = 60f,
+                    forwardOffset = 0.6f,
+                    lateralOffset = 0.2f
+                },
+                rearWeapon = new RearWeaponConfig
+                {
+                    enabled = false,
+                    damageMultiplier = 0.5f,
+                    fireRateMultiplier = 1.0f,
+                    rearOffset = 0.4f,
+                    syncWithForward = true
+                },
+                heatSystem = new HeatSystemConfig
+                {
+                    enabled = true,
+                    heatPerShot = 0.8f,
+                    cooldownRate = 85f,
+                    maxHeat = 100f,
+                    overheatDuration = 0.8f,
+                    overheatCooldownMultiplier = 1.5f,
+                    multiShotHeatMultiplier = 0.3f,
+                    rearWeaponHeatMultiplier = 0.5f
+                },
+                powerLevels = new PowerLevelConfig
+                {
+                    maxLevel = 10,
+                    autoUpgradePattern = true,
+                    damagePerLevel = 0.6f,
+                    fireRatePerLevel = 0.05f,
+                    projectileSpeedPerLevel = 0.5f,
+                    projectileSizePerLevel = 0.01f,
+                    doubleShotLevel = 0,
+                    tripleShotLevel = 3,
+                    quadShotLevel = 6,
+                    x5ShotLevel = 9
+                },
+                modifiers = new WeaponModifiersConfig
+                {
+                    rapidFireMultiplier = 1.5f,
+                    rapidFireDuration = 10f,
+                    damageBoostMultiplier = 2f,
+                    damageBoostDuration = 8f,
+                    speedBoostMultiplier = 1.5f,
+                    sizeBoostMultiplier = 1.5f
+                },
+                specials = new SpecialWeaponsConfig()
             };
 
             // Enemy defaults - FIXED to match TypeScript BALANCE_CONFIG exactly

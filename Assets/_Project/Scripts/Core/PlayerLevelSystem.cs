@@ -1,5 +1,4 @@
 using UnityEngine;
-using MoreMountains.Feedbacks;
 
 namespace NeuralBreak.Core
 {
@@ -19,8 +18,7 @@ namespace NeuralBreak.Core
         [SerializeField] private int _baseXPRequired = 10;
         [SerializeField] private float _xpMultiplierPerLevel = 1.15f;
 
-        [Header("Feel Feedbacks")]
-        [SerializeField] private MMF_Player _levelUpFeedback;
+        // Note: MMFeedbacks removed
 
         // Events
         public System.Action<int, int, int> OnXPChanged; // currentXP, xpForLevel, level
@@ -97,8 +95,7 @@ namespace NeuralBreak.Core
         {
             _currentLevel++;
 
-            // Play feedback
-            _levelUpFeedback?.PlayFeedbacks();
+            // Feedback (Feel removed)
 
             // Notify listeners
             OnLevelUp?.Invoke(_currentLevel);

@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
 using TMPro;
 using System.Collections.Generic;
 using NeuralBreak.Core;
@@ -52,27 +53,31 @@ namespace NeuralBreak.UI
 
         private void Start()
         {
-            if (FindObjectOfType<HighScoreManager>() != null)
+            if (FindFirstObjectByType<HighScoreManager>() != null)
             {
-                FindObjectOfType<HighScoreManager>().OnNewHighScore += OnNewHighScore;
-                FindObjectOfType<HighScoreManager>().OnNewHighScoreFloat += OnNewHighScoreFloat;
+                FindFirstObjectByType<HighScoreManager>().OnNewHighScore += OnNewHighScore;
+                FindFirstObjectByType<HighScoreManager>().OnNewHighScoreFloat += OnNewHighScoreFloat;
             }
         }
 
         private void OnDestroy()
         {
-            if (FindObjectOfType<HighScoreManager>() != null)
+            if (FindFirstObjectByType<HighScoreManager>() != null)
             {
-                FindObjectOfType<HighScoreManager>().OnNewHighScore -= OnNewHighScore;
-                FindObjectOfType<HighScoreManager>().OnNewHighScoreFloat -= OnNewHighScoreFloat;
+                FindFirstObjectByType<HighScoreManager>().OnNewHighScore -= OnNewHighScore;
+                FindFirstObjectByType<HighScoreManager>().OnNewHighScoreFloat -= OnNewHighScoreFloat;
             }
         }
 
         private void Update()
         {
-            if (_isVisible && UnityEngine.Input.GetKeyDown(KeyCode.Escape))
+            if (_isVisible)
             {
-                Hide();
+                var keyboard = Keyboard.current;
+                if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame)
+                {
+                    Hide();
+                }
             }
         }
 

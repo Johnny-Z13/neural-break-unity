@@ -44,7 +44,7 @@
                 {
                     "name": "Thrust",
                     "type": "Button",
-                    "id": "e5f6a7b8-c9d0-1234-efab-thrust000001",
+                    "id": "e5f6a7b8-c9d0-1234-efab-cd0123456789",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -53,7 +53,7 @@
                 {
                     "name": "SmartBomb",
                     "type": "Button",
-                    "id": "smartbomb-action-id-0001",
+                    "id": "f6a7b8c9-d0e1-2345-fabc-de0123456789",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -173,7 +173,7 @@
                 },
                 {
                     "name": "",
-                    "id": "gamepad-attack-button-a",
+                    "id": "b4c5d6e7-f8a9-0123-bcde-456789012345",
                     "path": "<Gamepad>/buttonWest",
                     "interactions": "",
                     "processors": "",
@@ -206,7 +206,7 @@
                 },
                 {
                     "name": "",
-                    "id": "f8a9b0c1-d2e3-4567-thrust-kb0001",
+                    "id": "f8a9b0c1-d2e3-4567-fabc-678901234567",
                     "path": "<Keyboard>/leftShift",
                     "interactions": "",
                     "processors": "",
@@ -217,7 +217,7 @@
                 },
                 {
                     "name": "",
-                    "id": "a9b0c1d2-e3f4-5678-thrust-gp0001",
+                    "id": "a9b0c1d2-e3f4-5678-abcd-789012345678",
                     "path": "<Gamepad>/rightShoulder",
                     "interactions": "",
                     "processors": "",
@@ -228,7 +228,7 @@
                 },
                 {
                     "name": "",
-                    "id": "smartbomb-kb-binding-b",
+                    "id": "b0c1d2e3-f4a5-6789-bcde-890123456789",
                     "path": "<Keyboard>/b",
                     "interactions": "",
                     "processors": "",
@@ -239,7 +239,7 @@
                 },
                 {
                     "name": "",
-                    "id": "smartbomb-gp-binding-l2",
+                    "id": "c1d2e3f4-a5b6-7890-cdef-901234567890",
                     "path": "<Gamepad>/leftTrigger",
                     "interactions": "",
                     "processors": "",
@@ -257,7 +257,7 @@
                 {
                     "name": "Submit",
                     "type": "Button",
-                    "id": "a9b0c1d2-e3f4-5678-abcd-789012345678",
+                    "id": "d2e3f4a5-b6c7-8901-defa-012345678901",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -266,7 +266,7 @@
                 {
                     "name": "Cancel",
                     "type": "Button",
-                    "id": "b0c1d2e3-f4a5-6789-bcde-890123456789",
+                    "id": "e3f4a5b6-c7d8-9012-efab-123456789012",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -275,7 +275,7 @@
                 {
                     "name": "Pause",
                     "type": "Button",
-                    "id": "c1d2e3f4-a5b6-7890-cdef-901234567890",
+                    "id": "f4a5b6c7-d8e9-0123-fabc-234567890123",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -285,7 +285,7 @@
             "bindings": [
                 {
                     "name": "",
-                    "id": "d2e3f4a5-b6c7-8901-defa-012345678901",
+                    "id": "a5b6c7d8-e9f0-1234-abcd-345678901234",
                     "path": "<Keyboard>/enter",
                     "interactions": "",
                     "processors": "",
@@ -296,7 +296,7 @@
                 },
                 {
                     "name": "",
-                    "id": "e3f4a5b6-c7d8-9012-efab-123456789012",
+                    "id": "b6c7d8e9-f0a1-2345-bcde-456789012345",
                     "path": "<Gamepad>/buttonSouth",
                     "interactions": "",
                     "processors": "",
@@ -307,7 +307,7 @@
                 },
                 {
                     "name": "",
-                    "id": "f4a5b6c7-d8e9-0123-fabc-234567890123",
+                    "id": "c7d8e9f0-a1b2-3456-cdef-567890123456",
                     "path": "<Keyboard>/escape",
                     "interactions": "",
                     "processors": "",
@@ -318,7 +318,7 @@
                 },
                 {
                     "name": "",
-                    "id": "a5b6c7d8-e9f0-1234-abcd-345678901234",
+                    "id": "d8e9f0a1-b2c3-4567-defa-678901234567",
                     "path": "<Gamepad>/buttonEast",
                     "interactions": "",
                     "processors": "",
@@ -329,7 +329,7 @@
                 },
                 {
                     "name": "",
-                    "id": "b6c7d8e9-f0a1-2345-bcde-456789012345",
+                    "id": "e9f0a1b2-c3d4-5678-efab-789012345678",
                     "path": "<Keyboard>/escape",
                     "interactions": "",
                     "processors": "",
@@ -340,7 +340,7 @@
                 },
                 {
                     "name": "",
-                    "id": "c7d8e9f0-a1b2-3456-cdef-567890123456",
+                    "id": "f0a1b2c3-d4e5-6789-fabc-890123456789",
                     "path": "<Gamepad>/start",
                     "interactions": "",
                     "processors": "",

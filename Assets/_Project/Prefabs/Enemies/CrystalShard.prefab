@@ -150,9 +150,6 @@ MonoBehaviour:
   _spawnDuration: 0.25
   _invulnerableDuringSpawn: 1
   _deathDuration: 0.5
-  _spawnFeedback: {fileID: 0}
-  _hitFeedback: {fileID: 0}
-  _deathFeedback: {fileID: 0}
   _shardCount: 6
   _orbitRadius: 1.5
   _orbitSpeed: 1.5
@@ -165,6 +162,3 @@ MonoBehaviour:
   _visuals: {fileID: 0}
   _crystalColor: {r: 0.4, g: 0.8, b: 1, a: 1}
   _coreColor: {r: 0.2, g: 0.4, b: 0.8, a: 1}
-  _burstFeedback: {fileID: 0}
-  _shardFireFeedback: {fileID: 0}
-  _shatterFeedback: {fileID: 0}

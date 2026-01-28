@@ -15,6 +15,7 @@ namespace NeuralBreak.UI
         [SerializeField] private ScreenBase _startScreen;
         [SerializeField] private ScreenBase _pauseScreen;
         [SerializeField] private ScreenBase _gameOverScreen;
+        [SerializeField] private UpgradeSelectionScreen _upgradeSelectionScreen;
         [SerializeField] private GameObject _hudRoot;
 
         [Header("Settings")]
@@ -51,14 +52,29 @@ namespace NeuralBreak.UI
 
         private System.Collections.IEnumerator DelayedInit()
         {
-            yield return null; // Wait one frame for UIBuilder to finish
+            Debug.Log("[UIManager] DelayedInit starting...");
 
-            // Initialize based on current state
-            if (GameManager.Instance != null)
+            // Wait for GameManager.Instance with timeout protection
+            float timeout = 5f;
+            float elapsed = 0f;
+
+            while (GameManager.Instance == null && elapsed < timeout)
             {
-                Debug.Log($"[UIManager] Initializing with state: {GameManager.Instance.CurrentState}");
-                UpdateUIForState(GameManager.Instance.CurrentState);
+                yield return null;
+                elapsed += Time.unscaledDeltaTime;
             }
+
+            if (GameManager.Instance == null)
+            {
+                Debug.LogError($"[UIManager] GameManager.Instance not found after {timeout}s timeout! UI may not initialize correctly.");
+                // Try to show start screen anyway as fallback
+                ShowScreen(_startScreen);
+                SetHUDVisible(false);
+                yield break;
+            }
+
+            Debug.Log($"[UIManager] GameManager found after {elapsed:F2}s. Initializing with state: {GameManager.Instance.CurrentState}");
+            UpdateUIForState(GameManager.Instance.CurrentState);
         }
 
         private void OnPausePressed()
@@ -103,6 +119,11 @@ namespace NeuralBreak.UI
                     SetHUDVisible(_showHUDDuringPause);
                     break;
 
+                case GameStateType.RogueChoice:
+                    ShowScreen(_upgradeSelectionScreen);
+                    SetHUDVisible(false);
+                    break;
+
                 case GameStateType.GameOver:
                     ShowScreen(_gameOverScreen);
                     SetHUDVisible(false);
@@ -128,6 +149,7 @@ namespace NeuralBreak.UI
             _startScreen?.Hide();
             _pauseScreen?.Hide();
             _gameOverScreen?.Hide();
+            _upgradeSelectionScreen?.Hide();
             _currentScreen = null;
         }
 

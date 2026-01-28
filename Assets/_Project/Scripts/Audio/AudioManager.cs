@@ -58,11 +58,12 @@ namespace NeuralBreak.Audio
             }
             Instance = this;
 
-            // Generate procedural clips
-            GenerateProceduralClips();
-
-            // Create audio sources if not assigned
+            // Create audio sources if not assigned (fast operation)
             EnsureAudioSources();
+
+            // Defer clip generation to avoid blocking main thread on boot
+            // This will happen over multiple frames via coroutine
+            Debug.Log("[AudioManager] Awake complete - clips will be generated in Start()");
         }
 
         private void OnDestroy()
@@ -77,34 +78,52 @@ namespace NeuralBreak.Audio
 
         private void Start()
         {
+            // Generate procedural clips (deferred from Awake to reduce boot hang)
+            StartCoroutine(GenerateProceduralClipsAsync());
+
             SubscribeEvents();
         }
 
-        private void GenerateProceduralClips()
+        private System.Collections.IEnumerator GenerateProceduralClipsAsync()
         {
-            // Note: Unity serialized fields need explicit null check, not ?? operator
-            // because Unity overloads == null but not the null-coalescing operator
+            Debug.Log("[AudioManager] Starting async clip generation...");
+            float startTime = Time.realtimeSinceStartup;
+
+            // Generate short clips first (fast)
             _shootClip = _shootClipOverride != null ? _shootClipOverride : ProceduralSFX.CreateShoot();
             _hitClip = _hitClipOverride != null ? _hitClipOverride : ProceduralSFX.CreateHit();
+            _menuClickClip = _menuClickClipOverride != null ? _menuClickClipOverride : ProceduralSFX.CreateMenuClick();
+            yield return null; // Allow other systems to initialize
+
             _explosionClip = _explosionClipOverride != null ? _explosionClipOverride : ProceduralSFX.CreateExplosion();
             _damageClip = _damageClipOverride != null ? _damageClipOverride : ProceduralSFX.CreateDamage();
             _pickupClip = _pickupClipOverride != null ? _pickupClipOverride : ProceduralSFX.CreatePickup();
-            _menuClickClip = _menuClickClipOverride != null ? _menuClickClipOverride : ProceduralSFX.CreateMenuClick();
+            yield return null;
+
             _shieldHitClip = ProceduralSFX.CreateShieldHit();
             _levelUpClip = ProceduralSFX.CreateLevelUp();
             _gameOverClip = ProceduralSFX.CreateGameOver();
             _overheatClip = ProceduralSFX.CreateOverheatWarning();
-            _bgmClip = ProceduralSFX.CreateBackgroundMusic();
+            yield return null;
 
             // Generate varied enemy death sounds (one per enemy type)
             _enemyDeathClips = new AudioClip[8];
             for (int i = 0; i < 8; i++)
             {
                 _enemyDeathClips[i] = ProceduralSFX.CreateEnemyDeath(i);
+                if (i % 2 == 1) yield return null; // Yield every 2 clips
             }
 
-            Debug.Log($"[AudioManager] Clips generated: shoot={_shootClip != null}, hit={_hitClip != null}, bgm={_bgmClip != null}");
+            // Background music is the heaviest - generate last
+            yield return null;
+            _bgmClip = ProceduralSFX.CreateBackgroundMusic();
+
+            float elapsed = Time.realtimeSinceStartup - startTime;
+            Debug.Log($"[AudioManager] Clips generated in {elapsed:F2}s: shoot={_shootClip != null}, hit={_hitClip != null}, bgm={_bgmClip != null}");
         }
+
+        // Note: GenerateProceduralClips moved to GenerateProceduralClipsAsync() coroutine
+        // to avoid blocking the main thread during boot
 
         private void EnsureAudioSources()
         {

@@ -292,6 +292,7 @@ MonoBehaviour:
   _startScreen: {fileID: 0}
   _pauseScreen: {fileID: 0}
   _gameOverScreen: {fileID: 0}
+  _upgradeSelectionScreen: {fileID: 0}
   _hudRoot: {fileID: 0}
   _showHUDDuringPause: 1
 --- !u!4 &305620131
@@ -1151,7 +1152,7 @@ RectTransform:
   m_GameObject: {fileID: 1045710458}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1029775529}
@@ -1159,7 +1160,7 @@ RectTransform:
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
@@ -6855,6 +6856,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1815845573}
+  - component: {fileID: 1815845574}
+  - component: {fileID: 1815845575}
   m_Layer: 0
   m_Name: GameSystems
   m_TagString: Untagged
@@ -6877,6 +6880,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1815845574
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1815845572}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f137247be922d3d40a6ad22cdbef84ea, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Combat.PermanentUpgradeManager
+--- !u!114 &1815845575
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1815845572}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 287fe2b3a19639140b59b05359760dee, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Combat.UpgradePoolManager
+  _cardsPerSelection: 3
+  _allowDuplicates: 0
+  _commonWeight: 60
+  _rareWeight: 25
+  _epicWeight: 12
+  _legendaryWeight: 3
+  _logSelections: 1
 --- !u!1 &1878016614
 GameObject:
   m_ObjectHideFlags: 0

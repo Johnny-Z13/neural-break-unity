@@ -300,7 +300,7 @@ namespace NeuralBreak.Core
             _sessionUpgradesUsed++;
 
             // Check if 3 upgrades active at once
-            var upgradeManager = FindObjectOfType<Combat.WeaponUpgradeManager>();
+            var upgradeManager = FindFirstObjectByType<Combat.WeaponUpgradeManager>();
             if (upgradeManager != null)
             {
                 int activeCount = 0;

@@ -11,7 +11,7 @@ namespace NeuralBreak.Editor
     /// </summary>
     public static class SceneSetupHelper
     {
-        [MenuItem("Tools/Neural Break/Setup Scene References")]
+        [MenuItem("Neural Break/Setup Scene References")]
         public static void SetupSceneReferences()
         {
             SetupPickupSpawner();
@@ -21,7 +21,7 @@ namespace NeuralBreak.Editor
             Debug.Log("[SceneSetup] Scene references configured!");
         }
 
-        [MenuItem("Tools/Neural Break/Setup Pickup Spawner")]
+        [MenuItem("Neural Break/Setup Pickup Spawner")]
         public static void SetupPickupSpawner()
         {
             var spawner = Object.FindFirstObjectByType<PickupSpawner>();
@@ -62,7 +62,7 @@ namespace NeuralBreak.Editor
             }
         }
 
-        [MenuItem("Tools/Neural Break/Setup Enemy Spawner")]
+        [MenuItem("Neural Break/Setup Enemy Spawner")]
         public static void SetupEnemySpawner()
         {
             var spawner = Object.FindFirstObjectByType<EnemySpawner>();
@@ -101,7 +101,7 @@ namespace NeuralBreak.Editor
             }
         }
 
-        [MenuItem("Tools/Neural Break/Setup Feedback Manager")]
+        [MenuItem("Neural Break/Setup Feedback Manager")]
         public static void SetupFeedbackManager()
         {
             var feedbackManager = Object.FindFirstObjectByType<FeedbackManager>();
@@ -152,7 +152,7 @@ namespace NeuralBreak.Editor
             }
         }
 
-        [MenuItem("Tools/Neural Break/Create All Managers")]
+        [MenuItem("Neural Break/Create All Managers")]
         public static void CreateAllManagers()
         {
             CreateIfMissing<PickupSpawner>("PickupSpawner");

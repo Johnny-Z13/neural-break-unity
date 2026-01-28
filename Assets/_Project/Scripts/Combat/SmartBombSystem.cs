@@ -3,7 +3,6 @@ using NeuralBreak.Core;
 using NeuralBreak.Entities;
 using NeuralBreak.Input;
 using NeuralBreak.Config;
-using MoreMountains.Feedbacks;
 
 namespace NeuralBreak.Combat
 {
@@ -24,9 +23,7 @@ namespace NeuralBreak.Combat
         [SerializeField] private Color _explosionStartColor = new Color(1f, 0.8f, 0.2f, 1f);
         [SerializeField] private Color _explosionEndColor = new Color(1f, 0.3f, 0.1f, 0f);
 
-        [Header("Feel Feedbacks")]
-        [SerializeField] private MMF_Player _activationFeedback;
-        [SerializeField] private MMF_Player _cameraShakeFeedback;
+        // Note: MMFeedbacks removed
 
         [Header("Audio")]
         [SerializeField] private AudioClip _epicExplosionSound;
@@ -37,10 +34,11 @@ namespace NeuralBreak.Combat
         private bool _isActivating;
         private float _activationTimer;
         private AudioSource _audioSource;
+        private int _bonusBombs;
 
         // Public accessors
         public int CurrentBombs => _currentBombs;
-        public int MaxBombs => _maxBombs;
+        public int MaxBombs => _maxBombs + _bonusBombs;
         public bool CanUseBomb => _currentBombs > 0 && !_isActivating;
 
         private void Awake()
@@ -57,18 +55,24 @@ namespace NeuralBreak.Combat
         {
             // Subscribe to events
             EventBus.Subscribe<GameStartedEvent>(OnGameStarted);
+            EventBus.Subscribe<WeaponModifiersChangedEvent>(OnModifiersChanged);
 
             // Subscribe to input events
             if (InputManager.Instance != null)
             {
                 InputManager.Instance.OnSmartBombPressed += TryActivateBomb;
+                Debug.Log("[SmartBombSystem] Subscribed to OnSmartBombPressed - press B to activate!");
+            }
+            else
+            {
+                Debug.LogError("[SmartBombSystem] InputManager.Instance is null! Smart Bomb input won't work.");
             }
 
             // Publish initial state
             EventBus.Publish(new SmartBombCountChangedEvent
             {
                 count = _currentBombs,
-                maxCount = _maxBombs
+                maxCount = MaxBombs
             });
 
             // Ensure particles are set up
@@ -81,11 +85,35 @@ namespace NeuralBreak.Combat
         private void OnDestroy()
         {
             EventBus.Unsubscribe<GameStartedEvent>(OnGameStarted);
+            EventBus.Unsubscribe<WeaponModifiersChangedEvent>(OnModifiersChanged);
 
             // Unsubscribe from input
             if (InputManager.Instance != null)
             {
                 InputManager.Instance.OnSmartBombPressed -= TryActivateBomb;
+            }
+        }
+
+        private void OnModifiersChanged(WeaponModifiersChangedEvent evt)
+        {
+            int bombDelta = evt.modifiers.bonusSmartBombs - _bonusBombs;
+            if (bombDelta != 0)
+            {
+                _bonusBombs = evt.modifiers.bonusSmartBombs;
+
+                // If bonus increased, add bombs
+                if (bombDelta > 0)
+                {
+                    _currentBombs = Mathf.Min(_currentBombs + bombDelta, MaxBombs);
+                }
+
+                EventBus.Publish(new SmartBombCountChangedEvent
+                {
+                    count = _currentBombs,
+                    maxCount = MaxBombs
+                });
+
+                Debug.Log($"[SmartBombSystem] Bomb bonus changed: +{_bonusBombs}. Max bombs: {MaxBombs}");
             }
         }
 
@@ -106,6 +134,8 @@ namespace NeuralBreak.Combat
         /// </summary>
         public void TryActivateBomb()
         {
+            Debug.Log($"[SmartBombSystem] TryActivateBomb called! Bombs: {_currentBombs}, IsActivating: {_isActivating}, CanUseBomb: {CanUseBomb}");
+
             if (!CanUseBomb)
             {
                 Debug.LogWarning("[SmartBombSystem] Cannot activate - no bombs available or already activating!");
@@ -127,9 +157,7 @@ namespace NeuralBreak.Combat
                 _audioSource.PlayOneShot(_epicExplosionSound, _explosionVolume);
             }
 
-            // Feedbacks
-            _activationFeedback?.PlayFeedbacks();
-            _cameraShakeFeedback?.PlayFeedbacks();
+            // Feedback (Feel removed)
 
             // Visual effect
             if (_explosionParticles != null)
@@ -145,7 +173,7 @@ namespace NeuralBreak.Combat
             EventBus.Publish(new SmartBombCountChangedEvent
             {
                 count = _currentBombs,
-                maxCount = _maxBombs
+                maxCount = MaxBombs
             });
 
             Debug.Log($"[SmartBombSystem] SMART BOMB ACTIVATED! Bombs remaining: {_currentBombs}");
@@ -153,8 +181,8 @@ namespace NeuralBreak.Combat
 
         private void KillAllEnemies()
         {
-            // Find all enemies in the scene
-            var enemies = FindObjectsOfType<EnemyBase>();
+            // Find all enemies in the scene (Unity 6 API)
+            var enemies = FindObjectsByType<EnemyBase>(FindObjectsSortMode.None);
             int killedCount = 0;
 
             foreach (var enemy in enemies)
@@ -175,9 +203,9 @@ namespace NeuralBreak.Combat
         /// </summary>
         public void AddBomb()
         {
-            if (_currentBombs >= _maxBombs)
+            if (_currentBombs >= MaxBombs)
             {
-                Debug.LogWarning($"[SmartBombSystem] Already at max bombs ({_maxBombs})!");
+                Debug.LogWarning($"[SmartBombSystem] Already at max bombs ({MaxBombs})!");
                 return;
             }
 
@@ -185,10 +213,10 @@ namespace NeuralBreak.Combat
             EventBus.Publish(new SmartBombCountChangedEvent
             {
                 count = _currentBombs,
-                maxCount = _maxBombs
+                maxCount = MaxBombs
             });
 
-            Debug.Log($"[SmartBombSystem] Smart bomb added! Total: {_currentBombs}/{_maxBombs}");
+            Debug.Log($"[SmartBombSystem] Smart bomb added! Total: {_currentBombs}/{MaxBombs}");
         }
 
         /// <summary>
@@ -203,7 +231,7 @@ namespace NeuralBreak.Combat
             EventBus.Publish(new SmartBombCountChangedEvent
             {
                 count = _currentBombs,
-                maxCount = _maxBombs
+                maxCount = MaxBombs
             });
         }
 

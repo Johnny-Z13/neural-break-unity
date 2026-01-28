@@ -1,54 +1,17 @@
 using UnityEngine;
-using MoreMountains.Feedbacks;
 using NeuralBreak.Core;
 
 namespace NeuralBreak.UI
 {
     /// <summary>
-    /// Centralized UI feedback system using FEEL (MMFeedbacks).
-    /// Provides juice effects for all UI interactions.
-    ///
-    /// USAGE:
-    /// 1. Attach to a persistent GameObject (e.g., UIManager or GameSetup)
-    /// 2. Call static methods like UIFeedbacks.PlayScorePop(position)
-    /// 3. Effects are pooled and reused for performance
-    ///
-    /// FEEL BEST PRACTICES:
-    /// - Use MMF_Player prefabs for complex reusable effects
-    /// - Layer subtle effects rather than one big effect
-    /// - Use TimescaleMode.Unscaled for pause-independent UI
+    /// Centralized UI feedback system.
+    /// Note: MMFeedbacks (Feel) has been removed.
+    /// This class now serves as a stub that logs feedback events.
+    /// Future implementation can add DOTween, LeanTween, or custom effects.
     /// </summary>
     public class UIFeedbacks : MonoBehaviour
     {
-
-        [Header("Score Feedbacks")]
-        [SerializeField] private MMF_Player _scorePunchFeedback;
-        [SerializeField] private MMF_Player _comboMilestoneFeedback;
-        [SerializeField] private MMF_Player _multiplierFeedback;
-
-        [Header("Health Feedbacks")]
-        [SerializeField] private MMF_Player _damageFeedback;
-        [SerializeField] private MMF_Player _healFeedback;
-        [SerializeField] private MMF_Player _shieldGainFeedback;
-        [SerializeField] private MMF_Player _lowHealthFeedback;
-
-        [Header("Level/Wave Feedbacks")]
-        [SerializeField] private MMF_Player _levelUpFeedback;
-        [SerializeField] private MMF_Player _waveStartFeedback;
-        [SerializeField] private MMF_Player _bossWarningFeedback;
-
-        [Header("Achievement Feedbacks")]
-        [SerializeField] private MMF_Player _achievementUnlockFeedback;
-
-        [Header("Button Feedbacks")]
-        [SerializeField] private MMF_Player _buttonHoverFeedback;
-        [SerializeField] private MMF_Player _buttonClickFeedback;
-
-        private void Awake()
-        {
-            // Create default feedbacks if not assigned
-            CreateDefaultFeedbacks();
-        }
+        // Note: MMFeedbacks removed - all MMF_Player fields have been removed
 
         private void Start()
         {
@@ -93,7 +56,7 @@ namespace NeuralBreak.UI
         {
             if (evt.delta >= 500)
             {
-                PlayFeedback(_scorePunchFeedback);
+                // Feedback (Feel removed) - Score punch
             }
         }
 
@@ -105,7 +68,7 @@ namespace NeuralBreak.UI
             {
                 if (evt.comboCount >= milestone.threshold && milestone.threshold > _lastComboMilestone)
                 {
-                    PlayFeedback(_comboMilestoneFeedback);
+                    // Feedback (Feel removed) - Combo milestone
                     _lastComboMilestone = milestone.threshold;
                     break;
                 }
@@ -118,24 +81,24 @@ namespace NeuralBreak.UI
 
             if (evt.multiplier >= 5f)
             {
-                PlayFeedback(_multiplierFeedback);
+                // Feedback (Feel removed) - Multiplier
             }
         }
 
         private void OnPlayerDamaged(PlayerDamagedEvent evt)
         {
-            PlayFeedback(_damageFeedback);
+            // Feedback (Feel removed) - Damage
 
             float healthPercent = evt.maxHealth > 0 ? (float)evt.currentHealth / evt.maxHealth : 0;
             if (healthPercent <= 0.25f)
             {
-                PlayFeedback(_lowHealthFeedback);
+                // Feedback (Feel removed) - Low health
             }
         }
 
         private void OnPlayerHealed(PlayerHealedEvent evt)
         {
-            PlayFeedback(_healFeedback);
+            // Feedback (Feel removed) - Heal
         }
 
         private void OnShieldChanged(ShieldChangedEvent evt)
@@ -143,184 +106,31 @@ namespace NeuralBreak.UI
             // Only play on shield gain
             if (evt.currentShields > 0)
             {
-                PlayFeedback(_shieldGainFeedback);
+                // Feedback (Feel removed) - Shield gain
             }
         }
 
         private void OnLevelUp(PlayerLevelUpEvent evt)
         {
-            PlayFeedback(_levelUpFeedback);
+            // Feedback (Feel removed) - Level up
         }
 
         private void OnLevelStarted(LevelStartedEvent evt)
         {
-            PlayFeedback(_waveStartFeedback);
+            // Feedback (Feel removed) - Wave start
         }
 
         private void OnBossEncounter(BossEncounterEvent evt)
         {
             if (evt.isBossActive)
             {
-                PlayFeedback(_bossWarningFeedback);
+                // Feedback (Feel removed) - Boss warning
             }
         }
 
         private void OnAchievementUnlocked(AchievementUnlockedEvent evt)
         {
-            PlayFeedback(_achievementUnlockFeedback);
-        }
-
-        #endregion
-
-        #region Public API (Removed singleton - now use EventBus directly)
-        // All feedback is now triggered via EventBus event subscriptions
-        // No static API needed - this class is a pure event subscriber
-        #endregion
-
-        #region Helper Methods
-
-        private void PlayFeedback(MMF_Player feedback)
-        {
-            if (feedback != null && feedback.isActiveAndEnabled)
-            {
-                feedback.PlayFeedbacks();
-            }
-        }
-
-        private void CreateDefaultFeedbacks()
-        {
-            // Create runtime feedbacks if not assigned in inspector
-            // These provide basic juice without needing prefab setup
-
-            if (_scorePunchFeedback == null)
-            {
-                _scorePunchFeedback = CreateSimpleFeedback("ScorePunch");
-                AddScaleEffect(_scorePunchFeedback, UITheme.Scale.PunchSmall, UITheme.Duration.Fast);
-            }
-
-            if (_comboMilestoneFeedback == null)
-            {
-                _comboMilestoneFeedback = CreateSimpleFeedback("ComboMilestone");
-                AddScaleEffect(_comboMilestoneFeedback, UITheme.Scale.PunchMedium, UITheme.Duration.Normal);
-                AddFlashEffect(_comboMilestoneFeedback, UITheme.Warning);
-            }
-
-            if (_damageFeedback == null)
-            {
-                _damageFeedback = CreateSimpleFeedback("Damage");
-                AddFlashEffect(_damageFeedback, UITheme.Danger);
-            }
-
-            if (_healFeedback == null)
-            {
-                _healFeedback = CreateSimpleFeedback("Heal");
-                AddFlashEffect(_healFeedback, UITheme.Good);
-            }
-
-            if (_levelUpFeedback == null)
-            {
-                _levelUpFeedback = CreateSimpleFeedback("LevelUp");
-                AddScaleEffect(_levelUpFeedback, UITheme.Scale.PunchLarge, UITheme.Duration.Smooth);
-                AddFlashEffect(_levelUpFeedback, UITheme.Warning);
-            }
-
-            if (_waveStartFeedback == null)
-            {
-                _waveStartFeedback = CreateSimpleFeedback("WaveStart");
-                AddScaleEffect(_waveStartFeedback, UITheme.Scale.PunchSmall, UITheme.Duration.Normal);
-            }
-
-            if (_bossWarningFeedback == null)
-            {
-                _bossWarningFeedback = CreateSimpleFeedback("BossWarning");
-                AddFlashEffect(_bossWarningFeedback, UITheme.Danger);
-            }
-
-            if (_achievementUnlockFeedback == null)
-            {
-                _achievementUnlockFeedback = CreateSimpleFeedback("AchievementUnlock");
-                AddScaleEffect(_achievementUnlockFeedback, UITheme.Scale.PunchMedium, UITheme.Duration.Normal);
-                AddFlashEffect(_achievementUnlockFeedback, UITheme.Warning);
-            }
-
-            if (_buttonHoverFeedback == null)
-            {
-                _buttonHoverFeedback = CreateSimpleFeedback("ButtonHover");
-                AddScaleEffect(_buttonHoverFeedback, 1.05f, UITheme.Duration.Fast);
-            }
-
-            if (_buttonClickFeedback == null)
-            {
-                _buttonClickFeedback = CreateSimpleFeedback("ButtonClick");
-                AddScaleEffect(_buttonClickFeedback, UITheme.Scale.PunchSmall, UITheme.Duration.Instant);
-            }
-        }
-
-        private MMF_Player CreateSimpleFeedback(string name)
-        {
-            var feedbackGO = new GameObject($"UIFeedback_{name}");
-            feedbackGO.transform.SetParent(transform);
-            var player = feedbackGO.AddComponent<MMF_Player>();
-            player.InitializationMode = MMFeedbacks.InitializationModes.Awake;
-            player.FeedbacksIntensity = 1f;
-            return player;
-        }
-
-        private void AddScaleEffect(MMF_Player player, float targetScale, float duration)
-        {
-            if (player == null) return;
-
-            try
-            {
-                // Create a scale feedback using MMF_Scale
-                var scaleFeedback = new MMF_Scale();
-                scaleFeedback.Label = "Scale Punch";
-                scaleFeedback.AnimateScaleTarget = player.transform;
-                scaleFeedback.AnimateScaleDuration = duration;
-                scaleFeedback.RemapCurveOne = 0f;
-                scaleFeedback.RemapCurveZero = targetScale;
-                scaleFeedback.Mode = MMF_Scale.Modes.Additive;
-
-                // Safely set timing mode
-                if (scaleFeedback.Timing != null)
-                {
-                    scaleFeedback.Timing.TimescaleMode = TimescaleModes.Unscaled;
-                }
-
-                player.AddFeedback(scaleFeedback);
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogWarning($"[UIFeedbacks] Failed to add scale effect: {e.Message}");
-            }
-        }
-
-        private void AddFlashEffect(MMF_Player player, Color flashColor)
-        {
-            if (player == null) return;
-
-            try
-            {
-                // Use MMF_ImageAlpha or similar for flash
-                // For now, create a simple feedback reference
-                var flashFeedback = new MMF_Flicker();
-                flashFeedback.Label = "Color Flash";
-                flashFeedback.FlickerDuration = UITheme.Duration.Fast;
-                flashFeedback.FlickerPeriod = 0.05f;
-                flashFeedback.FlickerColor = flashColor;
-
-                // Safely set timing mode
-                if (flashFeedback.Timing != null)
-                {
-                    flashFeedback.Timing.TimescaleMode = TimescaleModes.Unscaled;
-                }
-
-                player.AddFeedback(flashFeedback);
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogWarning($"[UIFeedbacks] Failed to add flash effect: {e.Message}");
-            }
+            // Feedback (Feel removed) - Achievement unlock
         }
 
         #endregion
@@ -328,19 +138,34 @@ namespace NeuralBreak.UI
         #region Debug
 
         [ContextMenu("Test: Score Punch")]
-        private void TestScorePunch() => PlayFeedback(_scorePunchFeedback);
+        private void TestScorePunch()
+        {
+            Debug.Log("[UIFeedbacks] Score punch feedback (Feel removed)");
+        }
 
         [ContextMenu("Test: Combo Milestone")]
-        private void TestComboMilestone() => PlayFeedback(_comboMilestoneFeedback);
+        private void TestComboMilestone()
+        {
+            Debug.Log("[UIFeedbacks] Combo milestone feedback (Feel removed)");
+        }
 
         [ContextMenu("Test: Damage")]
-        private void TestDamage() => PlayFeedback(_damageFeedback);
+        private void TestDamage()
+        {
+            Debug.Log("[UIFeedbacks] Damage feedback (Feel removed)");
+        }
 
         [ContextMenu("Test: Heal")]
-        private void TestHeal() => PlayFeedback(_healFeedback);
+        private void TestHeal()
+        {
+            Debug.Log("[UIFeedbacks] Heal feedback (Feel removed)");
+        }
 
         [ContextMenu("Test: Level Up")]
-        private void TestLevelUp() => PlayFeedback(_levelUpFeedback);
+        private void TestLevelUp()
+        {
+            Debug.Log("[UIFeedbacks] Level up feedback (Feel removed)");
+        }
 
         #endregion
     }

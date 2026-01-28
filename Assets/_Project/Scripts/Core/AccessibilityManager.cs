@@ -177,7 +177,7 @@ namespace NeuralBreak.Core
         private void ApplySettings()
         {
             // Apply rumble settings
-            var rumble = FindObjectOfType<GamepadRumble>();
+            var rumble = FindFirstObjectByType<GamepadRumble>();
             if (rumble != null)
             {
                 rumble.SetRumbleEnabled(RumbleEnabled);

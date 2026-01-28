@@ -54,16 +54,16 @@ namespace NeuralBreak.UI
         {
             CreateUI();
 
-            if (FindObjectOfType<PlayerLevelSystem>() != null)
+            if (FindFirstObjectByType<PlayerLevelSystem>() != null)
             {
-                FindObjectOfType<PlayerLevelSystem>().OnXPChanged += OnXPChanged;
-                FindObjectOfType<PlayerLevelSystem>().OnLevelUp += OnLevelUp;
+                FindFirstObjectByType<PlayerLevelSystem>().OnXPChanged += OnXPChanged;
+                FindFirstObjectByType<PlayerLevelSystem>().OnLevelUp += OnLevelUp;
 
                 // Initialize with current values
                 UpdateDisplay(
-                    FindObjectOfType<PlayerLevelSystem>().CurrentXP,
-                    FindObjectOfType<PlayerLevelSystem>().XPForCurrentLevel,
-                    FindObjectOfType<PlayerLevelSystem>().CurrentLevel
+                    FindFirstObjectByType<PlayerLevelSystem>().CurrentXP,
+                    FindFirstObjectByType<PlayerLevelSystem>().XPForCurrentLevel,
+                    FindFirstObjectByType<PlayerLevelSystem>().CurrentLevel
                 );
             }
 
@@ -72,10 +72,11 @@ namespace NeuralBreak.UI
 
         private void OnDestroy()
         {
-            if (FindObjectOfType<PlayerLevelSystem>() != null)
+            var levelSystem = FindFirstObjectByType<PlayerLevelSystem>();
+            if (levelSystem != null)
             {
-                FindObjectOfType<PlayerLevelSystem>().OnXPChanged -= OnXPChanged;
-                FindObjectOfType<PlayerLevelSystem>().OnLevelUp -= OnLevelUp;
+                levelSystem.OnXPChanged -= OnXPChanged;
+                levelSystem.OnLevelUp -= OnLevelUp;
             }
 
             EventBus.Unsubscribe<GameStartedEvent>(OnGameStarted);
@@ -314,10 +315,10 @@ namespace NeuralBreak.UI
             UpdateFillBar(0);
 
             // Update target from current system state
-            if (FindObjectOfType<PlayerLevelSystem>() != null)
+            if (FindFirstObjectByType<PlayerLevelSystem>() != null)
             {
-                _targetFill = FindObjectOfType<PlayerLevelSystem>().LevelProgress;
-                _xpText.text = $"{FindObjectOfType<PlayerLevelSystem>().CurrentXP}/{FindObjectOfType<PlayerLevelSystem>().XPForCurrentLevel}";
+                _targetFill = FindFirstObjectByType<PlayerLevelSystem>().LevelProgress;
+                _xpText.text = $"{FindFirstObjectByType<PlayerLevelSystem>().CurrentXP}/{FindFirstObjectByType<PlayerLevelSystem>().XPForCurrentLevel}";
             }
 
             _isLevelingUp = false;

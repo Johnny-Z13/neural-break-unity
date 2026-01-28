@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
 using NeuralBreak.Core;
+using NeuralBreak.Combat;
 
 namespace NeuralBreak.UI
 {
@@ -46,6 +47,26 @@ namespace NeuralBreak.UI
             EventBus.Subscribe<SmartBombCountChangedEvent>(OnBombCountChanged);
             EventBus.Subscribe<SmartBombActivatedEvent>(OnBombActivated);
             EventBus.Subscribe<GameStartedEvent>(OnGameStarted);
+
+            // Request initial state from SmartBombSystem (it may have already published)
+            StartCoroutine(RequestInitialState());
+        }
+
+        private System.Collections.IEnumerator RequestInitialState()
+        {
+            // Wait one frame for all systems to initialize
+            yield return null;
+
+            // Find SmartBombSystem and get current state
+            var bombSystem = FindFirstObjectByType<SmartBombSystem>();
+            if (bombSystem != null)
+            {
+                OnBombCountChanged(new SmartBombCountChangedEvent
+                {
+                    count = bombSystem.CurrentBombs,
+                    maxCount = bombSystem.MaxBombs
+                });
+            }
         }
 
         private void OnDestroy()

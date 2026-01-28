@@ -1,7 +1,6 @@
 using UnityEngine;
 using NeuralBreak.Core;
 using NeuralBreak.Combat;
-using MoreMountains.Feedbacks;
 
 namespace NeuralBreak.Entities
 {
@@ -46,10 +45,7 @@ namespace NeuralBreak.Entities
         [SerializeField] private Color _voidColor = new Color(0.2f, 0f, 0.4f); // Deep purple
         [SerializeField] private Color _glowColor = new Color(0.6f, 0f, 1f); // Purple glow
 
-        [Header("Feel Feedbacks")]
-        [SerializeField] private MMF_Player _burstFeedback;
-        [SerializeField] private MMF_Player _chargeFeedback;
-        [SerializeField] private MMF_Player _implosionFeedback;
+        // Note: MMFeedbacks removed
 
         // State
         private float _burstTimer;
@@ -133,7 +129,7 @@ namespace NeuralBreak.Entities
             if (!_isCharging && _burstTimer >= _burstCooldown - 0.5f)
             {
                 _isCharging = true;
-                _chargeFeedback?.PlayFeedbacks();
+                // Feedback (Feel removed)
             }
 
             if (_burstTimer >= _burstCooldown)
@@ -147,7 +143,7 @@ namespace NeuralBreak.Entities
         private System.Collections.IEnumerator FireBurst()
         {
             _isFiringBurst = true;
-            _burstFeedback?.PlayFeedbacks();
+            // Feedback (Feel removed)
 
             for (int i = 0; i < _burstCount; i++)
             {
@@ -204,7 +200,7 @@ namespace NeuralBreak.Entities
         public override void Kill()
         {
             // Massive implosion/explosion
-            _implosionFeedback?.PlayFeedbacks();
+            // Feedback (Feel removed)
             DealDeathDamage();
 
             // Fire death nova

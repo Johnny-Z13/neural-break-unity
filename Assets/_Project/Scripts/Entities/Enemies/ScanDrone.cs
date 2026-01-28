@@ -1,7 +1,6 @@
 using UnityEngine;
 using NeuralBreak.Core;
 using NeuralBreak.Combat;
-using MoreMountains.Feedbacks;
 
 namespace NeuralBreak.Entities
 {
@@ -38,9 +37,7 @@ namespace NeuralBreak.Entities
         [SerializeField] private float _rotationSpeed = 90f; // degrees per second
 #pragma warning restore CS0414
 
-        [Header("Feel Feedbacks")]
-        [SerializeField] private MMF_Player _fireFeedback;
-        [SerializeField] private MMF_Player _detectFeedback;
+        // Note: MMFeedbacks removed
 
         // State
         private enum DroneState { Patrolling, Alerted, Attacking }
@@ -98,7 +95,7 @@ namespace NeuralBreak.Entities
                     if (playerInRange)
                     {
                         _droneState = DroneState.Alerted;
-                        _detectFeedback?.PlayFeedbacks();
+                        // Feedback (Feel removed)
                         _visuals?.SetAlerted(true);
 
                         if (!_wasPlayerInRange)
@@ -209,7 +206,7 @@ namespace NeuralBreak.Entities
                 new Color(1f, 0.5f, 0f) // Orange
             );
 
-            _fireFeedback?.PlayFeedbacks();
+            // Feedback (Feel removed)
         }
 
         private Vector2 GetNewPatrolTarget()

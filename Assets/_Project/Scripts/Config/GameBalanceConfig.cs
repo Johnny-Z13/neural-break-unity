@@ -19,10 +19,7 @@ namespace NeuralBreak.Config
         [Header("Player Configuration")]
         public PlayerConfig player;
 
-        [Header("Weapon Configuration (Legacy)")]
-        public WeaponConfig weapon;
-
-        [Header("=== NEW WEAPON SYSTEM ===")]
+        [Header("=== WEAPON SYSTEM ===")]
         public WeaponSystemConfig weaponSystem;
 
         [Header("Enemy Configurations")]
@@ -44,6 +41,9 @@ namespace NeuralBreak.Config
 
         [Header("Combo System")]
         public ComboConfig combo;
+
+        [Header("Upgrade System")]
+        public UpgradeSystemConfig upgradeSystem;
 
         [Header("Spawning")]
         public SpawnConfig spawning;
@@ -150,13 +150,6 @@ namespace NeuralBreak.Config
         [Tooltip("Maximum shields that can be held")]
         public int maxShields = 3;
 
-        [Header("Power-Up System")]
-        [Tooltip("Max weapon power level (TS: 10)")]
-        public int maxPowerUpLevel = 10;
-
-        [Tooltip("Damage increase per level (TS: 0.6 = 60%)")]
-        public float powerUpDamageMultiplier = 0.6f;
-
         [Header("Speed System")]
         [Tooltip("Max speed boost level (TS: 20)")]
         public int maxSpeedLevel = 20;
@@ -209,52 +202,6 @@ namespace NeuralBreak.Config
 
         [Tooltip("Tank controls. Forward/back moves in facing direction, left/right rotates ship.")]
         TankControls
-    }
-
-    /// <summary>
-    /// Weapon configuration values - matches TypeScript BALANCE_CONFIG.WEAPONS
-    /// </summary>
-    [System.Serializable]
-    public class WeaponConfig
-    {
-        [Header("Base Stats (Level 0)")]
-        [Tooltip("Base bullet damage (TS: 12)")]
-        public int baseDamage = 12;
-
-        [Tooltip("Time between shots in seconds (TS: 0.12)")]
-        public float baseFireRate = 0.12f;
-
-        [Tooltip("Bullet speed in units/second (TS: 22)")]
-        public float projectileSpeed = 22f;
-
-        [Tooltip("Max bullet distance/lifetime (TS: 38 range)")]
-        public float projectileLifetime = 1.7f; // ~38 units at speed 22
-
-        [Header("Heat System")]
-        [Tooltip("Enable weapon overheating? (TS: true)")]
-        public bool heatEnabled = true;
-
-        [Tooltip("Heat added per shot (TS: 0.8)")]
-        public float heatPerShot = 0.8f;
-
-        [Tooltip("Heat removed per second (TS: 85)")]
-        public float heatCooldownRate = 85f;
-
-        [Tooltip("Max heat before overheat (TS: 100)")]
-        public float overheatThreshold = 100f;
-
-        [Tooltip("Forced cooldown time when overheated (TS: 0.8)")]
-        public float overheatCooldownDuration = 0.8f;
-
-        [Header("Power Levels")]
-        [Tooltip("Maximum power-up level (TS: 10)")]
-        public int maxPowerLevel = 10;
-
-        [Tooltip("Damage multiplier per power level (TS: 0.6 = 60%)")]
-        public float damagePerLevel = 0.6f;
-
-        [Tooltip("Fire rate improvement per power level")]
-        public float fireRatePerLevel = 0.05f;
     }
 
     /// <summary>
@@ -555,6 +502,23 @@ namespace NeuralBreak.Config
     {
         public float intensity = 0.5f;
         public float duration = 0.3f;
+    }
+
+    /// <summary>
+    /// Upgrade system configuration - card selection settings
+    /// </summary>
+    [System.Serializable]
+    public class UpgradeSystemConfig
+    {
+        [Header("Card Selection")]
+        [Tooltip("Show card selection every N levels (1 = every level, 5 = every 5 levels)")]
+        public int showUpgradeEveryNLevels = 1;
+
+        [Tooltip("Number of upgrade cards shown per selection")]
+        public int cardsPerSelection = 3;
+
+        [Tooltip("Allow same upgrade to appear multiple times in one selection")]
+        public bool allowDuplicates = false;
     }
 
     /// <summary>

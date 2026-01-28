@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using NeuralBreak.Core;
 using NeuralBreak.Combat;
-using MoreMountains.Feedbacks;
 
 namespace NeuralBreak.Entities
 {
@@ -40,8 +39,7 @@ namespace NeuralBreak.Entities
         [SerializeField] private ChaosWormVisuals _visuals;
         [SerializeField] private Color _wormColor = new Color(0.8f, 0.2f, 0.5f); // Purple-pink
 
-        [Header("Feel Feedbacks")]
-        [SerializeField] private MMF_Player _segmentDeathFeedback;
+        // Note: MMFeedbacks removed
 
         // Segments
         private List<Transform> _segments = new List<Transform>();
@@ -273,7 +271,7 @@ namespace NeuralBreak.Entities
                 );
             }
 
-            _segmentDeathFeedback?.PlayFeedbacks();
+            // Feedback (Feel removed)
 
             // Destroy segment
             Destroy(_segments[index].gameObject);

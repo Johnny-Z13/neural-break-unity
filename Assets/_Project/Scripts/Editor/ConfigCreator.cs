@@ -9,7 +9,7 @@ namespace NeuralBreak.Editor
     /// </summary>
     public static class ConfigCreator
     {
-        [MenuItem("Tools/Neural Break/Create Default Config")]
+        [MenuItem("Neural Break/Create Default Config")]
         public static void CreateDefaultConfig()
         {
             // Create the config asset
@@ -61,19 +61,65 @@ namespace NeuralBreak.Editor
             };
 
             // Weapon defaults
-            config.weapon = new WeaponConfig
+            config.weaponSystem = new WeaponSystemConfig
             {
                 baseDamage = 12,
                 baseFireRate = 0.12f,
-                projectileSpeed = 22f,
-                projectileLifetime = 2f,
-                heatPerShot = 0.8f,
-                heatCooldownRate = 15f,
-                overheatThreshold = 100f,
-                overheatCooldownDuration = 1.5f,
-                maxPowerLevel = 10,
-                damagePerLevel = 0.15f,
-                fireRatePerLevel = 0.05f
+                baseProjectileSpeed = 22f,
+                projectileLifetime = 1.7f,
+                projectileSize = 0.15f,
+                forwardWeapon = new ForwardWeaponConfig
+                {
+                    pattern = ForwardFirePattern.Single,
+                    doubleSpreadAngle = 15f,
+                    tripleSpreadAngle = 30f,
+                    quadSpreadAngle = 45f,
+                    x5SpreadAngle = 60f,
+                    forwardOffset = 0.6f,
+                    lateralOffset = 0.2f
+                },
+                rearWeapon = new RearWeaponConfig
+                {
+                    enabled = false,
+                    damageMultiplier = 0.5f,
+                    fireRateMultiplier = 1.0f,
+                    rearOffset = 0.4f,
+                    syncWithForward = true
+                },
+                heatSystem = new HeatSystemConfig
+                {
+                    enabled = true,
+                    heatPerShot = 0.8f,
+                    cooldownRate = 85f,
+                    maxHeat = 100f,
+                    overheatDuration = 0.8f,
+                    overheatCooldownMultiplier = 1.5f,
+                    multiShotHeatMultiplier = 0.3f,
+                    rearWeaponHeatMultiplier = 0.5f
+                },
+                powerLevels = new PowerLevelConfig
+                {
+                    maxLevel = 10,
+                    autoUpgradePattern = true,
+                    damagePerLevel = 0.6f,
+                    fireRatePerLevel = 0.05f,
+                    projectileSpeedPerLevel = 0.5f,
+                    projectileSizePerLevel = 0.01f,
+                    doubleShotLevel = 0,
+                    tripleShotLevel = 3,
+                    quadShotLevel = 6,
+                    x5ShotLevel = 9
+                },
+                modifiers = new WeaponModifiersConfig
+                {
+                    rapidFireMultiplier = 1.5f,
+                    rapidFireDuration = 10f,
+                    damageBoostMultiplier = 2f,
+                    damageBoostDuration = 8f,
+                    speedBoostMultiplier = 1.5f,
+                    sizeBoostMultiplier = 1.5f
+                },
+                specials = new SpecialWeaponsConfig()
             };
 
             // Enemy defaults

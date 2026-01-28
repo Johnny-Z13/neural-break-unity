@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f1529ef8ea513e44a7d6320cc3a1b81, type: 3}
+  m_Name: DoubleShot
+  m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Combat.UpgradeDefinition
+  upgradeId: double_shot
+  displayName: Double Shot
+  description: Fire 2 projectiles at once
+  icon: {fileID: 0}
+  iconColor: {r: 0.8, g: 0.8, b: 0.8, a: 1}
+  category: 3
+  tier: 0
+  isPermanent: 1
+  modifiers:
+    fireRateMultiplier: 1
+    damageMultiplier: 1
+    projectileSpeedMultiplier: 1
+    projectileSizeMultiplier: 1
+    additionalProjectiles: 1
+    spreadAngleAdd: 0
+    piercingCount: 0
+    criticalChance: 0
+    criticalMultiplier: 1
+    enableHoming: 0
+    enableRearFire: 0
+    enableExplosion: 0
+    enableRicochet: 0
+    enableChainLightning: 0
+    enableBeamWeapon: 0
+    homingStrength: 0
+    explosionRadius: 0
+    ricochetCount: 0
+    chainLightningTargets: 0
+    beamDuration: 0
+    bonusShields: 0
+    bonusSmartBombs: 0
+    bonusHealth: 0
+  prerequisiteIds: []
+  incompatibleIds: []
+  minPlayerLevel: 1
+  spawnWeight: 1
+  maxStacks: 1

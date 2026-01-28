@@ -24,11 +24,20 @@ namespace NeuralBreak.Core
 
         private void Awake()
         {
+            Debug.Log($"[GameSetup] Awake START at {Time.realtimeSinceStartup:F3}s");
+
             if (_autoSetupOnAwake)
             {
+                Debug.Log($"[GameSetup] SetupReferences START at {Time.realtimeSinceStartup:F3}s");
                 SetupReferences();
+                Debug.Log($"[GameSetup] SetupReferences DONE at {Time.realtimeSinceStartup:F3}s");
+
+                Debug.Log($"[GameSetup] SetupSprites START at {Time.realtimeSinceStartup:F3}s");
                 SetupSprites();
+                Debug.Log($"[GameSetup] SetupSprites DONE at {Time.realtimeSinceStartup:F3}s");
             }
+
+            Debug.Log($"[GameSetup] Awake DONE at {Time.realtimeSinceStartup:F3}s");
         }
 
         private void Start()

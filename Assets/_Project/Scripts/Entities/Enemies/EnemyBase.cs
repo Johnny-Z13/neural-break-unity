@@ -1,7 +1,6 @@
 using UnityEngine;
 using NeuralBreak.Core;
 using NeuralBreak.Config;
-using MoreMountains.Feedbacks;
 
 namespace NeuralBreak.Entities
 {
@@ -37,10 +36,7 @@ namespace NeuralBreak.Entities
         [Header("Death Settings")]
         [SerializeField] protected float _deathDuration = 0.5f;
 
-        [Header("Feel Feedbacks")]
-        [SerializeField] protected MMF_Player _spawnFeedback;
-        [SerializeField] protected MMF_Player _hitFeedback;
-        [SerializeField] protected MMF_Player _deathFeedback;
+        // Note: MMFeedbacks removed
 
         // State
         protected EnemyState _state = EnemyState.Dead;
@@ -103,7 +99,7 @@ namespace NeuralBreak.Entities
             _stateTimer = _spawnDuration;
 
             SetState(EnemyState.Spawning);
-            _spawnFeedback?.PlayFeedbacks();
+            // Feedback (Feel removed)
 
             // Initialize elite modifier if present
             var eliteModifier = GetComponent<EliteModifier>();
@@ -120,22 +116,7 @@ namespace NeuralBreak.Entities
         /// </summary>
         protected virtual void EnsureFeedbacks()
         {
-            if (FindObjectOfType<FeedbackSetup>() == null) return;
-
-            if (_hitFeedback == null)
-            {
-                _hitFeedback = FindObjectOfType<FeedbackSetup>().CreateHitFeedback(transform);
-            }
-
-            if (_spawnFeedback == null)
-            {
-                _spawnFeedback = FindObjectOfType<FeedbackSetup>().CreateSpawnFeedback(transform);
-            }
-
-            if (_deathFeedback == null)
-            {
-                _deathFeedback = FindObjectOfType<FeedbackSetup>().CreateDeathFeedback(transform);
-            }
+            // Note: MMFeedbacks removed - FeedbackSetup no longer available
         }
 
         /// <summary>
@@ -324,13 +305,13 @@ namespace NeuralBreak.Entities
             if (eliteModifier != null && eliteModifier.OnTakeDamage(damage, damageSource))
             {
                 // Damage was blocked by elite ability
-                _hitFeedback?.PlayFeedbacks();
+                // Feedback (Feel removed)
                 return;
             }
 
             _currentHealth -= damage;
 
-            _hitFeedback?.PlayFeedbacks();
+            // Feedback (Feel removed)
 
             // Trigger hit flash effect
             var hitFlash = GetComponent<Graphics.HitFlashEffect>();
@@ -363,7 +344,7 @@ namespace NeuralBreak.Entities
             _stateTimer = _deathDuration;
             SetState(EnemyState.Dying);
 
-            _deathFeedback?.PlayFeedbacks();
+            // Feedback (Feel removed)
 
             // Notify elite modifier of death (for splitter, etc.)
             var eliteModifier = GetComponent<EliteModifier>();

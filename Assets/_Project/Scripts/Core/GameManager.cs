@@ -1,7 +1,7 @@
 using UnityEngine;
-using MoreMountains.Feedbacks;
 using NeuralBreak.Entities;
 using NeuralBreak.Utils;
+using NeuralBreak.Config;
 using System.Collections;
 
 namespace NeuralBreak.Core
@@ -26,11 +26,8 @@ namespace NeuralBreak.Core
         [SerializeField] private EnemySpawner _enemySpawner;
         [SerializeField] private LevelManager _levelManager;
 
-        [Header("Feel Feedbacks")]
-        [SerializeField] private MMF_Player _gameStartFeedback;
-        [SerializeField] private MMF_Player _gameOverFeedback;
-        [SerializeField] private MMF_Player _levelCompleteFeedback;
-        [SerializeField] private MMF_Player _victoryFeedback;
+        // Note: MMFeedbacks removed - using native Unity feedback system
+        // Feel package can be re-added later if desired
 
         // Game stats
         public GameStats Stats { get; private set; } = new GameStats();
@@ -48,8 +45,13 @@ namespace NeuralBreak.Core
         private const float COMBO_DECAY_TIME = 1.5f;
         private const float MULTIPLIER_DECAY_TIME = 2f;
 
+        // Upgrade selection state
+        private bool _upgradeSelected;
+
         private void Awake()
         {
+            Debug.Log($"[GameManager] Awake START at {Time.realtimeSinceStartup:F3}s");
+
             // Singleton setup
             if (Instance != null && Instance != this)
             {
@@ -62,25 +64,20 @@ namespace NeuralBreak.Core
             EventBus.Subscribe<EnemyKilledEvent>(OnEnemyKilled);
             EventBus.Subscribe<PlayerDiedEvent>(OnPlayerDied);
             EventBus.Subscribe<LevelCompletedEvent>(OnLevelCompleted);
+            EventBus.Subscribe<UpgradeSelectedEvent>(OnUpgradeSelected);
 
-            // Ensure FeedbackSetup exists for runtime juiciness
-            EnsureFeedbackSetup();
+            // Feedback setup disabled - Feel package not installed
+
+            Debug.Log($"[GameManager] Awake DONE at {Time.realtimeSinceStartup:F3}s");
         }
 
-        private void EnsureFeedbackSetup()
-        {
-            if (FindObjectOfType<FeedbackSetup>() == null)
-            {
-                var feedbackGO = new GameObject("FeedbackSetup");
-                feedbackGO.AddComponent<FeedbackSetup>();
-            }
-        }
 
         private void OnDestroy()
         {
             EventBus.Unsubscribe<EnemyKilledEvent>(OnEnemyKilled);
             EventBus.Unsubscribe<PlayerDiedEvent>(OnPlayerDied);
             EventBus.Unsubscribe<LevelCompletedEvent>(OnLevelCompleted);
+            EventBus.Unsubscribe<UpgradeSelectedEvent>(OnUpgradeSelected);
 
             if (Instance == this)
             {
@@ -149,7 +146,7 @@ namespace NeuralBreak.Core
 
             SetState(GameStateType.Playing);
 
-            _gameStartFeedback?.PlayFeedbacks();
+            // Game start feedback (Feel package removed)
 
             // StartScreen will hide itself when it receives GameStartedEvent
             LogHelper.Log($"[GameManager] Publishing GameStartedEvent with mode: {mode}");
@@ -192,7 +189,7 @@ namespace NeuralBreak.Core
             SetState(GameStateType.GameOver);
             Time.timeScale = 1f;
 
-            _gameOverFeedback?.PlayFeedbacks();
+            // Game over feedback (Feel package removed)
 
             EventBus.Publish(new GameOverEvent { finalStats = Stats });
 
@@ -204,7 +201,7 @@ namespace NeuralBreak.Core
             Stats.gameCompleted = true;
             SetState(GameStateType.Victory);
 
-            _victoryFeedback?.PlayFeedbacks();
+            // Victory feedback (Feel package removed)
 
             EventBus.Publish(new VictoryEvent { finalStats = Stats });
 
@@ -343,7 +340,7 @@ namespace NeuralBreak.Core
         {
             Stats.level = evt.levelNumber + 1;
 
-            _levelCompleteFeedback?.PlayFeedbacks();
+            // Level complete feedback (Feel package removed)
 
             // Check for victory
             if (evt.levelNumber >= 99)
@@ -359,8 +356,7 @@ namespace NeuralBreak.Core
 
         private IEnumerator LevelTransition()
         {
-            // Brief pause before next level
-            yield return new WaitForSeconds(2f);
+            LogHelper.Log("[GameManager] Level completed - transitioning...");
 
             // Clear remaining enemies
             if (_enemySpawner != null)
@@ -370,6 +366,48 @@ namespace NeuralBreak.Core
             else
             {
                 Debug.LogWarning("[GameManager] EnemySpawner reference is null during level transition!");
+            }
+
+            // Check if we should show upgrade selection (every level in Rogue mode, every 5 levels in Arcade)
+            bool showUpgradeSelection = ShouldShowUpgradeSelection();
+
+            if (showUpgradeSelection)
+            {
+                // Pause game for upgrade selection
+                SetState(GameStateType.RogueChoice);
+
+                // Show upgrade selection screen via UI manager
+                var uiManager = FindFirstObjectByType<UI.UIManager>();
+                if (uiManager != null)
+                {
+                    // UIManager will show upgrade selection screen
+                    // For now, just publish event to trigger it
+                    EventBus.Publish(new UpgradeSelectionStartedEvent
+                    {
+                        options = new System.Collections.Generic.List<Combat.UpgradeDefinition>()
+                    });
+                }
+
+                // Wait for player to select upgrade (with timeout protection)
+                _upgradeSelected = false;
+                float upgradeTimeout = 60f; // Max 60 seconds to select
+                float upgradeWaitTime = 0f;
+
+                while (!_upgradeSelected && upgradeWaitTime < upgradeTimeout)
+                {
+                    yield return null;
+                    upgradeWaitTime += Time.unscaledDeltaTime;
+                }
+
+                if (!_upgradeSelected)
+                {
+                    Debug.LogWarning($"[GameManager] Upgrade selection timed out after {upgradeTimeout}s, continuing to next level...");
+                }
+            }
+            else
+            {
+                // Brief pause before next level (no upgrade selection)
+                yield return new WaitForSeconds(2f);
             }
 
             // Advance to next level
@@ -386,11 +424,45 @@ namespace NeuralBreak.Core
                 Debug.LogError("[GameManager] No LevelManager available for level transition!");
             }
 
+            // Resume game
+            SetState(GameStateType.Playing);
+
             // Resume spawning
             if (_enemySpawner != null)
             {
                 _enemySpawner.StartSpawning();
             }
+        }
+
+        private bool ShouldShowUpgradeSelection()
+        {
+            // Always show in Rogue mode
+            if (_currentMode == GameMode.Rogue)
+            {
+                return true;
+            }
+
+            // In Arcade mode, use config setting (default: every 1 level for testing)
+            if (_currentMode == GameMode.Arcade)
+            {
+                int interval = ConfigProvider.Balance?.upgradeSystem?.showUpgradeEveryNLevels ?? 5;
+                return Stats.level % interval == 0;
+            }
+
+            return false;
+        }
+
+        private void OnUpgradeSelected(UpgradeSelectedEvent evt)
+        {
+            if (evt.selected != null)
+            {
+                LogHelper.Log($"[GameManager] Upgrade selected: {evt.selected.displayName}");
+            }
+            else
+            {
+                LogHelper.LogWarning("[GameManager] No upgrade selected (no upgrades available)");
+            }
+            _upgradeSelected = true;
         }
 
         #endregion

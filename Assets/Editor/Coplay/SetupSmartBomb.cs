@@ -136,13 +136,11 @@ public class SetupSmartBomb
         );
         
         results.AppendLine("\n📋 MANUAL SETUP NEEDED:");
-        results.AppendLine("   1. Assign MMF_Player feedbacks to SmartBombSystem:");
-        results.AppendLine("      - _activationFeedback (screen flash, time scale)");
-        results.AppendLine("      - _cameraShakeFeedback (big camera shake)");
-        results.AppendLine("   2. Assign epic explosion AudioClip");
-        results.AppendLine("   3. Add 'SmartBomb' action to Input Actions asset");
+        results.AppendLine("   1. Assign epic explosion AudioClip to SmartBombSystem");
+        results.AppendLine("   2. Add 'SmartBomb' action to Input Actions asset");
         results.AppendLine("      - Keyboard: B key");
         results.AppendLine("      - Gamepad: Left Trigger or Y button");
+        results.AppendLine("   Note: Feel/MMFeedbacks removed - using native Unity feedback");
         
         return results.ToString();
     }

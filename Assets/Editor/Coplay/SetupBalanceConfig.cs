@@ -43,8 +43,6 @@ public class SetupBalanceConfig
             maxHealth = 130,
             startingShields = 0,
             maxShields = 3,
-            maxPowerUpLevel = 10,
-            powerUpDamageMultiplier = 0.6f,
             maxSpeedLevel = 20,
             speedBoostPerLevel = 0.05f,
             spawnInvulnerabilityDuration = 2f,
@@ -57,26 +55,7 @@ public class SetupBalanceConfig
         };
         
         // ═══════════════════════════════════════════════════════════════════
-        // LEGACY WEAPON CONFIGURATION
-        // ═══════════════════════════════════════════════════════════════════
-        config.weapon = new WeaponConfig
-        {
-            baseDamage = 12,
-            baseFireRate = 0.12f,
-            projectileSpeed = 22f,
-            projectileLifetime = 1.7f,
-            heatEnabled = true,
-            heatPerShot = 0.8f,
-            heatCooldownRate = 85f,
-            overheatThreshold = 100f,
-            overheatCooldownDuration = 0.8f,
-            maxPowerLevel = 10,
-            damagePerLevel = 0.6f,
-            fireRatePerLevel = 0.05f
-        };
-        
-        // ═══════════════════════════════════════════════════════════════════
-        // NEW WEAPON SYSTEM
+        // WEAPON SYSTEM
         // ═══════════════════════════════════════════════════════════════════
         config.weaponSystem = new WeaponSystemConfig
         {
@@ -162,7 +141,8 @@ public class SetupBalanceConfig
                 chainDamageReduction = 0.3f,
                 beamEnabled = false,
                 beamDPS = 50f,
-                beamRange = 15f
+                beamRange = 15f,
+                beamDuration = 0.5f
             }
         };
         

@@ -336,5 +336,8 @@ namespace NeuralBreak.Config
 
         [Tooltip("Beam max range")]
         public float beamRange = 15f;
+
+        [Tooltip("Beam duration in seconds")]
+        public float beamDuration = 0.5f;
     }
 }

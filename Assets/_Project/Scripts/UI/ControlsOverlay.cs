@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
 using TMPro;
 using NeuralBreak.Core;
 
@@ -251,7 +252,13 @@ namespace NeuralBreak.UI
             if (!_isVisible || _isFading) return;
 
             // Dismiss on any key or mouse click
-            if (UnityEngine.Input.anyKeyDown || UnityEngine.Input.GetMouseButtonDown(0))
+            var keyboard = Keyboard.current;
+            var mouse = Mouse.current;
+
+            bool anyKeyPressed = keyboard != null && keyboard.anyKey.wasPressedThisFrame;
+            bool mouseClicked = mouse != null && mouse.leftButton.wasPressedThisFrame;
+
+            if (anyKeyPressed || mouseClicked)
             {
                 Hide();
             }

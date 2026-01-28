@@ -1,6 +1,5 @@
 using UnityEngine;
 using NeuralBreak.Core;
-using MoreMountains.Feedbacks;
 
 namespace NeuralBreak.Graphics
 {
@@ -262,9 +261,9 @@ namespace NeuralBreak.Graphics
             if (!_enableScreenFlash) return;
 
             // Use ScreenFlash component
-            if (FindObjectOfType<ScreenFlash>() != null)
+            if (FindFirstObjectByType<ScreenFlash>() != null)
             {
-                FindObjectOfType<ScreenFlash>().Flash(color, _flashDuration);
+                FindFirstObjectByType<ScreenFlash>().Flash(color, _flashDuration);
             }
         }
 

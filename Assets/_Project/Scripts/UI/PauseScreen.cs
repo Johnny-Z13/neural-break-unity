@@ -267,9 +267,10 @@ namespace NeuralBreak.UI
 
         private void OnControlsClicked()
         {
-            if (FindObjectOfType<ControlsOverlay>() != null)
+            var controlsOverlay = FindFirstObjectByType<ControlsOverlay>();
+            if (controlsOverlay != null)
             {
-                FindObjectOfType<ControlsOverlay>().Show();
+                controlsOverlay.Show();
             }
         }
 

@@ -67,6 +67,8 @@ namespace NeuralBreak.Core
         /// </summary>
         public void WireSceneReferences()
         {
+            Debug.Log($"[SceneReferenceWiring] WireSceneReferences START at {Time.realtimeSinceStartup:F3}s");
+
             // Auto-find required references if not assigned in Inspector
             AutoFindRequiredReferences();
 
@@ -91,10 +93,12 @@ namespace NeuralBreak.Core
             // Setup GameManager
             SetupGameManager();
 
+            Debug.Log($"[SceneReferenceWiring] Core setup done at {Time.realtimeSinceStartup:F3}s, starting optional systems...");
+
             // Setup all optional systems (create if missing)
             SetupOptionalSystems();
 
-            Debug.Log("[SceneReferenceWiring] Scene references configured!");
+            Debug.Log($"[SceneReferenceWiring] Scene references configured at {Time.realtimeSinceStartup:F3}s!");
         }
 
         private void SetupCamera()

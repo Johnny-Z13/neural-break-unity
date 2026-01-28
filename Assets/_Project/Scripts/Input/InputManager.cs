@@ -143,6 +143,11 @@ namespace NeuralBreak.Input
             if (_smartBombAction != null)
             {
                 _smartBombAction.performed += OnSmartBombPerformed;
+                Debug.Log("[InputManager] SmartBomb action subscribed successfully!");
+            }
+            else
+            {
+                Debug.LogError("[InputManager] SmartBomb action is NULL! Check InputActionAsset has 'Player/SmartBomb' action.");
             }
 
             if (_submitAction != null)
@@ -481,6 +486,7 @@ namespace NeuralBreak.Input
 
         private void OnSmartBombPerformed(InputAction.CallbackContext context)
         {
+            Debug.Log("[InputManager] SmartBomb input received!");
             OnSmartBombPressed?.Invoke();
         }
 

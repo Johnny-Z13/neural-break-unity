@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using NeuralBreak.Core;
 using NeuralBreak.Combat;
-using MoreMountains.Feedbacks;
 
 namespace NeuralBreak.Entities
 {
@@ -47,10 +46,7 @@ namespace NeuralBreak.Entities
         [SerializeField] private Color _crystalColor = new Color(0.4f, 0.8f, 1f); // Ice blue
         [SerializeField] private Color _coreColor = new Color(0.2f, 0.4f, 0.8f); // Darker blue
 
-        [Header("Feel Feedbacks")]
-        [SerializeField] private MMF_Player _burstFeedback;
-        [SerializeField] private MMF_Player _shardFireFeedback;
-        [SerializeField] private MMF_Player _shatterFeedback;
+        // Note: MMFeedbacks removed
 
         // Shards
         private List<Transform> _shards = new List<Transform>();
@@ -206,7 +202,7 @@ namespace NeuralBreak.Entities
         private System.Collections.IEnumerator FireBurst()
         {
             _isFiring = true;
-            _burstFeedback?.PlayFeedbacks();
+            // Feedback (Feel removed)
 
             // Fire from multiple shards
             for (int s = 0; s < _shardsPerBurst; s++)
@@ -249,7 +245,7 @@ namespace NeuralBreak.Entities
                 _crystalColor
             );
 
-            _shardFireFeedback?.PlayFeedbacks();
+            // Feedback (Feel removed)
 
             // Flash the shard
             if (shardIndex < _shardRenderers.Count && _shardRenderers[shardIndex] != null)
@@ -275,7 +271,7 @@ namespace NeuralBreak.Entities
 
         public override void Kill()
         {
-            _shatterFeedback?.PlayFeedbacks();
+            // Feedback (Feel removed)
             DealDeathDamage();
 
             // Fire shards outward

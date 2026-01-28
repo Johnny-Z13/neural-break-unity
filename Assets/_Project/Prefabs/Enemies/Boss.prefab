@@ -150,9 +150,6 @@ MonoBehaviour:
   _spawnDuration: 0.25
   _invulnerableDuringSpawn: 1
   _deathDuration: 0.5
-  _spawnFeedback: {fileID: 0}
-  _hitFeedback: {fileID: 0}
-  _deathFeedback: {fileID: 0}
   _phase2FireRateMultiplier: 0.8
   _ringAttackCooldown: 3
   _ringExpandSpeed: 2
@@ -170,9 +167,3 @@ MonoBehaviour:
   _phase3Color: {r: 1, g: 0, b: 0.5, a: 1}
   _pulseSpeed: 2
   _pulseAmount: 0.1
-  _phase1Feedback: {fileID: 0}
-  _phase2Feedback: {fileID: 0}
-  _phase3Feedback: {fileID: 0}
-  _fireFeedback: {fileID: 0}
-  _ringFeedback: {fileID: 0}
-  _epicDeathFeedback: {fileID: 0}

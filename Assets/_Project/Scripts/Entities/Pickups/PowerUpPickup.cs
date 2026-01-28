@@ -64,17 +64,13 @@ namespace NeuralBreak.Entities
 
             if (weapon != null)
             {
-                // Increase power level
+                // Increase power level permanently
                 weapon.AddPowerLevel(_powerIncrease);
-                Debug.Log($"[PowerUp] Weapon power increased by {_powerIncrease}");
 
-                // Also activate spread shot upgrade
-                WeaponUpgradeManager upgradeManager = FindAnyObjectByType<WeaponUpgradeManager>();
-                if (upgradeManager != null)
-                {
-                    upgradeManager.ActivateUpgrade(PickupType.SpreadShot);
-                    Debug.Log($"[PowerUp] Spread shot activated! (3-gun)");
-                }
+                // Log pattern progression
+                int currentLevel = weapon.PowerLevel;
+                var pattern = weapon.CurrentPattern;
+                Debug.Log($"[PowerUp] Power level: {currentLevel} | Pattern: {pattern}");
             }
             else
             {

@@ -14,9 +14,10 @@ namespace NeuralBreak.UI
         [SerializeField] private WeaponHeatDisplay _heatDisplay;
         [SerializeField] private LevelDisplay _levelDisplay;
 
-        private void OnEnable()
+        private void Awake()
         {
-            // Subscribe to events
+            // Subscribe to events in Awake so we receive events even when disabled
+            // (HUD starts disabled and is enabled by UIManager when game starts)
             EventBus.Subscribe<PlayerDamagedEvent>(OnPlayerDamaged);
             EventBus.Subscribe<PlayerHealedEvent>(OnPlayerHealed);
             EventBus.Subscribe<ShieldChangedEvent>(OnShieldChanged);
@@ -28,7 +29,7 @@ namespace NeuralBreak.UI
             EventBus.Subscribe<GameStartedEvent>(OnGameStarted);
         }
 
-        private void OnDisable()
+        private void OnDestroy()
         {
             // Unsubscribe from events
             EventBus.Unsubscribe<PlayerDamagedEvent>(OnPlayerDamaged);

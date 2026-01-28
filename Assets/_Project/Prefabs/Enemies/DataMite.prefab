@@ -150,9 +150,6 @@ MonoBehaviour:
   _spawnDuration: 0.25
   _invulnerableDuringSpawn: 1
   _deathDuration: 0.5
-  _spawnFeedback: {fileID: 0}
-  _hitFeedback: {fileID: 0}
-  _deathFeedback: {fileID: 0}
   _swayAmplitude: 0.5
   _swayFrequency: 3
   _visuals: {fileID: 0}

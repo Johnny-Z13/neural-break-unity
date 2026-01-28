@@ -1,7 +1,6 @@
 using UnityEngine;
 using NeuralBreak.Core;
 using NeuralBreak.Combat;
-using MoreMountains.Feedbacks;
 
 namespace NeuralBreak.Entities
 {
@@ -40,9 +39,7 @@ namespace NeuralBreak.Entities
         [SerializeField] private FizzerVisuals _visuals;
         [SerializeField] private Color _electricColor = new Color(0.2f, 0.8f, 1f); // Electric cyan-blue
 
-        [Header("Feel Feedbacks")]
-        [SerializeField] private MMF_Player _burstFeedback;
-        [SerializeField] private MMF_Player _electricDeathFeedback;
+        // Note: MMFeedbacks removed
 
         // Movement state
         private Vector2 _currentDirection;
@@ -179,7 +176,7 @@ namespace NeuralBreak.Entities
         private System.Collections.IEnumerator FireBurst()
         {
             _isFiringBurst = true;
-            _burstFeedback?.PlayFeedbacks();
+            // Feedback (Feel removed)
 
             for (int i = 0; i < _burstCount; i++)
             {
@@ -213,7 +210,7 @@ namespace NeuralBreak.Entities
         public override void Kill()
         {
             // Electric death explosion
-            _electricDeathFeedback?.PlayFeedbacks();
+            // Feedback (Feel removed)
 
             // Damage nearby enemies
             DealDeathDamage();

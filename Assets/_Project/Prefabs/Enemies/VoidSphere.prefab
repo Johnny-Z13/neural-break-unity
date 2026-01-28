@@ -150,9 +150,6 @@ MonoBehaviour:
   _spawnDuration: 0.25
   _invulnerableDuringSpawn: 1
   _deathDuration: 0.5
-  _spawnFeedback: {fileID: 0}
-  _hitFeedback: {fileID: 0}
-  _deathFeedback: {fileID: 0}
   _pulsateSpeed: 1
   _pulsateAmount: 0.1
   _gravityPullRadius: 6
@@ -165,6 +162,3 @@ MonoBehaviour:
   _visuals: {fileID: 0}
   _voidColor: {r: 0.2, g: 0, b: 0.4, a: 1}
   _glowColor: {r: 0.6, g: 0, b: 1, a: 1}
-  _burstFeedback: {fileID: 0}
-  _chargeFeedback: {fileID: 0}
-  _implosionFeedback: {fileID: 0}

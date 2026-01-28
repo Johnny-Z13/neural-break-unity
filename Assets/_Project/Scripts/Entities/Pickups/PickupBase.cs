@@ -1,7 +1,6 @@
 using UnityEngine;
 using NeuralBreak.Core;
 using NeuralBreak.Combat;
-using MoreMountains.Feedbacks;
 
 namespace NeuralBreak.Entities
 {
@@ -31,9 +30,7 @@ namespace NeuralBreak.Entities
         [SerializeField] protected float _bobAmount = 0.15f;
         [SerializeField] protected float _rotateSpeed = 90f;
 
-        [Header("Feel Feedbacks")]
-        [SerializeField] protected MMF_Player _spawnFeedback;
-        [SerializeField] protected MMF_Player _collectFeedback;
+        // Note: MMFeedbacks removed
 
         // State
         protected Transform _playerTarget;
@@ -88,7 +85,7 @@ namespace NeuralBreak.Entities
             // Apply generated sprite and color
             ApplyGeneratedSprite();
 
-            _spawnFeedback?.PlayFeedbacks();
+            // Feedback (Feel removed)
         }
 
         /// <summary>
@@ -229,8 +226,7 @@ namespace NeuralBreak.Entities
                 Debug.LogError($"[PickupBase] Error applying pickup effect for {PickupType}: {ex.Message}");
             }
 
-            // Play feedback
-            _collectFeedback?.PlayFeedbacks();
+            // Feedback (Feel removed)
 
             // Publish event
             EventBus.Publish(new PickupCollectedEvent

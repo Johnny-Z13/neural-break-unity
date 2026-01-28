@@ -4,7 +4,6 @@ using NeuralBreak.Entities;
 using NeuralBreak.Input;
 using NeuralBreak.Config;
 using NeuralBreak.Utils;
-using MoreMountains.Feedbacks;
 
 namespace NeuralBreak.Combat
 {
@@ -22,17 +21,14 @@ namespace NeuralBreak.Combat
         [Header("References")]
         [SerializeField] private PlayerController _player;
         [SerializeField] private Projectile _projectilePrefab;
+        [SerializeField] private EnhancedProjectile _enhancedProjectilePrefab;
+        [SerializeField] private BeamWeapon _beamWeapon;
         [SerializeField] private Transform _projectileContainer;
 
-        [Header("Feel Feedbacks")]
-        [SerializeField] private MMF_Player _fireFeedback;
-        [SerializeField] private MMF_Player _overheatFeedback;
-        [SerializeField] private MMF_Player _overheatClearedFeedback;
-        [SerializeField] private MMF_Player _rearFireFeedback;
+        // Note: MMFeedbacks removed - using native Unity feedback system
 
         // Config references
-        private WeaponSystemConfig Config => ConfigProvider.Balance?.weaponSystem;
-        private WeaponConfig LegacyConfig => ConfigProvider.Weapon; // Fallback
+        private WeaponSystemConfig Config => ConfigProvider.WeaponSystem;
 
         // Runtime state
         private int _powerLevel = 0;
@@ -49,10 +45,12 @@ namespace NeuralBreak.Combat
         private float _damageBoostTimer;
         private bool _rearWeaponActive;
 
-        // Object pool
+        // Object pools
         private ObjectPool<Projectile> _projectilePool;
+        private ObjectPool<EnhancedProjectile> _enhancedProjectilePool;
         private InputManager _input;
         private WeaponUpgradeManager _upgradeManager;
+        private PermanentUpgradeManager _permanentUpgrades;
 
         #region Public Accessors
 
@@ -61,7 +59,7 @@ namespace NeuralBreak.Combat
         public float HeatPercent => _currentHeat / GetHeatMax();
         public bool IsOverheated => _isOverheated;
         public int PowerLevel => _powerLevel;
-        public int MaxPowerLevel => Config?.powerLevels?.maxLevel ?? LegacyConfig?.maxPowerLevel ?? 10;
+        public int MaxPowerLevel => Config?.powerLevels?.maxLevel ?? 10;
         public ForwardFirePattern CurrentPattern => GetCurrentPattern();
         public bool HasRearWeapon => _rearWeaponActive || (Config?.rearWeapon?.enabled ?? false);
 
@@ -89,7 +87,13 @@ namespace NeuralBreak.Combat
                 _projectilePrefab = CreateRuntimeProjectilePrefab();
             }
 
-            // Initialize projectile pool
+            // Create runtime enhanced projectile prefab if not assigned
+            if (_enhancedProjectilePrefab == null)
+            {
+                _enhancedProjectilePrefab = CreateRuntimeEnhancedProjectilePrefab();
+            }
+
+            // Initialize basic projectile pool
             try
             {
                 _projectilePool = new ObjectPool<Projectile>(
@@ -102,6 +106,21 @@ namespace NeuralBreak.Combat
             catch (System.Exception ex)
             {
                 LogHelper.LogError($"[WeaponSystem] Failed to create projectile pool: {ex.Message}");
+            }
+
+            // Initialize enhanced projectile pool
+            try
+            {
+                _enhancedProjectilePool = new ObjectPool<EnhancedProjectile>(
+                    _enhancedProjectilePrefab,
+                    _projectileContainer,
+                    initialSize: 50, // Smaller pool - only used for special behaviors
+                    onReturn: proj => proj.OnReturnToPool()
+                );
+            }
+            catch (System.Exception ex)
+            {
+                LogHelper.LogError($"[WeaponSystem] Failed to create enhanced projectile pool: {ex.Message}");
             }
         }
 
@@ -139,6 +158,40 @@ namespace NeuralBreak.Combat
             return projectile;
         }
 
+        private EnhancedProjectile CreateRuntimeEnhancedProjectilePrefab()
+        {
+            var projectileGO = new GameObject("RuntimeEnhancedProjectile");
+            projectileGO.layer = LayerMask.NameToLayer("Default");
+
+            var rb = projectileGO.AddComponent<Rigidbody2D>();
+            rb.gravityScale = 0f;
+            rb.bodyType = RigidbodyType2D.Kinematic;
+
+            var collider = projectileGO.AddComponent<CircleCollider2D>();
+            collider.isTrigger = true;
+            collider.radius = 0.15f;
+
+            var sr = projectileGO.AddComponent<SpriteRenderer>();
+            sr.sprite = Graphics.SpriteGenerator.CreateCircle(32, new Color(0.2f, 0.9f, 1f), "EnhancedProjectileSprite");
+            sr.sortingOrder = 100;
+            sr.color = Color.white;
+
+            var trail = projectileGO.AddComponent<TrailRenderer>();
+            trail.time = 0.15f;
+            trail.startWidth = 0.2f;
+            trail.endWidth = 0.03f;
+            trail.startColor = new Color(0.2f, 0.9f, 1f, 0.8f);
+            trail.endColor = new Color(0.2f, 0.9f, 1f, 0f);
+            trail.material = new Material(Shader.Find("Sprites/Default"));
+            trail.numCornerVertices = 5;
+            trail.numCapVertices = 5;
+
+            var projectile = projectileGO.AddComponent<EnhancedProjectile>();
+            projectileGO.SetActive(false);
+
+            return projectile;
+        }
+
         private void Start()
         {
             _input = InputManager.Instance;
@@ -149,10 +202,17 @@ namespace NeuralBreak.Combat
             }
 
             // Cache WeaponUpgradeManager reference (performance fix - avoid FindObjectOfType per frame)
-            _upgradeManager = FindObjectOfType<WeaponUpgradeManager>();
+            _upgradeManager = FindFirstObjectByType<WeaponUpgradeManager>();
             if (_upgradeManager == null)
             {
                 LogHelper.LogWarning("[WeaponSystem] WeaponUpgradeManager not found - pickup upgrades will not work");
+            }
+
+            // Cache PermanentUpgradeManager reference
+            _permanentUpgrades = PermanentUpgradeManager.Instance;
+            if (_permanentUpgrades == null)
+            {
+                LogHelper.LogWarning("[WeaponSystem] PermanentUpgradeManager not found - permanent upgrades will not work");
             }
 
             // Subscribe to pickup events
@@ -247,10 +307,20 @@ namespace NeuralBreak.Combat
             if (direction == Vector2.zero) direction = Vector2.up;
 
             int damage = CalculateDamage();
-            ForwardFirePattern pattern = GetCurrentPattern();
-            
+
             float forwardOffset = Config?.forwardWeapon?.forwardOffset ?? 0.6f;
             Vector2 basePos = _player.Position + direction * forwardOffset;
+
+            // Check if beam weapon is active
+            var modifiers = GetCombinedModifiers();
+            if (modifiers.enableBeamWeapon && _beamWeapon != null)
+            {
+                FireBeam(basePos, direction, damage, modifiers);
+                return;
+            }
+
+            // Normal projectile firing
+            ForwardFirePattern pattern = GetCurrentPattern();
 
             // Fire based on pattern
             switch (pattern)
@@ -282,7 +352,7 @@ namespace NeuralBreak.Combat
             ApplyHeat(pattern);
 
             // Feedback
-            _fireFeedback?.PlayFeedbacks();
+            // Fire feedback (Feel removed)
 
             // Event
             EventBus.Publish(new ProjectileFiredEvent
@@ -291,6 +361,32 @@ namespace NeuralBreak.Combat
                 direction = direction,
                 powerLevel = _powerLevel
             });
+        }
+
+        private void FireBeam(Vector2 position, Vector2 direction, int damage, WeaponModifiers modifiers)
+        {
+            if (_beamWeapon == null || _beamWeapon.IsActive) return;
+
+            float damageMultiplier = modifiers.damageMultiplier;
+            _beamWeapon.Fire(position, direction, damageMultiplier);
+
+            // Apply heat for beam
+            _currentHeat += GetHeatPerShot() * 0.5f; // Beam uses less heat
+
+            // Feedback
+            // Fire feedback (Feel removed)
+
+            // Schedule beam stop after duration
+            StartCoroutine(StopBeamAfterDuration(modifiers.beamDuration > 0f ? modifiers.beamDuration : 0.5f));
+        }
+
+        private System.Collections.IEnumerator StopBeamAfterDuration(float duration)
+        {
+            yield return new WaitForSeconds(duration);
+            if (_beamWeapon != null)
+            {
+                _beamWeapon.Stop();
+            }
         }
 
         #region Fire Patterns
@@ -375,29 +471,119 @@ namespace NeuralBreak.Combat
             float rearHeatMult = Config?.heatSystem?.rearWeaponHeatMultiplier ?? 0.5f;
             _currentHeat += GetHeatPerShot() * rearHeatMult;
 
-            _rearFireFeedback?.PlayFeedbacks();
+            // Rear fire feedback (Feel removed)
         }
 
         #endregion
 
         #region Projectile Spawning
 
-        private void FireProjectile(Vector2 position, Vector2 direction, int damage)
+        /// <summary>
+        /// Get combined modifiers from all sources (temporary pickups + permanent upgrades).
+        /// </summary>
+        private WeaponModifiers GetCombinedModifiers()
         {
-            Projectile proj = _projectilePool.Get(position, Quaternion.identity);
+            var modifiers = WeaponModifiers.Identity;
 
-            // Get special weapon states from config
-            bool isPiercing = Config?.specials?.piercingEnabled ?? false;
-            bool isHoming = Config?.specials?.homingEnabled ?? false;
-
-            // Check WeaponUpgradeManager for pickup-based specials (cached reference)
-            if (_upgradeManager != null)
+            // Add permanent upgrades
+            if (_permanentUpgrades != null)
             {
-                isPiercing = isPiercing || _upgradeManager.HasPiercing;
-                isHoming = isHoming || _upgradeManager.HasHoming;
+                modifiers = WeaponModifiers.Combine(modifiers, _permanentUpgrades.GetCombinedModifiers());
             }
 
-            proj.Initialize(position, direction, damage, _powerLevel, ReturnProjectile, isPiercing, isHoming);
+            // Add temporary pickup modifiers (convert to WeaponModifiers)
+            if (_upgradeManager != null)
+            {
+                var tempMods = WeaponModifiers.Identity;
+
+                if (_upgradeManager.HasHoming)
+                {
+                    tempMods.enableHoming = true;
+                    tempMods.homingStrength = _upgradeManager.HomingStrength;
+                }
+
+                if (_upgradeManager.HasPiercing)
+                {
+                    tempMods.piercingCount = 5; // Default piercing count for pickup
+                }
+
+                modifiers = WeaponModifiers.Combine(modifiers, tempMods);
+            }
+
+            // Add config-based specials
+            if (Config?.specials != null)
+            {
+                var configMods = WeaponModifiers.Identity;
+
+                if (Config.specials.piercingEnabled)
+                {
+                    configMods.piercingCount = Config.specials.maxPierceCount;
+                }
+
+                if (Config.specials.homingEnabled)
+                {
+                    configMods.enableHoming = true;
+                    configMods.homingStrength = Config.specials.homingStrength;
+                }
+
+                if (Config.specials.explosiveEnabled)
+                {
+                    configMods.enableExplosion = true;
+                    configMods.explosionRadius = Config.specials.explosionRadius;
+                }
+
+                if (Config.specials.ricochetEnabled)
+                {
+                    configMods.enableRicochet = true;
+                    configMods.ricochetCount = Config.specials.maxBounces;
+                }
+
+                if (Config.specials.chainLightningEnabled)
+                {
+                    configMods.enableChainLightning = true;
+                    configMods.chainLightningTargets = Config.specials.maxChainJumps;
+                }
+
+                if (Config.specials.beamEnabled)
+                {
+                    configMods.enableBeamWeapon = true;
+                    configMods.beamDuration = Config.specials.beamDuration;
+                }
+
+                modifiers = WeaponModifiers.Combine(modifiers, configMods);
+            }
+
+            return modifiers;
+        }
+
+        /// <summary>
+        /// Check if any special behaviors are active (requires EnhancedProjectile).
+        /// </summary>
+        private bool HasSpecialBehaviors(WeaponModifiers modifiers)
+        {
+            return modifiers.enableExplosion ||
+                   modifiers.enableChainLightning ||
+                   modifiers.enableRicochet ||
+                   modifiers.piercingCount > 0 ||
+                   modifiers.enableHoming;
+        }
+
+        private void FireProjectile(Vector2 position, Vector2 direction, int damage)
+        {
+            var modifiers = GetCombinedModifiers();
+
+            // Use EnhancedProjectile if special behaviors are active
+            if (HasSpecialBehaviors(modifiers))
+            {
+                EnhancedProjectile proj = _enhancedProjectilePool.Get(position, Quaternion.identity);
+                proj.Initialize(position, direction, damage, _powerLevel, ReturnEnhancedProjectile, modifiers);
+            }
+            else
+            {
+                // Use basic Projectile for performance (no special behaviors)
+                Projectile proj = _projectilePool.Get(position, Quaternion.identity);
+                proj.Initialize(position, direction, damage, _powerLevel, ReturnProjectile, false, false);
+            }
         }
 
         private void FireProjectileAtAngle(Vector2 position, float angleDegrees, int damage)
@@ -410,6 +596,11 @@ namespace NeuralBreak.Combat
         private void ReturnProjectile(Projectile proj)
         {
             _projectilePool.Return(proj);
+        }
+
+        private void ReturnEnhancedProjectile(EnhancedProjectile proj)
+        {
+            _enhancedProjectilePool.Return(proj);
         }
 
         #endregion
@@ -434,8 +625,8 @@ namespace NeuralBreak.Combat
 
         private int CalculateDamage()
         {
-            int baseDamage = Config?.baseDamage ?? LegacyConfig?.baseDamage ?? 12;
-            float damagePerLevel = Config?.powerLevels?.damagePerLevel ?? LegacyConfig?.damagePerLevel ?? 0.1f;
+            int baseDamage = Config?.baseDamage ?? 12;
+            float damagePerLevel = Config?.powerLevels?.damagePerLevel ?? 0.1f;
 
             float multiplier = 1f + (_powerLevel * damagePerLevel);
 
@@ -445,13 +636,19 @@ namespace NeuralBreak.Combat
                 multiplier *= Config?.modifiers?.damageBoostMultiplier ?? 2f;
             }
 
+            // Apply PERMANENT damage multiplier (NEW)
+            if (_permanentUpgrades != null)
+            {
+                multiplier *= _permanentUpgrades.GetCombinedModifiers().damageMultiplier;
+            }
+
             return Mathf.RoundToInt(baseDamage * multiplier);
         }
 
         private float GetFireRate()
         {
-            float baseRate = Config?.baseFireRate ?? LegacyConfig?.baseFireRate ?? 0.12f;
-            float ratePerLevel = Config?.powerLevels?.fireRatePerLevel ?? LegacyConfig?.fireRatePerLevel ?? 0.005f;
+            float baseRate = Config?.baseFireRate ?? 0.12f;
+            float ratePerLevel = Config?.powerLevels?.fireRatePerLevel ?? 0.005f;
 
             float rate = Mathf.Max(0.05f, baseRate - (_powerLevel * ratePerLevel));
 
@@ -467,17 +664,27 @@ namespace NeuralBreak.Combat
                 rate /= _upgradeManager.RapidFireMultiplier;
             }
 
+            // Apply PERMANENT fire rate modifier (NEW)
+            if (_permanentUpgrades != null)
+            {
+                float permMultiplier = _permanentUpgrades.GetCombinedModifiers().fireRateMultiplier;
+                if (permMultiplier > 1f)
+                {
+                    rate /= permMultiplier;
+                }
+            }
+
             return Mathf.Max(0.03f, rate);
         }
 
         private float GetHeatPerShot()
         {
-            return Config?.heatSystem?.heatPerShot ?? LegacyConfig?.heatPerShot ?? 0.8f;
+            return Config?.heatSystem?.heatPerShot ?? 0.8f;
         }
 
         private float GetHeatMax()
         {
-            return Config?.heatSystem?.maxHeat ?? LegacyConfig?.overheatThreshold ?? 100f;
+            return Config?.heatSystem?.maxHeat ?? 100f;
         }
 
         private void ApplyHeat(ForwardFirePattern pattern)
@@ -550,9 +757,9 @@ namespace NeuralBreak.Combat
         private void TriggerOverheat()
         {
             _isOverheated = true;
-            _overheatTimer = Config?.heatSystem?.overheatDuration ?? LegacyConfig?.overheatCooldownDuration ?? 0.8f;
+            _overheatTimer = Config?.heatSystem?.overheatDuration ?? 0.8f;
 
-            _overheatFeedback?.PlayFeedbacks();
+            // Overheat feedback (Feel removed)
 
             EventBus.Publish(new WeaponOverheatedEvent
             {
@@ -565,7 +772,7 @@ namespace NeuralBreak.Combat
         private void ClearOverheat()
         {
             _isOverheated = false;
-            _overheatClearedFeedback?.PlayFeedbacks();
+            // Overheat cleared feedback (Feel removed)
             LogHelper.Log("[WeaponSystem] Overheat cleared");
         }
 

@@ -381,6 +381,47 @@ namespace NeuralBreak.Core
         public PickupType upgradeType;
     }
 
+    // Permanent upgrade events
+    public struct PermanentUpgradeAddedEvent
+    {
+        public Combat.UpgradeDefinition upgrade;
+    }
+
+    public struct PermanentUpgradeRemovedEvent
+    {
+        public string upgradeId;
+    }
+
+    public struct WeaponModifiersChangedEvent
+    {
+        public Combat.WeaponModifiers modifiers;
+    }
+
+    // Card selection events
+    public struct UpgradeSelectionStartedEvent
+    {
+        public System.Collections.Generic.List<Combat.UpgradeDefinition> options;
+    }
+
+    public struct UpgradeSelectedEvent
+    {
+        public Combat.UpgradeDefinition selected;
+    }
+
+    public struct UpgradeSelectionCancelledEvent { }
+
+    // Special weapon events
+    public struct ExplosionTriggeredEvent
+    {
+        public UnityEngine.Vector2 position;
+        public float radius;
+    }
+
+    public struct ChainLightningEvent
+    {
+        public System.Collections.Generic.List<Entities.EnemyBase> targets;
+    }
+
     #endregion
 
     #region UI Events

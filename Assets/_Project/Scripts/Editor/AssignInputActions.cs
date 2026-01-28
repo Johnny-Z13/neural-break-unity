@@ -6,7 +6,7 @@ namespace NeuralBreak.Editor
 {
     public static class AssignInputActions
     {
-        [MenuItem("Tools/Neural Break/Assign Input Actions Asset")]
+        [MenuItem("Neural Break/Assign Input Actions Asset")]
         public static void AssignInputActionsAsset()
         {
             // Find the InputManager in the scene

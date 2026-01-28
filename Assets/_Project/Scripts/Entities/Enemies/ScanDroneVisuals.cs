@@ -29,7 +29,7 @@ namespace NeuralBreak.Entities
         [SerializeField] private float _alertPulseSpeed = 12f;
 
         [Header("Scale")]
-        [SerializeField] private float _scale = 1.5f; // Twice as big
+        [SerializeField] private float _scale = 1.2f; // 20% larger - matches collision
 
         // Visual components
         private Transform _hexBody;

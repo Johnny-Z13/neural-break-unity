@@ -118,7 +118,7 @@ namespace NeuralBreak.Combat
 
         private void UpdateHoming()
         {
-            var upgradeManager = FindObjectOfType<WeaponUpgradeManager>();
+            var upgradeManager = FindFirstObjectByType<WeaponUpgradeManager>();
             if (upgradeManager == null) return;
 
             // Find nearest enemy
@@ -172,7 +172,7 @@ namespace NeuralBreak.Combat
             _direction = direction.normalized;
 
             // Store speed at spawn time (FIXED - each bullet has its own speed)
-            _speed = ConfigProvider.Weapon.projectileSpeed;
+            _speed = ConfigProvider.WeaponSystem.baseProjectileSpeed;
 
             // Store damage at spawn time (FIXED)
             _damage = damage;
@@ -180,7 +180,7 @@ namespace NeuralBreak.Combat
             _returnToPool = returnToPool;
 
             // Store lifetime at spawn time (FIXED)
-            _lifeTimer = ConfigProvider.Weapon.projectileLifetime;
+            _lifeTimer = ConfigProvider.WeaponSystem.projectileLifetime;
 
             _isActive = true;
             _isPiercing = isPiercing;
@@ -243,6 +243,30 @@ namespace NeuralBreak.Combat
         public int GetDamage()
         {
             return _damage;
+        }
+
+        /// <summary>
+        /// Set projectile direction (for behaviors like homing).
+        /// </summary>
+        public void SetDirection(Vector2 direction)
+        {
+            _direction = direction.normalized;
+        }
+
+        /// <summary>
+        /// Get current direction.
+        /// </summary>
+        public Vector2 GetDirection()
+        {
+            return _direction;
+        }
+
+        /// <summary>
+        /// Set damage (for behaviors like ricochet that reduce damage).
+        /// </summary>
+        public void SetDamage(int damage)
+        {
+            _damage = damage;
         }
 
         /// <summary>

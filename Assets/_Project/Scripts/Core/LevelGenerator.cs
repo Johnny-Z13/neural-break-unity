@@ -305,6 +305,28 @@ namespace NeuralBreak.Core
         /// </summary>
         private static LevelConfig GenerateDynamicLevelConfig(int level)
         {
+            // QUICK TEST MODE: Level 1 completes after just 8 kills
+            if (level == 1)
+            {
+                return new LevelConfig
+                {
+                    level = 1,
+                    name = "NEURAL INITIALIZATION - LVL 1",
+                    objectives = new LevelObjectives { dataMites = 8 },
+                    spawnRates = new SpawnRates
+                    {
+                        dataMiteRate = 1.5f,
+                        scanDroneRate = float.PositiveInfinity,
+                        chaosWormRate = float.PositiveInfinity,
+                        voidSphereRate = float.PositiveInfinity,
+                        crystalShardRate = float.PositiveInfinity,
+                        fizzerRate = float.PositiveInfinity,
+                        ufoRate = float.PositiveInfinity,
+                        bossRate = float.PositiveInfinity
+                    }
+                };
+            }
+
             // Difficulty scales 3% per level
             float difficultyScale = 1f + (level - 1) * 0.03f;
 

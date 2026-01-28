@@ -1,7 +1,6 @@
 using UnityEngine;
 using NeuralBreak.Core;
 using NeuralBreak.Combat;
-using MoreMountains.Feedbacks;
 
 namespace NeuralBreak.Entities
 {
@@ -53,10 +52,7 @@ namespace NeuralBreak.Entities
         [SerializeField] private float _wobbleAmount = 8f;
         [SerializeField] private float _tiltAmount = 15f;
 
-        [Header("Feel Feedbacks")]
-        [SerializeField] private MMF_Player _dashFeedback;
-        [SerializeField] private MMF_Player _fireFeedback;
-        [SerializeField] private MMF_Player _hoverFeedback;
+        // Note: MMFeedbacks removed
 
         // State
         private enum UFOState { Approaching, Hovering, Strafing, Dashing, FigureEight }
@@ -173,7 +169,7 @@ namespace NeuralBreak.Entities
                 // Hover and shoot
                 _ufoState = UFOState.Hovering;
                 _stateTimer = _hoverDuration;
-                _hoverFeedback?.PlayFeedbacks();
+                // Feedback (Feel removed)
             }
             else if (roll < 0.6f)
             {
@@ -282,7 +278,7 @@ namespace NeuralBreak.Entities
                 _dashTarget = playerPos + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * dist;
             }
 
-            _dashFeedback?.PlayFeedbacks();
+            // Feedback (Feel removed)
         }
 
         private void UpdateDashing()
@@ -394,7 +390,7 @@ namespace NeuralBreak.Entities
                 _domeColor
             );
 
-            _fireFeedback?.PlayFeedbacks();
+            // Feedback (Feel removed)
         }
 
         private void UpdateVisuals()

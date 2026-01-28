@@ -128,7 +128,7 @@ CircleCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_Radius: 0.5
+  m_Radius: 0.72
 --- !u!114 &3126298202117424405
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -150,9 +150,6 @@ MonoBehaviour:
   _spawnDuration: 0.25
   _invulnerableDuringSpawn: 1
   _deathDuration: 0.5
-  _spawnFeedback: {fileID: 0}
-  _hitFeedback: {fileID: 0}
-  _deathFeedback: {fileID: 0}
   _detectionRange: 15
   _fireRange: 12
   _patrolRadius: 10
@@ -161,5 +158,3 @@ MonoBehaviour:
   _spriteRenderer: {fileID: 0}
   _visuals: {fileID: 0}
   _rotationSpeed: 90
-  _fireFeedback: {fileID: 0}
-  _detectFeedback: {fileID: 0}

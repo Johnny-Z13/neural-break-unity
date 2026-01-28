@@ -33,12 +33,14 @@ namespace NeuralBreak.UI
         private StartScreenBuilder _startScreenBuilder;
         private PauseMenuBuilder _pauseMenuBuilder;
         private GameOverScreenBuilder _gameOverScreenBuilder;
+        private UpgradeSelectionBuilder _upgradeSelectionBuilder;
 
         // Built references
         private GameObject _hudRoot;
         private StartScreen _startScreen;
         private PauseScreen _pauseScreen;
         private GameOverScreen _gameOverScreen;
+        private UpgradeSelectionScreen _upgradeSelectionScreen;
 
         private void Awake()
         {
@@ -126,6 +128,7 @@ namespace NeuralBreak.UI
             _startScreenBuilder = new StartScreenBuilder(_fontAsset, _useThemeColors);
             _pauseMenuBuilder = new PauseMenuBuilder(_fontAsset, _useThemeColors);
             _gameOverScreenBuilder = new GameOverScreenBuilder(_fontAsset, _useThemeColors);
+            _upgradeSelectionBuilder = new UpgradeSelectionBuilder(_fontAsset);
         }
 
         #endregion
@@ -146,6 +149,9 @@ namespace NeuralBreak.UI
 
             var gameOverScreenGO = _gameOverScreenBuilder.BuildGameOverScreen(transform);
             _gameOverScreen = gameOverScreenGO.GetComponent<GameOverScreen>();
+
+            // Build Upgrade Selection Screen
+            _upgradeSelectionScreen = _upgradeSelectionBuilder.Build(transform);
         }
 
         #endregion
@@ -178,6 +184,8 @@ namespace NeuralBreak.UI
                 ?.SetValue(_uiManager, _pauseScreen);
             type.GetField("_gameOverScreen", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
                 ?.SetValue(_uiManager, _gameOverScreen);
+            type.GetField("_upgradeSelectionScreen", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.SetValue(_uiManager, _upgradeSelectionScreen);
             type.GetField("_hudRoot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
                 ?.SetValue(_uiManager, _hudRoot);
 

@@ -1,7 +1,6 @@
 using UnityEngine;
 using NeuralBreak.Core;
 using NeuralBreak.Combat;
-using MoreMountains.Feedbacks;
 
 namespace NeuralBreak.Entities
 {
@@ -51,13 +50,7 @@ namespace NeuralBreak.Entities
         [SerializeField] private float _pulseSpeed = 2f;
         [SerializeField] private float _pulseAmount = 0.1f;
 
-        [Header("Feel Feedbacks")]
-        [SerializeField] private MMF_Player _phase1Feedback;
-        [SerializeField] private MMF_Player _phase2Feedback;
-        [SerializeField] private MMF_Player _phase3Feedback;
-        [SerializeField] private MMF_Player _fireFeedback;
-        [SerializeField] private MMF_Player _ringFeedback;
-        [SerializeField] private MMF_Player _epicDeathFeedback;
+        // Note: MMFeedbacks removed
 
         // State
         private enum BossPhase { Phase1, Phase2, Phase3 }
@@ -146,14 +139,14 @@ namespace NeuralBreak.Entities
             switch (newPhase)
             {
                 case BossPhase.Phase1:
-                    _phase1Feedback?.PlayFeedbacks();
+                    // Feedback (Feel removed)
                     break;
                 case BossPhase.Phase2:
-                    _phase2Feedback?.PlayFeedbacks();
+                    // Feedback (Feel removed)
                     Debug.Log("[Boss] Entering Phase 2 - Increased aggression!");
                     break;
                 case BossPhase.Phase3:
-                    _phase3Feedback?.PlayFeedbacks();
+                    // Feedback (Feel removed)
                     Debug.Log("[Boss] Entering Phase 3 - Ring attacks!");
                     break;
             }
@@ -216,7 +209,7 @@ namespace NeuralBreak.Entities
                 GetPhaseColor()
             );
 
-            _fireFeedback?.PlayFeedbacks();
+            // Feedback (Feel removed)
         }
 
         private void UpdateRingAttack()
@@ -248,7 +241,7 @@ namespace NeuralBreak.Entities
                 _ringVisual.localScale = Vector3.zero;
             }
 
-            _ringFeedback?.PlayFeedbacks();
+            // Feedback (Feel removed)
         }
 
         private void UpdateActiveRing()
@@ -326,7 +319,7 @@ namespace NeuralBreak.Entities
             // Announce boss defeated
             PublishBossEvent(false);
 
-            _epicDeathFeedback?.PlayFeedbacks();
+            // Feedback (Feel removed)
             DealDeathDamage();
 
             // Epic death bullet nova

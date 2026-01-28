@@ -3,17 +3,17 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using NeuralBreak.Combat;
 using NeuralBreak.UI;
-using MoreMountains.Feedbacks;
 
 namespace NeuralBreak.Editor
 {
     /// <summary>
-    /// Complete setup for SmartBombSystem with all required components and feedbacks.
-    /// Assigns particle systems, MMF_Player feedbacks, and audio clips.
+    /// Complete setup for SmartBombSystem with all required components.
+    /// Assigns particle systems and audio clips.
+    /// Note: MMFeedbacks removed - feedback system disabled.
     /// </summary>
     public class SetupSmartBombComplete : MonoBehaviour
     {
-        [MenuItem("NeuralBreak/Setup/Configure Smart Bomb System")]
+        [MenuItem("Neural Break/Setup/Configure Smart Bomb System")]
         public static void ConfigureSmartBombSystem()
         {
             Debug.Log("[SetupSmartBombComplete] Starting Smart Bomb System configuration...");
@@ -59,28 +59,11 @@ namespace NeuralBreak.Editor
                 Debug.LogWarning("[SetupSmartBombComplete] SmartBombExplosion particle system not found!");
             }
 
-            // 2. Create and assign activation feedback (MMF_Player)
-            MMF_Player activationFeedback = CreateOrGetFeedback(playerGO, "SmartBombActivationFeedback");
-            if (activationFeedback != null)
-            {
-                SerializedObject smartBombSO = new SerializedObject(smartBombSystem);
-                smartBombSO.FindProperty("_activationFeedback").objectReferenceValue = activationFeedback;
-                smartBombSO.ApplyModifiedProperties();
-                Debug.Log("[SetupSmartBombComplete] Created and assigned activation feedback");
-            }
+            // 2. Feedback assignment removed - MMFeedbacks/Feel package not installed
+            Debug.Log("[SetupSmartBombComplete] Skipping feedback setup - Feel package not installed");
 
-            // 3. Create and assign camera shake feedback (MMF_Player)
-            MMF_Player cameraShakeFeedback = CreateOrGetFeedback(playerGO, "SmartBombCameraShakeFeedback");
-            if (cameraShakeFeedback != null)
-            {
-                SerializedObject smartBombSO = new SerializedObject(smartBombSystem);
-                smartBombSO.FindProperty("_cameraShakeFeedback").objectReferenceValue = cameraShakeFeedback;
-                smartBombSO.ApplyModifiedProperties();
-                Debug.Log("[SetupSmartBombComplete] Created and assigned camera shake feedback");
-            }
-
-            // 4. Assign audio clip for epic explosion sound
-            AudioClip explosionAudio = FindOrCreateExplosionAudio();
+            // 3. Assign audio clip for epic explosion sound
+            AudioClip explosionAudio = FindExplosionAudio();
             if (explosionAudio != null)
             {
                 SerializedObject smartBombSO = new SerializedObject(smartBombSystem);
@@ -90,10 +73,10 @@ namespace NeuralBreak.Editor
             }
             else
             {
-                Debug.LogWarning("[SetupSmartBombComplete] Could not find or create explosion audio clip");
+                Debug.LogWarning("[SetupSmartBombComplete] Could not find explosion audio clip");
             }
 
-            // 5. Verify SmartBombDisplay on MainCanvas
+            // 4. Verify SmartBombDisplay on MainCanvas
             GameObject mainCanvas = GameObject.Find("MainCanvas");
             if (mainCanvas != null)
             {
@@ -126,41 +109,13 @@ namespace NeuralBreak.Editor
             Debug.Log("[SetupSmartBombComplete] Smart Bomb System configuration complete!");
         }
 
-        private static MMF_Player CreateOrGetFeedback(GameObject parent, string feedbackName)
+        private static AudioClip FindExplosionAudio()
         {
-            Transform existingFeedback = parent.transform.Find(feedbackName);
-            if (existingFeedback != null && existingFeedback.GetComponent<MMF_Player>() != null)
+            // Try to find an existing explosion-like audio clip in the project
+            string[] guids = AssetDatabase.FindAssets("t:AudioClip explosion");
+            foreach (string guid in guids)
             {
-                MMF_Player existingPlayer = existingFeedback.GetComponent<MMF_Player>();
-                if (existingPlayer != null)
-                {
-                    return existingPlayer;
-                }
-            }
-
-            // Create new feedback GameObject
-            GameObject feedbackGO = new GameObject(feedbackName);
-            feedbackGO.transform.SetParent(parent.transform);
-            feedbackGO.transform.localPosition = Vector3.zero;
-
-            MMF_Player player = feedbackGO.AddComponent<MMF_Player>();
-            player.InitializationMode = MMF_Player.InitializationModes.Script;
-
-            return player;
-        }
-
-        private static AudioClip FindOrCreateExplosionAudio()
-        {
-            // Try to find an existing explosion-like audio clip
-            string[] audioSearchPaths = new string[]
-            {
-                "Assets/Feel/FeelDemos/Barbarians/Sounds/FeelBarbarianThunder.wav",
-                "Assets/Feel/FeelDemosHDRP/Falcon/Sounds/FeelFalconEngineStopSound.wav",
-                "Assets/Feel/FeelDemos/Wheel/Sounds/FeelWheelMusic.wav"
-            };
-
-            foreach (string path in audioSearchPaths)
-            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
                 AudioClip clip = AssetDatabase.LoadAssetAtPath<AudioClip>(path);
                 if (clip != null)
                 {
@@ -169,7 +124,7 @@ namespace NeuralBreak.Editor
                 }
             }
 
-            Debug.LogWarning("[SetupSmartBombComplete] No suitable audio clip found in Feel demos");
+            Debug.LogWarning("[SetupSmartBombComplete] No suitable audio clip found");
             return null;
         }
     }

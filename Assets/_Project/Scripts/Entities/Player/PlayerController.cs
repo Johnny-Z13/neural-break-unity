@@ -2,7 +2,6 @@ using UnityEngine;
 using NeuralBreak.Core;
 using NeuralBreak.Input;
 using NeuralBreak.Config;
-using MoreMountains.Feedbacks;
 
 namespace NeuralBreak.Entities
 {
@@ -14,9 +13,7 @@ namespace NeuralBreak.Entities
     [RequireComponent(typeof(Rigidbody2D))]
     public class PlayerController : MonoBehaviour
     {
-        [Header("Feel Feedbacks")]
-        [SerializeField] private MMF_Player _dashFeedback;
-        [SerializeField] private MMF_Player _dashReadyFeedback;
+        // Note: MMFeedbacks removed
 
         [Header("Dash Trail")]
         [SerializeField] private TrailRenderer _dashTrail;
@@ -594,8 +591,7 @@ namespace NeuralBreak.Entities
                 _dashTrail.emitting = true;
             }
 
-            // Play dash feedback
-            _dashFeedback?.PlayFeedbacks();
+            // Feedback (Feel removed)
 
             // Publish event
             EventBus.Publish(new PlayerDashedEvent { direction = direction });
@@ -640,7 +636,7 @@ namespace NeuralBreak.Entities
                 if (_dashCooldownTimer <= 0f && !_dashReady)
                 {
                     _dashReady = true;
-                    _dashReadyFeedback?.PlayFeedbacks();
+                    // Feedback (Feel removed)
                 }
             }
         }

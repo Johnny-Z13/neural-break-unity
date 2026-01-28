@@ -28,6 +28,12 @@ namespace NeuralBreak.UI
 
         protected virtual void Awake()
         {
+            // If _screenRoot is not assigned, use this gameObject as fallback
+            if (_screenRoot == null)
+            {
+                _screenRoot = gameObject;
+            }
+
             // Get or add canvas group for fade effects
             if (_screenRoot != null)
             {
@@ -70,10 +76,10 @@ namespace NeuralBreak.UI
         {
             _isVisible = true;
 
-            if (_screenRoot != null)
-            {
-                _screenRoot.SetActive(true);
-            }
+            // Ensure _screenRoot is set (in case Show is called before Awake)
+            if (_screenRoot == null) _screenRoot = gameObject;
+
+            _screenRoot.SetActive(true);
 
             // Select first button for keyboard/gamepad navigation
             SelectFirstElement();
@@ -101,10 +107,10 @@ namespace NeuralBreak.UI
         {
             _isVisible = false;
 
-            if (_screenRoot != null)
-            {
-                _screenRoot.SetActive(false);
-            }
+            // Ensure _screenRoot is set (in case Hide is called before Awake)
+            if (_screenRoot == null) _screenRoot = gameObject;
+
+            _screenRoot.SetActive(false);
 
             OnHide();
         }
