@@ -224,6 +224,7 @@ MonoBehaviour:
   _startScreen: {fileID: 0}
   _pauseScreen: {fileID: 0}
   _gameOverScreen: {fileID: 0}
+  _upgradeSelectionScreen: {fileID: 0}
   _hudRoot: {fileID: 0}
   _showHUDDuringPause: 1
 --- !u!4 &305620131
@@ -395,16 +396,80 @@ MonoBehaviour:
   _offset: {x: 0, y: 0, z: -10}
   _followSpeed: 5
   _deadZone: 0.5
-  _baseSize: 15
-  _minSize: 12
-  _maxSize: 22.5
   _enableDynamicZoom: 1
+  _minZoom: 16.5
+  _maxZoom: 38.5
+  _baseSize: 15
   _zoomSpeed: 3
-  _zoomIntensityFactor: 0.1
+  _maxEnemiesForZoom: 20
+  _maxComboForZoom: 15
   _shakeDecay: 0.9
   _maxShakeOffset: 1
   _shakeEnabled: 1
-  _impactShakeFeedback: {fileID: 0}
+--- !u!1 &398909262
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 398909265}
+  - component: {fileID: 398909264}
+  - component: {fileID: 398909263}
+  m_Layer: 0
+  m_Name: Managers
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &398909263
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 398909262}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 287fe2b3a19639140b59b05359760dee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Combat.UpgradePoolManager
+  _cardsPerSelection: 3
+  _allowDuplicates: 0
+  _commonWeight: 60
+  _rareWeight: 25
+  _epicWeight: 12
+  _legendaryWeight: 3
+  _logSelections: 1
+--- !u!114 &398909264
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 398909262}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f137247be922d3d40a6ad22cdbef84ea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Combat.PermanentUpgradeManager
+--- !u!4 &398909265
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 398909262}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -1514,10 +1579,6 @@ MonoBehaviour:
   _player: {fileID: 0}
   _enemySpawner: {fileID: 0}
   _levelManager: {fileID: 0}
-  _gameStartFeedback: {fileID: 0}
-  _gameOverFeedback: {fileID: 0}
-  _levelCompleteFeedback: {fileID: 0}
-  _victoryFeedback: {fileID: 0}
 --- !u!4 &1588116112
 Transform:
   m_ObjectHideFlags: 0
@@ -1966,3 +2027,4 @@ SceneRoots:
   - {fileID: 1968209210}
   - {fileID: 774612688}
   - {fileID: 1472913744}
+  - {fileID: 398909265}
