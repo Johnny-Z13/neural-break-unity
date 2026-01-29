@@ -1,73 +1,107 @@
 using UnityEngine;
+using NeuralBreak.Combat;
 
 namespace NeuralBreak.UI
 {
     /// <summary>
-    /// NEURAL BREAK - Unified UI Theme System
+    /// NEURAL BREAK - NEON ARCADE CYBER Theme System
     ///
-    /// DESIGN DIRECTION: Cyberpunk terminal aesthetic with glitch undertones.
-    /// Clean, readable HUD that stays out of the player's way while providing
-    /// satisfying feedback through carefully timed animations.
+    /// DESIGN DIRECTION: 80s arcade cabinet meets cyberpunk terminal.
+    /// Scanlines, glowing edges, CRT warmth, sharp geometric shapes, pulsing neon.
+    /// Bold, memorable, unmistakably NEURAL BREAK.
     ///
     /// COLOR PHILOSOPHY:
-    /// - Green = GOOD (pickups, heals, positive feedback)
-    /// - Cyan = NEUTRAL/INFO (primary UI, score, standard text)
-    /// - Magenta/Pink = ACCENT (combo milestones, special events)
-    /// - Red = DANGER (damage, warnings, boss encounters)
-    /// - Gold/Yellow = ACHIEVEMENT (level-ups, milestones, rewards)
+    /// - Electric Cyan = PRIMARY (UI elements, information, player-friendly)
+    /// - Hot Magenta = ACCENT (special events, combos, power-ups)
+    /// - Neon Green = GOOD (heals, pickups, positive feedback)
+    /// - Plasma Orange = WARNING (achievements, caution)
+    /// - Crimson = DANGER (damage, critical warnings, bosses)
+    /// - Gold = LEGENDARY (rare items, milestones)
     ///
-    /// PLAYER VISIBILITY:
-    /// - Player is ALWAYS at screen center
-    /// - NO notifications should appear in center third of screen
-    /// - Use corners and edges for persistent HUD
-    /// - Announcements slide in from top third only
+    /// VISUAL EFFECTS:
+    /// - Glow/bloom on all accent colors
+    /// - Scanline texture overlay on panels
+    /// - CRT curvature on screen edges
+    /// - Chromatic aberration on hover states
     /// </summary>
     public static class UITheme
     {
-        #region Color Palette
+        #region Color Palette - NEON ARCADE CYBER
 
-        // === PRIMARY COLORS ===
-        public static readonly Color Primary = new Color(0.0f, 0.9f, 0.9f, 1f);          // Cyan - main UI
-        public static readonly Color PrimaryDark = new Color(0.0f, 0.6f, 0.7f, 1f);      // Darker cyan
-        public static readonly Color PrimaryGlow = new Color(0.0f, 1f, 1f, 0.4f);        // Cyan glow
+        // === PRIMARY - Electric Cyan ===
+        public static readonly Color Primary = new Color(0.0f, 0.95f, 1f, 1f);              // #00F2FF Electric cyan
+        public static readonly Color PrimaryDark = new Color(0.0f, 0.65f, 0.75f, 1f);       // Darker cyan
+        public static readonly Color PrimaryGlow = new Color(0.0f, 1f, 1f, 0.6f);           // Cyan glow (stronger)
+        public static readonly Color PrimaryDim = new Color(0.0f, 0.4f, 0.5f, 1f);          // Dimmed cyan
 
-        // === ACCENT COLORS ===
-        public static readonly Color Accent = new Color(1f, 0.2f, 0.55f, 1f);            // Hot pink/magenta
-        public static readonly Color AccentBright = new Color(1f, 0.4f, 0.7f, 1f);       // Bright pink
-        public static readonly Color AccentGlow = new Color(1f, 0.2f, 0.55f, 0.5f);      // Pink glow
+        // === ACCENT - Hot Magenta/Pink ===
+        public static readonly Color Accent = new Color(1f, 0.1f, 0.6f, 1f);                // #FF1A99 Hot magenta
+        public static readonly Color AccentBright = new Color(1f, 0.4f, 0.75f, 1f);         // Bright pink
+        public static readonly Color AccentGlow = new Color(1f, 0.2f, 0.65f, 0.6f);         // Magenta glow
+        public static readonly Color AccentDim = new Color(0.6f, 0.1f, 0.4f, 1f);           // Dimmed magenta
 
-        // === STATUS COLORS ===
-        public static readonly Color Good = new Color(0.2f, 1f, 0.4f, 1f);               // Neon green - pickups, heals
-        public static readonly Color GoodDark = new Color(0.1f, 0.7f, 0.3f, 1f);         // Darker green
-        public static readonly Color GoodGlow = new Color(0.2f, 1f, 0.4f, 0.4f);         // Green glow
+        // === GOOD - Neon Green ===
+        public static readonly Color Good = new Color(0.15f, 1f, 0.35f, 1f);                // #26FF59 Neon green
+        public static readonly Color GoodDark = new Color(0.1f, 0.7f, 0.25f, 1f);           // Darker green
+        public static readonly Color GoodGlow = new Color(0.2f, 1f, 0.4f, 0.5f);            // Green glow
 
-        public static readonly Color Warning = new Color(1f, 0.75f, 0.1f, 1f);           // Gold/yellow - achievements
-        public static readonly Color WarningDark = new Color(0.8f, 0.6f, 0.1f, 1f);      // Darker gold
-        public static readonly Color WarningGlow = new Color(1f, 0.8f, 0.2f, 0.5f);      // Gold glow
+        // === WARNING - Plasma Orange ===
+        public static readonly Color Warning = new Color(1f, 0.6f, 0.1f, 1f);               // #FF9919 Plasma orange
+        public static readonly Color WarningDark = new Color(0.85f, 0.45f, 0.05f, 1f);      // Darker orange
+        public static readonly Color WarningGlow = new Color(1f, 0.7f, 0.2f, 0.5f);         // Orange glow
 
-        public static readonly Color Danger = new Color(1f, 0.15f, 0.2f, 1f);            // Vibrant red
-        public static readonly Color DangerDark = new Color(0.7f, 0.1f, 0.15f, 1f);      // Darker red
-        public static readonly Color DangerGlow = new Color(1f, 0.2f, 0.2f, 0.5f);       // Red glow
+        // === DANGER - Crimson Red ===
+        public static readonly Color Danger = new Color(1f, 0.1f, 0.15f, 1f);               // #FF1A26 Crimson
+        public static readonly Color DangerDark = new Color(0.75f, 0.08f, 0.12f, 1f);       // Darker red
+        public static readonly Color DangerGlow = new Color(1f, 0.2f, 0.25f, 0.5f);         // Red glow
 
-        // === NEUTRAL COLORS ===
-        public static readonly Color TextPrimary = Color.white;
-        public static readonly Color TextSecondary = new Color(0.75f, 0.75f, 0.8f, 1f);  // Light gray-blue
-        public static readonly Color TextMuted = new Color(0.5f, 0.5f, 0.55f, 1f);       // Dimmed
+        // === LEGENDARY - Gold ===
+        public static readonly Color Legendary = new Color(1f, 0.85f, 0.2f, 1f);            // #FFD933 Gold
+        public static readonly Color LegendaryGlow = new Color(1f, 0.9f, 0.3f, 0.6f);       // Gold glow
 
-        // === BACKGROUND COLORS ===
-        public static readonly Color BackgroundDark = new Color(0.03f, 0.03f, 0.08f, 0.95f);    // Near black
-        public static readonly Color BackgroundMedium = new Color(0.08f, 0.08f, 0.12f, 0.9f);   // Dark blue-gray
-        public static readonly Color BackgroundLight = new Color(0.12f, 0.12f, 0.18f, 0.85f);   // Lighter
-        public static readonly Color BackgroundOverlay = new Color(0f, 0f, 0f, 0.7f);           // Screen overlay
+        // === TEXT COLORS ===
+        public static readonly Color TextPrimary = new Color(0.95f, 0.98f, 1f, 1f);         // Slightly blue-white
+        public static readonly Color TextSecondary = new Color(0.6f, 0.65f, 0.75f, 1f);     // Cool gray
+        public static readonly Color TextMuted = new Color(0.4f, 0.42f, 0.5f, 1f);          // Dimmed
+        public static readonly Color TextGlow = new Color(0.7f, 0.9f, 1f, 0.3f);            // Text shadow glow
+
+        // === BACKGROUND COLORS - Deep Purple-Black ===
+        public static readonly Color BackgroundDark = new Color(0.02f, 0.02f, 0.06f, 0.98f);     // Near black with purple tint
+        public static readonly Color BackgroundMedium = new Color(0.06f, 0.05f, 0.12f, 0.95f);   // Dark purple
+        public static readonly Color BackgroundLight = new Color(0.1f, 0.08f, 0.18f, 0.9f);      // Lighter purple
+        public static readonly Color BackgroundOverlay = new Color(0.02f, 0.01f, 0.05f, 0.85f);  // Screen overlay
+        public static readonly Color BackgroundPanel = new Color(0.04f, 0.03f, 0.1f, 0.92f);     // Panel background
 
         // === UI ELEMENT COLORS ===
-        public static readonly Color ButtonNormal = new Color(0.15f, 0.15f, 0.22f, 1f);
-        public static readonly Color ButtonHover = new Color(0.0f, 0.5f, 0.6f, 1f);
+        public static readonly Color ButtonNormal = new Color(0.08f, 0.06f, 0.15f, 1f);
+        public static readonly Color ButtonHover = new Color(0.0f, 0.4f, 0.5f, 1f);
         public static readonly Color ButtonPressed = Primary;
-        public static readonly Color ButtonSelected = new Color(0.0f, 0.4f, 0.5f, 1f);
+        public static readonly Color ButtonSelected = new Color(0.0f, 0.3f, 0.4f, 1f);
 
-        public static readonly Color BarBackground = new Color(0.12f, 0.12f, 0.15f, 0.85f);
-        public static readonly Color BarBorder = new Color(0.3f, 0.3f, 0.35f, 0.6f);
+        // === BAR COLORS ===
+        public static readonly Color BarBackground = new Color(0.08f, 0.06f, 0.12f, 0.9f);
+        public static readonly Color BarBorder = new Color(0.2f, 0.25f, 0.35f, 0.7f);
+        public static readonly Color BarGlow = new Color(0.0f, 0.8f, 1f, 0.3f);
+
+        // === CARD COLORS ===
+        public static readonly Color CardBackground = new Color(0.05f, 0.04f, 0.1f, 0.95f);
+        public static readonly Color CardBorder = new Color(0.0f, 0.7f, 0.8f, 0.6f);
+        public static readonly Color CardHover = new Color(0.08f, 0.06f, 0.15f, 1f);
+        public static readonly Color CardSelected = new Color(0.0f, 0.25f, 0.35f, 1f);
+
+        // === SCANLINE EFFECT ===
+        public static readonly Color ScanlineColor = new Color(0f, 0f, 0f, 0.08f);
+        public const float ScanlineSpacing = 3f;
+
+        // === GLOW INTENSITIES ===
+        public const float GlowIntensityLow = 0.3f;
+        public const float GlowIntensityMedium = 0.5f;
+        public const float GlowIntensityHigh = 0.8f;
+        public const float GlowIntensityMax = 1.2f;
+
+        #endregion
+
+        #region Gradients
 
         // === HEALTH BAR GRADIENT ===
         public static Gradient HealthGradient
@@ -80,7 +114,7 @@ namespace NeuralBreak.UI
                     {
                         new GradientColorKey(Danger, 0f),
                         new GradientColorKey(Warning, 0.35f),
-                        new GradientColorKey(Good, 0.7f),
+                        new GradientColorKey(Good, 0.65f),
                         new GradientColorKey(Good, 1f)
                     },
                     new GradientAlphaKey[]
@@ -103,8 +137,8 @@ namespace NeuralBreak.UI
                     new GradientColorKey[]
                     {
                         new GradientColorKey(Primary, 0f),
-                        new GradientColorKey(Primary, 0.5f),
-                        new GradientColorKey(Warning, 0.75f),
+                        new GradientColorKey(Primary, 0.45f),
+                        new GradientColorKey(Warning, 0.7f),
                         new GradientColorKey(Danger, 1f)
                     },
                     new GradientAlphaKey[]
@@ -117,46 +151,83 @@ namespace NeuralBreak.UI
             }
         }
 
-        // === MINIMAP COLORS ===
-        public static readonly Color MinimapBackground = new Color(0f, 0f, 0f, 0.55f);
-        public static readonly Color MinimapBorder = new Color(0.2f, 0.7f, 0.8f, 0.7f);
+        // === NEON RAINBOW GRADIENT (for special effects) ===
+        public static Gradient NeonRainbow
+        {
+            get
+            {
+                var gradient = new Gradient();
+                gradient.SetKeys(
+                    new GradientColorKey[]
+                    {
+                        new GradientColorKey(Primary, 0f),
+                        new GradientColorKey(Accent, 0.33f),
+                        new GradientColorKey(Warning, 0.66f),
+                        new GradientColorKey(Primary, 1f)
+                    },
+                    new GradientAlphaKey[]
+                    {
+                        new GradientAlphaKey(1f, 0f),
+                        new GradientAlphaKey(1f, 1f)
+                    }
+                );
+                return gradient;
+            }
+        }
+
+        #endregion
+
+        #region Minimap Colors
+
+        public static readonly Color MinimapBackground = new Color(0.02f, 0.02f, 0.05f, 0.7f);
+        public static readonly Color MinimapBorder = Primary.WithAlpha(0.6f);
         public static readonly Color MinimapPlayer = Good;
         public static readonly Color MinimapEnemy = Danger;
         public static readonly Color MinimapElite = Warning;
         public static readonly Color MinimapBoss = Accent;
         public static readonly Color MinimapPickup = Good;
 
-        // === SHIELD COLORS ===
-        public static readonly Color ShieldActive = new Color(0.2f, 0.85f, 1f, 1f);
-        public static readonly Color ShieldInactive = new Color(0.2f, 0.2f, 0.25f, 0.4f);
+        #endregion
+
+        #region Shield Colors
+
+        public static readonly Color ShieldActive = new Color(0.2f, 0.9f, 1f, 1f);
+        public static readonly Color ShieldInactive = new Color(0.15f, 0.15f, 0.2f, 0.4f);
+        public static readonly Color ShieldGlow = new Color(0.3f, 0.95f, 1f, 0.5f);
 
         #endregion
 
         #region Typography
 
-        // === FONT SIZES (relative to 1080p reference) ===
+        // === FONT SIZES (scaled for impact) ===
         public static class FontSize
         {
-            public const float Tiny = 11f;
+            public const float Tiny = 12f;
             public const float Small = 14f;
             public const float Body = 18f;
-            public const float Medium = 22f;
-            public const float Large = 28f;
-            public const float Title = 36f;
-            public const float Headline = 48f;
-            public const float Display = 64f;
-            public const float Giant = 80f;
+            public const float Medium = 24f;
+            public const float Large = 32f;
+            public const float Title = 42f;
+            public const float Headline = 56f;
+            public const float Display = 72f;
+            public const float Giant = 96f;
+            public const float Massive = 128f;
         }
 
-        // === FONT WEIGHTS ===
-        // Using TMPro FontStyles
-        // Normal, Bold, Italic, BoldItalic
+        // === LETTER SPACING ===
+        public static class LetterSpacing
+        {
+            public const float Tight = -2f;
+            public const float Normal = 0f;
+            public const float Wide = 5f;
+            public const float ExtraWide = 12f;
+            public const float Arcade = 8f;  // Classic arcade feel
+        }
 
         #endregion
 
         #region Animation Timing
 
-        // === DURATIONS (in seconds) ===
         public static class Duration
         {
             public const float Instant = 0.05f;
@@ -166,44 +237,45 @@ namespace NeuralBreak.UI
             public const float Smooth = 0.35f;
             public const float Slow = 0.5f;
             public const float Dramatic = 0.8f;
+            public const float Epic = 1.2f;
 
             // Notification hold times
             public const float NotificationBrief = 1.5f;
             public const float NotificationNormal = 2.5f;
             public const float NotificationLong = 4f;
+
+            // Pulse/glow cycles
+            public const float PulseFast = 0.3f;
+            public const float PulseNormal = 0.6f;
+            public const float PulseSlow = 1.2f;
         }
 
-        // === ANIMATION SCALES ===
         public static class Scale
         {
-            public const float PunchSmall = 1.1f;
-            public const float PunchMedium = 1.2f;
-            public const float PunchLarge = 1.35f;
-            public const float PunchDramatic = 1.5f;
+            public const float PunchSmall = 1.08f;
+            public const float PunchMedium = 1.15f;
+            public const float PunchLarge = 1.25f;
+            public const float PunchDramatic = 1.4f;
+            public const float PunchExplosive = 1.6f;
         }
 
         #endregion
 
         #region Layout Constants
 
-        // === SCREEN REGIONS (normalized 0-1) ===
-        // Player is ALWAYS center - never put notifications here
         public static class SafeZone
         {
-            // Center exclusion zone (player area)
-            public const float CenterExcludeTop = 0.65f;     // Don't go below this in top notifications
-            public const float CenterExcludeBottom = 0.35f;  // Don't go above this in bottom notifications
-
-            // HUD margins (from screen edge)
+            public const float CenterExcludeTop = 0.65f;
+            public const float CenterExcludeBottom = 0.35f;
             public const float MarginSmall = 12f;
             public const float MarginNormal = 20f;
-            public const float MarginLarge = 30f;
+            public const float MarginLarge = 32f;
         }
 
-        // === CANVAS SORTING ORDERS ===
         public static class SortOrder
         {
             public const int Background = 0;
+            public const int Scanlines = 50;
             public const int Minimap = 80;
             public const int HUD = 90;
             public const int XPBar = 92;
@@ -213,36 +285,33 @@ namespace NeuralBreak.UI
             public const int LevelUp = 160;
             public const int Screens = 200;
             public const int Achievements = 220;
+            public const int Overlay = 250;
             public const int Debug = 999;
         }
 
-        // === NOTIFICATION POSITIONS (Y offset from anchor) ===
         public static class NotificationY
         {
-            // Top notifications - slide down from top
-            public const float TopAnnouncement = -100f;      // Wave announcements
-            public const float TopAlert = -180f;             // Boss warnings, etc.
-            public const float TopInfo = -60f;               // XP bar, level display
-
-            // Bottom notifications - stay near bottom
-            public const float BottomHUD = 30f;              // Heat bar
-            public const float BottomInfo = 100f;            // Additional info
+            public const float TopAnnouncement = -100f;
+            public const float TopAlert = -180f;
+            public const float TopInfo = -60f;
+            public const float BottomHUD = 30f;
+            public const float BottomInfo = 100f;
         }
 
         #endregion
 
-        #region Combo Milestones
+        #region Combo Milestones - ARCADE STYLE
 
         public static readonly (int threshold, string message, Color color)[] ComboMilestones = new[]
         {
             (5, "NICE!", Warning),
-            (10, "GREAT!", new Color(1f, 0.65f, 0.1f)),
-            (15, "AWESOME!", new Color(1f, 0.5f, 0.2f)),
-            (20, "INCREDIBLE!", new Color(1f, 0.35f, 0.3f)),
-            (30, "UNSTOPPABLE!", Accent),
-            (50, "GODLIKE!", new Color(1f, 0.2f, 1f)),
-            (75, "LEGENDARY!", new Color(0.8f, 0.4f, 1f)),
-            (100, "TRANSCENDENT!", new Color(1f, 1f, 1f)),
+            (10, "GREAT!", new Color(1f, 0.5f, 0.15f)),        // Orange
+            (15, "AWESOME!", new Color(1f, 0.35f, 0.25f)),     // Red-orange
+            (20, "INCREDIBLE!", Accent),                        // Magenta
+            (30, "UNSTOPPABLE!", new Color(0.9f, 0.2f, 1f)),   // Purple
+            (50, "GODLIKE!", new Color(0.6f, 0.3f, 1f)),       // Violet
+            (75, "LEGENDARY!", Legendary),                      // Gold
+            (100, ">>> TRANSCENDENT <<<", TextPrimary),         // White flash
         };
 
         #endregion
@@ -251,30 +320,50 @@ namespace NeuralBreak.UI
 
         public static class DamageStyle
         {
-            // Normal hit
-            public const float NormalSize = 16f;
+            public const float NormalSize = 18f;
             public static readonly Color NormalColor = TextPrimary;
 
-            // Big hit (20+ damage)
-            public const float BigHitSize = 24f;
+            public const float BigHitSize = 26f;
             public static readonly Color BigHitColor = Warning;
-            public const float BigHitScale = 1.15f;
+            public const float BigHitScale = 1.2f;
 
-            // Critical (if implemented)
-            public const float CriticalSize = 28f;
-            public static readonly Color CriticalColor = new Color(1f, 0.5f, 0.1f);
-            public const float CriticalScale = 1.3f;
+            public const float CriticalSize = 32f;
+            public static readonly Color CriticalColor = Accent;
+            public const float CriticalScale = 1.4f;
 
-            // Kill/XP
-            public const float XPSize = 14f;
+            public const float XPSize = 16f;
             public static readonly Color XPColor = Primary;
 
-            // Heal
-            public const float HealSize = 20f;
+            public const float HealSize = 22f;
             public static readonly Color HealColor = Good;
+        }
 
-            // Level Up (keep out of DamageNumbers - use LevelUpAnnouncement instead)
-            // REMOVED - duplicate notification
+        #endregion
+
+        #region Tier Colors
+
+        public static Color GetTierColor(UpgradeTier tier)
+        {
+            return tier switch
+            {
+                UpgradeTier.Common => TextSecondary,
+                UpgradeTier.Rare => Primary,
+                UpgradeTier.Epic => Accent,
+                UpgradeTier.Legendary => Legendary,
+                _ => TextSecondary
+            };
+        }
+
+        public static Color GetTierGlow(UpgradeTier tier)
+        {
+            return tier switch
+            {
+                UpgradeTier.Common => TextSecondary.WithAlpha(0.2f),
+                UpgradeTier.Rare => PrimaryGlow,
+                UpgradeTier.Epic => AccentGlow,
+                UpgradeTier.Legendary => LegendaryGlow,
+                _ => TextSecondary.WithAlpha(0.2f)
+            };
         }
 
         #endregion
@@ -295,20 +384,66 @@ namespace NeuralBreak.UI
         public static Color LerpColor(Color a, Color b, float t, bool preserveAlpha = false)
         {
             Color result = Color.Lerp(a, b, t);
-            if (preserveAlpha)
-            {
-                result.a = a.a;
-            }
+            if (preserveAlpha) result.a = a.a;
             return result;
         }
 
         /// <summary>
-        /// Get pulse color for warning effects
+        /// Get pulse color for glow effects (arcade style)
         /// </summary>
-        public static Color GetPulseColor(Color baseColor, float time, float frequency = 4f, float intensity = 0.3f)
+        public static Color GetPulseColor(Color baseColor, float time, float frequency = 3f, float intensity = 0.4f)
         {
             float pulse = Mathf.Sin(time * frequency * Mathf.PI * 2f) * 0.5f + 0.5f;
             return Color.Lerp(baseColor, Color.white, pulse * intensity);
+        }
+
+        /// <summary>
+        /// Get glow color (brighter, with bloom feel)
+        /// </summary>
+        public static Color GetGlowColor(Color baseColor, float intensity = 0.5f)
+        {
+            return new Color(
+                Mathf.Min(baseColor.r + intensity, 1f),
+                Mathf.Min(baseColor.g + intensity, 1f),
+                Mathf.Min(baseColor.b + intensity, 1f),
+                baseColor.a * 0.6f
+            );
+        }
+
+        /// <summary>
+        /// Get chromatic aberration offset colors
+        /// </summary>
+        public static (Color red, Color cyan) GetChromaticColors(Color baseColor, float intensity = 0.3f)
+        {
+            Color red = new Color(
+                Mathf.Min(baseColor.r + intensity, 1f),
+                baseColor.g * (1f - intensity),
+                baseColor.b * (1f - intensity),
+                baseColor.a
+            );
+            Color cyan = new Color(
+                baseColor.r * (1f - intensity),
+                Mathf.Min(baseColor.g + intensity * 0.5f, 1f),
+                Mathf.Min(baseColor.b + intensity, 1f),
+                baseColor.a
+            );
+            return (red, cyan);
+        }
+
+        /// <summary>
+        /// Get glitch offset for text/UI elements
+        /// </summary>
+        public static Vector2 GetGlitchOffset(float time, float intensity = 2f)
+        {
+            float noise = Mathf.PerlinNoise(time * 10f, 0f);
+            if (noise > 0.9f) // Occasional glitch
+            {
+                return new Vector2(
+                    (Mathf.PerlinNoise(time * 50f, 0f) - 0.5f) * intensity * 4f,
+                    (Mathf.PerlinNoise(0f, time * 50f) - 0.5f) * intensity
+                );
+            }
+            return Vector2.zero;
         }
 
         #endregion

@@ -17,46 +17,31 @@ MonoBehaviour:
     acceleration: 25
     deceleration: 20
     dashSpeed: 32
-    dashDuration: 0.15
+    dashDuration: 0.45
     dashCooldown: 2.5
     dashInvulnerable: 1
     thrustSpeedMultiplier: 1.6
     thrustAccelerationTime: 0.15
     thrustDecelerationTime: 0.25
-    maxHealth: 130
+    maxHealth: 100
     startingShields: 0
     maxShields: 3
-    maxPowerUpLevel: 10
-    powerUpDamageMultiplier: 0.6
     maxSpeedLevel: 20
     speedBoostPerLevel: 0.05
     spawnInvulnerabilityDuration: 2
     damageInvulnerabilityDuration: 0.5
     invulnerablePickupDuration: 7
     shieldAbsorbsOneHit: 1
-    arenaRadius: 25
+    arenaRadius: 35
     boundaryPushStrength: 8
     collisionRadius: 0.5
-    controlScheme: 1
-  weapon:
-    baseDamage: 12
-    baseFireRate: 0.12
-    projectileSpeed: 22
-    projectileLifetime: 2
-    heatEnabled: 1
-    heatPerShot: 0.8
-    heatCooldownRate: 15
-    overheatThreshold: 100
-    overheatCooldownDuration: 1.5
-    maxPowerLevel: 10
-    damagePerLevel: 0.15
-    fireRatePerLevel: 0.05
+    controlScheme: 0
   weaponSystem:
     baseDamage: 12
     baseFireRate: 0.12
     baseProjectileSpeed: 22
     projectileLifetime: 1.7
-    projectileSize: 0.15
+    projectileSize: 0.09
     forwardWeapon:
       pattern: 0
       doubleSpreadAngle: 15
@@ -82,16 +67,16 @@ MonoBehaviour:
       multiShotHeatMultiplier: 0.3
       rearWeaponHeatMultiplier: 0.5
     powerLevels:
-      maxLevel: 20
+      maxLevel: 10
       autoUpgradePattern: 1
       damagePerLevel: 0.1
       fireRatePerLevel: 0.005
       projectileSpeedPerLevel: 0.5
       projectileSizePerLevel: 0.01
-      doubleShotLevel: 5
-      tripleShotLevel: 10
-      quadShotLevel: 15
-      x5ShotLevel: 20
+      doubleShotLevel: 2
+      tripleShotLevel: 4
+      quadShotLevel: 7
+      x5ShotLevel: 9
     modifiers:
       rapidFireMultiplier: 1.5
       rapidFireDuration: 10
@@ -118,13 +103,14 @@ MonoBehaviour:
       beamEnabled: 0
       beamDPS: 50
       beamRange: 15
+      beamDuration: 0.5
   dataMite:
     displayName: Data Mite
-    color: {r: 1, g: 0.5, b: 0, a: 1}
+    color: {r: 1, g: 0.3, b: 0.3, a: 1}
     health: 1
     speed: 1.5
-    contactDamage: 5
-    collisionRadius: 0.42
+    contactDamage: 10
+    collisionRadius: 0.46
     scoreValue: 100
     xpValue: 1
     baseSpawnRate: 1.5
@@ -140,196 +126,196 @@ MonoBehaviour:
     deathDamage: 0
     deathRadius: 0
     spawnDuration: 0.25
-    deathDuration: 0.5
+    deathDuration: 0.3
     explosionSize: 0
     healthScalePerLevel: 1.025
     speedScalePerLevel: 1.012
     damageScalePerLevel: 1.02
   scanDrone:
     displayName: Scan Drone
-    color: {r: 0.3, g: 0.8, b: 1, a: 1}
-    health: 30
+    color: {r: 0.3, g: 0.7, b: 1, a: 1}
+    health: 50
     speed: 1.2
-    contactDamage: 10
-    collisionRadius: 0.72
-    scoreValue: 250
-    xpValue: 3
+    contactDamage: 15
+    collisionRadius: 0.9
+    scoreValue: 600
+    xpValue: 6
     baseSpawnRate: 8
     poolSize: 30
     canShoot: 1
     fireRate: 2
     projectileSpeed: 7
-    projectileDamage: 10
+    projectileDamage: 15
     burstCount: 1
-    burstDelay: 0.2
+    burstDelay: 0
     detectionRange: 15
     patrolRange: 10
     deathDamage: 0
     deathRadius: 0
-    spawnDuration: 0.25
+    spawnDuration: 0.3
     deathDuration: 0.5
-    explosionSize: 1
+    explosionSize: 0
     healthScalePerLevel: 1.025
     speedScalePerLevel: 1.012
     damageScalePerLevel: 1.02
   chaosWorm:
     displayName: Chaos Worm
-    color: {r: 0.8, g: 0.2, b: 0.5, a: 1}
-    health: 25
-    speed: 2
+    color: {r: 0.8, g: 0.2, b: 0.8, a: 1}
+    health: 150
+    speed: 1.5
     contactDamage: 15
-    collisionRadius: 0.42
-    scoreValue: 500
-    xpValue: 5
-    baseSpawnRate: 15
-    poolSize: 10
+    collisionRadius: 0.75
+    scoreValue: 3500
+    xpValue: 35
+    baseSpawnRate: 30
+    poolSize: 5
     canShoot: 0
-    fireRate: 2
-    projectileSpeed: 7
-    projectileDamage: 10
-    burstCount: 1
-    burstDelay: 0.2
-    detectionRange: 15
-    patrolRange: 10
+    fireRate: 0
+    projectileSpeed: 8
+    projectileDamage: 15
+    burstCount: 6
+    burstDelay: 0
+    detectionRange: 30
+    patrolRange: 0
     deathDamage: 0
     deathRadius: 0
-    spawnDuration: 0.25
-    deathDuration: 0.5
+    spawnDuration: 0.5
+    deathDuration: 2
     explosionSize: 2
     healthScalePerLevel: 1.025
     speedScalePerLevel: 1.012
     damageScalePerLevel: 1.02
   voidSphere:
     displayName: Void Sphere
-    color: {r: 0.6, g: 0, b: 1, a: 1}
-    health: 100
-    speed: 0.8
-    contactDamage: 25
-    collisionRadius: 0.42
-    scoreValue: 1000
-    xpValue: 10
-    baseSpawnRate: 20
-    poolSize: 5
+    color: {r: 0.3, g: 0, b: 0.5, a: 1}
+    health: 650
+    speed: 0.5
+    contactDamage: 40
+    collisionRadius: 0.9
+    scoreValue: 5000
+    xpValue: 50
+    baseSpawnRate: 45
+    poolSize: 3
     canShoot: 1
     fireRate: 3
-    projectileSpeed: 7
-    projectileDamage: 15
-    burstCount: 1
-    burstDelay: 0.2
-    detectionRange: 15
-    patrolRange: 10
-    deathDamage: 0
-    deathRadius: 0
-    spawnDuration: 0.25
-    deathDuration: 0.5
-    explosionSize: 2
+    projectileSpeed: 5
+    projectileDamage: 20
+    burstCount: 4
+    burstDelay: 0.25
+    detectionRange: 25
+    patrolRange: 0
+    deathDamage: 50
+    deathRadius: 8
+    spawnDuration: 1
+    deathDuration: 1.5
+    explosionSize: 3
     healthScalePerLevel: 1.025
     speedScalePerLevel: 1.012
     damageScalePerLevel: 1.02
   crystalShard:
-    displayName: Crystal Shard
-    color: {r: 0.4, g: 0.8, b: 1, a: 1}
-    health: 20
-    speed: 3
-    contactDamage: 8
-    collisionRadius: 0.42
-    scoreValue: 750
-    xpValue: 8
-    baseSpawnRate: 25
-    poolSize: 15
-    canShoot: 0
-    fireRate: 2
-    projectileSpeed: 7
+    displayName: Crystal Swarm
+    color: {r: 0.5, g: 0.8, b: 1, a: 1}
+    health: 250
+    speed: 1.8
+    contactDamage: 25
+    collisionRadius: 1.4
+    scoreValue: 4500
+    xpValue: 45
+    baseSpawnRate: 40
+    poolSize: 5
+    canShoot: 1
+    fireRate: 3.5
+    projectileSpeed: 8
     projectileDamage: 10
-    burstCount: 1
+    burstCount: 2
     burstDelay: 0.2
-    detectionRange: 15
-    patrolRange: 10
-    deathDamage: 0
-    deathRadius: 0
-    spawnDuration: 0.25
-    deathDuration: 0.5
-    explosionSize: 1
+    detectionRange: 20
+    patrolRange: 0
+    deathDamage: 30
+    deathRadius: 5
+    spawnDuration: 0.6
+    deathDuration: 0.8
+    explosionSize: 2
     healthScalePerLevel: 1.025
     speedScalePerLevel: 1.012
     damageScalePerLevel: 1.02
   fizzer:
     displayName: Fizzer
-    color: {r: 0, g: 1, b: 0.5, a: 1}
+    color: {r: 0.2, g: 0.8, b: 1, a: 1}
     health: 2
     speed: 8
-    contactDamage: 5
-    collisionRadius: 0.42
-    scoreValue: 200
-    xpValue: 2
+    contactDamage: 6
+    collisionRadius: 0.35
+    scoreValue: 1500
+    xpValue: 15
     baseSpawnRate: 12
-    poolSize: 50
-    canShoot: 0
-    fireRate: 2
-    projectileSpeed: 7
-    projectileDamage: 10
-    burstCount: 1
+    poolSize: 20
+    canShoot: 1
+    fireRate: 3
+    projectileSpeed: 9
+    projectileDamage: 6
+    burstCount: 2
     burstDelay: 0.2
-    detectionRange: 15
-    patrolRange: 10
-    deathDamage: 0
-    deathRadius: 0
-    spawnDuration: 0.25
-    deathDuration: 0.5
-    explosionSize: 0
+    detectionRange: 20
+    patrolRange: 0
+    deathDamage: 15
+    deathRadius: 2
+    spawnDuration: 0.2
+    deathDuration: 0.4
+    explosionSize: 1
     healthScalePerLevel: 1.025
     speedScalePerLevel: 1.012
     damageScalePerLevel: 1.02
   ufo:
     displayName: UFO
-    color: {r: 0.5, g: 0.7, b: 1, a: 1}
-    health: 80
-    speed: 1.5
-    contactDamage: 20
-    collisionRadius: 0.42
-    scoreValue: 1500
-    xpValue: 15
-    baseSpawnRate: 50
-    poolSize: 20
+    color: {r: 0.7, g: 0.7, b: 0.8, a: 1}
+    health: 30
+    speed: 2.8
+    contactDamage: 12
+    collisionRadius: 1.2
+    scoreValue: 2500
+    xpValue: 25
+    baseSpawnRate: 15
+    poolSize: 15
     canShoot: 1
-    fireRate: 1.5
-    projectileSpeed: 7
-    projectileDamage: 12
-    burstCount: 1
-    burstDelay: 0.2
-    detectionRange: 15
-    patrolRange: 10
-    deathDamage: 0
-    deathRadius: 0
-    spawnDuration: 0.25
-    deathDuration: 0.5
+    fireRate: 2
+    projectileSpeed: 8
+    projectileDamage: 14
+    burstCount: 3
+    burstDelay: 0.15
+    detectionRange: 20
+    patrolRange: 0
+    deathDamage: 25
+    deathRadius: 3
+    spawnDuration: 0.4
+    deathDuration: 0.6
     explosionSize: 1
     healthScalePerLevel: 1.025
     speedScalePerLevel: 1.012
     damageScalePerLevel: 1.02
   boss:
     displayName: Boss
-    color: {r: 1, g: 0, b: 0, a: 1}
-    health: 500
-    speed: 0.5
-    contactDamage: 50
-    collisionRadius: 0.42
-    scoreValue: 5000
-    xpValue: 40
-    baseSpawnRate: 120
-    poolSize: 3
+    color: {r: 1, g: 0.2, b: 0.2, a: 1}
+    health: 180
+    speed: 0.3
+    contactDamage: 25
+    collisionRadius: 3.5
+    scoreValue: 10000
+    xpValue: 100
+    baseSpawnRate: 70
+    poolSize: 1
     canShoot: 1
-    fireRate: 1
-    projectileSpeed: 7
-    projectileDamage: 20
-    burstCount: 1
-    burstDelay: 0.2
-    detectionRange: 15
-    patrolRange: 10
-    deathDamage: 0
-    deathRadius: 0
-    spawnDuration: 0.25
-    deathDuration: 0.5
+    fireRate: 1.5
+    projectileSpeed: 6.5
+    projectileDamage: 18
+    burstCount: 5
+    burstDelay: 0.1
+    detectionRange: 40
+    patrolRange: 0
+    deathDamage: 75
+    deathRadius: 12
+    spawnDuration: 2
+    deathDuration: 3
     explosionSize: 3
     healthScalePerLevel: 1.025
     speedScalePerLevel: 1.012
@@ -337,19 +323,6 @@ MonoBehaviour:
   powerUp:
     displayName: Power Up
     color: {r: 1, g: 0.8, b: 0, a: 1}
-    spawnsPerLevel: 3
-    minSpawnInterval: 25
-    maxSpawnInterval: 40
-    lifetime: 15
-    magnetRadius: 5
-    magnetStrength: 16
-    maxMagnetSpeed: 18
-    effectDuration: 10
-    effectAmount: 30
-    healthThreshold: 1
-  speedUp:
-    displayName: Speed Up
-    color: {r: 1, g: 0.3, b: 0.8, a: 1}
     spawnsPerLevel: 2
     minSpawnInterval: 30
     maxSpawnInterval: 45
@@ -357,12 +330,25 @@ MonoBehaviour:
     magnetRadius: 5
     magnetStrength: 16
     maxMagnetSpeed: 18
-    effectDuration: 10
-    effectAmount: 1.5
+    effectDuration: 0
+    effectAmount: 1
+    healthThreshold: 1
+  speedUp:
+    displayName: Speed Up
+    color: {r: 0, g: 1, b: 0.5, a: 1}
+    spawnsPerLevel: 2
+    minSpawnInterval: 25
+    maxSpawnInterval: 35
+    lifetime: 15
+    magnetRadius: 5
+    magnetStrength: 16
+    maxMagnetSpeed: 18
+    effectDuration: 0
+    effectAmount: 0.05
     healthThreshold: 1
   medPack:
     displayName: Med Pack
-    color: {r: 0, g: 1, b: 0, a: 1}
+    color: {r: 1, g: 0.3, b: 0.3, a: 1}
     spawnsPerLevel: 3
     minSpawnInterval: 20
     maxSpawnInterval: 30
@@ -370,41 +356,41 @@ MonoBehaviour:
     magnetRadius: 5
     magnetStrength: 16
     maxMagnetSpeed: 18
-    effectDuration: 10
-    effectAmount: 30
-    healthThreshold: 1
+    effectDuration: 0
+    effectAmount: 35
+    healthThreshold: 0.8
   shield:
     displayName: Shield
-    color: {r: 0, g: 1, b: 1, a: 1}
+    color: {r: 0.3, g: 0.5, b: 1, a: 1}
     spawnsPerLevel: 2
-    minSpawnInterval: 35
-    maxSpawnInterval: 50
+    minSpawnInterval: 20
+    maxSpawnInterval: 30
     lifetime: 15
     magnetRadius: 5
     magnetStrength: 16
     maxMagnetSpeed: 18
-    effectDuration: 10
+    effectDuration: 0
     effectAmount: 1
     healthThreshold: 1
   invulnerable:
     displayName: Invulnerable
-    color: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+    color: {r: 1, g: 1, b: 0, a: 1}
     spawnsPerLevel: 1
     minSpawnInterval: 60
     maxSpawnInterval: 90
-    lifetime: 12
+    lifetime: 15
     magnetRadius: 5
     magnetStrength: 16
     maxMagnetSpeed: 18
     effectDuration: 7
-    effectAmount: 30
+    effectAmount: 0
     healthThreshold: 1
   combo:
-    comboDecayTime: 1.5
-    comboWindow: 2
+    comboDecayTime: 3
+    comboWindow: 1.5
     multiplierPerKill: 0.1
     maxMultiplier: 10
-    multiplierDecayRate: 0.5
+    multiplierDecayRate: 2
     baseKillPoints: 100
     levelCompleteBonus: 1000
     bossKillMultiplier: 2
@@ -413,16 +399,9 @@ MonoBehaviour:
     showUpgradeEveryNLevels: 1
     cardsPerSelection: 3
     allowDuplicates: 0
-  powerSystem:
-    maxPowerLevel: 20
-    powerPickupsToMaxLevel: 20
-    doubleShotLevel: 5
-    tripleShotLevel: 10
-    quadShotLevel: 15
-    x5ShotLevel: 20
   spawning:
-    minSpawnDistance: 8
-    maxSpawnDistance: 20
+    minSpawnDistance: 5
+    maxSpawnDistance: 28
     pickupSpawnBoundary: 25
     maxActiveEnemies: 200
     difficultyPerLevel: 0.03
@@ -430,7 +409,7 @@ MonoBehaviour:
     minSpawnRateMultiplier: 0.3
   levels:
     totalLevels: 99
-    levelDuration: 90
+    levelDuration: 45
     bossAppearsAt: 70
     enemyHealthScale: 1.025
     enemySpeedScale: 1.012
@@ -446,17 +425,17 @@ MonoBehaviour:
   feedback:
     smallShake:
       intensity: 0.2
-      duration: 0.1
+      duration: 0.12
     mediumShake:
       intensity: 0.5
       duration: 0.3
     largeShake:
       intensity: 1
       duration: 0.5
-    minZoom: 6
-    maxZoom: 16
+    minZoom: 8
+    maxZoom: 22
     zoomSpeed: 3
-    baseZoom: 10
-    particleDensity: 1
+    baseZoom: 15
+    particleDensity: 2
     trailEnabled: 1
-    explosionScale: 1
+    explosionScale: 2

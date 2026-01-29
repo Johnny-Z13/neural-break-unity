@@ -86,6 +86,14 @@ namespace NeuralBreak.Graphics
             if (shader != null)
             {
                 _particleMaterial = new Material(shader);
+
+                // Assign soft particle texture to avoid quad rendering
+                var softTexture = VFXHelpers.GetSoftParticleTexture();
+                if (_particleMaterial.HasProperty("_BaseMap"))
+                    _particleMaterial.SetTexture("_BaseMap", softTexture);
+                if (_particleMaterial.HasProperty("_MainTex"))
+                    _particleMaterial.SetTexture("_MainTex", softTexture);
+
                 _particleMaterial.SetColor("_BaseColor", Color.white);
                 _particleMaterial.SetColor("_Color", Color.white);
                 _particleMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);

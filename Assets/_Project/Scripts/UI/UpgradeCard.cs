@@ -286,6 +286,35 @@ namespace NeuralBreak.UI
             _isHovered = false;
         }
 
+        /// <summary>
+        /// Set highlight state (called by UpgradeSelectionScreen for custom navigation).
+        /// </summary>
+        public void SetHighlighted(bool highlighted)
+        {
+            _isHovered = highlighted;
+
+            // Update background color for visual feedback
+            if (_background != null)
+            {
+                _background.color = highlighted
+                    ? UITheme.BackgroundLight
+                    : UITheme.BackgroundMedium;
+            }
+
+            // Trigger animator hover effects
+            if (_animator != null)
+            {
+                if (highlighted)
+                {
+                    _animator.PlayHoverEffect();
+                }
+                else
+                {
+                    _animator.StopHoverEffect();
+                }
+            }
+        }
+
         public void PlayHoverEffect()
         {
             // Trigger animator

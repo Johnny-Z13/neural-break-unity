@@ -39,6 +39,10 @@ namespace NeuralBreak.Entities
         [SerializeField] private FizzerVisuals _visuals;
         [SerializeField] private Color _electricColor = new Color(0.2f, 0.8f, 1f); // Electric cyan-blue
 
+        [Header("Vapor Trail")]
+        [SerializeField] private bool _enableVaporTrail = true;
+        private ParticleSystem _vaporParticles;
+
         // Note: MMFeedbacks removed
 
         // Movement state
@@ -92,6 +96,94 @@ namespace NeuralBreak.Entities
                 EnsureVisuals();
                 _visualsGenerated = true;
             }
+
+            // Setup vapor trail particles
+            if (_enableVaporTrail)
+            {
+                EnsureVaporTrail();
+            }
+        }
+
+        private void EnsureVaporTrail()
+        {
+            if (_vaporParticles != null) return;
+
+            // Create vapor trail particle system
+            var vaporGO = new GameObject("VaporTrail");
+            vaporGO.transform.SetParent(transform, false);
+            vaporGO.transform.localPosition = Vector3.zero;
+
+            _vaporParticles = vaporGO.AddComponent<ParticleSystem>();
+
+            var main = _vaporParticles.main;
+            main.startLifetime = 0.4f;
+            main.startSpeed = 0.5f;
+            main.startSize = new ParticleSystem.MinMaxCurve(0.15f, 0.3f);
+            main.startColor = new Color(_electricColor.r, _electricColor.g, _electricColor.b, 0.4f);
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.maxParticles = 50;
+
+            var emission = _vaporParticles.emission;
+            emission.rateOverTime = 30f;
+
+            var shape = _vaporParticles.shape;
+            shape.shapeType = ParticleSystemShapeType.Sphere;
+            shape.radius = 0.1f;
+
+            var colorOverLifetime = _vaporParticles.colorOverLifetime;
+            colorOverLifetime.enabled = true;
+            var gradient = new Gradient();
+            gradient.SetKeys(
+                new GradientColorKey[] {
+                    new GradientColorKey(_electricColor, 0f),
+                    new GradientColorKey(Color.white, 0.5f),
+                    new GradientColorKey(_electricColor, 1f)
+                },
+                new GradientAlphaKey[] {
+                    new GradientAlphaKey(0.5f, 0f),
+                    new GradientAlphaKey(0.3f, 0.5f),
+                    new GradientAlphaKey(0f, 1f)
+                }
+            );
+            colorOverLifetime.color = gradient;
+
+            var sizeOverLifetime = _vaporParticles.sizeOverLifetime;
+            sizeOverLifetime.enabled = true;
+            sizeOverLifetime.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(
+                new Keyframe(0f, 0.5f),
+                new Keyframe(0.5f, 1f),
+                new Keyframe(1f, 0f)
+            ));
+
+            // Set up renderer with proper URP particle material
+            var renderer = vaporGO.GetComponent<ParticleSystemRenderer>();
+            renderer.renderMode = ParticleSystemRenderMode.Billboard;
+
+            // Try to load existing particle material, or create one with proper shader
+            var particleMat = Resources.Load<Material>("Materials/VFX/ParticleAdditive");
+            if (particleMat != null)
+            {
+                renderer.material = particleMat;
+            }
+            else
+            {
+                // Fallback: try multiple shader names for URP compatibility
+                var shader = Shader.Find("Universal Render Pipeline/Particles/Unlit")
+                          ?? Shader.Find("Particles/Standard Unlit")
+                          ?? Shader.Find("Sprites/Default");
+
+                if (shader != null)
+                {
+                    var mat = new Material(shader);
+                    mat.SetColor("_BaseColor", Color.white);
+                    // Enable alpha blending
+                    mat.SetFloat("_Surface", 1); // Transparent
+                    mat.SetFloat("_Blend", 0);   // Alpha blend
+                    mat.renderQueue = 3000;
+                    renderer.material = mat;
+                }
+            }
+            renderer.sortingOrder = -1;
         }
 
         private void EnsureVisuals()
@@ -239,6 +331,18 @@ namespace NeuralBreak.Entities
         {
             base.OnStateChanged(newState);
 
+            // Control vapor trail based on state
+            if (_vaporParticles != null)
+            {
+                var emission = _vaporParticles.emission;
+                emission.enabled = (newState == EnemyState.Alive);
+            }
+
+            if (_trailRenderer != null)
+            {
+                _trailRenderer.enabled = (newState == EnemyState.Alive);
+            }
+
             if (_spriteRenderer == null) return;
 
             switch (newState)
@@ -252,6 +356,23 @@ namespace NeuralBreak.Entities
                 case EnemyState.Dying:
                     _spriteRenderer.color = Color.white;
                     break;
+            }
+        }
+
+        public override void OnReturnToPool()
+        {
+            base.OnReturnToPool();
+
+            // Clear vapor trail
+            if (_vaporParticles != null)
+            {
+                _vaporParticles.Clear();
+            }
+
+            // Clear trail renderer
+            if (_trailRenderer != null)
+            {
+                _trailRenderer.Clear();
             }
         }
 

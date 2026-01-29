@@ -1,16 +1,19 @@
 using UnityEngine;
+using NeuralBreak.Config;
 
 namespace NeuralBreak.Graphics
 {
     /// <summary>
     /// 80s-style perspective grid floor effect for starfield background.
     /// Manages grid line rendering and scrolling animation.
+    /// Auto-sizes to match arena boundary.
     /// </summary>
     public class StarGridRenderer
     {
         private readonly LineRenderer _gridRenderer;
         private readonly StarfieldOptimizer _optimizer;
         private readonly Transform _gridTransform;
+        private readonly float _gridSize;
 
         private Color _gridColor;
         private float _speed;
@@ -31,6 +34,10 @@ namespace NeuralBreak.Graphics
             _gridColor = gridColor;
             _gridHorizonY = gridHorizonY;
             _optimizer = optimizer;
+
+            // Size grid to match arena boundary
+            float arenaRadius = ConfigProvider.Player?.arenaRadius ?? 30f;
+            _gridSize = arenaRadius * 1.5f;
 
             GameObject gridObj = new GameObject("Grid");
             gridObj.transform.SetParent(parent);
@@ -55,25 +62,24 @@ namespace NeuralBreak.Graphics
         private void CreateGridLines()
         {
             const int gridLines = 20;
-            const float gridSize = 40f;
             int totalPoints = (gridLines * 2 + 1) * 4;
             _gridRenderer.positionCount = totalPoints;
 
             int index = 0;
-            float spacing = gridSize / gridLines;
+            float spacing = _gridSize / gridLines;
 
             // Horizontal lines (perpendicular to camera)
             for (int i = -gridLines; i <= gridLines; i++)
             {
-                _gridRenderer.SetPosition(index++, new Vector3(-gridSize, 0, i * spacing));
-                _gridRenderer.SetPosition(index++, new Vector3(gridSize, 0, i * spacing));
+                _gridRenderer.SetPosition(index++, new Vector3(-_gridSize, 0, i * spacing));
+                _gridRenderer.SetPosition(index++, new Vector3(_gridSize, 0, i * spacing));
             }
 
             // Vertical lines (going into distance)
             for (int i = -gridLines; i <= gridLines; i++)
             {
-                _gridRenderer.SetPosition(index++, new Vector3(i * spacing, 0, -gridSize));
-                _gridRenderer.SetPosition(index++, new Vector3(i * spacing, 0, gridSize));
+                _gridRenderer.SetPosition(index++, new Vector3(i * spacing, 0, -_gridSize));
+                _gridRenderer.SetPosition(index++, new Vector3(i * spacing, 0, _gridSize));
             }
         }
 

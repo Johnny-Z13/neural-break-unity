@@ -1,5 +1,6 @@
 using UnityEngine;
 using NeuralBreak.Core;
+using NeuralBreak.Config;
 
 namespace NeuralBreak.Graphics
 {
@@ -11,15 +12,17 @@ namespace NeuralBreak.Graphics
     public class FeedbackManager : MonoBehaviour
     {
 
-        [Header("Camera Shake")]
-        [SerializeField] private float _smallShakeIntensity = 0.5f;
-        [SerializeField] private float _smallShakeDuration = 0.1f;
-        [SerializeField] private float _mediumShakeIntensity = 1.5f;
-        [SerializeField] private float _mediumShakeDuration = 0.2f;
-        [SerializeField] private float _largeShakeIntensity = 3f;
-        [SerializeField] private float _largeShakeDuration = 0.4f;
+        [Header("Camera Shake (Fallback - reads from config)")]
         [SerializeField] private float _bossShakeIntensity = 5f;
         [SerializeField] private float _bossShakeDuration = 0.6f;
+
+        // Config-driven shake settings (read from GameBalanceConfig.feedback)
+        private float SmallShakeIntensity => ConfigProvider.Balance?.feedback?.smallShake?.intensity ?? 0.2f;
+        private float SmallShakeDuration => ConfigProvider.Balance?.feedback?.smallShake?.duration ?? 0.1f;
+        private float MediumShakeIntensity => ConfigProvider.Balance?.feedback?.mediumShake?.intensity ?? 0.5f;
+        private float MediumShakeDuration => ConfigProvider.Balance?.feedback?.mediumShake?.duration ?? 0.3f;
+        private float LargeShakeIntensity => ConfigProvider.Balance?.feedback?.largeShake?.intensity ?? 1.0f;
+        private float LargeShakeDuration => ConfigProvider.Balance?.feedback?.largeShake?.duration ?? 0.5f;
 
         [Header("Hitstop (Freeze Frame)")]
         [SerializeField] private bool _enableHitstop = true;
@@ -118,29 +121,29 @@ namespace NeuralBreak.Graphics
 
         private void OnEnemyKilled(EnemyKilledEvent evt)
         {
-            // Shake based on enemy type
+            // Shake based on enemy type (config-driven)
             switch (evt.enemyType)
             {
                 case EnemyType.DataMite:
                 case EnemyType.Fizzer:
                     // Tiny shake for small enemies
-                    TriggerCameraShake(_smallShakeIntensity * 0.5f, _smallShakeDuration * 0.5f);
+                    TriggerCameraShake(SmallShakeIntensity * 0.5f, SmallShakeDuration * 0.5f);
                     break;
 
                 case EnemyType.ScanDrone:
                 case EnemyType.UFO:
-                    TriggerCameraShake(_smallShakeIntensity, _smallShakeDuration);
+                    TriggerCameraShake(SmallShakeIntensity, SmallShakeDuration);
                     TriggerHitstop(_smallHitstopDuration);
                     break;
 
                 case EnemyType.ChaosWorm:
                 case EnemyType.CrystalShard:
-                    TriggerCameraShake(_mediumShakeIntensity, _mediumShakeDuration);
+                    TriggerCameraShake(MediumShakeIntensity, MediumShakeDuration);
                     TriggerHitstop(_mediumHitstopDuration);
                     break;
 
                 case EnemyType.VoidSphere:
-                    TriggerCameraShake(_largeShakeIntensity, _largeShakeDuration);
+                    TriggerCameraShake(LargeShakeIntensity, LargeShakeDuration);
                     TriggerHitstop(_largeHitstopDuration);
                     TriggerSlowMotion();
                     break;
@@ -155,7 +158,7 @@ namespace NeuralBreak.Graphics
 
         private void OnPlayerDamaged(PlayerDamagedEvent evt)
         {
-            TriggerCameraShake(_mediumShakeIntensity, _mediumShakeDuration);
+            TriggerCameraShake(MediumShakeIntensity, MediumShakeDuration);
             TriggerScreenFlash(_damageFlashColor);
             TriggerHitstop(_mediumHitstopDuration);
         }
@@ -171,12 +174,12 @@ namespace NeuralBreak.Graphics
             {
                 case PickupType.PowerUp:
                     TriggerScreenFlash(_powerUpFlashColor);
-                    TriggerCameraShake(_smallShakeIntensity, _smallShakeDuration);
+                    TriggerCameraShake(SmallShakeIntensity, SmallShakeDuration);
                     break;
 
                 case PickupType.Invulnerable:
                     TriggerScreenFlash(new Color(1f, 1f, 0f, 0.3f));
-                    TriggerCameraShake(_mediumShakeIntensity, _mediumShakeDuration);
+                    TriggerCameraShake(MediumShakeIntensity, MediumShakeDuration);
                     break;
 
                 default:
@@ -187,11 +190,11 @@ namespace NeuralBreak.Graphics
 
         private void OnComboChanged(ComboChangedEvent evt)
         {
-            // Bigger feedback at combo milestones
+            // Bigger feedback at combo milestones (config-driven)
             if (evt.comboCount > 0 && evt.comboCount % _comboMilestone == 0)
             {
-                float intensity = Mathf.Min(_mediumShakeIntensity + (evt.comboCount * _comboShakeMultiplier), _largeShakeIntensity);
-                TriggerCameraShake(intensity, _mediumShakeDuration);
+                float intensity = Mathf.Min(MediumShakeIntensity + (evt.comboCount * _comboShakeMultiplier), LargeShakeIntensity);
+                TriggerCameraShake(intensity, MediumShakeDuration);
 
                 // Flash based on multiplier
                 Color flashColor = Color.Lerp(Color.white, Color.yellow, evt.multiplier / 10f);
@@ -202,19 +205,19 @@ namespace NeuralBreak.Graphics
 
         private void OnPlayerDashed(PlayerDashedEvent evt)
         {
-            // Small zoom/shake on dash
-            TriggerCameraShake(_smallShakeIntensity * 0.3f, _smallShakeDuration);
+            // Small zoom/shake on dash (config-driven)
+            TriggerCameraShake(SmallShakeIntensity * 0.3f, SmallShakeDuration);
         }
 
         private void OnLevelCompleted(LevelCompletedEvent evt)
         {
-            TriggerCameraShake(_mediumShakeIntensity, _mediumShakeDuration);
+            TriggerCameraShake(MediumShakeIntensity, MediumShakeDuration);
             TriggerScreenFlash(new Color(1f, 1f, 1f, 0.3f));
         }
 
         private void OnGameOver(GameOverEvent evt)
         {
-            TriggerCameraShake(_largeShakeIntensity, _largeShakeDuration);
+            TriggerCameraShake(LargeShakeIntensity, LargeShakeDuration);
             TriggerSlowMotion();
         }
 
@@ -315,10 +318,10 @@ namespace NeuralBreak.Graphics
         #region Debug
 
         [ContextMenu("Debug: Small Shake")]
-        private void DebugSmallShake() => TriggerCameraShake(_smallShakeIntensity, _smallShakeDuration);
+        private void DebugSmallShake() => TriggerCameraShake(SmallShakeIntensity, SmallShakeDuration);
 
         [ContextMenu("Debug: Large Shake")]
-        private void DebugLargeShake() => TriggerCameraShake(_largeShakeIntensity, _largeShakeDuration);
+        private void DebugLargeShake() => TriggerCameraShake(LargeShakeIntensity, LargeShakeDuration);
 
         [ContextMenu("Debug: Hitstop")]
         private void DebugHitstop() => TriggerHitstop(_mediumHitstopDuration);

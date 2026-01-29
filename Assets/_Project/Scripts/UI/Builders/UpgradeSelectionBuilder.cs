@@ -5,8 +5,9 @@ using TMPro;
 namespace NeuralBreak.UI.Builders
 {
     /// <summary>
-    /// Builder for upgrade selection screen.
-    /// Creates card layout programmatically.
+    /// Builder for upgrade selection screen - HOLOGRAPHIC ARCADE TERMINAL style.
+    /// Transparent floating panels, glowing selection rings, pulsing neon borders.
+    /// Compact, non-intrusive, feels part of the game world.
     /// </summary>
     public class UpgradeSelectionBuilder : UIScreenBuilderBase
     {
@@ -19,40 +20,41 @@ namespace NeuralBreak.UI.Builders
         /// </summary>
         public UpgradeSelectionScreen Build(Transform parent)
         {
-            // Create screen root
             var screenRoot = CreateUIObject("UpgradeSelectionScreen", parent);
             StretchToFill(screenRoot);
 
-            // Add canvas group for fade effects
             var canvasGroup = screenRoot.gameObject.AddComponent<CanvasGroup>();
 
-            // Create background overlay
+            // Subtle darkened vignette overlay (much more transparent)
             CreateBackgroundOverlay(screenRoot);
 
-            // Create content panel
+            // Subtle scanline overlay for CRT feel
+            CreateScanlineOverlay(screenRoot);
+
+            // Floating holographic content panel
             var contentPanel = CreateContentPanel(screenRoot);
 
-            // Create title
+            // Compact title with glow
             CreateTitle(contentPanel);
 
-            // Create subtitle
-            CreateSubtitle(contentPanel);
-
-            // Create card container
+            // Card container (no subtitle - let cards speak)
             var cardContainer = CreateCardContainer(contentPanel);
+
+            // Minimal instructions at bottom
+            CreateInstructions(contentPanel);
 
             // Add screen component
             var screen = screenRoot.gameObject.AddComponent<UpgradeSelectionScreen>();
             SetPrivateField(screen, "_screenRoot", screenRoot.gameObject);
             SetPrivateField(screen, "_cardContainer", cardContainer);
 
-            // Find and set text references
             var titleText = contentPanel.Find("TitleText")?.GetComponent<TextMeshProUGUI>();
-            var subtitleText = contentPanel.Find("SubtitleText")?.GetComponent<TextMeshProUGUI>();
             SetPrivateField(screen, "_titleText", titleText);
+
+            // Find subtitle if it exists (for backwards compat)
+            var subtitleText = contentPanel.Find("SubtitleText")?.GetComponent<TextMeshProUGUI>();
             SetPrivateField(screen, "_subtitleText", subtitleText);
 
-            // Start hidden
             screenRoot.gameObject.SetActive(false);
 
             return screen;
@@ -64,7 +66,40 @@ namespace NeuralBreak.UI.Builders
             StretchToFill(overlayRect);
 
             var overlayImg = overlayRect.gameObject.AddComponent<Image>();
-            overlayImg.color = UITheme.BackgroundOverlay;
+            // Much more transparent - let the game show through
+            overlayImg.color = new Color(0.01f, 0.01f, 0.03f, 0.6f);
+        }
+
+        private void CreateScanlineOverlay(RectTransform parent)
+        {
+            var scanlineRect = CreateUIObject("Scanlines", parent);
+            StretchToFill(scanlineRect);
+
+            var scanlineImg = scanlineRect.gameObject.AddComponent<RawImage>();
+            scanlineImg.color = new Color(0f, 0f, 0f, 0.04f); // Very subtle
+            scanlineImg.raycastTarget = false;
+
+            var tex = CreateScanlineTexture(4, 64);
+            scanlineImg.texture = tex;
+            scanlineImg.uvRect = new Rect(0, 0, 1, Screen.height / 4f);
+        }
+
+        private Texture2D CreateScanlineTexture(int height, int width)
+        {
+            var tex = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            tex.filterMode = FilterMode.Point;
+            tex.wrapMode = TextureWrapMode.Repeat;
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    float alpha = (y % 2 == 0) ? 0.12f : 0f;
+                    tex.SetPixel(x, y, new Color(0, 0, 0, alpha));
+                }
+            }
+            tex.Apply();
+            return tex;
         }
 
         private RectTransform CreateContentPanel(RectTransform parent)
@@ -73,21 +108,15 @@ namespace NeuralBreak.UI.Builders
             panelRect.anchorMin = new Vector2(0.5f, 0.5f);
             panelRect.anchorMax = new Vector2(0.5f, 0.5f);
             panelRect.pivot = new Vector2(0.5f, 0.5f);
-            panelRect.sizeDelta = new Vector2(1200f, 700f);
+            // Smaller, more compact
+            panelRect.sizeDelta = new Vector2(1050f, 520f);
 
-            // Background
-            var panelImg = panelRect.gameObject.AddComponent<Image>();
-            panelImg.color = UITheme.BackgroundDark;
-
-            // Border
-            var outline = panelRect.gameObject.AddComponent<Outline>();
-            outline.effectColor = UITheme.Primary;
-            outline.effectDistance = new Vector2(2f, -2f);
+            // No solid background - fully transparent, just floating elements
 
             // Layout
             var vlg = panelRect.gameObject.AddComponent<VerticalLayoutGroup>();
-            vlg.spacing = 20f;
-            vlg.padding = new RectOffset(40, 40, 40, 40);
+            vlg.spacing = 12f;
+            vlg.padding = new RectOffset(30, 30, 25, 20);
             vlg.childAlignment = TextAnchor.UpperCenter;
             vlg.childControlWidth = false;
             vlg.childControlHeight = false;
@@ -97,40 +126,69 @@ namespace NeuralBreak.UI.Builders
             return panelRect;
         }
 
+        private void CreateHolographicBorder(RectTransform parent, Color color)
+        {
+            // Create multiple glow layers for holographic effect
+            for (int i = 3; i >= 1; i--)
+            {
+                var borderRect = CreateUIObject($"GlowBorder_{i}", parent);
+                StretchToFill(borderRect);
+                borderRect.SetAsFirstSibling();
+
+                float expand = i * 3f;
+                borderRect.offsetMin = new Vector2(-expand, -expand);
+                borderRect.offsetMax = new Vector2(expand, expand);
+
+                var borderImg = borderRect.gameObject.AddComponent<Image>();
+                borderImg.color = Color.clear;
+                borderImg.raycastTarget = false;
+
+                var outline = borderRect.gameObject.AddComponent<Outline>();
+                float alpha = 0.08f + (0.08f / i);
+                outline.effectColor = color.WithAlpha(alpha);
+                outline.effectDistance = new Vector2(i * 1.5f, -i * 1.5f);
+            }
+
+            // Main crisp border - thinner, sharper
+            var mainOutline = parent.gameObject.AddComponent<Outline>();
+            mainOutline.effectColor = color.WithAlpha(0.7f);
+            mainOutline.effectDistance = new Vector2(1.5f, -1.5f);
+        }
+
         private void CreateTitle(RectTransform parent)
         {
             var titleRect = CreateUIObject("TitleText", parent);
-            titleRect.sizeDelta = new Vector2(1100f, 60f);
+            titleRect.sizeDelta = new Vector2(990f, 50f);
 
             var titleText = AddTextComponent(titleRect.gameObject);
-            titleText.text = "LEVEL COMPLETE";
-            titleText.fontSize = UITheme.FontSize.Headline;
-            titleText.color = UITheme.Primary;
-            titleText.alignment = TextAlignmentOptions.Center;
-            titleText.fontStyle = FontStyles.Bold;
-        }
+            if (titleText != null)
+            {
+                titleText.text = "◈ UPGRADE AVAILABLE ◈";
+                titleText.fontSize = UITheme.FontSize.Title;
+                titleText.color = UITheme.Primary;
+                titleText.alignment = TextAlignmentOptions.Center;
+                titleText.fontStyle = FontStyles.Bold;
+                titleText.characterSpacing = UITheme.LetterSpacing.ExtraWide;
 
-        private void CreateSubtitle(RectTransform parent)
-        {
-            var subtitleRect = CreateUIObject("SubtitleText", parent);
-            subtitleRect.sizeDelta = new Vector2(1100f, 40f);
+                // Add glow shadow
+                var shadow = titleRect.gameObject.AddComponent<Shadow>();
+                shadow.effectColor = UITheme.PrimaryGlow;
+                shadow.effectDistance = new Vector2(0, -2);
 
-            var subtitleText = AddTextComponent(subtitleRect.gameObject);
-            subtitleText.text = "CHOOSE YOUR UPGRADE";
-            subtitleText.fontSize = UITheme.FontSize.Medium;
-            subtitleText.color = UITheme.TextSecondary;
-            subtitleText.alignment = TextAlignmentOptions.Center;
-            subtitleText.fontStyle = FontStyles.Normal;
+                // Second shadow for stronger glow
+                var shadow2 = titleRect.gameObject.AddComponent<Shadow>();
+                shadow2.effectColor = UITheme.Primary.WithAlpha(0.3f);
+                shadow2.effectDistance = new Vector2(0, -4);
+            }
         }
 
         private Transform CreateCardContainer(RectTransform parent)
         {
             var containerRect = CreateUIObject("CardContainer", parent);
-            containerRect.sizeDelta = new Vector2(1100f, 500f);
+            containerRect.sizeDelta = new Vector2(990f, 400f);
 
-            // Horizontal layout for cards
             var hlg = containerRect.gameObject.AddComponent<HorizontalLayoutGroup>();
-            hlg.spacing = 30f;
+            hlg.spacing = 30f; // Tighter spacing
             hlg.childAlignment = TextAnchor.MiddleCenter;
             hlg.childControlWidth = true;
             hlg.childControlHeight = true;
@@ -140,89 +198,122 @@ namespace NeuralBreak.UI.Builders
             return containerRect;
         }
 
+        private void CreateInstructions(RectTransform parent)
+        {
+            var instrRect = CreateUIObject("Instructions", parent);
+            instrRect.sizeDelta = new Vector2(990f, 25f);
+
+            var instrText = AddTextComponent(instrRect.gameObject);
+            if (instrText != null)
+            {
+                instrText.text = "[ ◄ ► ]  SELECT   •   [ FIRE ]  CONFIRM";
+                instrText.fontSize = UITheme.FontSize.Small;
+                instrText.color = UITheme.TextMuted;
+                instrText.alignment = TextAlignmentOptions.Center;
+                instrText.characterSpacing = UITheme.LetterSpacing.Arcade;
+            }
+        }
+
         /// <summary>
-        /// Build a single upgrade card (can be used as prefab or instantiated).
+        /// Build a single upgrade card with HOLOGRAPHIC NEON style.
+        /// Compact, transparent, with dramatic selection glow.
         /// </summary>
         public UpgradeCard BuildCard(Transform parent)
         {
+            if (parent == null)
+            {
+                Debug.LogError("[UpgradeSelectionBuilder] BuildCard called with null parent!");
+                return null;
+            }
+
             var cardRect = CreateUIObject("UpgradeCard", parent);
-            cardRect.sizeDelta = new Vector2(340f, 480f);
+            if (cardRect == null)
+            {
+                Debug.LogError("[UpgradeSelectionBuilder] Failed to create card RectTransform!");
+                return null;
+            }
+            // Smaller, more compact cards
+            cardRect.sizeDelta = new Vector2(280f, 380f);
 
-            // Background with glow
+            // Selection glow container (behind everything)
+            CreateSelectionGlow(cardRect);
+
+            // Transparent card background
             var bgImg = cardRect.gameObject.AddComponent<Image>();
-            bgImg.color = UITheme.BackgroundMedium;
-            bgImg.raycastTarget = true; // Ensure clicks are detected
+            bgImg.color = new Color(0.03f, 0.03f, 0.08f, 0.7f);
+            bgImg.raycastTarget = true;
 
-            // Outline
-            var outline = cardRect.gameObject.AddComponent<Outline>();
-            outline.effectColor = UITheme.Primary.WithAlpha(0.5f);
-            outline.effectDistance = new Vector2(1f, -1f);
+            // Subtle border
+            var borderOutline = cardRect.gameObject.AddComponent<Outline>();
+            borderOutline.effectColor = UITheme.Primary.WithAlpha(0.4f);
+            borderOutline.effectDistance = new Vector2(1f, -1f);
 
             // Button
             var button = cardRect.gameObject.AddComponent<Button>();
-            button.targetGraphic = bgImg; // IMPORTANT: Set target graphic for click detection
+            button.targetGraphic = bgImg;
             var colors = button.colors;
             colors.normalColor = Color.white;
-            colors.highlightedColor = UITheme.Primary.WithAlpha(0.3f);
-            colors.pressedColor = UITheme.Primary.WithAlpha(0.5f);
-            colors.selectedColor = UITheme.Primary.WithAlpha(0.4f);
-            colors.fadeDuration = 0.15f;
+            colors.highlightedColor = new Color(1f, 1f, 1f, 1.1f);
+            colors.pressedColor = UITheme.Primary.WithAlpha(0.3f);
+            colors.selectedColor = new Color(1f, 1f, 1f, 1.05f);
+            colors.fadeDuration = 0.08f;
             button.colors = colors;
 
-            // Navigation
             var nav = button.navigation;
             nav.mode = Navigation.Mode.Horizontal;
             button.navigation = nav;
 
             // Vertical layout
             var vlg = cardRect.gameObject.AddComponent<VerticalLayoutGroup>();
-            vlg.spacing = 15f;
-            vlg.padding = new RectOffset(20, 20, 20, 20);
+            vlg.spacing = 8f;
+            vlg.padding = new RectOffset(18, 18, 20, 15);
             vlg.childAlignment = TextAnchor.UpperCenter;
             vlg.childControlWidth = false;
             vlg.childControlHeight = false;
             vlg.childForceExpandWidth = false;
             vlg.childForceExpandHeight = false;
 
-            // Icon
+            // Tier badge (compact)
+            CreateCardTierBadge(cardRect);
+
+            // Icon (smaller)
             CreateCardIcon(cardRect);
 
             // Name
             CreateCardName(cardRect);
+
+            // Divider
+            CreateDividerLine(cardRect);
 
             // Description
             CreateCardDescription(cardRect);
 
             // Spacer
             var spacerRect = CreateUIObject("Spacer", cardRect);
-            spacerRect.sizeDelta = new Vector2(0f, 20f);
+            spacerRect.sizeDelta = new Vector2(0f, 5f);
             var layoutElement = spacerRect.gameObject.AddComponent<LayoutElement>();
             layoutElement.flexibleHeight = 1f;
 
-            // Tier
-            CreateCardTier(cardRect);
+            // Stats
+            CreateCardStats(cardRect);
 
             // Add card component
             var card = cardRect.gameObject.AddComponent<UpgradeCard>();
             SetPrivateField(card, "_background", bgImg);
             SetPrivateField(card, "_button", button);
 
-            // Find and set child references
-            var iconImg = cardRect.Find("Icon")?.GetComponent<Image>();
+            var iconImg = cardRect.Find("Icon/IconImage")?.GetComponent<Image>();
             var nameText = cardRect.Find("NameText")?.GetComponent<TextMeshProUGUI>();
             var descText = cardRect.Find("DescriptionText")?.GetComponent<TextMeshProUGUI>();
-            var tierText = cardRect.Find("TierText")?.GetComponent<TextMeshProUGUI>();
+            var tierText = cardRect.Find("TierBadge/TierText")?.GetComponent<TextMeshProUGUI>();
 
             SetPrivateField(card, "_icon", iconImg);
             SetPrivateField(card, "_nameText", nameText);
             SetPrivateField(card, "_descriptionText", descText);
             SetPrivateField(card, "_tierText", tierText);
 
-            // Add canvas group for animations BEFORE adding animator
-            // (animator's Awake will find it instead of adding a duplicate)
             var canvasGroup = cardRect.gameObject.AddComponent<CanvasGroup>();
 
-            // Add animator component for polish
             var animator = cardRect.gameObject.AddComponent<UpgradeCardAnimator>();
             SetPrivateField(animator, "_background", bgImg);
             SetPrivateField(animator, "_canvasGroup", canvasGroup);
@@ -230,62 +321,150 @@ namespace NeuralBreak.UI.Builders
             return card;
         }
 
+        private void CreateSelectionGlow(RectTransform cardRect)
+        {
+            // This creates the glowing selection ring effect
+            var glowContainer = CreateUIObject("SelectionGlow", cardRect);
+            StretchToFill(glowContainer);
+            glowContainer.SetAsFirstSibling();
+
+            // Expand beyond card bounds for glow effect
+            glowContainer.offsetMin = new Vector2(-12f, -12f);
+            glowContainer.offsetMax = new Vector2(12f, 12f);
+
+            var glowImg = glowContainer.gameObject.AddComponent<Image>();
+            glowImg.color = Color.clear; // Starts invisible
+            glowImg.raycastTarget = false;
+
+            // Multiple glow outlines
+            var glow1 = glowContainer.gameObject.AddComponent<Outline>();
+            glow1.effectColor = Color.clear;
+            glow1.effectDistance = new Vector2(4f, -4f);
+
+            var glow2 = glowContainer.gameObject.AddComponent<Outline>();
+            glow2.effectColor = Color.clear;
+            glow2.effectDistance = new Vector2(2f, -2f);
+        }
+
+        private void CreateCardTierBadge(RectTransform parent)
+        {
+            var badgeRect = CreateUIObject("TierBadge", parent);
+            badgeRect.sizeDelta = new Vector2(244f, 22f);
+
+            // Background
+            var bgRect = CreateUIObject("Background", badgeRect);
+            StretchToFill(bgRect);
+            var badgeBg = bgRect.gameObject.AddComponent<Image>();
+            badgeBg.color = new Color(0.08f, 0.06f, 0.15f, 0.8f);
+            badgeBg.raycastTarget = false;
+
+            // Text
+            var textRect = CreateUIObject("TierText", badgeRect);
+            StretchToFill(textRect);
+
+            var tierText = AddTextComponent(textRect.gameObject);
+            if (tierText != null)
+            {
+                tierText.text = "COMMON";
+                tierText.fontSize = UITheme.FontSize.Tiny;
+                tierText.color = UITheme.TextMuted;
+                tierText.alignment = TextAlignmentOptions.Center;
+                tierText.fontStyle = FontStyles.Bold;
+                tierText.characterSpacing = UITheme.LetterSpacing.ExtraWide;
+            }
+        }
+
         private void CreateCardIcon(RectTransform parent)
         {
-            var iconRect = CreateUIObject("Icon", parent);
-            iconRect.sizeDelta = new Vector2(120f, 120f);
+            var iconContainer = CreateUIObject("Icon", parent);
+            iconContainer.sizeDelta = new Vector2(90f, 90f);
+
+            // Hexagonal-feel background
+            var iconBg = iconContainer.gameObject.AddComponent<Image>();
+            iconBg.color = new Color(0.06f, 0.05f, 0.12f, 0.9f);
+
+            // Glow outline
+            var iconOutline = iconContainer.gameObject.AddComponent<Outline>();
+            iconOutline.effectColor = UITheme.Primary.WithAlpha(0.5f);
+            iconOutline.effectDistance = new Vector2(2f, -2f);
+
+            // Actual icon
+            var iconRect = CreateUIObject("IconImage", iconContainer);
+            iconRect.sizeDelta = new Vector2(70f, 70f);
+            iconRect.anchorMin = new Vector2(0.5f, 0.5f);
+            iconRect.anchorMax = new Vector2(0.5f, 0.5f);
+            iconRect.anchoredPosition = Vector2.zero;
 
             var iconImg = iconRect.gameObject.AddComponent<Image>();
             iconImg.color = UITheme.Primary;
             iconImg.preserveAspect = true;
-
-            // Circle background
-            var bgRect = CreateUIObject("IconBG", iconRect);
-            StretchToFill(bgRect);
-            var bgImg = bgRect.gameObject.AddComponent<Image>();
-            bgImg.color = UITheme.BackgroundLight;
-            bgRect.SetAsFirstSibling();
         }
 
         private void CreateCardName(RectTransform parent)
         {
             var nameRect = CreateUIObject("NameText", parent);
-            nameRect.sizeDelta = new Vector2(300f, 50f);
+            nameRect.sizeDelta = new Vector2(244f, 40f);
 
             var nameText = AddTextComponent(nameRect.gameObject);
-            nameText.text = "UPGRADE NAME";
-            nameText.fontSize = UITheme.FontSize.Large;
-            nameText.color = UITheme.Primary;
-            nameText.alignment = TextAlignmentOptions.Center;
-            nameText.fontStyle = FontStyles.Bold;
-            nameText.textWrappingMode = TMPro.TextWrappingModes.Normal;
+            if (nameText != null)
+            {
+                nameText.text = "UPGRADE";
+                nameText.fontSize = UITheme.FontSize.Medium;
+                nameText.color = UITheme.TextPrimary;
+                nameText.alignment = TextAlignmentOptions.Center;
+                nameText.fontStyle = FontStyles.Bold;
+                nameText.characterSpacing = UITheme.LetterSpacing.Wide;
+                nameText.textWrappingMode = TextWrappingModes.Normal;
+
+                // Subtle glow
+                var shadow = nameRect.gameObject.AddComponent<Shadow>();
+                shadow.effectColor = UITheme.PrimaryGlow.WithAlpha(0.4f);
+                shadow.effectDistance = new Vector2(0, -1);
+            }
+        }
+
+        private void CreateDividerLine(RectTransform parent)
+        {
+            var dividerRect = CreateUIObject("Divider", parent);
+            dividerRect.sizeDelta = new Vector2(200f, 1f);
+
+            var dividerImg = dividerRect.gameObject.AddComponent<Image>();
+            dividerImg.color = UITheme.Primary.WithAlpha(0.25f);
         }
 
         private void CreateCardDescription(RectTransform parent)
         {
             var descRect = CreateUIObject("DescriptionText", parent);
-            descRect.sizeDelta = new Vector2(300f, 120f);
+            descRect.sizeDelta = new Vector2(244f, 80f);
 
             var descText = AddTextComponent(descRect.gameObject);
-            descText.text = "Upgrade description goes here...";
-            descText.fontSize = UITheme.FontSize.Body;
-            descText.color = UITheme.TextSecondary;
-            descText.alignment = TextAlignmentOptions.Center;
-            descText.fontStyle = FontStyles.Normal;
-            descText.textWrappingMode = TMPro.TextWrappingModes.Normal;
+            if (descText != null)
+            {
+                descText.text = "Upgrade description here.";
+                descText.fontSize = UITheme.FontSize.Small;
+                descText.color = UITheme.TextSecondary;
+                descText.alignment = TextAlignmentOptions.Center;
+                descText.fontStyle = FontStyles.Normal;
+                descText.textWrappingMode = TextWrappingModes.Normal;
+                descText.lineSpacing = 3f;
+            }
         }
 
-        private void CreateCardTier(RectTransform parent)
+        private void CreateCardStats(RectTransform parent)
         {
-            var tierRect = CreateUIObject("TierText", parent);
-            tierRect.sizeDelta = new Vector2(300f, 30f);
+            var statsRect = CreateUIObject("StatsText", parent);
+            statsRect.sizeDelta = new Vector2(244f, 25f);
 
-            var tierText = AddTextComponent(tierRect.gameObject);
-            tierText.text = "[COMMON]";
-            tierText.fontSize = UITheme.FontSize.Small;
-            tierText.color = UITheme.TextMuted;
-            tierText.alignment = TextAlignmentOptions.Center;
-            tierText.fontStyle = FontStyles.Bold;
+            var statsText = AddTextComponent(statsRect.gameObject);
+            if (statsText != null)
+            {
+                statsText.text = "+25% DAMAGE";
+                statsText.fontSize = UITheme.FontSize.Body;
+                statsText.color = UITheme.Good;
+                statsText.alignment = TextAlignmentOptions.Center;
+                statsText.fontStyle = FontStyles.Bold;
+                statsText.characterSpacing = UITheme.LetterSpacing.Wide;
+            }
         }
     }
 }

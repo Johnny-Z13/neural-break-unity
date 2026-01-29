@@ -25,14 +25,16 @@ namespace NeuralBreak.Graphics
 
         /// <summary>
         /// Calculate world position for star particle (allocation-free)
+        /// Locked to world origin (0,0,0) - does not follow camera
         /// </summary>
         public Vector3 CalculateWorldPosition(Vector3 starPos, float z, float starFieldDepth, Vector3 camPos)
         {
             float scale = starFieldDepth / Mathf.Max(z, 1f);
 
-            _cachedWorldPos.x = camPos.x + starPos.x * scale * 0.1f;
-            _cachedWorldPos.y = camPos.y + starPos.y * scale * 0.1f;
-            _cachedWorldPos.z = camPos.z + z * 0.5f;
+            // Lock to world origin - stars don't follow camera
+            _cachedWorldPos.x = starPos.x * scale * 0.1f;
+            _cachedWorldPos.y = starPos.y * scale * 0.1f;
+            _cachedWorldPos.z = z * 0.5f - 10f; // Push behind the play area
 
             return _cachedWorldPos;
         }

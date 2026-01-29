@@ -58,7 +58,19 @@ namespace NeuralBreak.UI.Builders
         /// </summary>
         protected TextMeshProUGUI AddTextComponent(GameObject go)
         {
+            if (go == null)
+            {
+                Debug.LogError("[UIScreenBuilderBase] AddTextComponent called with null GameObject!");
+                return null;
+            }
+
             var tmp = go.AddComponent<TextMeshProUGUI>();
+            if (tmp == null)
+            {
+                Debug.LogError($"[UIScreenBuilderBase] Failed to add TextMeshProUGUI to '{go.name}'! Check for conflicting components.");
+                return null;
+            }
+
             if (_fontAsset != null)
             {
                 tmp.font = _fontAsset;

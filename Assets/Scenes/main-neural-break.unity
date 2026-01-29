@@ -151,6 +151,7 @@ MonoBehaviour:
   _starCount: 400
   _starFieldDepth: 100
   _starFieldRadius: 50
+  _autoSizeToArena: 1
   _speed: 2
   _minSpeed: 0.5
   _maxSpeed: 10
@@ -397,14 +398,15 @@ MonoBehaviour:
   _followSpeed: 5
   _deadZone: 0.5
   _enableDynamicZoom: 1
-  _minZoom: 16.5
-  _maxZoom: 38.5
+  _minZoom: 8
+  _maxZoom: 22
   _baseSize: 15
   _zoomSpeed: 3
   _maxEnemiesForZoom: 20
   _maxComboForZoom: 15
   _shakeDecay: 0.9
   _maxShakeOffset: 1
+  _shakeMultiplier: 1.5
   _shakeEnabled: 1
 --- !u!1 &398909262
 GameObject:
@@ -1031,7 +1033,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Core.LevelManager
   _currentLevel: 1
-  _maxLevel: 99
   _enemySpawner: {fileID: 1715311633}
   _rogueCurrentLayer: 1
 --- !u!4 &983163549
@@ -1463,19 +1464,8 @@ MonoBehaviour:
   _shieldPoolSize: 10
   _invulnerablePoolSize: 5
   _weaponUpgradePoolSize: 5
-  _powerUpSpawnsPerLevel: 2
-  _speedUpSpawnsPerLevel: 2
-  _medPackSpawnsPerLevel: 3
-  _shieldSpawnsPerLevel: 2
-  _invulnerableSpawnsPerLevel: 1
   _weaponUpgradeSpawnsPerLevel: 1
-  _powerUpInterval: {x: 30, y: 45}
-  _speedUpInterval: {x: 25, y: 35}
-  _medPackInterval: {x: 20, y: 30}
-  _shieldInterval: {x: 20, y: 30}
-  _invulnerableInterval: {x: 60, y: 90}
   _weaponUpgradeInterval: {x: 25, y: 40}
-  _medPackHealthThreshold: 0.8
   _spawningEnabled: 1
   _maxActivePickups: 30
 --- !u!4 &1224075988
@@ -1683,12 +1673,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b39e1bcd146131c418cf4334b78ff85b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Graphics.FeedbackManager
-  _smallShakeIntensity: 0.5
-  _smallShakeDuration: 0.1
-  _mediumShakeIntensity: 1.5
-  _mediumShakeDuration: 0.2
-  _largeShakeIntensity: 3
-  _largeShakeDuration: 0.4
   _bossShakeIntensity: 5
   _bossShakeDuration: 0.6
   _enableHitstop: 1

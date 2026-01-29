@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using NeuralBreak.Core;
+using NeuralBreak.Config;
 
 namespace NeuralBreak.Entities
 {
@@ -48,24 +49,34 @@ namespace NeuralBreak.Entities
         [SerializeField] private int _invulnerablePoolSize = 5;
         [SerializeField] private int _weaponUpgradePoolSize = 5;
 
-        [Header("Spawn Rates - Spawns Per Level")]
-        [SerializeField] private int _powerUpSpawnsPerLevel = 2;
-        [SerializeField] private int _speedUpSpawnsPerLevel = 2;
-        [SerializeField] private int _medPackSpawnsPerLevel = 3;
-        [SerializeField] private int _shieldSpawnsPerLevel = 2;
-        [SerializeField] private int _invulnerableSpawnsPerLevel = 1;
+        [Header("Weapon Upgrade Spawn Settings")]
         [SerializeField] private int _weaponUpgradeSpawnsPerLevel = 1;
-
-        [Header("Spawn Intervals (seconds)")]
-        [SerializeField] private Vector2 _powerUpInterval = new Vector2(30f, 45f);
-        [SerializeField] private Vector2 _speedUpInterval = new Vector2(25f, 35f);
-        [SerializeField] private Vector2 _medPackInterval = new Vector2(20f, 30f);
-        [SerializeField] private Vector2 _shieldInterval = new Vector2(20f, 30f);
-        [SerializeField] private Vector2 _invulnerableInterval = new Vector2(60f, 90f);
         [SerializeField] private Vector2 _weaponUpgradeInterval = new Vector2(25f, 40f);
 
-        [Header("Conditional Spawning")]
-        [SerializeField] private float _medPackHealthThreshold = 0.8f; // Only spawn if < 80% health
+        // Config-driven properties (read from GameBalanceConfig)
+        private int PowerUpSpawnsPerLevel => ConfigProvider.Balance?.powerUp?.spawnsPerLevel ?? 2;
+        private int SpeedUpSpawnsPerLevel => ConfigProvider.Balance?.speedUp?.spawnsPerLevel ?? 2;
+        private int MedPackSpawnsPerLevel => ConfigProvider.Balance?.medPack?.spawnsPerLevel ?? 3;
+        private int ShieldSpawnsPerLevel => ConfigProvider.Balance?.shield?.spawnsPerLevel ?? 2;
+        private int InvulnerableSpawnsPerLevel => ConfigProvider.Balance?.invulnerable?.spawnsPerLevel ?? 1;
+
+        private Vector2 PowerUpInterval => new Vector2(
+            ConfigProvider.Balance?.powerUp?.minSpawnInterval ?? 30f,
+            ConfigProvider.Balance?.powerUp?.maxSpawnInterval ?? 45f);
+        private Vector2 SpeedUpInterval => new Vector2(
+            ConfigProvider.Balance?.speedUp?.minSpawnInterval ?? 25f,
+            ConfigProvider.Balance?.speedUp?.maxSpawnInterval ?? 35f);
+        private Vector2 MedPackInterval => new Vector2(
+            ConfigProvider.Balance?.medPack?.minSpawnInterval ?? 20f,
+            ConfigProvider.Balance?.medPack?.maxSpawnInterval ?? 30f);
+        private Vector2 ShieldInterval => new Vector2(
+            ConfigProvider.Balance?.shield?.minSpawnInterval ?? 20f,
+            ConfigProvider.Balance?.shield?.maxSpawnInterval ?? 30f);
+        private Vector2 InvulnerableInterval => new Vector2(
+            ConfigProvider.Balance?.invulnerable?.minSpawnInterval ?? 60f,
+            ConfigProvider.Balance?.invulnerable?.maxSpawnInterval ?? 90f);
+
+        private float MedPackHealthThreshold => ConfigProvider.Balance?.medPack?.healthThreshold ?? 0.8f;
 
         [Header("Spawn Control")]
         [SerializeField] private bool _spawningEnabled = true;
@@ -239,37 +250,37 @@ namespace NeuralBreak.Entities
 
             float dt = Time.deltaTime;
 
-            // PowerUp
+            // PowerUp (config-driven)
             _powerUpTimer += dt;
-            if (_powerUpTimer >= _nextPowerUpTime && _powerUpSpawns < _powerUpSpawnsPerLevel)
+            if (_powerUpTimer >= _nextPowerUpTime && _powerUpSpawns < PowerUpSpawnsPerLevel)
             {
                 TrySpawnPowerUp();
             }
 
-            // SpeedUp
+            // SpeedUp (config-driven)
             _speedUpTimer += dt;
-            if (_speedUpTimer >= _nextSpeedUpTime && _speedUpSpawns < _speedUpSpawnsPerLevel)
+            if (_speedUpTimer >= _nextSpeedUpTime && _speedUpSpawns < SpeedUpSpawnsPerLevel)
             {
                 TrySpawnSpeedUp();
             }
 
-            // MedPack (conditional)
+            // MedPack (conditional, config-driven)
             _medPackTimer += dt;
-            if (_medPackTimer >= _nextMedPackTime && _medPackSpawns < _medPackSpawnsPerLevel)
+            if (_medPackTimer >= _nextMedPackTime && _medPackSpawns < MedPackSpawnsPerLevel)
             {
                 TrySpawnMedPack();
             }
 
-            // Shield
+            // Shield (config-driven)
             _shieldTimer += dt;
-            if (_shieldTimer >= _nextShieldTime && _shieldSpawns < _shieldSpawnsPerLevel)
+            if (_shieldTimer >= _nextShieldTime && _shieldSpawns < ShieldSpawnsPerLevel)
             {
                 TrySpawnShield();
             }
 
-            // Invulnerable
+            // Invulnerable (config-driven)
             _invulnerableTimer += dt;
-            if (_invulnerableTimer >= _nextInvulnerableTime && _invulnerableSpawns < _invulnerableSpawnsPerLevel)
+            if (_invulnerableTimer >= _nextInvulnerableTime && _invulnerableSpawns < InvulnerableSpawnsPerLevel)
             {
                 TrySpawnInvulnerable();
             }
@@ -293,9 +304,9 @@ namespace NeuralBreak.Entities
 
             _powerUpSpawns++;
             _powerUpTimer = 0f;
-            _nextPowerUpTime = Random.Range(_powerUpInterval.x, _powerUpInterval.y);
+            _nextPowerUpTime = Random.Range(PowerUpInterval.x, PowerUpInterval.y);
 
-            Debug.Log($"[PickupSpawner] PowerUp spawned ({_powerUpSpawns}/{_powerUpSpawnsPerLevel})");
+            Debug.Log($"[PickupSpawner] PowerUp spawned ({_powerUpSpawns}/{PowerUpSpawnsPerLevel})");
         }
 
         private void TrySpawnSpeedUp()
@@ -309,21 +320,21 @@ namespace NeuralBreak.Entities
 
             _speedUpSpawns++;
             _speedUpTimer = 0f;
-            _nextSpeedUpTime = Random.Range(_speedUpInterval.x, _speedUpInterval.y);
+            _nextSpeedUpTime = Random.Range(SpeedUpInterval.x, SpeedUpInterval.y);
 
-            Debug.Log($"[PickupSpawner] SpeedUp spawned ({_speedUpSpawns}/{_speedUpSpawnsPerLevel})");
+            Debug.Log($"[PickupSpawner] SpeedUp spawned ({_speedUpSpawns}/{SpeedUpSpawnsPerLevel})");
         }
 
         private void TrySpawnMedPack()
         {
             if (_medPackPool == null) return;
 
-            // Conditional: Only spawn if player health is below threshold
-            if (_playerHealth != null && _playerHealth.HealthPercent >= _medPackHealthThreshold)
+            // Conditional: Only spawn if player health is below threshold (config-driven)
+            if (_playerHealth != null && _playerHealth.HealthPercent >= MedPackHealthThreshold)
             {
                 // Reset timer but don't count as a spawn
                 _medPackTimer = 0f;
-                _nextMedPackTime = Random.Range(_medPackInterval.x, _medPackInterval.y);
+                _nextMedPackTime = Random.Range(MedPackInterval.x, MedPackInterval.y);
                 return;
             }
 
@@ -334,9 +345,9 @@ namespace NeuralBreak.Entities
 
             _medPackSpawns++;
             _medPackTimer = 0f;
-            _nextMedPackTime = Random.Range(_medPackInterval.x, _medPackInterval.y);
+            _nextMedPackTime = Random.Range(MedPackInterval.x, MedPackInterval.y);
 
-            Debug.Log($"[PickupSpawner] MedPack spawned ({_medPackSpawns}/{_medPackSpawnsPerLevel})");
+            Debug.Log($"[PickupSpawner] MedPack spawned ({_medPackSpawns}/{MedPackSpawnsPerLevel})");
         }
 
         private void TrySpawnShield()
@@ -350,9 +361,9 @@ namespace NeuralBreak.Entities
 
             _shieldSpawns++;
             _shieldTimer = 0f;
-            _nextShieldTime = Random.Range(_shieldInterval.x, _shieldInterval.y);
+            _nextShieldTime = Random.Range(ShieldInterval.x, ShieldInterval.y);
 
-            Debug.Log($"[PickupSpawner] Shield spawned ({_shieldSpawns}/{_shieldSpawnsPerLevel})");
+            Debug.Log($"[PickupSpawner] Shield spawned ({_shieldSpawns}/{ShieldSpawnsPerLevel})");
         }
 
         private void TrySpawnInvulnerable()
@@ -366,9 +377,9 @@ namespace NeuralBreak.Entities
 
             _invulnerableSpawns++;
             _invulnerableTimer = 0f;
-            _nextInvulnerableTime = Random.Range(_invulnerableInterval.x, _invulnerableInterval.y);
+            _nextInvulnerableTime = Random.Range(InvulnerableInterval.x, InvulnerableInterval.y);
 
-            Debug.Log($"[PickupSpawner] Invulnerable spawned! ({_invulnerableSpawns}/{_invulnerableSpawnsPerLevel})");
+            Debug.Log($"[PickupSpawner] Invulnerable spawned! ({_invulnerableSpawns}/{InvulnerableSpawnsPerLevel})");
         }
 
         private void TrySpawnWeaponUpgrade()
@@ -551,11 +562,12 @@ namespace NeuralBreak.Entities
 
         private void RandomizeNextSpawnTimes()
         {
-            _nextPowerUpTime = Random.Range(_powerUpInterval.x * 0.5f, _powerUpInterval.y * 0.5f);
-            _nextSpeedUpTime = Random.Range(_speedUpInterval.x * 0.5f, _speedUpInterval.y * 0.5f);
-            _nextMedPackTime = Random.Range(_medPackInterval.x * 0.5f, _medPackInterval.y * 0.5f);
-            _nextShieldTime = Random.Range(_shieldInterval.x * 0.5f, _shieldInterval.y * 0.5f);
-            _nextInvulnerableTime = Random.Range(_invulnerableInterval.x * 0.5f, _invulnerableInterval.y * 0.5f);
+            // Use config-driven intervals (read from GameBalanceConfig)
+            _nextPowerUpTime = Random.Range(PowerUpInterval.x * 0.5f, PowerUpInterval.y * 0.5f);
+            _nextSpeedUpTime = Random.Range(SpeedUpInterval.x * 0.5f, SpeedUpInterval.y * 0.5f);
+            _nextMedPackTime = Random.Range(MedPackInterval.x * 0.5f, MedPackInterval.y * 0.5f);
+            _nextShieldTime = Random.Range(ShieldInterval.x * 0.5f, ShieldInterval.y * 0.5f);
+            _nextInvulnerableTime = Random.Range(InvulnerableInterval.x * 0.5f, InvulnerableInterval.y * 0.5f);
             _nextWeaponUpgradeTime = Random.Range(_weaponUpgradeInterval.x * 0.5f, _weaponUpgradeInterval.y * 0.5f);
         }
 

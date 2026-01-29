@@ -133,15 +133,17 @@ namespace NeuralBreak.Entities
             }
             else
             {
-                // Create simple placeholder shards
+                // Create simple placeholder shards - visuals handled by CrystalShardVisuals
+                // We just need transform references for attack positions
                 for (int i = 0; i < _shardCount; i++)
                 {
                     GameObject shard = new GameObject($"Shard_{i}");
                     shard.transform.SetParent(transform);
                     shard.transform.localScale = Vector3.one * _shardScale;
 
+                    // Create a simple diamond sprite if no prefab
                     SpriteRenderer sr = shard.AddComponent<SpriteRenderer>();
-                    sr.sprite = _coreRenderer?.sprite;
+                    sr.sprite = Graphics.SpriteGenerator.CreateDiamond(32, _crystalColor, $"CrystalShard_{i}");
                     sr.color = _crystalColor;
                     _shardRenderers.Add(sr);
 
@@ -224,7 +226,10 @@ namespace NeuralBreak.Entities
                 }
             }
 
-            _nextFiringShard = (_nextFiringShard + _shardsPerBurst) % _shards.Count;
+            if (_shards.Count > 0)
+            {
+                _nextFiringShard = (_nextFiringShard + _shardsPerBurst) % _shards.Count;
+            }
             _isFiring = false;
         }
 
@@ -341,20 +346,21 @@ namespace NeuralBreak.Entities
         {
             base.OnStateChanged(newState);
 
-            if (_coreRenderer == null) return;
-
             switch (newState)
             {
                 case EnemyState.Spawning:
-                    _coreRenderer.color = new Color(_coreColor.r, _coreColor.g, _coreColor.b, 0.5f);
+                    if (_coreRenderer != null)
+                        _coreRenderer.color = new Color(_coreColor.r, _coreColor.g, _coreColor.b, 0.5f);
                     SetShardsAlpha(0.5f);
                     break;
                 case EnemyState.Alive:
-                    _coreRenderer.color = _coreColor;
+                    if (_coreRenderer != null)
+                        _coreRenderer.color = _coreColor;
                     SetShardsAlpha(1f);
                     break;
                 case EnemyState.Dying:
-                    _coreRenderer.color = Color.white;
+                    if (_coreRenderer != null)
+                        _coreRenderer.color = Color.white;
                     break;
             }
         }

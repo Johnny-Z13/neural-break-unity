@@ -26,24 +26,25 @@ namespace NeuralBreak.Graphics
         [SerializeField] private float _followSpeed = 5f;
         [SerializeField] private float _deadZone = 0.5f;
 
-        [Header("Dynamic Zoom (from TypeScript visual.config.ts)")]
+        [Header("Dynamic Zoom")]
         [SerializeField] private bool _enableDynamicZoom = true;
-        [Tooltip("Minimum zoom - zoomed IN, tight view (TS: MIN_ZOOM = 16.5)")]
-        [SerializeField] private float _minZoom = 16.5f;
-        [Tooltip("Maximum zoom - zoomed OUT for many enemies (TS: MAX_ZOOM = 38.5)")]
-        [SerializeField] private float _maxZoom = 38.5f;
-        [Tooltip("Base/default camera size - starts here with 0 enemies (TS: BASE_FRUSTUM_SIZE = 22)")]
-        [SerializeField] private float _baseSize = 22f;
-        [Tooltip("How fast zoom changes (TS: zoomLerpSpeed = 3.0)")]
-        [SerializeField] private float _zoomSpeed = 3f;
-        [Tooltip("Enemy count for max intensity (TS: 20)")]
-        [SerializeField] private int _maxEnemiesForZoom = 20;
-        [Tooltip("Combo count for max intensity (TS: 15)")]
-        [SerializeField] private int _maxComboForZoom = 15;
+        [Tooltip("Minimum zoom - zoomed IN, tight view")]
+        [SerializeField] private float _minZoom = 5f;
+        [Tooltip("Maximum zoom - zoomed OUT for many enemies")]
+        [SerializeField] private float _maxZoom = 18f;
+        [Tooltip("Base/default camera size - starts here with 0 enemies")]
+        [SerializeField] private float _baseSize = 8f;
+        [Tooltip("How fast zoom changes")]
+        [SerializeField] private float _zoomSpeed = 4f;
+        [Tooltip("Enemy count for max intensity")]
+        [SerializeField] private int _maxEnemiesForZoom = 15;
+        [Tooltip("Combo count for max intensity")]
+        [SerializeField] private int _maxComboForZoom = 10;
 
         [Header("Screen Shake")]
-        [SerializeField] private float _shakeDecay = 0.9f;
-        [SerializeField] private float _maxShakeOffset = 1f;
+        [SerializeField] private float _shakeDecay = 0.85f;
+        [SerializeField] private float _maxShakeOffset = 1.5f;
+        [SerializeField] private float _shakeMultiplier = 1.5f;
         [SerializeField] private bool _shakeEnabled = true;
 
         // Note: MMFeedbacks removed
@@ -328,10 +329,11 @@ namespace NeuralBreak.Graphics
         {
             if (!_shakeEnabled) return;
 
-            // Feedback (Feel removed)
+            // Apply shake multiplier for punchier feel
+            float boostedIntensity = intensity * _shakeMultiplier;
 
             // Manual shake - accumulate intensity
-            _shakeIntensity = Mathf.Max(_shakeIntensity, intensity);
+            _shakeIntensity = Mathf.Max(_shakeIntensity, boostedIntensity);
             _shakeDuration = Mathf.Max(_shakeDuration, duration);
             _shakeTimer = _shakeDuration;
         }
@@ -385,30 +387,30 @@ namespace NeuralBreak.Graphics
             switch (evt.enemyType)
             {
                 case EnemyType.Boss:
-                    intensity = 0.6f;
-                    duration = 0.3f;
+                    intensity = 1.0f;
+                    duration = 0.4f;
                     break;
                 case EnemyType.VoidSphere:
-                    intensity = 0.4f;
-                    duration = 0.25f;
+                    intensity = 0.7f;
+                    duration = 0.3f;
                     break;
                 case EnemyType.ChaosWorm:
                 case EnemyType.CrystalShard:
-                    intensity = 0.3f;
-                    duration = 0.2f;
+                    intensity = 0.5f;
+                    duration = 0.25f;
                     break;
                 case EnemyType.UFO:
                 case EnemyType.ScanDrone:
-                    intensity = 0.2f;
-                    duration = 0.15f;
+                    intensity = 0.35f;
+                    duration = 0.18f;
                     break;
                 case EnemyType.Fizzer:
-                    intensity = 0.15f;
-                    duration = 0.1f;
+                    intensity = 0.25f;
+                    duration = 0.12f;
                     break;
                 default: // DataMite
-                    intensity = 0.1f;
-                    duration = 0.08f;
+                    intensity = 0.15f;
+                    duration = 0.1f;
                     break;
             }
 

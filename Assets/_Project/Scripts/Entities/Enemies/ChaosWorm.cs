@@ -115,41 +115,90 @@ namespace NeuralBreak.Entities
             }
             _segments.Clear();
 
-            // Create new segments
-            if (_segmentPrefab != null)
+            // Create new segments (runtime creation if no prefab)
+            for (int i = 0; i < _segmentCount; i++)
             {
-                for (int i = 0; i < _segmentCount; i++)
+                GameObject seg;
+
+                if (_segmentPrefab != null)
                 {
-                    GameObject seg = Instantiate(_segmentPrefab, transform.position, Quaternion.identity, transform.parent);
-                    seg.name = $"WormSegment_{i}";
-
-                    // Scale segments (smaller toward tail)
-                    float scale = 1f - (i * 0.05f);
-                    seg.transform.localScale = Vector3.one * Mathf.Max(scale, 0.4f);
-
-                    // Color gradient
-                    SpriteRenderer sr = seg.GetComponent<SpriteRenderer>();
-                    if (sr != null)
-                    {
-                        float t = (float)i / _segmentCount;
-                        sr.color = Color.Lerp(_wormColor, Color.red, t * 0.5f);
-                    }
-
-                    _segments.Add(seg.transform);
+                    seg = Instantiate(_segmentPrefab, transform.position, Quaternion.identity, transform.parent);
                 }
+                else
+                {
+                    // Create segment at runtime
+                    seg = CreateRuntimeSegment();
+                }
+
+                seg.name = $"WormSegment_{i}";
+
+                // Add WormSegment component to forward damage to parent
+                var wormSegment = seg.GetComponent<WormSegment>();
+                if (wormSegment == null)
+                {
+                    wormSegment = seg.AddComponent<WormSegment>();
+                }
+                wormSegment.Initialize(this);
+
+                // Scale segments (smaller toward tail)
+                float scale = 1f - (i * 0.05f);
+                seg.transform.localScale = Vector3.one * Mathf.Max(scale, 0.4f);
+
+                // Color gradient (rainbow effect like TS version)
+                SpriteRenderer sr = seg.GetComponent<SpriteRenderer>();
+                if (sr != null)
+                {
+                    float t = (float)i / _segmentCount;
+                    // Rainbow gradient from magenta through to red
+                    Color segColor = Color.HSVToRGB(0.85f - t * 0.15f, 0.8f, 1f);
+                    sr.color = segColor;
+                }
+
+                _segments.Add(seg.transform);
             }
+        }
+
+        /// <summary>
+        /// Create a worm segment at runtime with sprite and collider.
+        /// </summary>
+        private GameObject CreateRuntimeSegment()
+        {
+            var seg = new GameObject("WormSegment");
+            seg.tag = "Enemy";
+
+            // Add sprite renderer with circle sprite
+            var sr = seg.AddComponent<SpriteRenderer>();
+            sr.sprite = Graphics.SpriteGenerator.CreateCircle(32, _wormColor, "WormSegmentSprite");
+            sr.sortingOrder = 5;
+
+            // Add collider for projectile detection
+            var col = seg.AddComponent<CircleCollider2D>();
+            col.isTrigger = true;
+            col.radius = 0.4f;
+
+            return seg;
         }
 
         protected override void UpdateAI()
         {
+            UpdateMovement();
+            UpdateSegments();
+        }
+
+        /// <summary>
+        /// Override dying state to handle our custom death animation
+        /// </summary>
+        protected override void UpdateDying()
+        {
             if (_isDeathAnimating)
             {
                 UpdateDeathAnimation();
-                return;
             }
-
-            UpdateMovement();
-            UpdateSegments();
+            else
+            {
+                // Fallback to base behavior if not animating
+                base.UpdateDying();
+            }
         }
 
         private void UpdateMovement()
@@ -210,12 +259,26 @@ namespace NeuralBreak.Entities
 
         public override void Kill()
         {
+            // Prevent multiple kill calls
+            if (_isDeathAnimating || _state == EnemyState.Dying || _state == EnemyState.Dead) return;
+
             // Start death animation instead of immediate death
             _isDeathAnimating = true;
             _deathTimer = 0f;
             _currentDeathSegment = _segments.Count - 1; // Start from tail
 
-            // Don't call base.Kill() yet - wait for animation
+            // Transition to Dying state so we stop taking damage
+            // but we'll handle the animation ourselves
+            SetState(EnemyState.Dying);
+
+            // Publish kill event immediately (for scoring)
+            EventBus.Publish(new EnemyKilledEvent
+            {
+                enemyType = EnemyType,
+                position = transform.position,
+                scoreValue = _scoreValue,
+                xpValue = _xpValue
+            });
         }
 
         private void UpdateDeathAnimation()
@@ -248,7 +311,10 @@ namespace NeuralBreak.Entities
                 }
 
                 _isDeathAnimating = false;
-                base.Kill();
+
+                // Finish dying - return to pool
+                SetState(EnemyState.Dead);
+                _returnToPool?.Invoke(this);
             }
         }
 

@@ -15,7 +15,8 @@ namespace NeuralBreak.Combat
     public class Projectile : MonoBehaviour
     {
         [Header("Settings")]
-        [SerializeField] private float _baseRadius = 0.15f; // Increased for visibility
+        // Base radius now read from ConfigProvider.WeaponSystem.projectileSize
+        private float _baseRadius;
 
         [Header("Visuals")]
         [SerializeField] private SpriteRenderer _spriteRenderer;
@@ -27,6 +28,7 @@ namespace NeuralBreak.Combat
 
         // Runtime state - FIXED AT SPAWN TIME (each bullet is independent)
         private Vector2 _direction;
+        private Vector2 _initialDirection; // For homing: original aim direction
         private float _speed; // Stored at spawn - never changes
         private int _damage;
         private int _powerLevel;
@@ -36,6 +38,13 @@ namespace NeuralBreak.Combat
         private bool _isHoming;
         private int _pierceCount;
         private const int MAX_PIERCE = 5;
+
+        // Homing target lock
+        private Transform _lockedTarget;
+        private float _reacquireTimer;
+        private const float REACQUIRE_DELAY = 0.2f;
+        private const float AIM_CONE_ANGLE = 45f;
+        private const float AIM_PRIORITY_MULTIPLIER = 0.5f;
 
         // Pool callback
         private System.Action<Projectile> _returnToPool;
@@ -65,7 +74,7 @@ namespace NeuralBreak.Combat
                 _collider = gameObject.AddComponent<CircleCollider2D>();
             }
             _collider.isTrigger = true;
-            _collider.radius = _baseRadius;
+            // Collider radius will be set in Initialize() from config
 
             // Get sprite renderer reference if not assigned
             if (_spriteRenderer == null)
@@ -121,24 +130,52 @@ namespace NeuralBreak.Combat
             var upgradeManager = FindFirstObjectByType<WeaponUpgradeManager>();
             if (upgradeManager == null) return;
 
-            // Find nearest enemy
-            Transform nearestEnemy = FindNearestEnemy(upgradeManager.HomingRange);
-            if (nearestEnemy == null) return;
+            float range = upgradeManager.HomingRange;
+            float strength = upgradeManager.HomingStrength;
 
-            // Calculate direction to enemy
-            Vector2 toEnemy = ((Vector2)nearestEnemy.position - (Vector2)transform.position).normalized;
+            // Check if we need to reacquire target
+            if (_lockedTarget == null || !IsTargetValid(_lockedTarget, range))
+            {
+                _reacquireTimer -= Time.deltaTime;
+                if (_reacquireTimer <= 0f)
+                {
+                    _lockedTarget = FindBestTarget(range);
+                    _reacquireTimer = REACQUIRE_DELAY;
+                }
+            }
 
-            // Smoothly turn toward enemy
-            _direction = Vector2.Lerp(_direction, toEnemy, upgradeManager.HomingStrength * Time.deltaTime).normalized;
+            // If we have a valid target, home toward it
+            if (_lockedTarget != null && IsTargetValid(_lockedTarget, range))
+            {
+                Vector2 toTarget = ((Vector2)_lockedTarget.position - (Vector2)transform.position).normalized;
+                _direction = Vector2.Lerp(_direction, toTarget, strength * Time.deltaTime).normalized;
+            }
+            // else: maintain current direction (fly straight)
         }
 
-        private Transform FindNearestEnemy(float range)
+        private bool IsTargetValid(Transform target, float range)
         {
-            Transform nearest = null;
-            float nearestDist = range;
+            if (target == null) return false;
 
-            // Find all colliders in range
+            float dist = Vector2.Distance(transform.position, target.position);
+            if (dist > range * 1.5f) return false;
+
+            var enemy = target.GetComponent<EnemyBase>();
+            if (enemy == null || !enemy.IsAlive) return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Find the best target, prioritizing enemies in the aim direction.
+        /// </summary>
+        private Transform FindBestTarget(float range)
+        {
+            Transform bestTarget = null;
+            float bestScore = float.MaxValue;
+
             Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, range);
+
             foreach (var col in colliders)
             {
                 if (!col.CompareTag("Enemy")) continue;
@@ -146,15 +183,35 @@ namespace NeuralBreak.Combat
                 var enemy = col.GetComponent<EnemyBase>();
                 if (enemy == null || !enemy.IsAlive) continue;
 
-                float dist = Vector2.Distance(transform.position, col.transform.position);
-                if (dist < nearestDist)
+                Vector2 toEnemy = (Vector2)col.transform.position - (Vector2)transform.position;
+                float dist = toEnemy.magnitude;
+
+                if (dist < 0.1f) continue;
+
+                // Calculate angle between initial aim direction and enemy direction
+                Vector2 toEnemyDir = toEnemy.normalized;
+                float dot = Vector2.Dot(_initialDirection, toEnemyDir);
+                float angleDeg = Mathf.Acos(Mathf.Clamp(dot, -1f, 1f)) * Mathf.Rad2Deg;
+
+                // Score = distance, with bonus for enemies in aim cone
+                float score = dist;
+                if (angleDeg <= AIM_CONE_ANGLE)
                 {
-                    nearestDist = dist;
-                    nearest = col.transform;
+                    score *= AIM_PRIORITY_MULTIPLIER; // Prioritize enemies in aim cone
+                }
+                else if (angleDeg > 90f)
+                {
+                    score *= 2f; // Penalize enemies behind
+                }
+
+                if (score < bestScore)
+                {
+                    bestScore = score;
+                    bestTarget = col.transform;
                 }
             }
 
-            return nearest;
+            return bestTarget;
         }
 
         /// <summary>
@@ -170,6 +227,11 @@ namespace NeuralBreak.Combat
             // Set position and direction (FIXED - won't change unless homing)
             transform.position = position;
             _direction = direction.normalized;
+            _initialDirection = _direction; // Store for homing target acquisition
+
+            // Reset homing state
+            _lockedTarget = null;
+            _reacquireTimer = 0f;
 
             // Store speed at spawn time (FIXED - each bullet has its own speed)
             _speed = ConfigProvider.WeaponSystem.baseProjectileSpeed;
@@ -187,14 +249,33 @@ namespace NeuralBreak.Combat
             _isHoming = isHoming;
             _pierceCount = 0;
 
+            // Get projectile size from config
+            _baseRadius = ConfigProvider.WeaponSystem?.projectileSize ?? 0.15f;
+
+            // Apply projectile size per level scaling from config
+            float sizePerLevel = ConfigProvider.WeaponSystem?.powerLevels?.projectileSizePerLevel ?? 0.01f;
+            float scaledRadius = _baseRadius * (1f + powerLevel * sizePerLevel);
+
+            // Update collider radius
+            if (_collider != null)
+            {
+                _collider.radius = scaledRadius;
+            }
+
+            // Acquire initial target for homing projectiles
+            if (_isHoming)
+            {
+                var upgradeManager = FindFirstObjectByType<WeaponUpgradeManager>();
+                float range = upgradeManager != null ? upgradeManager.HomingRange : 10f;
+                _lockedTarget = FindBestTarget(range);
+            }
+
             // Set rotation ONCE at spawn (won't update unless homing)
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
             transform.rotation = Quaternion.Euler(0, 0, angle - 90f);
 
-            // Scale with power level - small but visible projectiles
-            // At power level 0: scale = 0.15 * 3 = 0.45
-            // At power level 10: scale = 0.15 * 1.1 * 3 = 0.495
-            float visualScale = _baseRadius * (1f + powerLevel * 0.1f) * 3f;
+            // Visual scale - use config-based radius with visual multiplier
+            float visualScale = scaledRadius * 3f;
             transform.localScale = Vector3.one * visualScale;
 
             // Visual indication for special projectiles
@@ -299,11 +380,28 @@ namespace NeuralBreak.Combat
             // Check if hit enemy
             if (other.CompareTag("Enemy"))
             {
+                bool hitSomething = false;
+
+                // First try EnemyBase (standard enemies)
                 var enemy = other.GetComponent<EnemyBase>();
                 if (enemy != null && enemy.IsAlive)
                 {
                     enemy.TakeDamage(_damage, transform.position);
+                    hitSomething = true;
+                }
+                else
+                {
+                    // Try WormSegment (ChaosWorm body segments)
+                    var wormSegment = other.GetComponent<WormSegment>();
+                    if (wormSegment != null)
+                    {
+                        wormSegment.TakeDamage(_damage, transform.position);
+                        hitSomething = true;
+                    }
+                }
 
+                if (hitSomething)
+                {
                     // Piercing: continue through enemies up to max pierce count
                     if (_isPiercing)
                     {

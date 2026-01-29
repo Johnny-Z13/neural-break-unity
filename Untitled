@@ -1,0 +1,31 @@
+[EnemySpawner] Spawning DataMite!
+UnityEngine.Debug:Log (object)
+NeuralBreak.Utils.LogHelper:Log (string) (at Assets/_Project/Scripts/Utils/LogHelper.cs:19)
+NeuralBreak.Entities.EnemySpawner:UpdateSpawnTimers () (at Assets/_Project/Scripts/Entities/Enemies/EnemySpawner.cs:127)
+NeuralBreak.Entities.EnemySpawner:Update () (at Assets/_Project/Scripts/Entities/Enemies/EnemySpawner.cs:104)
+
+[PlayerHealth] Shield absorbed hit! Shields: 0
+UnityEngine.Debug:Log (object)
+NeuralBreak.Utils.LogHelper:Log (string) (at Assets/_Project/Scripts/Utils/LogHelper.cs:19)
+NeuralBreak.Entities.PlayerHealth:TakeDamage (int,UnityEngine.Vector3) (at Assets/_Project/Scripts/Entities/Player/PlayerHealth.cs:201)
+NeuralBreak.Entities.EnemyBase:OnTriggerEnter2D (UnityEngine.Collider2D) (at Assets/_Project/Scripts/Entities/Enemies/EnemyBase.cs:466)
+
+[PlayerLevelSystem] Level Up! Now level 13
+UnityEngine.Debug:Log (object)
+NeuralBreak.Core.PlayerLevelSystem:LevelUp () (at Assets/_Project/Scripts/Core/PlayerLevelSystem.cs:110)
+NeuralBreak.Core.PlayerLevelSystem:AddXP (int) (at Assets/_Project/Scripts/Core/PlayerLevelSystem.cs:81)
+NeuralBreak.Core.PlayerLevelSystem:OnEnemyKilled (NeuralBreak.Core.EnemyKilledEvent) (at Assets/_Project/Scripts/Core/PlayerLevelSystem.cs:55)
+NeuralBreak.Core.EventBus:Publish<NeuralBreak.Core.EnemyKilledEvent> (NeuralBreak.Core.EnemyKilledEvent) (at Assets/_Project/Scripts/Core/EventBus.cs:76)
+NeuralBreak.Entities.EnemyBase:Kill () (at Assets/_Project/Scripts/Entities/Enemies/EnemyBase.cs:365)
+NeuralBreak.Entities.ChaosWorm:UpdateDeathAnimation () (at Assets/_Project/Scripts/Entities/Enemies/ChaosWorm.cs:251)
+NeuralBreak.Entities.ChaosWorm:UpdateAI () (at Assets/_Project/Scripts/Entities/Enemies/ChaosWorm.cs:147)
+NeuralBreak.Entities.EnemyBase:UpdateAlive () (at Assets/_Project/Scripts/Entities/Enemies/EnemyBase.cs:218)
+NeuralBreak.Entities.EnemyBase:Update () (at Assets/_Project/Scripts/Entities/Enemies/EnemyBase.cs:195)
+
+Assets\_Project\Scripts\Graphics\UpgradeSelectionVFX.cs(80,41): error CS0104: 'UpgradeTier' is an ambiguous reference between 'NeuralBreak.Combat.UpgradeTier' and 'NeuralBreak.UI.UpgradeTier'
+
+Assets\_Project\Scripts\Graphics\UpgradeSelectionVFX.cs(101,36): error CS0104: 'UpgradeTier' is an ambiguous reference between 'NeuralBreak.Combat.UpgradeTier' and 'NeuralBreak.UI.UpgradeTier'
+
+All compiler errors have to be fixed before you can enter playmode!
+UnityEditor.SceneView:ShowCompileErrorNotification ()
+

@@ -42,11 +42,21 @@ namespace NeuralBreak.Core
         private int _currentCombo;
         private float _currentMultiplier = 1f;
         private float _comboTimer;
-        private const float COMBO_DECAY_TIME = 1.5f;
-        private const float MULTIPLIER_DECAY_TIME = 2f;
+
+        // Config-driven combo settings (read from GameBalanceConfig)
+        private float ComboDecayTime => ConfigProvider.Combo?.comboDecayTime ?? 3f;
+        private float ComboWindow => ConfigProvider.Combo?.comboWindow ?? 1.5f;
+        private float MultiplierPerKill => ConfigProvider.Combo?.multiplierPerKill ?? 0.1f;
+        private float MaxMultiplier => ConfigProvider.Combo?.maxMultiplier ?? 10f;
+        private float MultiplierDecayRate => ConfigProvider.Combo?.multiplierDecayRate ?? 2f;
+        private float BossKillMultiplier => ConfigProvider.Combo?.bossKillMultiplier ?? 2f;
 
         // Upgrade selection state
         private bool _upgradeSelected;
+
+        // Level transition tracking
+        private Coroutine _levelTransitionCoroutine;
+        private bool _isPlayerDead;
 
         private void Awake()
         {
@@ -143,6 +153,8 @@ namespace NeuralBreak.Core
             Stats.Reset();
             _currentCombo = 0;
             _currentMultiplier = 1f;
+            _isPlayerDead = false;
+            _levelTransitionCoroutine = null;
 
             SetState(GameStateType.Playing);
 
@@ -237,28 +249,33 @@ namespace NeuralBreak.Core
             Stats.enemiesKilled++;
             UpdateKillCount(evt.enemyType);
 
-            // Update combo
+            // Update combo (config-driven)
             _currentCombo++;
-            _comboTimer = COMBO_DECAY_TIME;
+            _comboTimer = ComboDecayTime;
 
             if (_currentCombo > Stats.highestCombo)
             {
                 Stats.highestCombo = _currentCombo;
             }
 
-            // Update multiplier (increases with quick kills)
+            // Update multiplier (increases with quick kills, config-driven)
             if (_comboTimer > 0)
             {
-                _currentMultiplier = Mathf.Min(_currentMultiplier + 0.1f, 10f);
+                _currentMultiplier = Mathf.Min(_currentMultiplier + MultiplierPerKill, MaxMultiplier);
                 if (_currentMultiplier > Stats.highestMultiplier)
                 {
                     Stats.highestMultiplier = _currentMultiplier;
                 }
             }
 
-            // Calculate score with multiplier
+            // Calculate score with multiplier (apply boss multiplier if applicable)
             int baseScore = evt.scoreValue;
-            int finalScore = Mathf.RoundToInt(baseScore * _currentMultiplier);
+            float scoreMultiplier = _currentMultiplier;
+            if (evt.enemyType == EnemyType.Boss)
+            {
+                scoreMultiplier *= BossKillMultiplier;
+            }
+            int finalScore = Mathf.RoundToInt(baseScore * scoreMultiplier);
             Stats.score += finalScore;
 
             // Add XP
@@ -310,10 +327,11 @@ namespace NeuralBreak.Core
                 }
             }
 
-            // Multiplier decays more slowly
+            // Multiplier decays more slowly (config-driven decay rate)
             if (_currentMultiplier > 1f && _comboTimer <= 0)
             {
-                _currentMultiplier = Mathf.Max(1f, _currentMultiplier - Time.deltaTime * 0.5f);
+                float decayRate = MultiplierDecayRate > 0 ? 1f / MultiplierDecayRate : 0.5f;
+                _currentMultiplier = Mathf.Max(1f, _currentMultiplier - Time.deltaTime * decayRate);
             }
         }
 
@@ -333,11 +351,30 @@ namespace NeuralBreak.Core
 
         private void OnPlayerDied(PlayerDiedEvent evt)
         {
+            _isPlayerDead = true;
+
+            // Cancel any ongoing level transition to prevent upgrade screen showing
+            if (_levelTransitionCoroutine != null)
+            {
+                StopCoroutine(_levelTransitionCoroutine);
+                _levelTransitionCoroutine = null;
+            }
+
+            // Small delay to let death explosion play, then show game over
+            StartCoroutine(DelayedGameOver(1.5f));
+        }
+
+        private IEnumerator DelayedGameOver(float delay)
+        {
+            yield return new WaitForSeconds(delay);
             GameOver();
         }
 
         private void OnLevelCompleted(LevelCompletedEvent evt)
         {
+            // Don't process level completion if player is dead
+            if (_isPlayerDead) return;
+
             Stats.level = evt.levelNumber + 1;
 
             // Level complete feedback (Feel package removed)
@@ -349,14 +386,21 @@ namespace NeuralBreak.Core
             }
             else
             {
-                // Start transition to next level
-                StartCoroutine(LevelTransition());
+                // Start transition to next level (track coroutine so we can cancel if player dies)
+                _levelTransitionCoroutine = StartCoroutine(LevelTransition());
             }
         }
 
         private IEnumerator LevelTransition()
         {
             LogHelper.Log("[GameManager] Level completed - transitioning...");
+
+            // Abort if player died during transition
+            if (_isPlayerDead)
+            {
+                _levelTransitionCoroutine = null;
+                yield break;
+            }
 
             // Clear remaining enemies
             if (_enemySpawner != null)
@@ -371,7 +415,8 @@ namespace NeuralBreak.Core
             // Check if we should show upgrade selection (every level in Rogue mode, every 5 levels in Arcade)
             bool showUpgradeSelection = ShouldShowUpgradeSelection();
 
-            if (showUpgradeSelection)
+            // Don't show upgrade selection if player is dead
+            if (showUpgradeSelection && !_isPlayerDead)
             {
                 // Pause game for upgrade selection
                 SetState(GameStateType.RogueChoice);

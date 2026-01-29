@@ -4,13 +4,22 @@ using NeuralBreak.Entities;
 namespace NeuralBreak.Combat.ProjectileBehaviors
 {
     /// <summary>
-    /// Projectile behavior: tracks and follows nearby enemies.
+    /// Projectile behavior: tracks and follows enemies.
+    /// Prioritizes enemies in the player's aim direction, then locks on.
     /// </summary>
     public class HomingBehavior : ProjectileBehaviorBase
     {
         private float _strength;
         private float _range;
         private Vector2 _direction;
+        private Vector2 _initialDirection; // The direction player was aiming
+        private Transform _lockedTarget;   // Locked target (sticky)
+        private float _reacquireDelay = 0.2f;
+        private float _reacquireTimer;
+
+        // Cone angle for prioritizing targets in aim direction (degrees)
+        private const float AIM_CONE_ANGLE = 45f;
+        private const float AIM_PRIORITY_MULTIPLIER = 0.5f; // Enemies in cone get distance halved
 
         public HomingBehavior(float strength = 5f, float range = 10f)
         {
@@ -21,26 +30,41 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
         public override void Initialize(MonoBehaviour proj)
         {
             base.Initialize(proj);
-            _direction = (proj.transform.up).normalized; // Initial direction
+            _direction = proj.transform.up.normalized;
+            _initialDirection = _direction;
+            _lockedTarget = null;
+            _reacquireTimer = 0f;
+
+            // Acquire initial target immediately
+            AcquireTarget();
         }
 
         public override void Update(float deltaTime)
         {
-            // Find nearest enemy
-            Transform nearestEnemy = FindNearestEnemy();
-            if (nearestEnemy == null) return;
+            // Check if we need to reacquire target
+            if (_lockedTarget == null || !IsTargetValid(_lockedTarget))
+            {
+                _reacquireTimer -= deltaTime;
+                if (_reacquireTimer <= 0f)
+                {
+                    AcquireTarget();
+                    _reacquireTimer = _reacquireDelay;
+                }
+            }
 
-            // Calculate direction to enemy
-            Vector2 toEnemy = ((Vector2)nearestEnemy.position - (Vector2)transform.position).normalized;
-
-            // Smoothly turn toward enemy
-            _direction = Vector2.Lerp(_direction, toEnemy, _strength * deltaTime).normalized;
+            // If we have a valid target, home toward it
+            if (_lockedTarget != null && IsTargetValid(_lockedTarget))
+            {
+                Vector2 toTarget = ((Vector2)_lockedTarget.position - (Vector2)transform.position).normalized;
+                _direction = Vector2.Lerp(_direction, toTarget, _strength * deltaTime).normalized;
+            }
+            // else: maintain current direction (fly straight)
 
             // Update projectile rotation to face direction
             float angle = Mathf.Atan2(_direction.y, _direction.x) * Mathf.Rad2Deg;
             transform.rotation = Quaternion.Euler(0, 0, angle - 90f);
 
-            // Update velocity - try both projectile types
+            // Update velocity
             var enhancedProj = GetAsEnhancedProjectile();
             if (enhancedProj != null)
             {
@@ -58,17 +82,44 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
 
         public override bool OnHitEnemy(EnemyBase enemy)
         {
-            // Don't destroy on hit if piercing is also active
-            return true; // Let other behaviors decide
+            // If we hit our locked target, clear it so we can acquire a new one
+            if (_lockedTarget != null && enemy.transform == _lockedTarget)
+            {
+                _lockedTarget = null;
+            }
+            return true;
         }
 
-        private Transform FindNearestEnemy()
+        private void AcquireTarget()
         {
-            Transform nearest = null;
-            float nearestDist = _range;
+            _lockedTarget = FindBestTarget();
+        }
 
-            // Find all colliders in range
+        private bool IsTargetValid(Transform target)
+        {
+            if (target == null) return false;
+
+            // Check if still in range
+            float dist = Vector2.Distance(transform.position, target.position);
+            if (dist > _range * 1.5f) return false; // Allow some buffer
+
+            // Check if enemy is still alive
+            var enemy = target.GetComponent<EnemyBase>();
+            if (enemy == null || !enemy.IsAlive) return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Find the best target, prioritizing enemies in the aim direction.
+        /// </summary>
+        private Transform FindBestTarget()
+        {
+            Transform bestTarget = null;
+            float bestScore = float.MaxValue;
+
             Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, _range);
+
             foreach (var col in colliders)
             {
                 if (!col.CompareTag("Enemy")) continue;
@@ -76,15 +127,37 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
                 var enemy = col.GetComponent<EnemyBase>();
                 if (enemy == null || !enemy.IsAlive) continue;
 
-                float dist = Vector2.Distance(transform.position, col.transform.position);
-                if (dist < nearestDist)
+                Vector2 toEnemy = (Vector2)col.transform.position - (Vector2)transform.position;
+                float dist = toEnemy.magnitude;
+
+                if (dist < 0.1f) continue; // Too close
+
+                // Calculate angle between aim direction and enemy direction
+                Vector2 toEnemyDir = toEnemy.normalized;
+                float dot = Vector2.Dot(_initialDirection, toEnemyDir);
+                float angleDeg = Mathf.Acos(Mathf.Clamp(dot, -1f, 1f)) * Mathf.Rad2Deg;
+
+                // Score = distance, with bonus for enemies in aim cone
+                float score = dist;
+                if (angleDeg <= AIM_CONE_ANGLE)
                 {
-                    nearestDist = dist;
-                    nearest = col.transform;
+                    // Prioritize enemies in the aim cone
+                    score *= AIM_PRIORITY_MULTIPLIER;
+                }
+                else if (angleDeg > 90f)
+                {
+                    // Penalize enemies behind the projectile
+                    score *= 2f;
+                }
+
+                if (score < bestScore)
+                {
+                    bestScore = score;
+                    bestTarget = col.transform;
                 }
             }
 
-            return nearest;
+            return bestTarget;
         }
     }
 }

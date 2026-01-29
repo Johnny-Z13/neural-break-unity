@@ -188,11 +188,30 @@ namespace NeuralBreak.Entities
                     // Shard spin
                     _shards[i].GetChild(0).Rotate(0, 0, Time.deltaTime * 120f);
 
-                    // Tip pulse
+                    // Rainbow color shifting like original TypeScript
+                    var bodySr = _shards[i].GetChild(0).GetComponent<SpriteRenderer>();
+                    if (bodySr != null)
+                    {
+                        float hue = (_time * 0.25f + i * 0.12f) % 1f;
+                        Color rainbow = Color.HSVToRGB(hue, 0.9f, 0.9f);
+                        rainbow.a = 0.85f;
+                        bodySr.color = rainbow;
+                    }
+
+                    // Tip pulse with color
                     if (_shardTips[i] != null)
                     {
-                        float tipPulse = 0.1f + Mathf.Sin(_time * 8f + i) * 0.05f;
+                        float tipPulse = 0.12f + Mathf.Sin(_time * 8f + i) * 0.06f;
                         _shardTips[i].localScale = Vector3.one * tipPulse;
+
+                        var tipSr = _shardTips[i].GetComponent<SpriteRenderer>();
+                        if (tipSr != null)
+                        {
+                            float tipHue = (_time * 0.4f + i * 0.15f) % 1f;
+                            Color tipColor = Color.HSVToRGB(tipHue, 0.7f, 1f);
+                            tipColor.a = 0.9f;
+                            tipSr.color = tipColor;
+                        }
                     }
                 }
             }
@@ -231,9 +250,15 @@ namespace NeuralBreak.Entities
                     _lightning[i].SetPosition(2, mid2);
                     _lightning[i].SetPosition(3, end);
 
+                    // Rainbow color shifting like original TypeScript
+                    float lightningHue = (_time * 0.6f + i * 0.12f) % 1f;
+                    Color lightningRainbow = Color.HSVToRGB(lightningHue, 1f, 0.9f);
+
                     // Flicker
-                    float alpha = Random.Range(0.3f, 0.8f);
-                    _lightning[i].startColor = new Color(_lightningColor.r, _lightningColor.g, _lightningColor.b, alpha);
+                    float alpha = 0.5f + Mathf.Sin(_time * 25f + i * 2f) * 0.4f;
+                    lightningRainbow.a = alpha;
+                    _lightning[i].startColor = lightningRainbow;
+                    _lightning[i].endColor = new Color(lightningRainbow.r, lightningRainbow.g, lightningRainbow.b, alpha * 0.3f);
                 }
             }
         }

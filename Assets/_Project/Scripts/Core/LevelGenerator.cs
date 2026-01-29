@@ -1,4 +1,5 @@
 using UnityEngine;
+using NeuralBreak.Config;
 
 namespace NeuralBreak.Core
 {
@@ -12,7 +13,14 @@ namespace NeuralBreak.Core
     /// </summary>
     public static class LevelGenerator
     {
-        public const int TOTAL_LEVELS = 99;
+        // Config-driven properties (read from GameBalanceConfig.levels)
+        public static int TOTAL_LEVELS => ConfigProvider.Balance?.levels?.totalLevels ?? 99;
+        private static float DifficultyPerLevel => ConfigProvider.Balance?.spawning?.difficultyPerLevel ?? 0.03f;
+        private static float SpawnRateScalePerLevel => ConfigProvider.Balance?.spawning?.spawnRateScalePerLevel ?? 0.992f;
+        private static float MinSpawnRateMultiplier => ConfigProvider.Balance?.spawning?.minSpawnRateMultiplier ?? 0.3f;
+        private static float EnemyHealthScale => ConfigProvider.Balance?.levels?.enemyHealthScale ?? 1.025f;
+        private static float EnemySpeedScale => ConfigProvider.Balance?.levels?.enemySpeedScale ?? 1.012f;
+        private static float EnemyDamageScale => ConfigProvider.Balance?.levels?.enemyDamageScale ?? 1.02f;
 
         // Level names that cycle through progression
         private static readonly string[] LEVEL_NAMES =
@@ -65,9 +73,10 @@ namespace NeuralBreak.Core
         /// </summary>
         private static LevelConfig GetSurpriseLevelConfig(int level)
         {
-            // Difficulty scaling
-            float difficultyScale = 1f + (level - 1) * 0.03f;
-            float spawnScale = Mathf.Max(0.3f, 1f - (level - 1) * 0.008f);
+            // Difficulty scaling (config-driven)
+            float difficultyScale = 1f + (level - 1) * DifficultyPerLevel;
+            float spawnRateDecay = 1f - SpawnRateScalePerLevel; // Convert multiplier to decay rate
+            float spawnScale = Mathf.Max(MinSpawnRateMultiplier, Mathf.Pow(SpawnRateScalePerLevel, level - 1));
 
             // Cycle through surprise types
             int surpriseType = (level / 5) % 10;
@@ -327,11 +336,11 @@ namespace NeuralBreak.Core
                 };
             }
 
-            // Difficulty scales 3% per level
-            float difficultyScale = 1f + (level - 1) * 0.03f;
+            // Difficulty scaling (config-driven)
+            float difficultyScale = 1f + (level - 1) * DifficultyPerLevel;
 
-            // Spawn rates get faster (minimum 0.3x)
-            float spawnScale = Mathf.Max(0.3f, 1f - (level - 1) * 0.008f);
+            // Spawn rates get faster (minimum from config)
+            float spawnScale = Mathf.Max(MinSpawnRateMultiplier, Mathf.Pow(SpawnRateScalePerLevel, level - 1));
 
             // Level name cycles through array
             int nameIndex = (level - 1) % LEVEL_NAMES.Length;

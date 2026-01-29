@@ -1,6 +1,7 @@
 using UnityEngine;
 using NeuralBreak.Entities;
 using NeuralBreak.Utils;
+using NeuralBreak.Config;
 
 namespace NeuralBreak.Core
 {
@@ -16,7 +17,9 @@ namespace NeuralBreak.Core
 
         [Header("Level Settings")]
         [SerializeField] private int _currentLevel = 1;
-        [SerializeField] private int _maxLevel = 99;
+
+        // Config-driven max level (read from GameBalanceConfig.levels)
+        private int MaxLevel => ConfigProvider.Balance?.levels?.totalLevels ?? 99;
 
         [Header("References")]
         [SerializeField] private EnemySpawner _enemySpawner;
@@ -33,7 +36,6 @@ namespace NeuralBreak.Core
 
         // Public accessors
         public int CurrentLevel => _currentLevel;
-        public int MaxLevel => _maxLevel;
         public string CurrentLevelName => _currentConfig?.name ?? $"Level {_currentLevel}";
         public LevelProgress CurrentProgress => _currentProgress;
         public bool ObjectivesComplete => _objectivesComplete;
@@ -156,7 +158,7 @@ namespace NeuralBreak.Core
         /// </summary>
         public void StartAtLevel(int level)
         {
-            _currentLevel = Mathf.Clamp(level, 1, _maxLevel);
+            _currentLevel = Mathf.Clamp(level, 1, MaxLevel);
             _totalElapsedTime = 0;
             ResetProgress();
             LoadLevelConfig(_currentLevel);
@@ -216,7 +218,7 @@ namespace NeuralBreak.Core
         /// </summary>
         public void AdvanceLevel()
         {
-            if (_currentLevel >= _maxLevel)
+            if (_currentLevel >= MaxLevel)
             {
                 // Game complete!
                 EventBus.Publish(new GameCompletedEvent
@@ -290,7 +292,7 @@ namespace NeuralBreak.Core
         /// </summary>
         public bool IsGameComplete()
         {
-            return _currentLevel >= _maxLevel && _objectivesComplete;
+            return _currentLevel >= MaxLevel && _objectivesComplete;
         }
 
         #endregion

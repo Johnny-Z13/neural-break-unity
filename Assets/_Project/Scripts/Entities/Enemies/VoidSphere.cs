@@ -54,6 +54,7 @@ namespace NeuralBreak.Entities
         private float _chargeTimer;
         private bool _isCharging;
         private bool _visualsGenerated;
+        private float _baseScale; // Store the config-based scale
 
         protected override void OnInitialize()
         {
@@ -63,6 +64,9 @@ namespace NeuralBreak.Entities
             _isFiringBurst = false;
             _pulsatePhase = Random.Range(0f, Mathf.PI * 2f);
             _isCharging = false;
+
+            // Cache the base scale set by EnemyBase (collisionRadius * 2)
+            _baseScale = _collisionRadius * 2f;
 
             // Generate procedural visuals if not yet done
             if (!_visualsGenerated)
@@ -106,8 +110,8 @@ namespace NeuralBreak.Entities
         private void UpdatePulsate()
         {
             _pulsatePhase += Time.deltaTime * _pulsateSpeed;
-            float scale = 1f + Mathf.Sin(_pulsatePhase) * _pulsateAmount;
-            transform.localScale = Vector3.one * scale;
+            float pulseFactor = 1f + Mathf.Sin(_pulsatePhase) * _pulsateAmount;
+            transform.localScale = Vector3.one * _baseScale * pulseFactor;
 
             // Inner glow intensity
             if (_innerGlow != null)

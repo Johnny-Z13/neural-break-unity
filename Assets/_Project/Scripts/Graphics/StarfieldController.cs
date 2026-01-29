@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Rendering;
 using NeuralBreak.Core;
+using NeuralBreak.Config;
 
 namespace NeuralBreak.Graphics
 {
@@ -10,14 +11,15 @@ namespace NeuralBreak.Graphics
     /// motion trails, and nebula clouds.
     /// Based on TypeScript Starfield.ts.
     /// Refactored to use sub-systems for cleaner separation of concerns.
+    /// Locked to world origin (0,0,0) - does not follow camera.
     /// </summary>
     public class StarfieldController : MonoBehaviour
     {
-
         [Header("Star Configuration")]
         [SerializeField] private int _starCount = 400;
         [SerializeField] private float _starFieldDepth = 100f;
         [SerializeField] private float _starFieldRadius = 50f;
+        [SerializeField] private bool _autoSizeToArena = true;
         [SerializeField] private float _speed = 2f;
         [SerializeField] private float _minSpeed = 0.5f;
         [SerializeField] private float _maxSpeed = 10f;
@@ -67,6 +69,7 @@ namespace NeuralBreak.Graphics
         private NebulaSystem _nebulaSystem;
         private StarGridRenderer _gridRenderer;
         private ScanlineEffect _scanlineEffect;
+        private StarTrailRenderer _trailRenderer;
 
         // Constants for star simulation
         private const float SPEED_MULTIPLIER = 10f;
@@ -100,6 +103,17 @@ namespace NeuralBreak.Graphics
 
         private void Start()
         {
+            // Lock position to world origin
+            transform.position = Vector3.zero;
+
+            // Auto-size starfield to cover arena boundary
+            if (_autoSizeToArena)
+            {
+                float arenaRadius = ConfigProvider.Player?.arenaRadius ?? 30f;
+                // Make starfield radius larger than arena to ensure full coverage
+                _starFieldRadius = arenaRadius * 1.5f;
+            }
+
             CreateParticleSystem();
             InitializeStars();
 
@@ -129,6 +143,12 @@ namespace NeuralBreak.Graphics
             if (_enableScanlines)
             {
                 _scanlineEffect = new ScanlineEffect(transform, _scanlineIntensity);
+            }
+
+            // Create trail renderer for motion trails
+            if (_enableTrails)
+            {
+                _trailRenderer = gameObject.AddComponent<StarTrailRenderer>();
             }
 
             SubscribeToEvents();
@@ -208,21 +228,33 @@ namespace NeuralBreak.Graphics
 
         private void UpdateParticles()
         {
-            Camera cam = Camera.main;
-            if (cam == null) return;
+            // Clear trails for this frame
+            if (_trailRenderer != null)
+            {
+                _trailRenderer.ClearTrails();
+            }
 
-            Vector3 camPos = cam.transform.position;
+            // Use world origin since starfield is locked to 0,0,0
+            Vector3 origin = Vector3.zero;
 
             for (int i = 0; i < _stars.Length; i++)
             {
                 ref Star star = ref _stars[i];
 
-                // Calculate world position (allocation-free)
+                // Calculate world position (allocation-free, locked to origin)
                 Vector3 worldPos = _optimizer.CalculateWorldPosition(
                     star.position,
                     star.z,
                     _starFieldDepth,
-                    camPos
+                    origin
+                );
+
+                // Calculate previous world position for trails
+                Vector3 prevWorldPos = _optimizer.CalculateWorldPosition(
+                    star.previousPosition,
+                    star.z + _speed * SPEED_MULTIPLIER * Time.deltaTime, // Approximate previous z
+                    _starFieldDepth,
+                    origin
                 );
 
                 // Depth-based size and brightness
@@ -235,11 +267,10 @@ namespace NeuralBreak.Graphics
                     (1f - depthFactor * TWINKLE_DEPTH_DAMPING);
                 float brightness = Mathf.Min(1f, depthFactor * twinkle);
 
-                // Trail effect
-                if (_enableTrails && _speed > 1f)
+                // Add motion trail for close/fast stars
+                if (_enableTrails && _trailRenderer != null && _speed > 0.5f)
                 {
-                    float trailFactor = Mathf.Min(_trailLength * (_speed / _maxSpeed), 0.5f);
-                    _particles[i].rotation = Mathf.Atan2(star.position.y, star.position.x) * Mathf.Rad2Deg;
+                    _trailRenderer.AddTrail(worldPos, prevWorldPos, depthFactor, star.color, _speed);
                 }
 
                 // Set particle (allocation-free color)

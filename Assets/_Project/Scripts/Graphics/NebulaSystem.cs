@@ -1,10 +1,12 @@
 using UnityEngine;
+using NeuralBreak.Config;
 
 namespace NeuralBreak.Graphics
 {
     /// <summary>
     /// Manages nebula particle effects for starfield background.
     /// Creates drifting, pulsing nebula clouds with color gradients.
+    /// Auto-sizes to match arena boundary.
     /// </summary>
     public class NebulaSystem
     {
@@ -14,6 +16,7 @@ namespace NeuralBreak.Graphics
         private readonly float _nebulaSize;
         private readonly float _nebulaIntensity;
         private readonly float _nebulaMoveSpeed;
+        private readonly float _arenaRadius;
 
         private float _time;
 
@@ -44,6 +47,9 @@ namespace NeuralBreak.Graphics
             _nebulaMoveSpeed = nebulaMoveSpeed;
             _optimizer = optimizer;
 
+            // Get arena radius for positioning
+            _arenaRadius = ConfigProvider.Player?.arenaRadius ?? 30f;
+
             _nebulaObjects = new GameObject[_nebulaCount];
 
             CreateNebulae(parent, starFieldDepth);
@@ -54,6 +60,10 @@ namespace NeuralBreak.Graphics
         /// </summary>
         private void CreateNebulae(Transform parent, float starFieldDepth)
         {
+            // Scale nebula spread to arena size
+            float spreadX = _arenaRadius * 1.2f;
+            float spreadY = _arenaRadius * 0.6f;
+
             for (int i = 0; i < _nebulaCount; i++)
             {
                 GameObject nebula = GameObject.CreatePrimitive(PrimitiveType.Quad);
@@ -63,10 +73,10 @@ namespace NeuralBreak.Graphics
                 // Remove collider
                 Object.Destroy(nebula.GetComponent<Collider>());
 
-                // Position far in background
+                // Position far in background, scaled to arena
                 nebula.transform.localPosition = new Vector3(
-                    Random.Range(-20f, 20f),
-                    Random.Range(-10f, 10f),
+                    Random.Range(-spreadX, spreadX),
+                    Random.Range(-spreadY, spreadY),
                     starFieldDepth * DEPTH_FACTOR
                 );
                 nebula.transform.localScale = Vector3.one * _nebulaSize;

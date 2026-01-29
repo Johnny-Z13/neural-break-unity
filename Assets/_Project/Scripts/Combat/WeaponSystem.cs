@@ -61,7 +61,9 @@ namespace NeuralBreak.Combat
         public int PowerLevel => _powerLevel;
         public int MaxPowerLevel => Config?.powerLevels?.maxLevel ?? 10;
         public ForwardFirePattern CurrentPattern => GetCurrentPattern();
-        public bool HasRearWeapon => _rearWeaponActive || (Config?.rearWeapon?.enabled ?? false);
+        public bool HasRearWeapon => _rearWeaponActive ||
+                                      (Config?.rearWeapon?.enabled ?? false) ||
+                                      (_permanentUpgrades?.GetCombinedModifiers().enableRearFire ?? false);
 
         #endregion
 
@@ -135,7 +137,8 @@ namespace NeuralBreak.Combat
 
             var collider = projectileGO.AddComponent<CircleCollider2D>();
             collider.isTrigger = true;
-            collider.radius = 0.1f;
+            // Initial radius from config (will be updated in Initialize() with power level scaling)
+            collider.radius = ConfigProvider.WeaponSystem?.projectileSize ?? 0.15f;
 
             var sr = projectileGO.AddComponent<SpriteRenderer>();
             sr.sprite = Graphics.SpriteGenerator.CreateCircle(32, new Color(0.2f, 0.9f, 1f), "ProjectileSprite");
@@ -169,7 +172,8 @@ namespace NeuralBreak.Combat
 
             var collider = projectileGO.AddComponent<CircleCollider2D>();
             collider.isTrigger = true;
-            collider.radius = 0.15f;
+            // Initial radius from config (will be updated in Initialize() with power level scaling)
+            collider.radius = ConfigProvider.WeaponSystem?.projectileSize ?? 0.15f;
 
             var sr = projectileGO.AddComponent<SpriteRenderer>();
             sr.sprite = Graphics.SpriteGenerator.CreateCircle(32, new Color(0.2f, 0.9f, 1f), "EnhancedProjectileSprite");
@@ -322,6 +326,9 @@ namespace NeuralBreak.Combat
             // Normal projectile firing
             ForwardFirePattern pattern = GetCurrentPattern();
 
+            // Get spread angle modifier from upgrades
+            float spreadAngleModifier = modifiers.spreadAngleAdd;
+
             // Fire based on pattern
             switch (pattern)
             {
@@ -329,21 +336,29 @@ namespace NeuralBreak.Combat
                     FireSingle(basePos, direction, damage);
                     break;
                 case ForwardFirePattern.Double:
-                    FireDouble(basePos, direction, damage);
+                    FireDouble(basePos, direction, damage, spreadAngleModifier);
                     break;
                 case ForwardFirePattern.Triple:
-                    FireTriple(basePos, direction, damage);
+                    FireTriple(basePos, direction, damage, spreadAngleModifier);
                     break;
                 case ForwardFirePattern.Quad:
-                    FireQuad(basePos, direction, damage);
+                    FireQuad(basePos, direction, damage, spreadAngleModifier);
                     break;
                 case ForwardFirePattern.X5:
-                    FireX5(basePos, direction, damage);
+                    FireX5(basePos, direction, damage, spreadAngleModifier);
                     break;
             }
 
-            // Fire rear weapon if synced
-            if (HasRearWeapon && (Config?.rearWeapon?.syncWithForward ?? true))
+            // Fire additional projectiles from upgrades (spread evenly)
+            int additionalProjectiles = modifiers.additionalProjectiles;
+            if (additionalProjectiles > 0)
+            {
+                FireAdditionalProjectiles(basePos, direction, damage, additionalProjectiles);
+            }
+
+            // Fire rear weapon if synced OR if enableRearFire modifier is active
+            bool hasRear = HasRearWeapon || modifiers.enableRearFire;
+            if (hasRear && (Config?.rearWeapon?.syncWithForward ?? true))
             {
                 FireRear();
             }
@@ -361,6 +376,23 @@ namespace NeuralBreak.Combat
                 direction = direction,
                 powerLevel = _powerLevel
             });
+        }
+
+        /// <summary>
+        /// Fire additional projectiles from upgrades, spread evenly around the main direction.
+        /// </summary>
+        private void FireAdditionalProjectiles(Vector2 position, Vector2 direction, int damage, int count)
+        {
+            float baseAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+            float spreadPerProjectile = 15f; // degrees between each additional projectile
+
+            for (int i = 0; i < count; i++)
+            {
+                // Alternate left and right of main direction
+                float offset = ((i / 2) + 1) * spreadPerProjectile;
+                float angle = (i % 2 == 0) ? baseAngle + offset : baseAngle - offset;
+                FireProjectileAtAngle(position, angle, damage);
+            }
         }
 
         private void FireBeam(Vector2 position, Vector2 direction, int damage, WeaponModifiers modifiers)
@@ -396,9 +428,9 @@ namespace NeuralBreak.Combat
             FireProjectile(position, direction, damage);
         }
 
-        private void FireDouble(Vector2 position, Vector2 direction, int damage)
+        private void FireDouble(Vector2 position, Vector2 direction, int damage, float spreadMod = 0f)
         {
-            float spreadAngle = Config?.forwardWeapon?.doubleSpreadAngle ?? 15f;
+            float spreadAngle = (Config?.forwardWeapon?.doubleSpreadAngle ?? 15f) + spreadMod;
             float baseAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
 
             // Two projectiles with slight spread
@@ -406,9 +438,9 @@ namespace NeuralBreak.Combat
             FireProjectileAtAngle(position, baseAngle + spreadAngle / 2f, damage);
         }
 
-        private void FireTriple(Vector2 position, Vector2 direction, int damage)
+        private void FireTriple(Vector2 position, Vector2 direction, int damage, float spreadMod = 0f)
         {
-            float spreadAngle = Config?.forwardWeapon?.tripleSpreadAngle ?? 30f;
+            float spreadAngle = (Config?.forwardWeapon?.tripleSpreadAngle ?? 30f) + spreadMod;
             float baseAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
 
             // Center projectile
@@ -419,9 +451,9 @@ namespace NeuralBreak.Combat
             FireProjectileAtAngle(position, baseAngle + spreadAngle / 2f, damage);
         }
 
-        private void FireQuad(Vector2 position, Vector2 direction, int damage)
+        private void FireQuad(Vector2 position, Vector2 direction, int damage, float spreadMod = 0f)
         {
-            float spreadAngle = Config?.forwardWeapon?.quadSpreadAngle ?? 45f;
+            float spreadAngle = (Config?.forwardWeapon?.quadSpreadAngle ?? 45f) + spreadMod;
             float baseAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
             float step = spreadAngle / 3f;
 
@@ -432,9 +464,9 @@ namespace NeuralBreak.Combat
             FireProjectileAtAngle(position, baseAngle + spreadAngle / 2f, damage);
         }
 
-        private void FireX5(Vector2 position, Vector2 direction, int damage)
+        private void FireX5(Vector2 position, Vector2 direction, int damage, float spreadMod = 0f)
         {
-            float spreadAngle = Config?.forwardWeapon?.x5SpreadAngle ?? 60f;
+            float spreadAngle = (Config?.forwardWeapon?.x5SpreadAngle ?? 60f) + spreadMod;
             float baseAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
             float step = spreadAngle / 4f;
 
@@ -636,10 +668,22 @@ namespace NeuralBreak.Combat
                 multiplier *= Config?.modifiers?.damageBoostMultiplier ?? 2f;
             }
 
-            // Apply PERMANENT damage multiplier (NEW)
+            // Apply PERMANENT damage multiplier
             if (_permanentUpgrades != null)
             {
-                multiplier *= _permanentUpgrades.GetCombinedModifiers().damageMultiplier;
+                var modifiers = _permanentUpgrades.GetCombinedModifiers();
+                multiplier *= modifiers.damageMultiplier;
+
+                // Apply critical hit chance
+                if (modifiers.criticalChance > 0f)
+                {
+                    if (Random.value < modifiers.criticalChance)
+                    {
+                        float critMultiplier = modifiers.criticalMultiplier > 0f ? modifiers.criticalMultiplier : 2f;
+                        multiplier *= critMultiplier;
+                        // Could publish a CriticalHitEvent here for VFX
+                    }
+                }
             }
 
             return Mathf.RoundToInt(baseDamage * multiplier);

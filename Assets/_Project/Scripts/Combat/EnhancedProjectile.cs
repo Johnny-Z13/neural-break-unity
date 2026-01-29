@@ -16,7 +16,8 @@ namespace NeuralBreak.Combat
     public class EnhancedProjectile : MonoBehaviour
     {
         [Header("Settings")]
-        [SerializeField] private float _baseRadius = 0.15f;
+        // Base radius now read from ConfigProvider.WeaponSystem.projectileSize
+        private float _baseRadius;
 
         [Header("Visuals")]
         [SerializeField] private SpriteRenderer _spriteRenderer;
@@ -58,7 +59,7 @@ namespace NeuralBreak.Combat
             _collider = GetComponent<CircleCollider2D>();
             if (_collider == null) _collider = gameObject.AddComponent<CircleCollider2D>();
             _collider.isTrigger = true;
-            _collider.radius = _baseRadius;
+            // Collider radius will be set in Initialize() from config
 
             // Setup sprite
             if (_spriteRenderer == null) _spriteRenderer = GetComponent<SpriteRenderer>();
@@ -165,8 +166,21 @@ namespace NeuralBreak.Combat
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
             transform.rotation = Quaternion.Euler(0, 0, angle - 90f);
 
-            // Apply size modifier
-            float visualScale = _baseRadius * (1f + powerLevel * 0.1f) * 3f * modifiers.projectileSizeMultiplier;
+            // Get projectile size from config
+            _baseRadius = ConfigProvider.WeaponSystem?.projectileSize ?? 0.15f;
+
+            // Apply projectile size per level scaling from config
+            float sizePerLevel = ConfigProvider.WeaponSystem?.powerLevels?.projectileSizePerLevel ?? 0.01f;
+            float scaledRadius = _baseRadius * (1f + powerLevel * sizePerLevel) * modifiers.projectileSizeMultiplier;
+
+            // Update collider radius
+            if (_collider != null)
+            {
+                _collider.radius = scaledRadius;
+            }
+
+            // Visual scale - use config-based radius with visual multiplier
+            float visualScale = scaledRadius * 3f;
             transform.localScale = Vector3.one * visualScale;
 
             // Update visuals
@@ -292,7 +306,31 @@ namespace NeuralBreak.Combat
 
             if (other.CompareTag("Enemy"))
             {
-                var enemy = other.GetComponent<EnemyBase>();
+                EnemyBase enemy = null;
+
+                // First try EnemyBase (standard enemies)
+                enemy = other.GetComponent<EnemyBase>();
+
+                // If not found, try WormSegment (ChaosWorm body segments)
+                if (enemy == null)
+                {
+                    var wormSegment = other.GetComponent<WormSegment>();
+                    if (wormSegment != null)
+                    {
+                        // Forward damage to worm segment (which forwards to parent)
+                        wormSegment.TakeDamage(_damage, transform.position);
+
+                        // For behaviors, we need to get the actual enemy
+                        // WormSegment doesn't expose parent, so just handle destruction
+                        bool hasPiercing = HasBehavior<PiercingBehavior>();
+                        if (!hasPiercing)
+                        {
+                            Deactivate();
+                        }
+                        return;
+                    }
+                }
+
                 if (enemy != null && enemy.IsAlive)
                 {
                     // Apply base damage

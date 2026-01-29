@@ -65,6 +65,7 @@ namespace NeuralBreak.Graphics
             EventBus.Subscribe<EnemyKilledEvent>(OnEnemyKilled);
             EventBus.Subscribe<EnemyDamagedEvent>(OnEnemyDamaged);
             EventBus.Subscribe<PlayerDamagedEvent>(OnPlayerDamaged);
+            EventBus.Subscribe<PlayerDiedEvent>(OnPlayerDied);
             EventBus.Subscribe<PlayerHealedEvent>(OnPlayerHealed);
             EventBus.Subscribe<ShieldChangedEvent>(OnShieldChanged);
             EventBus.Subscribe<PickupCollectedEvent>(OnPickupCollected);
@@ -75,6 +76,16 @@ namespace NeuralBreak.Graphics
 
         private void OnGameStarted(GameStartedEvent evt)
         {
+            // Re-enable player sprite if it was hidden from death
+            if (_playerTransform != null)
+            {
+                var spriteRenderer = _playerTransform.GetComponent<SpriteRenderer>();
+                if (spriteRenderer != null)
+                {
+                    spriteRenderer.enabled = true;
+                }
+            }
+
             // Clear cached player reference on new game
             _playerTransform = null;
         }
@@ -84,6 +95,7 @@ namespace NeuralBreak.Graphics
             EventBus.Unsubscribe<EnemyKilledEvent>(OnEnemyKilled);
             EventBus.Unsubscribe<EnemyDamagedEvent>(OnEnemyDamaged);
             EventBus.Unsubscribe<PlayerDamagedEvent>(OnPlayerDamaged);
+            EventBus.Unsubscribe<PlayerDiedEvent>(OnPlayerDied);
             EventBus.Unsubscribe<PlayerHealedEvent>(OnPlayerHealed);
             EventBus.Unsubscribe<ShieldChangedEvent>(OnShieldChanged);
             EventBus.Unsubscribe<PickupCollectedEvent>(OnPickupCollected);
@@ -127,6 +139,23 @@ namespace NeuralBreak.Graphics
         private void OnPlayerDamaged(PlayerDamagedEvent evt)
         {
             PlayEffect(_playerHitPrefab, evt.damageSource, Color.red);
+        }
+
+        private void OnPlayerDied(PlayerDiedEvent evt)
+        {
+            // Big explosion at player death location
+            PlayExplosion(evt.position, ExplosionSize.Boss, Color.cyan);
+
+            // Hide player ship
+            CachePlayerTransform();
+            if (_playerTransform != null)
+            {
+                var spriteRenderer = _playerTransform.GetComponent<SpriteRenderer>();
+                if (spriteRenderer != null)
+                {
+                    spriteRenderer.enabled = false;
+                }
+            }
         }
 
         private void OnPlayerHealed(PlayerHealedEvent evt)

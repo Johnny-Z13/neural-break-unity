@@ -125,12 +125,13 @@ namespace NeuralBreak.UI
                     break;
 
                 case GameStateType.GameOver:
-                    ShowScreen(_gameOverScreen);
+                    // StatisticsScreen handles its own visibility via GameOverEvent
+                    // Don't show _gameOverScreen to avoid duplicate "GAME OVER" text
                     SetHUDVisible(false);
                     break;
 
                 case GameStateType.Victory:
-                    ShowScreen(_gameOverScreen); // Reuse game over screen for victory
+                    // StatisticsScreen handles its own visibility via VictoryEvent
                     SetHUDVisible(false);
                     break;
             }

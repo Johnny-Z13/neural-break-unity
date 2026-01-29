@@ -1,6 +1,7 @@
 using UnityEngine;
 using NeuralBreak.Core;
 using NeuralBreak.Combat;
+using NeuralBreak.Config;
 
 namespace NeuralBreak.Entities
 {
@@ -12,14 +13,22 @@ namespace NeuralBreak.Entities
     public abstract class PickupBase : MonoBehaviour
     {
         [Header("Pickup Settings")]
-        [SerializeField] protected float _lifetime = 30f;
         [SerializeField] protected float _flashStartTime = 5f;
         [SerializeField] protected float _flashSpeed = 10f;
 
-        [Header("Magnetism")]
-        [SerializeField] protected float _magnetRadius = 5f;
-        [SerializeField] protected float _magnetStrength = 16f;
-        [SerializeField] protected float _maxMagnetSpeed = 18f;
+        // Config-driven properties (read from GameBalanceConfig based on pickup type)
+        protected float Lifetime => GetPickupConfig()?.lifetime ?? 15f;
+        protected float MagnetRadius => GetPickupConfig()?.magnetRadius ?? 5f;
+        protected float MagnetStrength => GetPickupConfig()?.magnetStrength ?? 16f;
+        protected float MaxMagnetSpeed => GetPickupConfig()?.maxMagnetSpeed ?? 18f;
+
+        /// <summary>
+        /// Get config for this pickup type from GameBalanceConfig
+        /// </summary>
+        protected virtual PickupConfig GetPickupConfig()
+        {
+            return ConfigProvider.Balance?.GetPickupConfig(PickupType);
+        }
 
         [Header("Collection")]
         [SerializeField] protected float _collectionRadius = 1f;
@@ -66,17 +75,18 @@ namespace NeuralBreak.Entities
                 return;
             }
 
-            if (_lifetime <= 0)
+            float lifetime = Lifetime;
+            if (lifetime <= 0)
             {
-                Debug.LogWarning($"[PickupBase] Invalid lifetime: {_lifetime}. Using default of 30s.");
-                _lifetime = 30f;
+                Debug.LogWarning($"[PickupBase] Invalid lifetime: {lifetime}. Using default of 15s.");
+                lifetime = 15f;
             }
 
             transform.position = position;
             _startPosition = position;
             _playerTarget = playerTarget;
             _returnToPoolCallback = returnCallback;
-            _lifeTimer = _lifetime;
+            _lifeTimer = lifetime;
             _isCollected = false;
             _bobPhase = Random.Range(0f, Mathf.PI * 2f);
 
@@ -148,18 +158,19 @@ namespace NeuralBreak.Entities
             if (_playerTarget == null) return;
 
             float distance = Vector2.Distance(transform.position, _playerTarget.position);
+            float magnetRadius = MagnetRadius;
 
-            if (distance <= _magnetRadius && distance > 0.01f)
+            if (distance <= magnetRadius && distance > 0.01f)
             {
                 // Calculate pull strength (stronger when closer)
-                float pullFactor = 1f - (distance / _magnetRadius);
+                float pullFactor = 1f - (distance / magnetRadius);
                 pullFactor = pullFactor * pullFactor; // Quadratic falloff
 
                 // Direction to player
                 Vector2 direction = ((Vector2)_playerTarget.position - (Vector2)transform.position).normalized;
 
-                // Apply magnetism
-                float pullSpeed = Mathf.Min(_magnetStrength * pullFactor, _maxMagnetSpeed);
+                // Apply magnetism (config-driven)
+                float pullSpeed = Mathf.Min(MagnetStrength * pullFactor, MaxMagnetSpeed);
                 transform.position = (Vector2)transform.position + direction * pullSpeed * Time.deltaTime;
             }
         }
@@ -285,9 +296,9 @@ namespace NeuralBreak.Entities
             Gizmos.color = Color.green;
             Gizmos.DrawWireSphere(transform.position, _collectionRadius);
 
-            // Magnet radius
+            // Magnet radius (config-driven)
             Gizmos.color = Color.cyan;
-            Gizmos.DrawWireSphere(transform.position, _magnetRadius);
+            Gizmos.DrawWireSphere(transform.position, MagnetRadius);
         }
 
         #endregion

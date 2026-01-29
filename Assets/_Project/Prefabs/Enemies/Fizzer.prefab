@@ -270,3 +270,4 @@ MonoBehaviour:
   _trailRenderer: {fileID: 0}
   _visuals: {fileID: 0}
   _electricColor: {r: 0.2, g: 1, b: 0.5, a: 1}
+  _enableVaporTrail: 1

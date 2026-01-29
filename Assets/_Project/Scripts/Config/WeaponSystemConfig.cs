@@ -29,7 +29,7 @@ namespace NeuralBreak.Config
         public float projectileLifetime = 1.7f;
 
         [Tooltip("Visual size of projectiles")]
-        public float projectileSize = 0.15f;
+        public float projectileSize = 0.075f;
 
         [Header("=== FORWARD WEAPON PATTERNS ===")]
         public ForwardWeaponConfig forwardWeapon;

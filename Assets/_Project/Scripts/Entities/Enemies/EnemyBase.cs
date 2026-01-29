@@ -401,7 +401,45 @@ namespace NeuralBreak.Entities
 
         protected virtual void OnStateChanged(EnemyState newState)
         {
-            // Override for state-specific visuals
+            // Hide sprite immediately when dying (VFX handles the visual)
+            if (newState == EnemyState.Dying)
+            {
+                HideVisuals();
+            }
+            else if (newState == EnemyState.Spawning || newState == EnemyState.Alive)
+            {
+                ShowVisuals();
+            }
+        }
+
+        /// <summary>
+        /// Hide enemy visuals (called when entering Dying state)
+        /// </summary>
+        protected virtual void HideVisuals()
+        {
+            var sr = GetComponent<SpriteRenderer>();
+            if (sr != null) sr.enabled = false;
+
+            // Also hide any child renderers
+            foreach (var childSR in GetComponentsInChildren<SpriteRenderer>())
+            {
+                childSR.enabled = false;
+            }
+        }
+
+        /// <summary>
+        /// Show enemy visuals (called when spawning/alive)
+        /// </summary>
+        protected virtual void ShowVisuals()
+        {
+            var sr = GetComponent<SpriteRenderer>();
+            if (sr != null) sr.enabled = true;
+
+            // Also show any child renderers
+            foreach (var childSR in GetComponentsInChildren<SpriteRenderer>())
+            {
+                childSR.enabled = true;
+            }
         }
 
         #endregion
@@ -504,6 +542,9 @@ namespace NeuralBreak.Entities
         {
             _state = EnemyState.Dead;
             _playerTarget = null;
+
+            // Re-enable visuals for next spawn
+            ShowVisuals();
 
             // Reset elite modifier
             var eliteModifier = GetComponent<EliteModifier>();

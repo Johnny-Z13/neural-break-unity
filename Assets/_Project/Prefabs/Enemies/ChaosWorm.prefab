@@ -141,7 +141,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 91dd1c02baa412a45ba7c3fbecda29a0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Entities.ChaosWorm
-  _maxHealth: 1
+  _maxHealth: 100
   _speed: 1.5
   _damage: 5
   _xpValue: 1

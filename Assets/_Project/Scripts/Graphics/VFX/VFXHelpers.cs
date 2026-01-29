@@ -8,6 +8,46 @@ namespace NeuralBreak.Graphics.VFX
     /// </summary>
     public static class VFXHelpers
     {
+        // Cached soft particle texture (generated once, reused)
+        private static Texture2D _softParticleTexture;
+
+        /// <summary>
+        /// Gets or creates a soft circular particle texture for proper particle rendering.
+        /// </summary>
+        public static Texture2D GetSoftParticleTexture()
+        {
+            if (_softParticleTexture != null) return _softParticleTexture;
+
+            int size = 64;
+            _softParticleTexture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            _softParticleTexture.filterMode = FilterMode.Bilinear;
+            _softParticleTexture.wrapMode = TextureWrapMode.Clamp;
+
+            Color[] pixels = new Color[size * size];
+            float center = size / 2f;
+            float maxDist = size / 2f;
+
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float dx = x - center;
+                    float dy = y - center;
+                    float dist = Mathf.Sqrt(dx * dx + dy * dy);
+
+                    // Soft falloff from center
+                    float alpha = 1f - Mathf.Clamp01(dist / maxDist);
+                    alpha = alpha * alpha; // Quadratic falloff for softer edges
+
+                    pixels[y * size + x] = new Color(1f, 1f, 1f, alpha);
+                }
+            }
+
+            _softParticleTexture.SetPixels(pixels);
+            _softParticleTexture.Apply();
+            return _softParticleTexture;
+        }
+
         /// <summary>
         /// Creates a base particle system with common defaults for 2D effects.
         /// </summary>
@@ -84,11 +124,19 @@ namespace NeuralBreak.Graphics.VFX
 
         /// <summary>
         /// Creates a material instance with the specified color and emission.
+        /// Assigns a soft circular particle texture to avoid quad rendering.
         /// </summary>
         public static Material CreateMaterialForColor(Material baseMaterial, Color color, float emissionIntensity)
         {
             var mat = new Material(baseMaterial);
             Color emissiveColor = color * emissionIntensity;
+
+            // Assign soft particle texture to avoid quad rendering
+            var softTexture = GetSoftParticleTexture();
+            if (mat.HasProperty("_BaseMap"))
+                mat.SetTexture("_BaseMap", softTexture);
+            if (mat.HasProperty("_MainTex"))
+                mat.SetTexture("_MainTex", softTexture);
 
             mat.SetColor("_BaseColor", emissiveColor);
             mat.SetColor("_Color", emissiveColor);

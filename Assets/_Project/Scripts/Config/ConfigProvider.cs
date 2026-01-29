@@ -186,7 +186,7 @@ namespace NeuralBreak.Config
                 baseFireRate = 0.12f,
                 baseProjectileSpeed = 22f,
                 projectileLifetime = 1.7f,
-                projectileSize = 0.15f,
+                projectileSize = 0.075f,
                 forwardWeapon = new ForwardWeaponConfig
                 {
                     pattern = ForwardFirePattern.Single,
