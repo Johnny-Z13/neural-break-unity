@@ -50,33 +50,42 @@ namespace NeuralBreak.UI
         private bool _isLevelingUp;
         private Coroutine _levelUpCoroutine;
 
+        // Cached reference - avoids FindFirstObjectByType every frame!
+        private PlayerLevelSystem _levelSystem;
+
         private void Start()
         {
             CreateUI();
+            CacheReferences();
 
-            if (FindFirstObjectByType<PlayerLevelSystem>() != null)
+            if (_levelSystem != null)
             {
-                FindFirstObjectByType<PlayerLevelSystem>().OnXPChanged += OnXPChanged;
-                FindFirstObjectByType<PlayerLevelSystem>().OnLevelUp += OnLevelUp;
+                _levelSystem.OnXPChanged += OnXPChanged;
+                _levelSystem.OnLevelUp += OnLevelUp;
 
                 // Initialize with current values
                 UpdateDisplay(
-                    FindFirstObjectByType<PlayerLevelSystem>().CurrentXP,
-                    FindFirstObjectByType<PlayerLevelSystem>().XPForCurrentLevel,
-                    FindFirstObjectByType<PlayerLevelSystem>().CurrentLevel
+                    _levelSystem.CurrentXP,
+                    _levelSystem.XPForCurrentLevel,
+                    _levelSystem.CurrentLevel
                 );
             }
 
             EventBus.Subscribe<GameStartedEvent>(OnGameStarted);
         }
 
+        private void CacheReferences()
+        {
+            if (_levelSystem == null)
+                _levelSystem = FindFirstObjectByType<PlayerLevelSystem>();
+        }
+
         private void OnDestroy()
         {
-            var levelSystem = FindFirstObjectByType<PlayerLevelSystem>();
-            if (levelSystem != null)
+            if (_levelSystem != null)
             {
-                levelSystem.OnXPChanged -= OnXPChanged;
-                levelSystem.OnLevelUp -= OnLevelUp;
+                _levelSystem.OnXPChanged -= OnXPChanged;
+                _levelSystem.OnLevelUp -= OnLevelUp;
             }
 
             EventBus.Unsubscribe<GameStartedEvent>(OnGameStarted);
@@ -314,11 +323,11 @@ namespace NeuralBreak.UI
             _currentFill = 0;
             UpdateFillBar(0);
 
-            // Update target from current system state
-            if (FindFirstObjectByType<PlayerLevelSystem>() != null)
+            // Update target from current system state (use cached reference)
+            if (_levelSystem != null)
             {
-                _targetFill = FindFirstObjectByType<PlayerLevelSystem>().LevelProgress;
-                _xpText.text = $"{FindFirstObjectByType<PlayerLevelSystem>().CurrentXP}/{FindFirstObjectByType<PlayerLevelSystem>().XPForCurrentLevel}";
+                _targetFill = _levelSystem.LevelProgress;
+                _xpText.text = $"{_levelSystem.CurrentXP}/{_levelSystem.XPForCurrentLevel}";
             }
 
             _isLevelingUp = false;

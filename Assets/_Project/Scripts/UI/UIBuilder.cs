@@ -29,7 +29,7 @@ namespace NeuralBreak.UI
         [SerializeField] private Color _customTextColor = Color.white;
 
         // Specialized builders
-        private HUDBuilder _hudBuilder;
+        private HUDBuilderArcade _hudBuilder;
         private StartScreenBuilder _startScreenBuilder;
         private PauseMenuBuilder _pauseMenuBuilder;
         private GameOverScreenBuilder _gameOverScreenBuilder;
@@ -124,7 +124,7 @@ namespace NeuralBreak.UI
 
         private void InitializeBuilders()
         {
-            _hudBuilder = new HUDBuilder(_fontAsset, _useThemeColors);
+            _hudBuilder = new HUDBuilderArcade(_fontAsset, _useThemeColors);
             _startScreenBuilder = new StartScreenBuilder(_fontAsset, _useThemeColors);
             _pauseMenuBuilder = new PauseMenuBuilder(_fontAsset, _useThemeColors);
             _gameOverScreenBuilder = new GameOverScreenBuilder(_fontAsset, _useThemeColors);

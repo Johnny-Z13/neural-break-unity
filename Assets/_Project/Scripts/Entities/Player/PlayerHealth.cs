@@ -61,13 +61,60 @@ namespace NeuralBreak.Entities
             _currentHealth = _maxHealth;
             _currentShields = Config.startingShields;
 
-            // Subscribe to upgrade changes
+            // Subscribe to events
             EventBus.Subscribe<WeaponModifiersChangedEvent>(OnModifiersChanged);
+            EventBus.Subscribe<GameStartedEvent>(OnGameStarted);
         }
 
         private void OnDestroy()
         {
             EventBus.Unsubscribe<WeaponModifiersChangedEvent>(OnModifiersChanged);
+            EventBus.Unsubscribe<GameStartedEvent>(OnGameStarted);
+        }
+
+        private void OnGameStarted(GameStartedEvent evt)
+        {
+            // Full reset on game start/restart
+            Reset();
+
+            // Reset upgrade bonuses
+            _bonusShields = 0;
+            _bonusHealth = 0;
+
+            // Re-show player (was hidden on death)
+            var spriteRenderer = GetComponent<SpriteRenderer>();
+            if (spriteRenderer != null)
+            {
+                spriteRenderer.enabled = true;
+            }
+
+            // Reset position to center
+            if (_controller != null)
+            {
+                _controller.SetPosition(Vector2.zero);
+            }
+
+            // Grant spawn invulnerability
+            if (SpawnInvulnerabilityDuration > 0)
+            {
+                _invulnerabilityTimer = SpawnInvulnerabilityDuration;
+            }
+
+            // Publish initial health state so HUD updates
+            EventBus.Publish(new PlayerHealedEvent
+            {
+                amount = 0,
+                currentHealth = _currentHealth,
+                maxHealth = _maxHealth
+            });
+
+            EventBus.Publish(new ShieldChangedEvent
+            {
+                currentShields = _currentShields,
+                maxShields = _maxShields
+            });
+
+            LogHelper.Log($"[PlayerHealth] Reset for new game. Health: {_currentHealth}/{_maxHealth}");
         }
 
         private void OnModifiersChanged(WeaponModifiersChangedEvent evt)

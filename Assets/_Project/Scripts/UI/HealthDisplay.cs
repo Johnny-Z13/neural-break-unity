@@ -49,6 +49,19 @@ namespace NeuralBreak.UI
             _targetFillAmount = 1f;
         }
 
+        private void Start()
+        {
+            // Verify health fill is properly configured
+            if (_healthFill != null)
+            {
+                // Ensure correct Image settings for fill
+                _healthFill.type = Image.Type.Filled;
+                _healthFill.fillMethod = Image.FillMethod.Horizontal;
+                _healthFill.fillOrigin = 0;
+                _healthFill.fillAmount = 1f;
+            }
+        }
+
         private void Update()
         {
             if (!_animateChanges) return;
@@ -71,12 +84,9 @@ namespace NeuralBreak.UI
 
             float percent = maxHealth > 0 ? (float)currentHealth / maxHealth : 0f;
             _targetFillAmount = percent;
+            _currentFillAmount = percent;  // Sync immediately for responsive feedback
 
-            if (!_animateChanges)
-            {
-                _currentFillAmount = percent;
-                ApplyFillAmount(percent);
-            }
+            ApplyFillAmount(percent);
 
             // Update text
             if (_healthText != null)
@@ -131,15 +141,14 @@ namespace NeuralBreak.UI
 
         private void ApplyFillAmount(float amount)
         {
-            if (_healthFill != null)
-            {
-                _healthFill.fillAmount = amount;
+            if (_healthFill == null) return;
 
-                // Apply color from gradient
-                if (_healthGradient != null)
-                {
-                    _healthFill.color = _healthGradient.Evaluate(amount);
-                }
+            _healthFill.fillAmount = amount;
+
+            // Apply color from gradient (green -> yellow -> red)
+            if (_healthGradient != null)
+            {
+                _healthFill.color = _healthGradient.Evaluate(amount);
             }
         }
 

@@ -44,8 +44,8 @@ namespace NeuralBreak.UI
                 _levelText.text = string.Format(_levelFormat, level);
             }
 
-            // Animate on level up
-            if (isLevelUp && _animateLevelUp && _levelText != null)
+            // Animate on level up (only if active)
+            if (isLevelUp && _animateLevelUp && _levelText != null && gameObject.activeInHierarchy)
             {
                 if (_animCoroutine != null)
                 {

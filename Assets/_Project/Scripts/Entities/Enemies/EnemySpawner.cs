@@ -292,13 +292,22 @@ namespace NeuralBreak.Entities
 
         private void CleanupDeadEnemies()
         {
-            _activeEnemies.RemoveAll(e => e == null || e.State == EnemyState.Dead);
+            // Use backward iteration instead of RemoveAll to avoid delegate allocation
+            for (int i = _activeEnemies.Count - 1; i >= 0; i--)
+            {
+                if (_activeEnemies[i] == null || _activeEnemies[i].State == EnemyState.Dead)
+                {
+                    _activeEnemies.RemoveAt(i);
+                }
+            }
         }
 
         public void ClearAllEnemies()
         {
-            foreach (var enemy in _activeEnemies.ToArray())
+            // Use backward iteration instead of ToArray() allocation
+            for (int i = _activeEnemies.Count - 1; i >= 0; i--)
             {
+                var enemy = _activeEnemies[i];
                 if (enemy != null)
                 {
                     enemy.KillInstant();
@@ -310,8 +319,10 @@ namespace NeuralBreak.Entities
 
         public void KillAllEnemies()
         {
-            foreach (var enemy in _activeEnemies.ToArray())
+            // Use backward iteration instead of ToArray() allocation
+            for (int i = _activeEnemies.Count - 1; i >= 0; i--)
             {
+                var enemy = _activeEnemies[i];
                 if (enemy != null && enemy.IsAlive)
                 {
                     enemy.Kill();

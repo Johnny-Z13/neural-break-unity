@@ -361,6 +361,7 @@ namespace NeuralBreak.Core
         Invulnerable,
         XP,
         Score,
+        SmartBomb,      // Adds a smart bomb to player inventory
         // Weapon upgrades
         SpreadShot,
         Piercing,

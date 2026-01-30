@@ -76,31 +76,16 @@ namespace NeuralBreak.Editor
                 Debug.LogWarning("[SetupSmartBombComplete] Could not find explosion audio clip");
             }
 
-            // 4. Verify SmartBombDisplay on MainCanvas
-            GameObject mainCanvas = GameObject.Find("MainCanvas");
-            if (mainCanvas != null)
+            // 4. BombDisplay is now created automatically by HUDBuilderArcade at runtime
+            // No need for manual MainCanvas setup - just verify UIManager exists
+            GameObject uiManager = GameObject.Find("UIManager");
+            if (uiManager != null)
             {
-                Transform smartBombDisplayTransform = mainCanvas.transform.Find("SmartBombDisplay");
-                if (smartBombDisplayTransform != null)
-                {
-                    SmartBombDisplay smartBombDisplay = smartBombDisplayTransform.GetComponent<SmartBombDisplay>();
-                    if (smartBombDisplay != null)
-                    {
-                        Debug.Log("[SetupSmartBombComplete] SmartBombDisplay component verified on MainCanvas");
-                    }
-                    else
-                    {
-                        Debug.LogWarning("[SetupSmartBombComplete] SmartBombDisplay component not found on MainCanvas/SmartBombDisplay");
-                    }
-                }
-                else
-                {
-                    Debug.LogWarning("[SetupSmartBombComplete] SmartBombDisplay GameObject not found under MainCanvas");
-                }
+                Debug.Log("[SetupSmartBombComplete] UIManager found - BombDisplay will be created by HUDBuilderArcade at runtime");
             }
             else
             {
-                Debug.LogError("[SetupSmartBombComplete] MainCanvas not found!");
+                Debug.LogWarning("[SetupSmartBombComplete] UIManager not found - ensure it exists for HUD to display bombs");
             }
 
             // Mark scene as dirty

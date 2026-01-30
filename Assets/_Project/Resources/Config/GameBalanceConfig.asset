@@ -134,7 +134,7 @@ MonoBehaviour:
   scanDrone:
     displayName: Scan Drone
     color: {r: 0.3, g: 0.7, b: 1, a: 1}
-    health: 50
+    health: 100
     speed: 1.2
     contactDamage: 15
     collisionRadius: 0.9
@@ -161,9 +161,9 @@ MonoBehaviour:
   chaosWorm:
     displayName: Chaos Worm
     color: {r: 0.8, g: 0.2, b: 0.8, a: 1}
-    health: 150
+    health: 170
     speed: 1.5
-    contactDamage: 15
+    contactDamage: 20
     collisionRadius: 0.75
     scoreValue: 3500
     xpValue: 35
@@ -188,7 +188,7 @@ MonoBehaviour:
   voidSphere:
     displayName: Void Sphere
     color: {r: 0.3, g: 0, b: 0.5, a: 1}
-    health: 650
+    health: 1000
     speed: 0.5
     contactDamage: 40
     collisionRadius: 0.9
@@ -215,7 +215,7 @@ MonoBehaviour:
   crystalShard:
     displayName: Crystal Swarm
     color: {r: 0.5, g: 0.8, b: 1, a: 1}
-    health: 250
+    health: 999
     speed: 1.8
     contactDamage: 25
     collisionRadius: 1.4
@@ -242,9 +242,9 @@ MonoBehaviour:
   fizzer:
     displayName: Fizzer
     color: {r: 0.2, g: 0.8, b: 1, a: 1}
-    health: 2
+    health: 81
     speed: 8
-    contactDamage: 6
+    contactDamage: 51
     collisionRadius: 0.35
     scoreValue: 1500
     xpValue: 15
@@ -269,9 +269,9 @@ MonoBehaviour:
   ufo:
     displayName: UFO
     color: {r: 0.7, g: 0.7, b: 0.8, a: 1}
-    health: 30
+    health: 120
     speed: 2.8
-    contactDamage: 12
+    contactDamage: 30
     collisionRadius: 1.2
     scoreValue: 2500
     xpValue: 25
@@ -296,9 +296,9 @@ MonoBehaviour:
   boss:
     displayName: Boss
     color: {r: 1, g: 0.2, b: 0.2, a: 1}
-    health: 180
+    health: 1000
     speed: 0.3
-    contactDamage: 25
+    contactDamage: 50
     collisionRadius: 3.5
     scoreValue: 10000
     xpValue: 100
@@ -306,8 +306,8 @@ MonoBehaviour:
     poolSize: 1
     canShoot: 1
     fireRate: 1.5
-    projectileSpeed: 6.5
-    projectileDamage: 18
+    projectileSpeed: 6.55
+    projectileDamage: 25
     burstCount: 5
     burstDelay: 0.1
     detectionRange: 40
@@ -385,6 +385,19 @@ MonoBehaviour:
     effectDuration: 7
     effectAmount: 0
     healthThreshold: 1
+  smartBombPickup:
+    displayName: Pickup
+    color: {r: 1, g: 1, b: 1, a: 1}
+    spawnsPerLevel: 2
+    minSpawnInterval: 20
+    maxSpawnInterval: 40
+    lifetime: 15
+    magnetRadius: 5
+    magnetStrength: 16
+    maxMagnetSpeed: 18
+    effectDuration: 10
+    effectAmount: 30
+    healthThreshold: 1
   combo:
     comboDecayTime: 3
     comboWindow: 1.5
@@ -399,6 +412,10 @@ MonoBehaviour:
     showUpgradeEveryNLevels: 1
     cardsPerSelection: 3
     allowDuplicates: 0
+  smartBomb:
+    startingBombs: 3
+    maxBombs: 3
+    activationDuration: 1
   spawning:
     minSpawnDistance: 5
     maxSpawnDistance: 28
@@ -432,10 +449,10 @@ MonoBehaviour:
     largeShake:
       intensity: 1
       duration: 0.5
-    minZoom: 8
+    minZoom: 7
     maxZoom: 22
     zoomSpeed: 3
-    baseZoom: 15
+    baseZoom: 11
     particleDensity: 2
     trailEnabled: 1
-    explosionScale: 2
+    explosionScale: 4

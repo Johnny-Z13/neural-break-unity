@@ -46,6 +46,9 @@ namespace NeuralBreak.Combat
         private const float AIM_CONE_ANGLE = 45f;
         private const float AIM_PRIORITY_MULTIPLIER = 0.5f;
 
+        // Cached reference - avoids FindFirstObjectByType every frame!
+        private static WeaponUpgradeManager _cachedUpgradeManager;
+
         // Pool callback
         private System.Action<Projectile> _returnToPool;
 
@@ -127,11 +130,13 @@ namespace NeuralBreak.Combat
 
         private void UpdateHoming()
         {
-            var upgradeManager = FindFirstObjectByType<WeaponUpgradeManager>();
-            if (upgradeManager == null) return;
+            // Use cached reference instead of FindFirstObjectByType every frame
+            if (_cachedUpgradeManager == null)
+                _cachedUpgradeManager = FindFirstObjectByType<WeaponUpgradeManager>();
+            if (_cachedUpgradeManager == null) return;
 
-            float range = upgradeManager.HomingRange;
-            float strength = upgradeManager.HomingStrength;
+            float range = _cachedUpgradeManager.HomingRange;
+            float strength = _cachedUpgradeManager.HomingStrength;
 
             // Check if we need to reacquire target
             if (_lockedTarget == null || !IsTargetValid(_lockedTarget, range))
@@ -265,8 +270,10 @@ namespace NeuralBreak.Combat
             // Acquire initial target for homing projectiles
             if (_isHoming)
             {
-                var upgradeManager = FindFirstObjectByType<WeaponUpgradeManager>();
-                float range = upgradeManager != null ? upgradeManager.HomingRange : 10f;
+                // Use cached reference
+                if (_cachedUpgradeManager == null)
+                    _cachedUpgradeManager = FindFirstObjectByType<WeaponUpgradeManager>();
+                float range = _cachedUpgradeManager != null ? _cachedUpgradeManager.HomingRange : 10f;
                 _lockedTarget = FindBestTarget(range);
             }
 

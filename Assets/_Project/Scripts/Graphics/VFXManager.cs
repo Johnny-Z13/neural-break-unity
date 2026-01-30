@@ -77,17 +77,18 @@ namespace NeuralBreak.Graphics
         private void OnGameStarted(GameStartedEvent evt)
         {
             // Re-enable player sprite if it was hidden from death
+            // First, try to find player if not cached
+            CachePlayerTransform();
+
             if (_playerTransform != null)
             {
                 var spriteRenderer = _playerTransform.GetComponent<SpriteRenderer>();
                 if (spriteRenderer != null)
                 {
                     spriteRenderer.enabled = true;
+                    Debug.Log("[VFXManager] Re-enabled player sprite on game start");
                 }
             }
-
-            // Clear cached player reference on new game
-            _playerTransform = null;
         }
 
         private void UnsubscribeFromEvents()

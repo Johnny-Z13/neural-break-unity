@@ -38,12 +38,16 @@ namespace NeuralBreak.Config
         public PickupConfig medPack;
         public PickupConfig shield;
         public PickupConfig invulnerable;
+        public PickupConfig smartBombPickup;
 
         [Header("Combo System")]
         public ComboConfig combo;
 
         [Header("Upgrade System")]
         public UpgradeSystemConfig upgradeSystem;
+
+        [Header("Smart Bomb")]
+        public SmartBombConfig smartBomb;
 
         [Header("Spawning")]
         public SpawnConfig spawning;
@@ -88,6 +92,7 @@ namespace NeuralBreak.Config
                 Core.PickupType.MedPack => medPack,
                 Core.PickupType.Shield => shield,
                 Core.PickupType.Invulnerable => invulnerable,
+                Core.PickupType.SmartBomb => smartBombPickup,
                 _ => powerUp
             };
         }
@@ -530,5 +535,25 @@ namespace NeuralBreak.Config
         Medium,
         Large,
         Boss
+    }
+
+    /// <summary>
+    /// Smart Bomb configuration - screen-clearing super weapon
+    /// </summary>
+    [System.Serializable]
+    public class SmartBombConfig
+    {
+        [Header("Bomb Inventory")]
+        [Tooltip("Number of smart bombs at game start (0-3)")]
+        [Range(0, 3)]
+        public int startingBombs = 0;
+
+        [Tooltip("Maximum smart bombs player can hold")]
+        [Range(1, 3)]
+        public int maxBombs = 3;
+
+        [Header("Activation")]
+        [Tooltip("Duration of bomb activation effect")]
+        public float activationDuration = 0.5f;
     }
 }

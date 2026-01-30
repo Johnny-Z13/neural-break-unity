@@ -13,8 +13,9 @@ namespace NeuralBreak.Combat
     /// </summary>
     public class SmartBombSystem : MonoBehaviour
     {
-        [Header("Smart Bomb Settings")]
-        [SerializeField] private int _startingBombs = 1;
+        [Header("Smart Bomb Settings (from GameBalanceConfig)")]
+        [Tooltip("These values are loaded from GameBalanceConfig at runtime")]
+        [SerializeField] private int _startingBombs = 0;
         [SerializeField] private int _maxBombs = 3;
         [SerializeField] private float _activationDuration = 0.5f;
 
@@ -36,6 +37,9 @@ namespace NeuralBreak.Combat
         private AudioSource _audioSource;
         private int _bonusBombs;
 
+        // Cached reference - avoids FindObjectsByType every bomb!
+        private Entities.EnemySpawner _enemySpawner;
+
         // Public accessors
         public int CurrentBombs => _currentBombs;
         public int MaxBombs => _maxBombs + _bonusBombs;
@@ -43,12 +47,31 @@ namespace NeuralBreak.Combat
 
         private void Awake()
         {
+            // Load settings from GameBalanceConfig
+            LoadConfigValues();
+
             _currentBombs = _startingBombs;
 
             // Create audio source
             _audioSource = gameObject.AddComponent<AudioSource>();
             _audioSource.playOnAwake = false;
             _audioSource.spatialBlend = 0f; // 2D sound
+        }
+
+        private void LoadConfigValues()
+        {
+            var config = ConfigProvider.Balance?.smartBomb;
+            if (config != null)
+            {
+                _startingBombs = config.startingBombs;
+                _maxBombs = config.maxBombs;
+                _activationDuration = config.activationDuration;
+                Debug.Log($"[SmartBombSystem] Loaded config: starting={_startingBombs}, max={_maxBombs}");
+            }
+            else
+            {
+                Debug.LogWarning("[SmartBombSystem] GameBalanceConfig.smartBomb not found, using defaults");
+            }
         }
 
         private void Start()
@@ -181,17 +204,37 @@ namespace NeuralBreak.Combat
 
         private void KillAllEnemies()
         {
-            // Find all enemies in the scene (Unity 6 API)
-            var enemies = FindObjectsByType<EnemyBase>(FindObjectsSortMode.None);
+            // Use cached EnemySpawner.ActiveEnemies instead of FindObjectsByType
+            if (_enemySpawner == null)
+                _enemySpawner = FindFirstObjectByType<Entities.EnemySpawner>();
+
             int killedCount = 0;
 
-            foreach (var enemy in enemies)
+            if (_enemySpawner != null)
             {
-                // Only kill enemies that are alive (not spawning, not already dead)
-                if (enemy.IsAlive)
+                // Iterate the cached active enemies list
+                var enemies = _enemySpawner.ActiveEnemies;
+                foreach (var enemy in enemies)
                 {
-                    enemy.Kill();
-                    killedCount++;
+                    // Only kill enemies that are alive (not spawning, not already dead)
+                    if (enemy != null && enemy.IsAlive)
+                    {
+                        enemy.Kill();
+                        killedCount++;
+                    }
+                }
+            }
+            else
+            {
+                // Fallback to FindObjectsByType if spawner not found
+                var enemies = FindObjectsByType<EnemyBase>(FindObjectsSortMode.None);
+                foreach (var enemy in enemies)
+                {
+                    if (enemy.IsAlive)
+                    {
+                        enemy.Kill();
+                        killedCount++;
+                    }
                 }
             }
 

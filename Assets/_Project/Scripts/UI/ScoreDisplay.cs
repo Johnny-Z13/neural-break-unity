@@ -45,7 +45,9 @@ namespace NeuralBreak.UI
         private float _currentMultiplier = 1f;
         private Coroutine _deltaCoroutine;
         private Coroutine _milestoneCoroutine;
+        private Coroutine _multiplierPunchCoroutine;
         private Vector3 _comboOriginalScale;
+        private Vector3 _multiplierOriginalScale;
         private int _lastMilestoneShown = 0;
 
         private void Awake()
@@ -54,6 +56,11 @@ namespace NeuralBreak.UI
             {
                 _comboOriginalScale = _comboContainer.transform.localScale;
                 _comboContainer.SetActive(false);
+            }
+
+            if (_multiplierText != null)
+            {
+                _multiplierOriginalScale = _multiplierText.transform.localScale;
             }
 
             if (_deltaText != null)
@@ -117,6 +124,7 @@ namespace NeuralBreak.UI
         public void UpdateCombo(int comboCount, float multiplier)
         {
             int previousCombo = _currentCombo;
+            float previousMultiplier = _currentMultiplier;
             _currentCombo = comboCount;
             _currentMultiplier = multiplier;
 
@@ -129,7 +137,7 @@ namespace NeuralBreak.UI
                 if (showCombo && comboCount > previousCombo)
                 {
                     // Punch scale on combo increase
-                    StartCoroutine(PunchScale(_comboContainer.transform));
+                    StartCoroutine(PunchScale(_comboContainer.transform, _comboOriginalScale));
                 }
             }
 
@@ -143,6 +151,12 @@ namespace NeuralBreak.UI
                 if (multiplier > 1f)
                 {
                     _multiplierText.text = $"x{multiplier:F1}";
+
+                    // Scale bump on multiplier increase
+                    if (multiplier > previousMultiplier)
+                    {
+                        PunchMultiplier();
+                    }
                 }
                 else
                 {
@@ -158,6 +172,18 @@ namespace NeuralBreak.UI
             {
                 _lastMilestoneShown = 0;
             }
+        }
+
+        private void PunchMultiplier()
+        {
+            if (_multiplierText == null) return;
+
+            if (_multiplierPunchCoroutine != null)
+            {
+                StopCoroutine(_multiplierPunchCoroutine);
+                _multiplierText.transform.localScale = _multiplierOriginalScale;
+            }
+            _multiplierPunchCoroutine = StartCoroutine(PunchScale(_multiplierText.transform, _multiplierOriginalScale));
         }
 
         private void CheckComboMilestone(int comboCount)
@@ -318,9 +344,8 @@ namespace NeuralBreak.UI
             _deltaCoroutine = null;
         }
 
-        private IEnumerator PunchScale(Transform target)
+        private IEnumerator PunchScale(Transform target, Vector3 originalScale)
         {
-            Vector3 originalScale = _comboOriginalScale;
             Vector3 punchedScale = originalScale * _comboPunchScale;
 
             // Scale up

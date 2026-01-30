@@ -29,6 +29,9 @@ namespace NeuralBreak.UI
         private RectTransform _container;
         private Dictionary<PickupType, UpgradeIcon> _icons = new Dictionary<PickupType, UpgradeIcon>();
 
+        // Cached reference - avoids FindFirstObjectByType every frame!
+        private WeaponUpgradeManager _upgradeManager;
+
         private class UpgradeIcon
         {
             public GameObject gameObject;
@@ -41,9 +44,16 @@ namespace NeuralBreak.UI
         private void Start()
         {
             CreateUI();
+            CacheReferences();
             EventBus.Subscribe<WeaponUpgradeActivatedEvent>(OnUpgradeActivated);
             EventBus.Subscribe<WeaponUpgradeExpiredEvent>(OnUpgradeExpired);
             EventBus.Subscribe<GameStartedEvent>(OnGameStarted);
+        }
+
+        private void CacheReferences()
+        {
+            if (_upgradeManager == null)
+                _upgradeManager = FindFirstObjectByType<WeaponUpgradeManager>();
         }
 
         private void OnDestroy()
@@ -232,15 +242,19 @@ namespace NeuralBreak.UI
 
         private void Update()
         {
-            var upgradeManager = FindFirstObjectByType<WeaponUpgradeManager>();
-            if (upgradeManager == null) return;
+            // Use cached reference instead of FindFirstObjectByType every frame
+            if (_upgradeManager == null)
+            {
+                CacheReferences();
+                if (_upgradeManager == null) return;
+            }
 
             foreach (var kvp in _icons)
             {
                 PickupType type = kvp.Key;
                 UpgradeIcon icon = kvp.Value;
 
-                float remaining = upgradeManager.GetRemainingTime(type);
+                float remaining = _upgradeManager.GetRemainingTime(type);
 
                 if (remaining > 0)
                 {

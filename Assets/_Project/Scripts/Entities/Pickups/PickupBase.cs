@@ -213,15 +213,23 @@ namespace NeuralBreak.Entities
 
         protected virtual void Collect()
         {
+            CollectByPlayer(_playerTarget?.gameObject);
+        }
+
+        /// <summary>
+        /// Collect pickup with explicit player reference (used by trigger collision)
+        /// </summary>
+        protected virtual void CollectByPlayer(GameObject player)
+        {
             if (_isCollected)
             {
                 Debug.LogWarning($"[PickupBase] Pickup {PickupType} already collected!");
                 return;
             }
 
-            if (_playerTarget == null)
+            if (player == null)
             {
-                Debug.LogError("[PickupBase] Cannot collect - playerTarget is null!");
+                Debug.LogError("[PickupBase] Cannot collect - player is null!");
                 return;
             }
 
@@ -230,7 +238,7 @@ namespace NeuralBreak.Entities
             try
             {
                 // Apply the pickup effect
-                ApplyEffect(_playerTarget.gameObject);
+                ApplyEffect(player);
             }
             catch (System.Exception ex)
             {
@@ -282,7 +290,8 @@ namespace NeuralBreak.Entities
 
             if (other.CompareTag("Player"))
             {
-                Collect();
+                // Pass the player directly instead of relying on cached _playerTarget
+                CollectByPlayer(other.gameObject);
             }
         }
 

@@ -1050,6 +1050,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &984175328 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3365961541476718978, guid: b2c625dd76ff58745b02ee6d43ac6981, type: 3}
+  m_PrefabInstance: {fileID: 4989507563906846139}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1029775528
 GameObject:
   m_ObjectHideFlags: 0
@@ -1454,6 +1459,7 @@ MonoBehaviour:
   _medPackPrefab: {fileID: 4395750603363808897, guid: fa83db4abd27b9949a02a985e3f9b3f2, type: 3}
   _shieldPrefab: {fileID: 5083500648721314523, guid: 93e3c9d7038cae8418342c33ae94b34e, type: 3}
   _invulnerablePrefab: {fileID: 7466130998158676811, guid: da479a677f291c347b4816465ac8fa14, type: 3}
+  _smartBombPrefab: {fileID: 2487701110293902826, guid: 0aec592104084c541ac76f07b89388fe, type: 3}
   _spreadShotPrefab: {fileID: 0}
   _piercingPrefab: {fileID: 0}
   _rapidFirePrefab: {fileID: 0}
@@ -1463,7 +1469,10 @@ MonoBehaviour:
   _medPackPoolSize: 15
   _shieldPoolSize: 10
   _invulnerablePoolSize: 5
+  _smartBombPoolSize: 5
   _weaponUpgradePoolSize: 5
+  _smartBombSpawnsPerLevel: 1
+  _smartBombInterval: {x: 45, y: 75}
   _weaponUpgradeSpawnsPerLevel: 1
   _weaponUpgradeInterval: {x: 25, y: 40}
   _spawningEnabled: 1
@@ -1921,12 +1930,97 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 5288426245339951891, guid: b2c625dd76ff58745b02ee6d43ac6981, type: 3}
   m_PrefabInstance: {fileID: 4989507563906846139}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 984175328}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 87b8f8e3615caa24a89e86e7e6d8c002, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Entities.PlayerController
+--- !u!114 &2107141851
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 984175328}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a880bb669426607499e792a09bbda01f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Combat.SmartBombSystem
+  _startingBombs: 1
+  _maxBombs: 3
+  _activationDuration: 0.5
+  _explosionParticles: {fileID: 0}
+  _explosionStartColor: {r: 1, g: 0.8, b: 0.2, a: 1}
+  _explosionEndColor: {r: 1, g: 0.3, b: 0.1, a: 0}
+  _epicExplosionSound: {fileID: 0}
+  _explosionVolume: 0.8
+--- !u!1001 &1536679585844316258
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 2255022006777922828, guid: 0aec592104084c541ac76f07b89388fe, type: 3}
+      propertyPath: m_Name
+      value: SmartBombPickup
+      objectReference: {fileID: 0}
+    - target: {fileID: 4935234086901621492, guid: 0aec592104084c541ac76f07b89388fe, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4935234086901621492, guid: 0aec592104084c541ac76f07b89388fe, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4935234086901621492, guid: 0aec592104084c541ac76f07b89388fe, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4935234086901621492, guid: 0aec592104084c541ac76f07b89388fe, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4935234086901621492, guid: 0aec592104084c541ac76f07b89388fe, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4935234086901621492, guid: 0aec592104084c541ac76f07b89388fe, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4935234086901621492, guid: 0aec592104084c541ac76f07b89388fe, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4935234086901621492, guid: 0aec592104084c541ac76f07b89388fe, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4935234086901621492, guid: 0aec592104084c541ac76f07b89388fe, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4935234086901621492, guid: 0aec592104084c541ac76f07b89388fe, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5458225458396361077, guid: 0aec592104084c541ac76f07b89388fe, type: 3}
+      propertyPath: m_BodyType
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6240692437253312656, guid: 0aec592104084c541ac76f07b89388fe, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 0aec592104084c541ac76f07b89388fe, type: 3}
 --- !u!1001 &4989507563906846139
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1982,7 +2076,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 3365961541476718978, guid: b2c625dd76ff58745b02ee6d43ac6981, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2107141851}
   m_SourcePrefab: {fileID: 100100000, guid: b2c625dd76ff58745b02ee6d43ac6981, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
@@ -2012,3 +2109,4 @@ SceneRoots:
   - {fileID: 774612688}
   - {fileID: 1472913744}
   - {fileID: 398909265}
+  - {fileID: 1536679585844316258}

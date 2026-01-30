@@ -8,10 +8,10 @@ namespace NeuralBreak.UI
 {
     /// <summary>
     /// Displays a minimap/radar showing player, enemies, and pickups.
+    /// Optimized: Uses cached EnemySpawner.ActiveEnemies instead of FindObjectsByType.
     /// </summary>
     public class Minimap : MonoBehaviour
     {
-
         [Header("Settings")]
         [SerializeField] private float _mapRadius = 15f;
         [SerializeField] private float _displayRadius = 60f;
@@ -54,45 +54,72 @@ namespace NeuralBreak.UI
         private int _activeEnemyBlips;
         private int _activePickupBlips;
 
-        // References
+        // Cached references (avoids FindObjectsByType!)
         private Transform _playerTransform;
+        private EnemySpawner _enemySpawner;
+        private PickupSpawner _pickupSpawner;
         private float _nextUpdateTime;
+
+        // Cached sprites (generated once, reused)
+        private static Sprite _circleSprite64;
+        private static Sprite _circleSprite16;
+        private static Sprite _ringSprite;
+        private static Sprite _triangleSprite;
 
         private void Awake()
         {
-
+            CacheSprites();
             CreateUI();
         }
 
         private void Start()
         {
-            // Subscribe to player spawn event
             EventBus.Subscribe<GameStartedEvent>(OnGameStarted);
+            CacheReferences();
         }
 
         private void OnGameStarted(GameStartedEvent evt)
         {
-            // Player reference will be set when we first update
             _playerTransform = null;
+            CacheReferences();
         }
 
         private void OnDestroy()
         {
             EventBus.Unsubscribe<GameStartedEvent>(OnGameStarted);
+        }
 
+        private void CacheReferences()
+        {
+            // Cache spawner references once - no FindObjectsByType in Update!
+            if (_enemySpawner == null)
+                _enemySpawner = FindFirstObjectByType<EnemySpawner>();
+            if (_pickupSpawner == null)
+                _pickupSpawner = FindFirstObjectByType<PickupSpawner>();
+        }
+
+        private void CacheSprites()
+        {
+            // Generate sprites once, reuse everywhere
+            if (_circleSprite64 == null)
+                _circleSprite64 = CreateCircleSprite(64);
+            if (_circleSprite16 == null)
+                _circleSprite16 = CreateCircleSprite(16);
+            if (_ringSprite == null)
+                _ringSprite = CreateRingSprite(64, 0.9f);
+            if (_triangleSprite == null)
+                _triangleSprite = CreateTriangleSprite();
         }
 
         private void Update()
         {
             if (Time.time < _nextUpdateTime) return;
             _nextUpdateTime = Time.time + _updateInterval;
-
             UpdateMinimap();
         }
 
         private void CreateUI()
         {
-            // Create canvas
             var canvasGO = new GameObject("MinimapCanvas");
             canvasGO.transform.SetParent(transform);
             _canvas = canvasGO.AddComponent<Canvas>();
@@ -105,14 +132,14 @@ namespace NeuralBreak.UI
 
             canvasGO.AddComponent<GraphicRaycaster>();
 
-            // Map container (bottom-right corner)
+            // Map container (bottom-left corner)
             var containerGO = new GameObject("MapContainer");
             containerGO.transform.SetParent(canvasGO.transform);
             _mapContainer = containerGO.AddComponent<RectTransform>();
-            _mapContainer.anchorMin = new Vector2(1, 0);
-            _mapContainer.anchorMax = new Vector2(1, 0);
-            _mapContainer.pivot = new Vector2(1, 0);
-            _mapContainer.anchoredPosition = new Vector2(-20, 20);
+            _mapContainer.anchorMin = new Vector2(0, 0);
+            _mapContainer.anchorMax = new Vector2(0, 0);
+            _mapContainer.pivot = new Vector2(0, 0);
+            _mapContainer.anchoredPosition = new Vector2(24, 24);
             _mapContainer.sizeDelta = new Vector2(_displayRadius * 2, _displayRadius * 2);
 
             // Background (circle)
@@ -125,7 +152,7 @@ namespace NeuralBreak.UI
             bgRect.offsetMax = Vector2.zero;
 
             _backgroundImage = bgGO.AddComponent<Image>();
-            _backgroundImage.sprite = CreateCircleSprite(64);
+            _backgroundImage.sprite = _circleSprite64;
             _backgroundImage.color = BackgroundColor;
 
             // Border
@@ -138,10 +165,10 @@ namespace NeuralBreak.UI
             borderRect.offsetMax = new Vector2(2, 2);
 
             _borderImage = borderGO.AddComponent<Image>();
-            _borderImage.sprite = CreateRingSprite(64, 0.9f);
+            _borderImage.sprite = _ringSprite;
             _borderImage.color = BorderColor;
 
-            // Player blip (center, always visible)
+            // Player blip
             var playerGO = new GameObject("PlayerBlip");
             playerGO.transform.SetParent(_mapContainer);
             _playerBlip = playerGO.AddComponent<RectTransform>();
@@ -152,18 +179,14 @@ namespace NeuralBreak.UI
             _playerBlip.sizeDelta = new Vector2(_playerBlipSize, _playerBlipSize);
 
             var playerImage = playerGO.AddComponent<Image>();
-            playerImage.sprite = CreateTriangleSprite();
+            playerImage.sprite = _triangleSprite;
             playerImage.color = PlayerColor;
 
-            // Pre-create blip pools
+            // Pre-create blip pools (reuse cached sprite)
             for (int i = 0; i < 50; i++)
-            {
                 _enemyBlipPool.Add(CreateBlip("EnemyBlip", _enemyBlipSize, EnemyColor));
-            }
             for (int i = 0; i < 20; i++)
-            {
                 _pickupBlipPool.Add(CreateBlip("PickupBlip", _pickupBlipSize, PickupColor));
-            }
         }
 
         private RectTransform CreateBlip(string name, float size, Color color)
@@ -177,7 +200,7 @@ namespace NeuralBreak.UI
             rect.sizeDelta = new Vector2(size, size);
 
             var image = blipGO.AddComponent<Image>();
-            image.sprite = CreateCircleSprite(16);
+            image.sprite = _circleSprite16; // Reuse cached sprite
             image.color = color;
 
             blipGO.SetActive(false);
@@ -186,119 +209,98 @@ namespace NeuralBreak.UI
 
         private void UpdateMinimap()
         {
-            // Cache player transform on first use
+            // Cache player transform
             if (_playerTransform == null)
             {
-                // Try to find player via GameObject.FindGameObjectWithTag
                 var playerGO = GameObject.FindGameObjectWithTag("Player");
                 if (playerGO != null)
-                {
                     _playerTransform = playerGO.transform;
-                }
                 else
-                {
                     return;
-                }
             }
 
             Vector3 playerPos = _playerTransform.position;
 
-            // Rotate player blip if needed
             if (_rotateWithPlayer)
-            {
                 _playerBlip.localRotation = Quaternion.Euler(0, 0, -_playerTransform.eulerAngles.z);
-            }
 
-            // Update enemy blips
-            var enemies = FindObjectsByType<EnemyBase>(FindObjectsSortMode.None);
+            // Update enemy blips - use cached EnemySpawner.ActiveEnemies (no FindObjectsByType!)
             _activeEnemyBlips = 0;
-
-            foreach (var enemy in enemies)
+            if (_enemySpawner != null)
             {
-                if (enemy == null || !enemy.gameObject.activeInHierarchy) continue;
-
-                Vector3 offset = enemy.transform.position - playerPos;
-                float distance = offset.magnitude;
-
-                if (distance > _mapRadius) continue;
-
-                // Get or create blip
-                if (_activeEnemyBlips >= _enemyBlipPool.Count)
+                var enemies = _enemySpawner.ActiveEnemies;
+                foreach (var enemy in enemies)
                 {
-                    _enemyBlipPool.Add(CreateBlip("EnemyBlip", _enemyBlipSize, EnemyColor));
+                    if (enemy == null || !enemy.gameObject.activeInHierarchy) continue;
+
+                    Vector3 offset = enemy.transform.position - playerPos;
+                    if (offset.sqrMagnitude > _mapRadius * _mapRadius) continue;
+
+                    if (_activeEnemyBlips >= _enemyBlipPool.Count)
+                        _enemyBlipPool.Add(CreateBlip("EnemyBlip", _enemyBlipSize, EnemyColor));
+
+                    var blip = _enemyBlipPool[_activeEnemyBlips];
+                    blip.gameObject.SetActive(true);
+                    blip.anchoredPosition = new Vector2(offset.x, offset.y) / _mapRadius * _displayRadius;
+
+                    var blipImage = blip.GetComponent<Image>();
+                    var eliteMod = enemy.GetComponent<EliteModifier>();
+
+                    if (enemy.EnemyType == EnemyType.Boss)
+                    {
+                        blipImage.color = BossColor;
+                        blip.sizeDelta = new Vector2(_bossBlipSize, _bossBlipSize);
+                    }
+                    else if (eliteMod != null && eliteMod.IsElite)
+                    {
+                        blipImage.color = EliteColor;
+                        blip.sizeDelta = new Vector2(_enemyBlipSize * 1.5f, _enemyBlipSize * 1.5f);
+                    }
+                    else
+                    {
+                        blipImage.color = EnemyColor;
+                        blip.sizeDelta = new Vector2(_enemyBlipSize, _enemyBlipSize);
+                    }
+
+                    _activeEnemyBlips++;
                 }
-
-                var blip = _enemyBlipPool[_activeEnemyBlips];
-                blip.gameObject.SetActive(true);
-
-                // Position on map
-                Vector2 mapPos = new Vector2(offset.x, offset.y) / _mapRadius * _displayRadius;
-                blip.anchoredPosition = mapPos;
-
-                // Color based on enemy type
-                var blipImage = blip.GetComponent<Image>();
-                var eliteMod = enemy.GetComponent<EliteModifier>();
-
-                if (enemy.EnemyType == EnemyType.Boss)
-                {
-                    blipImage.color = BossColor;
-                    blip.sizeDelta = new Vector2(_bossBlipSize, _bossBlipSize);
-                }
-                else if (eliteMod != null && eliteMod.IsElite)
-                {
-                    blipImage.color = EliteColor;
-                    blip.sizeDelta = new Vector2(_enemyBlipSize * 1.5f, _enemyBlipSize * 1.5f);
-                }
-                else
-                {
-                    blipImage.color = EnemyColor;
-                    blip.sizeDelta = new Vector2(_enemyBlipSize, _enemyBlipSize);
-                }
-
-                _activeEnemyBlips++;
             }
 
             // Hide unused enemy blips
             for (int i = _activeEnemyBlips; i < _enemyBlipPool.Count; i++)
-            {
                 _enemyBlipPool[i].gameObject.SetActive(false);
-            }
 
-            // Update pickup blips
-            var pickups = FindObjectsByType<PickupBase>(FindObjectsSortMode.None);
+            // Update pickup blips - use cached PickupSpawner.ActivePickups
             _activePickupBlips = 0;
-
-            foreach (var pickup in pickups)
+            if (_pickupSpawner != null)
             {
-                if (pickup == null || !pickup.gameObject.activeInHierarchy) continue;
-
-                Vector3 offset = pickup.transform.position - playerPos;
-                float distance = offset.magnitude;
-
-                if (distance > _mapRadius) continue;
-
-                if (_activePickupBlips >= _pickupBlipPool.Count)
+                var pickups = _pickupSpawner.ActivePickups;
+                foreach (var pickup in pickups)
                 {
-                    _pickupBlipPool.Add(CreateBlip("PickupBlip", _pickupBlipSize, PickupColor));
+                    if (pickup == null || !pickup.gameObject.activeInHierarchy) continue;
+
+                    Vector3 offset = pickup.transform.position - playerPos;
+                    if (offset.sqrMagnitude > _mapRadius * _mapRadius) continue;
+
+                    if (_activePickupBlips >= _pickupBlipPool.Count)
+                        _pickupBlipPool.Add(CreateBlip("PickupBlip", _pickupBlipSize, PickupColor));
+
+                    var blip = _pickupBlipPool[_activePickupBlips];
+                    blip.gameObject.SetActive(true);
+                    blip.anchoredPosition = new Vector2(offset.x, offset.y) / _mapRadius * _displayRadius;
+
+                    _activePickupBlips++;
                 }
-
-                var blip = _pickupBlipPool[_activePickupBlips];
-                blip.gameObject.SetActive(true);
-
-                Vector2 mapPos = new Vector2(offset.x, offset.y) / _mapRadius * _displayRadius;
-                blip.anchoredPosition = mapPos;
-
-                _activePickupBlips++;
             }
 
             // Hide unused pickup blips
             for (int i = _activePickupBlips; i < _pickupBlipPool.Count; i++)
-            {
                 _pickupBlipPool[i].gameObject.SetActive(false);
-            }
         }
 
-        private Sprite CreateCircleSprite(int size)
+        #region Sprite Generation (Static Cache)
+
+        private static Sprite CreateCircleSprite(int size)
         {
             Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
             tex.filterMode = FilterMode.Bilinear;
@@ -323,7 +325,7 @@ namespace NeuralBreak.UI
             return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
         }
 
-        private Sprite CreateRingSprite(int size, float innerRadius)
+        private static Sprite CreateRingSprite(int size, float innerRadius)
         {
             Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
             tex.filterMode = FilterMode.Bilinear;
@@ -343,7 +345,6 @@ namespace NeuralBreak.UI
                     if (dist <= outerR && dist >= innerR)
                     {
                         alpha = 1f;
-                        // Smooth edges
                         if (dist > outerR - 1f)
                             alpha = Mathf.Clamp01(outerR - dist + 1f);
                         else if (dist < innerR + 1f)
@@ -360,7 +361,7 @@ namespace NeuralBreak.UI
             return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
         }
 
-        private Sprite CreateTriangleSprite()
+        private static Sprite CreateTriangleSprite()
         {
             int size = 32;
             Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
@@ -368,7 +369,6 @@ namespace NeuralBreak.UI
 
             Color[] pixels = new Color[size * size];
 
-            // Simple triangle pointing up
             for (int y = 0; y < size; y++)
             {
                 for (int x = 0; x < size; x++)
@@ -388,30 +388,9 @@ namespace NeuralBreak.UI
             return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
         }
 
-        /// <summary>
-        /// Set map visibility
-        /// </summary>
-        public void SetVisible(bool visible)
-        {
-            _canvas.gameObject.SetActive(visible);
-        }
-
-        /// <summary>
-        /// Set map range
-        /// </summary>
-        public void SetRange(float radius)
-        {
-            _mapRadius = radius;
-        }
-
-        #region Debug
-
-        [ContextMenu("Debug: Toggle Visibility")]
-        private void DebugToggle()
-        {
-            SetVisible(!_canvas.gameObject.activeSelf);
-        }
-
         #endregion
+
+        public void SetVisible(bool visible) => _canvas.gameObject.SetActive(visible);
+        public void SetRange(float radius) => _mapRadius = radius;
     }
 }

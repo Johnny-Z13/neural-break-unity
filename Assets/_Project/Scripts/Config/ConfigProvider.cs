@@ -103,6 +103,24 @@ namespace NeuralBreak.Config
             }
         }
 
+        public static SmartBombConfig SmartBomb
+        {
+            get
+            {
+                if (Balance == null)
+                {
+                    Debug.LogError("[ConfigProvider] Balance is null! Call Initialize() first.");
+                    return null;
+                }
+                if (Balance.smartBomb == null)
+                {
+                    Debug.LogError("[ConfigProvider] SmartBombConfig is null in Balance!");
+                    return null;
+                }
+                return Balance.smartBomb;
+            }
+        }
+
         /// <summary>
         /// Initialize the config provider.
         /// Called automatically on first access.
@@ -309,6 +327,14 @@ namespace NeuralBreak.Config
                 maxActiveEnemies = 200,
                 difficultyPerLevel = 0.03f,
                 minSpawnRateMultiplier = 0.3f
+            };
+
+            // Smart Bomb defaults
+            config.smartBomb = new SmartBombConfig
+            {
+                startingBombs = 0,
+                maxBombs = 3,
+                activationDuration = 0.5f
             };
         }
 

@@ -98,36 +98,16 @@ public class SetupSmartBomb
             results.AppendLine("✅ Assigned explosion particles to SmartBombSystem");
         }
         
-        // 3. Add SmartBombDisplay to UI
-        var mainCanvas = GameObject.Find("MainCanvas");
-        if (mainCanvas == null)
+        // 3. BombDisplay is now created automatically by HUDBuilderArcade at runtime
+        // No manual UI setup needed - verify UIManager exists
+        var uiManager = GameObject.Find("UIManager");
+        if (uiManager == null)
         {
-            results.AppendLine("⚠️ MainCanvas not found - SmartBombDisplay not added to UI");
+            results.AppendLine("⚠️ UIManager not found - ensure it exists for HUD to display bombs");
         }
         else
         {
-            // Check if SmartBombDisplay already exists
-            var existingDisplay = mainCanvas.GetComponentInChildren<SmartBombDisplay>(true);
-            if (existingDisplay == null)
-            {
-                // Create SmartBombDisplay container
-                var displayGO = new GameObject("SmartBombDisplay");
-                displayGO.transform.SetParent(mainCanvas.transform, false);
-                
-                var rectTransform = displayGO.AddComponent<RectTransform>();
-                rectTransform.anchorMin = new Vector2(0, 0);
-                rectTransform.anchorMax = new Vector2(0, 0);
-                rectTransform.pivot = new Vector2(0, 0);
-                rectTransform.anchoredPosition = new Vector2(20, 20);
-                rectTransform.sizeDelta = new Vector2(150, 50);
-                
-                var display = displayGO.AddComponent<SmartBombDisplay>();
-                results.AppendLine("✅ Added SmartBombDisplay to MainCanvas");
-            }
-            else
-            {
-                results.AppendLine("ℹ️ SmartBombDisplay already exists in UI");
-            }
+            results.AppendLine("✅ UIManager found - BombDisplay will be created by HUDBuilderArcade at runtime");
         }
         
         // Mark scene dirty

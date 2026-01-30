@@ -35,6 +35,9 @@ namespace NeuralBreak.Entities
         [SerializeField] private ShieldPickup _shieldPrefab;
         [SerializeField] private InvulnerablePickup _invulnerablePrefab;
 
+        [Header("Special Pickups")]
+        [SerializeField] private SmartBombPickup _smartBombPrefab;
+
         [Header("Weapon Upgrade Prefabs")]
         [SerializeField] private SpreadShotPickup _spreadShotPrefab;
         [SerializeField] private PiercingPickup _piercingPrefab;
@@ -47,7 +50,12 @@ namespace NeuralBreak.Entities
         [SerializeField] private int _medPackPoolSize = 15;
         [SerializeField] private int _shieldPoolSize = 10;
         [SerializeField] private int _invulnerablePoolSize = 5;
+        [SerializeField] private int _smartBombPoolSize = 5;
         [SerializeField] private int _weaponUpgradePoolSize = 5;
+
+        [Header("Smart Bomb Spawn Settings")]
+        [SerializeField] private int _smartBombSpawnsPerLevel = 1;
+        [SerializeField] private Vector2 _smartBombInterval = new Vector2(45f, 75f);
 
         [Header("Weapon Upgrade Spawn Settings")]
         [SerializeField] private int _weaponUpgradeSpawnsPerLevel = 1;
@@ -88,6 +96,7 @@ namespace NeuralBreak.Entities
         private ObjectPool<MedPackPickup> _medPackPool;
         private ObjectPool<ShieldPickup> _shieldPool;
         private ObjectPool<InvulnerablePickup> _invulnerablePool;
+        private ObjectPool<SmartBombPickup> _smartBombPool;
         private ObjectPool<SpreadShotPickup> _spreadShotPool;
         private ObjectPool<PiercingPickup> _piercingPool;
         private ObjectPool<RapidFirePickup> _rapidFirePool;
@@ -99,6 +108,7 @@ namespace NeuralBreak.Entities
         private float _medPackTimer;
         private float _shieldTimer;
         private float _invulnerableTimer;
+        private float _smartBombTimer;
         private float _weaponUpgradeTimer;
 
         // Next spawn times (randomized)
@@ -107,6 +117,7 @@ namespace NeuralBreak.Entities
         private float _nextMedPackTime;
         private float _nextShieldTime;
         private float _nextInvulnerableTime;
+        private float _nextSmartBombTime;
         private float _nextWeaponUpgradeTime;
 
         // Spawns this level
@@ -115,6 +126,7 @@ namespace NeuralBreak.Entities
         private int _medPackSpawns;
         private int _shieldSpawns;
         private int _invulnerableSpawns;
+        private int _smartBombSpawns;
         private int _weaponUpgradeSpawns;
 
         // Active pickups
@@ -125,6 +137,7 @@ namespace NeuralBreak.Entities
 
         // Public accessors
         public int ActivePickupCount => _activePickups.Count;
+        public IReadOnlyList<PickupBase> ActivePickups => _activePickups;
         public bool SpawningEnabled { get => _spawningEnabled; set => _spawningEnabled = value; }
 
         private void Awake()
@@ -210,6 +223,13 @@ namespace NeuralBreak.Entities
                     onReturn: p => p.OnReturnToPool());
             }
 
+            if (_smartBombPrefab != null)
+            {
+                _smartBombPool = new ObjectPool<SmartBombPickup>(
+                    _smartBombPrefab, _pickupContainer, _smartBombPoolSize,
+                    onReturn: p => p.OnReturnToPool());
+            }
+
             // Weapon upgrade pools
             if (_spreadShotPrefab != null)
             {
@@ -283,6 +303,13 @@ namespace NeuralBreak.Entities
             if (_invulnerableTimer >= _nextInvulnerableTime && _invulnerableSpawns < InvulnerableSpawnsPerLevel)
             {
                 TrySpawnInvulnerable();
+            }
+
+            // Smart Bomb (rare spawn)
+            _smartBombTimer += dt;
+            if (_smartBombTimer >= _nextSmartBombTime && _smartBombSpawns < _smartBombSpawnsPerLevel)
+            {
+                TrySpawnSmartBomb();
             }
 
             // Weapon Upgrades (random type each spawn)
@@ -382,6 +409,22 @@ namespace NeuralBreak.Entities
             Debug.Log($"[PickupSpawner] Invulnerable spawned! ({_invulnerableSpawns}/{InvulnerableSpawnsPerLevel})");
         }
 
+        private void TrySpawnSmartBomb()
+        {
+            if (_smartBombPool == null) return;
+
+            Vector2 pos = GetSpawnPosition();
+            SmartBombPickup pickup = _smartBombPool.Get(pos, Quaternion.identity);
+            pickup.Initialize(pos, _playerTarget, ReturnToPool);
+            _activePickups.Add(pickup);
+
+            _smartBombSpawns++;
+            _smartBombTimer = 0f;
+            _nextSmartBombTime = Random.Range(_smartBombInterval.x, _smartBombInterval.y);
+
+            Debug.Log($"[PickupSpawner] Smart Bomb spawned! ({_smartBombSpawns}/{_smartBombSpawnsPerLevel})");
+        }
+
         private void TrySpawnWeaponUpgrade()
         {
             // Pick a random weapon upgrade type
@@ -464,6 +507,7 @@ namespace NeuralBreak.Entities
                 case MedPackPickup m: _medPackPool?.Return(m); break;
                 case ShieldPickup sh: _shieldPool?.Return(sh); break;
                 case InvulnerablePickup inv: _invulnerablePool?.Return(inv); break;
+                case SmartBombPickup sb: _smartBombPool?.Return(sb); break;
                 case SpreadShotPickup ss: _spreadShotPool?.Return(ss); break;
                 case PiercingPickup pc: _piercingPool?.Return(pc); break;
                 case RapidFirePickup rf: _rapidFirePool?.Return(rf); break;
@@ -473,7 +517,14 @@ namespace NeuralBreak.Entities
 
         private void CleanupInactivePickups()
         {
-            _activePickups.RemoveAll(p => p == null || !p.IsActive);
+            // Use backward iteration instead of RemoveAll to avoid delegate allocation
+            for (int i = _activePickups.Count - 1; i >= 0; i--)
+            {
+                if (_activePickups[i] == null || !_activePickups[i].IsActive)
+                {
+                    _activePickups.RemoveAt(i);
+                }
+            }
         }
 
         #endregion
@@ -506,6 +557,9 @@ namespace NeuralBreak.Entities
                 case PickupType.Invulnerable when _invulnerablePool != null:
                     pickup = _invulnerablePool.Get(pos, Quaternion.identity);
                     break;
+                case PickupType.SmartBomb when _smartBombPool != null:
+                    pickup = _smartBombPool.Get(pos, Quaternion.identity);
+                    break;
                 case PickupType.SpreadShot when _spreadShotPool != null:
                     pickup = _spreadShotPool.Get(pos, Quaternion.identity);
                     break;
@@ -534,8 +588,10 @@ namespace NeuralBreak.Entities
         /// </summary>
         public void ClearAllPickups()
         {
-            foreach (var pickup in _activePickups.ToArray())
+            // Iterate backward to avoid allocation from ToArray()
+            for (int i = _activePickups.Count - 1; i >= 0; i--)
             {
+                var pickup = _activePickups[i];
                 if (pickup != null)
                 {
                     pickup.OnReturnToPool();
@@ -555,6 +611,7 @@ namespace NeuralBreak.Entities
             _medPackSpawns = 0;
             _shieldSpawns = 0;
             _invulnerableSpawns = 0;
+            _smartBombSpawns = 0;
             _weaponUpgradeSpawns = 0;
 
             RandomizeNextSpawnTimes();
@@ -568,6 +625,7 @@ namespace NeuralBreak.Entities
             _nextMedPackTime = Random.Range(MedPackInterval.x * 0.5f, MedPackInterval.y * 0.5f);
             _nextShieldTime = Random.Range(ShieldInterval.x * 0.5f, ShieldInterval.y * 0.5f);
             _nextInvulnerableTime = Random.Range(InvulnerableInterval.x * 0.5f, InvulnerableInterval.y * 0.5f);
+            _nextSmartBombTime = Random.Range(_smartBombInterval.x * 0.5f, _smartBombInterval.y * 0.5f);
             _nextWeaponUpgradeTime = Random.Range(_weaponUpgradeInterval.x * 0.5f, _weaponUpgradeInterval.y * 0.5f);
         }
 
@@ -614,6 +672,9 @@ namespace NeuralBreak.Entities
 
         [ContextMenu("Debug: Spawn Invulnerable")]
         private void DebugSpawnInvulnerable() => SpawnPickup(PickupType.Invulnerable);
+
+        [ContextMenu("Debug: Spawn Smart Bomb")]
+        private void DebugSpawnSmartBomb() => SpawnPickup(PickupType.SmartBomb);
 
         [ContextMenu("Debug: Spawn All Types")]
         private void DebugSpawnAll()

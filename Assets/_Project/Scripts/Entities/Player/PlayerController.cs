@@ -117,6 +117,10 @@ namespace NeuralBreak.Entities
                 Debug.LogError("[PlayerController] InputManager.Instance is NULL!");
             }
 
+            // Subscribe to player death and game start events
+            EventBus.Subscribe<PlayerDiedEvent>(OnPlayerDied);
+            EventBus.Subscribe<GameStartedEvent>(OnGameStarted);
+
             // Apply generated player sprite (triangle pointing up)
             ApplyPlayerSprite();
 
@@ -229,6 +233,62 @@ namespace NeuralBreak.Entities
                 _input.OnDashPressed -= TryDash;
                 _input.OnThrustPressed -= OnThrustPressed;
                 _input.OnThrustReleased -= OnThrustReleased;
+            }
+            EventBus.Unsubscribe<PlayerDiedEvent>(OnPlayerDied);
+            EventBus.Unsubscribe<GameStartedEvent>(OnGameStarted);
+        }
+
+        private void OnGameStarted(GameStartedEvent evt)
+        {
+            // Show aim indicator when game starts/restarts
+            ShowAimIndicator();
+        }
+
+        private void OnPlayerDied(PlayerDiedEvent evt)
+        {
+            // Hide aim indicator when player dies
+            HideAimIndicator();
+
+            // Also hide trails
+            if (_dashTrail != null)
+            {
+                _dashTrail.emitting = false;
+                _dashTrail.Clear();
+            }
+            if (_thrustTrail != null)
+            {
+                _thrustTrail.emitting = false;
+                _thrustTrail.Clear();
+            }
+        }
+
+        /// <summary>
+        /// Hide the aim indicator (called on death)
+        /// </summary>
+        public void HideAimIndicator()
+        {
+            if (_aimLine != null)
+            {
+                _aimLine.enabled = false;
+            }
+            if (_aimIndicator != null)
+            {
+                _aimIndicator.SetActive(false);
+            }
+        }
+
+        /// <summary>
+        /// Show the aim indicator (called on respawn/reset)
+        /// </summary>
+        public void ShowAimIndicator()
+        {
+            if (_aimLine != null)
+            {
+                _aimLine.enabled = true;
+            }
+            if (_aimIndicator != null)
+            {
+                _aimIndicator.SetActive(true);
             }
         }
 
