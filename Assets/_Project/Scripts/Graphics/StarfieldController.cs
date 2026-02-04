@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using NeuralBreak.Core;
 using NeuralBreak.Config;
+using Z13.Core;
 
 namespace NeuralBreak.Graphics
 {

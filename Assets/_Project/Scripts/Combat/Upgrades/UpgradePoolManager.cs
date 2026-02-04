@@ -1,14 +1,13 @@
 using UnityEngine;
-using NeuralBreak.Core;
-using NeuralBreak.Utils;
 using System.Collections.Generic;
+using NeuralBreak.Core;
+using Z13.Core;
 
 namespace NeuralBreak.Combat
 {
     /// <summary>
     /// Manages the pool of available upgrades and generates random selections.
     /// Handles weighted selection based on rarity tiers.
-    /// Singleton pattern for global access.
     /// </summary>
     public class UpgradePoolManager : MonoBehaviour
     {
@@ -35,17 +34,11 @@ namespace NeuralBreak.Combat
 
         private void Awake()
         {
-            Debug.Log($"[UpgradePoolManager] Awake called. Current Instance: {(Instance != null ? Instance.gameObject.name : "null")}");
-
             if (Instance != null && Instance != this)
             {
-                Debug.LogWarning($"[UpgradePoolManager] Duplicate instance detected, destroying self");
-                Destroy(gameObject);
-                return;
+                Debug.LogWarning("[UpgradePoolManager] Multiple instances detected");
             }
             Instance = this;
-
-            Debug.Log($"[UpgradePoolManager] Singleton Instance set to: {gameObject.name}");
         }
 
         private void Start()

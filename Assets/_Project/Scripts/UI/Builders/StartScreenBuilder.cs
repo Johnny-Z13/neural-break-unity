@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using NeuralBreak.Core;
 
 namespace NeuralBreak.UI.Builders
 {
@@ -61,6 +62,22 @@ namespace NeuralBreak.UI.Builders
             SetPrivateField(startScreen, "m_subtitleText", subText);
             SetPrivateField(startScreen, "m_playButton", playBtn);
             SetPrivateField(startScreen, "m_firstSelected", playBtn);
+
+            // DIRECTLY wire the button click - don't rely on StartScreen
+            playBtn.onClick.AddListener(() =>
+            {
+                Debug.Log("[StartScreenBuilder] PLAY BUTTON CLICKED!");
+                startScreen.Hide();
+
+                if (GameManager.Instance != null)
+                {
+                    GameManager.Instance.StartGame(GameMode.Arcade);
+                }
+                else if (GameStateManager.Instance != null)
+                {
+                    GameStateManager.Instance.StartGame(GameMode.Arcade);
+                }
+            });
 
             return screen.gameObject;
         }

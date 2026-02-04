@@ -247,21 +247,23 @@ namespace NeuralBreak.UI
 
         private void OnResumeClicked()
         {
-            if (GameManager.Instance != null)
-            {
-                GameManager.Instance.ResumeGame();
-            }
+            // Use GameStateManager (guaranteed to exist from Boot scene)
+            GameStateManager.Instance.ResumeGame();
         }
 
         private void OnRestartClicked()
         {
+            // Resume time first
+            Time.timeScale = 1f;
+
+            // Use GameManager if available (handles stats reset), otherwise GameStateManager
             if (GameManager.Instance != null)
             {
-                // Resume time first
-                Time.timeScale = 1f;
-
-                // Start new game
-                GameManager.Instance.StartGame(GameManager.Instance.CurrentMode);
+                GameManager.Instance.StartGame(GameStateManager.Instance.CurrentMode);
+            }
+            else
+            {
+                GameStateManager.Instance.StartGame(GameStateManager.Instance.CurrentMode);
             }
         }
 
@@ -276,10 +278,8 @@ namespace NeuralBreak.UI
 
         private void OnQuitClicked()
         {
-            if (GameManager.Instance != null)
-            {
-                GameManager.Instance.ReturnToMenu();
-            }
+            // Use GameStateManager (guaranteed to exist from Boot scene)
+            GameStateManager.Instance.ReturnToMenu();
         }
     }
 }

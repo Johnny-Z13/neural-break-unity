@@ -1,6 +1,7 @@
 using UnityEngine;
 using NeuralBreak.Config;
 using NeuralBreak.Core;
+using Z13.Core;
 
 namespace NeuralBreak.Entities
 {

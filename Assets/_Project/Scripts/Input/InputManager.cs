@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System;
+using Z13.Core;
 
 namespace NeuralBreak.Input
 {
@@ -8,8 +9,10 @@ namespace NeuralBreak.Input
     /// Twin-stick shooter input manager.
     /// Left stick/WASD = movement, Right stick/Mouse = aim direction.
     /// Supports keyboard+mouse and gamepad input.
+    ///
+    /// TRUE SINGLETON - Lives in Boot scene, persists across all scenes.
     /// </summary>
-    public class InputManager : MonoBehaviour
+    public class InputManager : MonoBehaviour, IBootable
     {
         public static InputManager Instance { get; private set; }
 
@@ -60,14 +63,11 @@ namespace NeuralBreak.Input
         // Reference to player transform for mouse aim calculation
         private Transform m_playerTransform;
 
-        private void Awake()
+        /// <summary>
+        /// Called by BootManager for controlled initialization order.
+        /// </summary>
+        public void Initialize()
         {
-            // Singleton
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
             Instance = this;
 
             // Initialize aim direction to up (12 o'clock)
@@ -75,6 +75,24 @@ namespace NeuralBreak.Input
             AimInput = Vector2.up;
 
             SetupInputActions();
+            Debug.Log("[InputManager] Initialized via BootManager");
+        }
+
+        private void Awake()
+        {
+            // If already initialized by BootManager, skip
+            if (Instance == this) return;
+
+            // Fallback for running main scene directly (development only)
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            // Development fallback - initialize directly
+            Initialize();
+            Debug.LogWarning("[InputManager] Initialized via Awake fallback - should use Boot scene in production");
         }
 
         private void SetupInputActions()
@@ -553,13 +571,5 @@ namespace NeuralBreak.Input
         }
 
         #endregion
-
-        private void OnDestroy()
-        {
-            if (Instance == this)
-            {
-                Instance = null;
-            }
-        }
     }
 }

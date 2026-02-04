@@ -1,11 +1,10 @@
 using UnityEngine;
-using NeuralBreak.Core;
+using Z13.Core;
 
 namespace NeuralBreak.Combat
 {
     /// <summary>
     /// Manages pooling for enemy projectiles.
-    /// Singleton for easy access from enemy scripts.
     /// </summary>
     public class EnemyProjectilePool : MonoBehaviour
     {
@@ -22,8 +21,7 @@ namespace NeuralBreak.Combat
         {
             if (Instance != null && Instance != this)
             {
-                Destroy(gameObject);
-                return;
+                Debug.LogWarning("[EnemyProjectilePool] Multiple instances detected");
             }
             Instance = this;
 

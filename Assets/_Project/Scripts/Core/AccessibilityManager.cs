@@ -3,14 +3,17 @@ using UnityEngine.UI;
 using TMPro;
 using System;
 using NeuralBreak.Input;
+using Z13.Core;
 
 namespace NeuralBreak.Core
 {
     /// <summary>
     /// Manages accessibility options for the game.
     /// Includes screen shake, flash effects, color options, etc.
+    ///
+    /// TRUE SINGLETON - Lives in Boot scene, persists across all scenes.
     /// </summary>
-    public class AccessibilityManager : MonoBehaviour
+    public class AccessibilityManager : MonoBehaviour, IBootable
     {
         public static AccessibilityManager Instance { get; private set; }
 
@@ -49,25 +52,37 @@ namespace NeuralBreak.Core
 
         private const string PREFS_KEY = "AccessibilitySettings";
 
+        /// <summary>
+        /// Called by BootManager for controlled initialization order.
+        /// </summary>
+        public void Initialize()
+        {
+            Instance = this;
+            LoadSettings();
+            Debug.Log("[AccessibilityManager] Initialized via BootManager");
+        }
+
         private void Awake()
         {
+            // If already initialized by BootManager, skip
+            if (Instance == this) return;
+
+            // Fallback for running main scene directly (development only)
             if (Instance != null && Instance != this)
             {
                 Destroy(gameObject);
                 return;
             }
+
+            // Development fallback - initialize directly
             Instance = this;
             DontDestroyOnLoad(gameObject);
-
             LoadSettings();
+            Debug.LogWarning("[AccessibilityManager] Initialized via Awake fallback - should use Boot scene in production");
         }
 
         private void OnDestroy()
         {
-            if (Instance == this)
-            {
-                Instance = null;
-            }
         }
 
         /// <summary>

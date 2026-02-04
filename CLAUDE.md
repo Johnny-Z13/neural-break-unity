@@ -39,6 +39,7 @@ public class SaveSystem : Z13.Core.SaveSystemBase<SaveData> { }
 | `ObjectPool<T>` | Zero-allocation object pooling |
 | `LogHelper` | Editor-only logging (stripped in builds) |
 | `SaveSystemBase<T>` | Generic save/load with JSON |
+| `IBootable` | Interface for controlled singleton initialization |
 
 ### Adding to Z13.Core
 1. Create in `Assets/_Project/Packages/Z13.Core/Runtime/`
@@ -46,18 +47,67 @@ public class SaveSystem : Z13.Core.SaveSystemBase<SaveData> { }
 3. **No game-specific types** - must be fully generic
 4. Update `Z13.Core/README.md`
 
-### Backward Compatibility Pattern
-When extracting to Z13.Core, leave a thin wrapper in the game project:
+### Using Z13.Core in Game Code
+Add `using Z13.Core;` at the top of files that need EventBus, ObjectPool, LogHelper, etc:
 ```csharp
-// Game project wrapper for backward compatibility
+using Z13.Core;
+
+// Then use directly
+EventBus.Publish(new MyEvent { value = 10 });
+LogHelper.Log("Debug message");
+```
+
+---
+
+## Development Philosophy
+
+### No Backward Compatibility Code
+When refactoring, **delete code that's no longer relevant**. Do not:
+- Keep wrapper classes for backward compatibility
+- Leave `// DEPRECATED` comments on old APIs
+- Add `// TODO: Remove this` comments
+- Keep unused parameters or methods "just in case"
+
+```csharp
+// ❌ WRONG - Don't keep compatibility wrappers
 namespace NeuralBreak.Core
 {
-    public static class EventBus
-    {
-        public static void Publish<T>(T evt) where T : struct
-            => Z13.Core.EventBus.Publish(evt);
-    }
+    // DEPRECATED: Use Z13.Core.EventBus directly
+    public static class EventBus { ... }
 }
+
+// ✅ CORRECT - Just use the real thing
+using Z13.Core;
+EventBus.Publish(new MyEvent());
+```
+
+### Delete Over Comment
+If code is no longer needed, **delete it entirely**. Don't comment it out or mark it deprecated:
+```csharp
+// ❌ WRONG
+// Note: OnDestroy does NOT null Instance - true singletons live forever
+private void OnDestroy() { }
+
+// ❌ WRONG
+// DEPRECATED: Access via serialized field instead of Instance
+public static MyClass Instance { get; private set; }
+
+// ✅ CORRECT - Just write clean code without explanatory comments for removed features
+private void OnDestroy() { }
+public static MyClass Instance { get; private set; }
+```
+
+### Prefer Direct Imports
+Use `using` statements rather than fully qualified names:
+```csharp
+// ❌ WRONG
+Z13.Core.EventBus.Publish(evt);
+Z13.Core.LogHelper.Log("message");
+
+// ✅ CORRECT
+using Z13.Core;
+EventBus.Publish(evt);
+LogHelper.Log("message");
 ```
 
 ---
@@ -86,8 +136,47 @@ FindFirstObjectByType<GameManager>()
 ### File Size Limit
 All files must be **≤300 LOC**. Extract helpers to separate files if exceeded.
 
-### Singleton Allowlist (Only These 8)
-`GameManager`, `InputManager`, `UIManager`, `AudioManager`, `PermanentUpgradeManager`, `UpgradePoolManager`, `ConfigProvider` (static), `EventBus` (static)
+### Singleton Architecture (Boot Scene Pattern)
+
+**TRUE SINGLETONS (Boot Scene, App-Lifetime):**
+These live in the Boot scene, implement `IBootable`, and persist via `DontDestroyOnLoad`:
+- `GameStateManager` - Global game flow, state, and mode
+- `InputManager` - Global input handling
+- `AudioManager` - Global audio playback
+- `MusicManager` - Global music playback
+- `SaveSystem` - Persistent save data
+- `AccessibilityManager` - Global accessibility settings
+- `HighScoreManager` - Persistent high scores
+- `ConfigProvider` (static) - Config access
+- `EventBus` (static) - Pub/sub messaging
+
+```csharp
+// ✅ TRUE SINGLETON - Always safe to access (Boot scene guarantees existence)
+GameStateManager.Instance.StartGame(mode);
+AudioManager.Instance.PlaySFX(clip);
+InputManager.Instance.OnFirePressed += HandleFire;
+```
+
+**SCENE-SPECIFIC OBJECTS:**
+These are scene objects. They have `Instance` for convenience but should be accessed via serialized fields when possible:
+- `GameManager` - Scene-specific gameplay: score, combo, enemies
+- `UIManager` - Scene-specific UI management
+- `LevelManager` - Scene-specific level logic
+- `PermanentUpgradeManager` - Game-session specific upgrades
+- `UpgradePoolManager` - Game-session specific pool
+- `EnemyProjectilePool` - Scene-specific projectile pool
+
+```csharp
+// Both work - Instance is available for convenience
+GameManager.Instance.Stats
+
+// Preferred when you have a reference - Use serialized field references
+[SerializeField] private GameManager m_gameManager;
+m_gameManager.Stats
+```
+
+**Boot Scene Setup:**
+Run `Neural Break > Create Boot Scene` to generate the Boot scene with proper singleton initialization order.
 
 ### Zero-Allocation Gameplay
 - Use object pools for spawned objects (projectiles, enemies, pickups, VFX)
@@ -169,7 +258,8 @@ EventBus.Subscribe<MyEvent>(OnMyEvent);
 EventBus.Unsubscribe<MyEvent>(OnMyEvent);
 ```
 
-**Location**: `Assets/_Project/Scripts/Core/EventBus.cs`
+**Location**: `Assets/_Project/Packages/Z13.Core/Runtime/EventBus.cs`
+**Game Events**: `Assets/_Project/Scripts/Core/GameEvents.cs`
 
 ### Config-Driven Design
 Balance values live in ScriptableObjects, not code.
@@ -190,7 +280,7 @@ projectile.Initialize(position, direction, damage);
 m_projectilePool.Return(projectile);
 ```
 
-**Location**: `Assets/_Project/Scripts/Core/ObjectPool.cs`
+**Location**: `Assets/_Project/Packages/Z13.Core/Runtime/ObjectPool.cs`
 
 ---
 
@@ -198,15 +288,19 @@ m_projectilePool.Return(projectile);
 
 | System | Location | Purpose |
 |--------|----------|---------|
-| GameManager | `Core/GameManager.cs` | State machine, scoring, level flow |
+| BootManager | `Core/BootManager.cs` | Boot scene singleton initialization |
+| GameStateManager | `Core/GameStateManager.cs` | Global state machine (Boot scene singleton) |
+| GameManager | `Core/GameManager.cs` | Scene-specific scoring, combo, level flow |
 | LevelManager | `Core/LevelManager.cs` | Objectives, enemy unlock schedule |
 | EnemySpawner | `Entities/Enemies/EnemySpawner.cs` | Wave/rate-based spawning |
-| InputManager | `Input/InputManager.cs` | Twin-stick controls, events |
+| InputManager | `Input/InputManager.cs` | Twin-stick controls, events (Boot scene singleton) |
 | WeaponSystem | `Combat/WeaponSystem.cs` | Firing, heat, modifiers |
 | EventBus | `Z13.Core` + `Core/GameEvents.cs` | Pub/sub + game events |
 
 ### Game States
 `StartScreen` → `Playing` → `Paused` / `RogueChoice` / `GameOver` / `Victory`
+
+State is managed by `GameStateManager` (global singleton). Scene-specific gameplay (scoring, combo) is handled by `GameManager` (scene object).
 
 ### Weapon Modifier Flow
 ```
@@ -218,26 +312,30 @@ Base → WeaponUpgradeManager (temp) → PermanentUpgradeManager (perm) → Fina
 ## Project Structure
 
 ```
-Assets/_Project/
-├── Packages/
-│   └── Z13.Core/           # Shared reusable package
-│       └── Runtime/        # EventBus, ObjectPool, LogHelper, SaveSystemBase
-├── Scripts/
-│   ├── Audio/              # AudioManager, MusicManager
-│   ├── Combat/             # WeaponSystem, Projectile, Upgrades/
-│   ├── Config/             # ConfigProvider, GameBalanceConfig
-│   ├── Core/               # GameManager, LevelManager, GameEvents
-│   │   ├── EventBus.cs     # Wrapper → Z13.Core.EventBus
-│   │   ├── ObjectPool.cs   # Wrapper → Z13.Core.ObjectPool
-│   │   ├── GameEvents.cs   # Game-specific events & enums
-│   │   └── SaveSystem.cs   # Extends Z13.Core.SaveSystemBase
-│   ├── Entities/           # Player, Enemies/, Pickups/
-│   ├── Graphics/           # CameraController, VFX, Starfield
-│   ├── Input/              # InputManager, GamepadRumble
-│   ├── UI/                 # UIManager, HUD, Screens
-│   └── Utils/              # Extensions (LogHelper → Z13.Core)
-├── Prefabs/                # Enemies/, Pickups/, UI/
-└── Resources/              # Config/, Upgrades/
+Assets/
+├── Scenes/
+│   ├── Boot.unity              # Singleton initialization scene (index 0)
+│   └── main-neural-break.unity # Main gameplay scene (index 1)
+└── _Project/
+    ├── Packages/
+    │   └── Z13.Core/           # Shared reusable package
+    │       └── Runtime/        # EventBus, ObjectPool, LogHelper, SaveSystemBase, IBootable
+    ├── Scripts/
+    │   ├── Audio/              # AudioManager, MusicManager (Boot scene singletons)
+    │   ├── Combat/             # WeaponSystem, Projectile, Upgrades/
+    │   ├── Config/             # ConfigProvider, GameBalanceConfig
+    │   ├── Core/               # BootManager, GameStateManager, GameManager, LevelManager
+    │   │   ├── BootManager.cs      # Initializes singletons, loads main scene
+    │   │   ├── GameStateManager.cs # Global state (Boot scene singleton)
+    │   │   ├── GameManager.cs      # Scene-specific gameplay
+    │   │   ├── GameEvents.cs       # Game-specific events & enums
+    │   │   └── SaveSystem.cs       # Extends Z13.Core.SaveSystemBase
+    │   ├── Entities/           # Player, Enemies/, Pickups/
+    │   ├── Graphics/           # CameraController, VFX, Starfield
+    │   ├── Input/              # InputManager, GamepadRumble (Boot scene singleton)
+    │   └── UI/                 # UIManager, HUD, Screens (scene-specific)
+    ├── Prefabs/                # Enemies/, Pickups/, UI/
+    └── Resources/              # Config/, Upgrades/
 ```
 
 ### Namespaces
@@ -320,6 +418,8 @@ EventBus.Subscribe<UpgradeSelectedEvent>(OnUpgradeSelected);
 ```
 
 ### Debug Menu
+- `Neural Break > Create Boot Scene` - Generate Boot scene with singletons
+- `Neural Break > Validate Boot Scene Setup` - Check Boot scene configuration
 - `Neural Break > Create Upgrades > Create Starter Pack`
 - `Neural Break > Clear Save Data`
 - Right-click GameManager > Debug commands

@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using NeuralBreak.Core;
+using Z13.Core;
 
 namespace NeuralBreak.UI
 {
@@ -122,18 +123,21 @@ namespace NeuralBreak.UI
 
         private void OnRestartClicked()
         {
+            // Use GameManager if available (handles stats reset), otherwise GameStateManager
             if (GameManager.Instance != null)
             {
-                GameManager.Instance.StartGame(GameManager.Instance.CurrentMode);
+                GameManager.Instance.StartGame(GameStateManager.Instance.CurrentMode);
+            }
+            else
+            {
+                GameStateManager.Instance.StartGame(GameStateManager.Instance.CurrentMode);
             }
         }
 
         private void OnMainMenuClicked()
         {
-            if (GameManager.Instance != null)
-            {
-                GameManager.Instance.ReturnToMenu();
-            }
+            // Use GameStateManager (guaranteed to exist from Boot scene)
+            GameStateManager.Instance.ReturnToMenu();
         }
 
         #region Debug

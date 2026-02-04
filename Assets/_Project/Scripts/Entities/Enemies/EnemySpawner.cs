@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using NeuralBreak.Core;
 using NeuralBreak.Config;
-using NeuralBreak.Utils;
+using Z13.Core;
 
 namespace NeuralBreak.Entities
 {

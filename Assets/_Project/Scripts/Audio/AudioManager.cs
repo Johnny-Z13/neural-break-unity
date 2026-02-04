@@ -1,13 +1,16 @@
 using UnityEngine;
 using NeuralBreak.Core;
+using Z13.Core;
 
 namespace NeuralBreak.Audio
 {
     /// <summary>
     /// Audio manager that wraps MMSoundManager and uses procedural placeholder sounds.
     /// Subscribes to game events and plays appropriate sounds.
+    ///
+    /// TRUE SINGLETON - Lives in Boot scene, persists across all scenes.
     /// </summary>
-    public class AudioManager : MonoBehaviour
+    public class AudioManager : MonoBehaviour, IBootable
     {
         public static AudioManager Instance { get; private set; }
 
@@ -48,32 +51,39 @@ namespace NeuralBreak.Audio
         private int m_currentCombo;
         private float m_comboPitchBonus;
 
-        private void Awake()
+        /// <summary>
+        /// Called by BootManager for controlled initialization order.
+        /// </summary>
+        public void Initialize()
         {
-            // Singleton setup
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
             Instance = this;
 
             // Create audio sources if not assigned (fast operation)
             EnsureAudioSources();
 
-            // Defer clip generation to avoid blocking main thread on boot
-            // This will happen over multiple frames via coroutine
-            Debug.Log("[AudioManager] Awake complete - clips will be generated in Start()");
+            Debug.Log("[AudioManager] Initialized via BootManager - clips will be generated in Start()");
+        }
+
+        private void Awake()
+        {
+            // If already initialized by BootManager, skip
+            if (Instance == this) return;
+
+            // Fallback for running main scene directly (development only)
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            // Development fallback - initialize directly
+            Initialize();
+            Debug.LogWarning("[AudioManager] Initialized via Awake fallback - should use Boot scene in production");
         }
 
         private void OnDestroy()
         {
             UnsubscribeEvents();
-
-            if (Instance == this)
-            {
-                Instance = null;
-            }
         }
 
         private void Start()

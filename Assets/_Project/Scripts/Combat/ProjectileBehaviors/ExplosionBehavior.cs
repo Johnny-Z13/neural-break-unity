@@ -3,6 +3,7 @@ using NeuralBreak.Core;
 using NeuralBreak.Entities;
 using NeuralBreak.Graphics;
 using System.Collections.Generic;
+using Z13.Core;
 
 namespace NeuralBreak.Combat.ProjectileBehaviors
 {

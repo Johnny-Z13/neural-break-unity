@@ -1,14 +1,13 @@
 using UnityEngine;
-using NeuralBreak.Core;
-using NeuralBreak.Utils;
 using System.Collections.Generic;
+using NeuralBreak.Core;
+using Z13.Core;
 
 namespace NeuralBreak.Combat
 {
     /// <summary>
     /// Manages permanently selected upgrades during a run.
     /// Tracks active upgrades and calculates combined modifiers.
-    /// Singleton pattern for global access.
     /// </summary>
     public class PermanentUpgradeManager : MonoBehaviour
     {
@@ -29,17 +28,11 @@ namespace NeuralBreak.Combat
 
         private void Awake()
         {
-            Debug.Log($"[PermanentUpgradeManager] Awake called. Current Instance: {(Instance != null ? Instance.gameObject.name : "null")}");
-
             if (Instance != null && Instance != this)
             {
-                Debug.LogWarning($"[PermanentUpgradeManager] Duplicate instance detected, destroying self");
-                Destroy(gameObject);
-                return;
+                Debug.LogWarning("[PermanentUpgradeManager] Multiple instances detected");
             }
             Instance = this;
-
-            Debug.Log($"[PermanentUpgradeManager] Singleton Instance set to: {gameObject.name}");
 
             // Subscribe to game events
             EventBus.Subscribe<GameStartedEvent>(OnGameStarted);

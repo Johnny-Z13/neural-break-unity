@@ -1,7 +1,7 @@
 using UnityEngine;
 using NeuralBreak.Entities;
-using NeuralBreak.Utils;
 using NeuralBreak.Config;
+using Z13.Core;
 
 namespace NeuralBreak.Core
 {
@@ -9,7 +9,6 @@ namespace NeuralBreak.Core
     /// Manages the 99-level progression system with objective-based advancement.
     /// Each level has specific kill objectives that must be completed.
     /// Controls enemy spawn rates based on level configuration.
-    /// Based on TypeScript LevelManager.ts.
     /// </summary>
     public class LevelManager : MonoBehaviour
     {
@@ -45,8 +44,7 @@ namespace NeuralBreak.Core
         {
             if (Instance != null && Instance != this)
             {
-                Destroy(gameObject);
-                return;
+                Debug.LogWarning("[LevelManager] Multiple instances detected");
             }
             Instance = this;
         }

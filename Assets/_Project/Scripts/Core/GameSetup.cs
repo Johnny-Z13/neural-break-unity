@@ -16,7 +16,7 @@ namespace NeuralBreak.Core
 
         [Header("Auto-Find Settings")]
         [SerializeField] private bool m_autoSetupOnAwake = true;
-        [SerializeField] private bool m_autoStartGame = false; // DISABLED - let user choose mode via UI
+        [SerializeField] private bool m_autoStartGame = false;
 
         // Static sprite accessors for backward compatibility
         public static Sprite CircleSprite => PrefabSpriteSetup.CircleSprite;
@@ -46,38 +46,24 @@ namespace NeuralBreak.Core
 
             if (m_autoStartGame)
             {
-                // Give a frame for everything to initialize
-                StartCoroutine(AutoStartGame());
+                AutoStartGame();
             }
         }
 
-        private System.Collections.IEnumerator AutoStartGame()
+        private void AutoStartGame()
         {
-            Debug.Log("[GameSetup] AutoStartGame coroutine starting...");
-
-            // Wait for GameManager to exist
-            float timeout = 3f;
-            while (GameManager.Instance == null && timeout > 0)
+            // GameStateManager is guaranteed to exist (Boot scene) - no timeout needed!
+            if (GameStateManager.Instance == null)
             {
-                yield return null;
-                timeout -= Time.deltaTime;
+                Debug.LogError("[GameSetup] GameStateManager.Instance is null! Boot scene may not have loaded.");
+                return;
             }
 
-            if (GameManager.Instance == null)
+            if (!GameStateManager.Instance.IsPlaying)
             {
-                Debug.LogError("[GameSetup] GameManager.Instance is null after waiting!");
-                yield break;
-            }
-
-            // Wait one more frame for safety
-            yield return null;
-
-            if (!GameManager.Instance.IsPlaying)
-            {
-                // Respect the GameManager's configured mode instead of hardcoding Arcade
-                var mode = GameManager.Instance.CurrentMode;
+                var mode = GameStateManager.Instance.CurrentMode;
                 Debug.Log($"[GameSetup] Starting game in {mode} mode...");
-                GameManager.Instance.StartGame(mode);
+                GameStateManager.Instance.StartGame(mode);
                 Debug.Log($"[GameSetup] Auto-started game in {mode} mode");
             }
         }

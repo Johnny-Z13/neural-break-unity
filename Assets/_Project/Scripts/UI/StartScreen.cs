@@ -2,7 +2,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using NeuralBreak.Core;
-using NeuralBreak.Utils;
 
 namespace NeuralBreak.UI
 {
@@ -27,24 +26,48 @@ namespace NeuralBreak.UI
         [Header("Version")]
         [SerializeField] private TextMeshProUGUI m_versionText;
 
+        private bool m_buttonsWired;
+
         protected override void Awake()
         {
             base.Awake();
+            WireButtons();
+        }
 
-            // Wire up button events
+        private void Start()
+        {
+            // Wire buttons again in Start() in case they were set via reflection after Awake()
+            WireButtons();
+        }
+
+        /// <summary>
+        /// Wire button click listeners. Called by UIBuilder after setting fields via reflection.
+        /// </summary>
+        public void InitializeButtons()
+        {
+            WireButtons();
+        }
+
+        private void WireButtons()
+        {
+            if (m_buttonsWired) return;
+
             if (m_playButton != null)
             {
                 m_playButton.onClick.AddListener(() => StartGame(GameMode.Arcade));
+                m_buttonsWired = true;
             }
 
             if (m_arcadeButton != null)
             {
                 m_arcadeButton.onClick.AddListener(() => StartGame(GameMode.Arcade));
+                m_buttonsWired = true;
             }
 
             if (m_rogueButton != null)
             {
                 m_rogueButton.onClick.AddListener(() => StartGame(GameMode.Rogue));
+                m_buttonsWired = true;
             }
         }
 
@@ -84,21 +107,21 @@ namespace NeuralBreak.UI
             Debug.Log($"[StartScreen] Launching {mode} MODE");
             Debug.Log($"[StartScreen] ========================================");
 
-            if (GameManager.Instance == null)
-            {
-                Debug.LogError("[StartScreen] ERROR: GameManager.Instance is NULL! Cannot start game!");
-                return;
-            }
-
-            Debug.Log($"[StartScreen] GameManager found, calling StartGame({mode})");
-
             // Hide this screen FIRST (before state change event)
-            Debug.Log($"[StartScreen] Calling Hide() - m_screenRoot: {(m_screenRoot != null ? m_screenRoot.name : "NULL")}");
             Hide();
-            Debug.Log($"[StartScreen] Hide() completed - m_screenRoot active: {(m_screenRoot != null ? m_screenRoot.activeSelf.ToString() : "NULL")}");
 
-            // Start the game (this will also trigger UIManager to hide screens via event)
-            GameManager.Instance.StartGame(mode);
+            // Use GameStateManager (guaranteed to exist from Boot scene)
+            // GameManager.StartGame delegates to GameStateManager anyway
+            if (GameManager.Instance != null)
+            {
+                // Use scene-specific GameManager if available (handles stats reset)
+                GameManager.Instance.StartGame(mode);
+            }
+            else
+            {
+                // Fall back to global GameStateManager
+                GameStateManager.Instance.StartGame(mode);
+            }
 
             Debug.Log($"[StartScreen] StartGame() called successfully");
         }

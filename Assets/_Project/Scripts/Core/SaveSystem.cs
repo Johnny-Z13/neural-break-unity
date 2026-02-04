@@ -1,14 +1,17 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+using Z13.Core;
 
 namespace NeuralBreak.Core
 {
     /// <summary>
     /// Neural Break save system. Inherits from Z13.Core.SaveSystemBase.
     /// Handles player progress, unlocks, and statistics.
+    ///
+    /// TRUE SINGLETON - Lives in Boot scene, persists across all scenes.
     /// </summary>
-    public class SaveSystem : Z13.Core.SaveSystemBase<SaveData>
+    public class SaveSystem : Z13.Core.SaveSystemBase<SaveData>, IBootable
     {
         public static SaveSystem Instance { get; private set; }
 
@@ -18,19 +21,35 @@ namespace NeuralBreak.Core
         public bool HasPlayed => CurrentSave != null && CurrentSave.hasPlayed;
 
         protected override string SaveFileName => "neural_break_save.json";
-        protected override bool ShouldAutoSave => GameManager.Instance != null && GameManager.Instance.IsPlaying;
+        protected override bool ShouldAutoSave => GameStateManager.Instance != null && GameStateManager.Instance.IsPlaying;
+
+        /// <summary>
+        /// Called by BootManager for controlled initialization order.
+        /// </summary>
+        public void Initialize()
+        {
+            Instance = this;
+            base.Awake(); // Call base to load save data
+            Debug.Log("[SaveSystem] Initialized via BootManager");
+        }
 
         protected override void Awake()
         {
+            // If already initialized by BootManager, skip
+            if (Instance == this) return;
+
+            // Fallback for running main scene directly (development only)
             if (Instance != null && Instance != this)
             {
                 Destroy(gameObject);
                 return;
             }
+
+            // Development fallback - initialize directly
             Instance = this;
             DontDestroyOnLoad(gameObject);
-
             base.Awake();
+            Debug.LogWarning("[SaveSystem] Initialized via Awake fallback - should use Boot scene in production");
         }
 
         private void Start()
@@ -43,11 +62,6 @@ namespace NeuralBreak.Core
         {
             EventBus.Unsubscribe<GameOverEvent>(OnGameOver);
             EventBus.Unsubscribe<VictoryEvent>(OnVictory);
-
-            if (Instance == this)
-            {
-                Instance = null;
-            }
         }
 
         private void OnGameOver(GameOverEvent evt)

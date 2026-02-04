@@ -2,6 +2,7 @@ using UnityEngine;
 using NeuralBreak.Core;
 using NeuralBreak.Input;
 using NeuralBreak.Config;
+using Z13.Core;
 
 namespace NeuralBreak.Entities
 {

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using NeuralBreak.Core;
 using NeuralBreak.Entities;
+using Z13.Core;
 
 namespace NeuralBreak.Audio
 {
@@ -22,9 +23,24 @@ namespace NeuralBreak.Audio
     /// <summary>
     /// Manages background music with multiple tracks.
     /// Handles cross-fading, intensity-based track selection, and boss music.
+    ///
+    /// TRUE SINGLETON - Lives in Boot scene, persists across all scenes.
     /// </summary>
-    public class MusicManager : MonoBehaviour
+    public class MusicManager : MonoBehaviour, IBootable
     {
+        public static MusicManager Instance { get; private set; }
+
+        /// <summary>
+        /// Called by BootManager for controlled initialization order.
+        /// </summary>
+        public void Initialize()
+        {
+            Instance = this;
+            SetupAudioSources();
+            CreateDefaultTracks();
+            Debug.Log("[MusicManager] Initialized via BootManager");
+        }
+
 
         [Header("Audio Sources")]
         [SerializeField] private AudioSource m_sourceA;
@@ -51,10 +67,20 @@ namespace NeuralBreak.Audio
 
         private void Awake()
         {
-            DontDestroyOnLoad(gameObject);
+            // If already initialized by BootManager, skip
+            if (Instance == this) return;
 
-            SetupAudioSources();
-            CreateDefaultTracks();
+            // Fallback for running main scene directly (development only)
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            // Development fallback - initialize directly
+            Initialize();
+            DontDestroyOnLoad(gameObject);
+            Debug.LogWarning("[MusicManager] Initialized via Awake fallback - should use Boot scene in production");
         }
 
         private void Start()
@@ -76,7 +102,6 @@ namespace NeuralBreak.Audio
             EventBus.Unsubscribe<BossSpawnedEvent>(OnBossSpawned);
             EventBus.Unsubscribe<BossDefeatedEvent>(OnBossDefeated);
             EventBus.Unsubscribe<LevelStartedEvent>(OnLevelStarted);
-
         }
 
         private void SetupAudioSources()
@@ -364,7 +389,8 @@ namespace NeuralBreak.Audio
             {
                 yield return new WaitForSeconds(m_intensityCheckInterval);
 
-                if (!m_isBossFight && m_autoSelectByIntensity && GameManager.Instance != null && GameManager.Instance.IsPlaying)
+                // Use GameStateManager (guaranteed to exist from Boot scene)
+                if (!m_isBossFight && m_autoSelectByIntensity && GameStateManager.Instance != null && GameStateManager.Instance.IsPlaying)
                 {
                     // Calculate current game intensity based on enemy count
                     // Use GameObject.FindGameObjectsWithTag for better performance

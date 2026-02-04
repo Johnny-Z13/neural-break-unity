@@ -2,6 +2,7 @@ using UnityEngine;
 using NeuralBreak.Core;
 using NeuralBreak.Entities;
 using System.Collections.Generic;
+using Z13.Core;
 
 namespace NeuralBreak.Combat.ProjectileBehaviors
 {
