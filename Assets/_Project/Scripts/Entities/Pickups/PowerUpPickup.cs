@@ -16,40 +16,40 @@ namespace NeuralBreak.Entities
         public override PickupType PickupType => PickupType.PowerUp;
 
         [Header("PowerUp Settings")]
-        [SerializeField] private int _powerIncrease = 1;
-        [SerializeField] private Color _pickupColor = new Color(0f, 0.67f, 0.27f, 0.9f); // Deep Emerald #00AA44
+        [SerializeField] private int m_powerIncrease = 1;
+        [SerializeField] private Color m_pickupColor = new Color(0f, 0.67f, 0.27f, 0.9f); // Deep Emerald #00AA44
 
         [Header("Visual")]
-        [SerializeField] private PowerUpVisuals _visuals;
-        private bool _visualsGenerated;
+        [SerializeField] private PowerUpVisuals m_visuals;
+        private bool m_visualsGenerated;
 
-        protected override Color GetPickupColor() => _pickupColor;
+        protected override Color GetPickupColor() => m_pickupColor;
 
         public override void Initialize(Vector2 position, Transform playerTarget, System.Action<PickupBase> returnCallback)
         {
             base.Initialize(position, playerTarget, returnCallback);
 
-            if (!_visualsGenerated)
+            if (!m_visualsGenerated)
             {
                 EnsureVisuals();
-                _visualsGenerated = true;
+                m_visualsGenerated = true;
             }
         }
 
         private void EnsureVisuals()
         {
-            if (_visuals == null)
+            if (m_visuals == null)
             {
-                _visuals = GetComponentInChildren<PowerUpVisuals>();
+                m_visuals = GetComponentInChildren<PowerUpVisuals>();
             }
 
-            if (_visuals == null)
+            if (m_visuals == null)
             {
                 var visualsGO = new GameObject("Visuals");
                 visualsGO.transform.SetParent(transform, false);
                 visualsGO.transform.localPosition = Vector3.zero;
-                _visuals = visualsGO.AddComponent<PowerUpVisuals>();
-                _visuals.SetLetter('P');
+                m_visuals = visualsGO.AddComponent<PowerUpVisuals>();
+                m_visuals.SetLetter('P');
             }
         }
 
@@ -65,7 +65,7 @@ namespace NeuralBreak.Entities
             if (weapon != null)
             {
                 // Increase power level permanently
-                weapon.AddPowerLevel(_powerIncrease);
+                weapon.AddPowerLevel(m_powerIncrease);
 
                 // Log pattern progression
                 int currentLevel = weapon.PowerLevel;

@@ -18,65 +18,65 @@ namespace NeuralBreak.Entities
         public override EnemyType EnemyType => EnemyType.Fizzer;
 
         [Header("Fizzer Settings")]
-        [SerializeField] private float _directionChangeInterval = 0.15f;
-        [SerializeField] private float _zigzagAmplitude = 3f;
-        [SerializeField] private float _zigzagFrequency = 8f;
+        [SerializeField] private float m_directionChangeInterval = 0.15f;
+        [SerializeField] private float m_zigzagAmplitude = 3f;
+        [SerializeField] private float m_zigzagFrequency = 8f;
 
         [Header("Death Explosion")]
-        [SerializeField] private float _deathDamageRadius = 2f;
-        [SerializeField] private int _deathDamageAmount = 15;
+        [SerializeField] private float m_deathDamageRadius = 2f;
+        [SerializeField] private int m_deathDamageAmount = 15;
 
         // Config-driven shooting values
-        private float _burstCooldown => EnemyConfig?.fireRate ?? 3f;
-        private int _burstCount => EnemyConfig?.burstCount ?? 2;
-        private float _burstDelay => EnemyConfig?.burstDelay ?? 0.2f;
-        private float _projectileSpeed => EnemyConfig?.projectileSpeed ?? 9f;
-        private int _projectileDamage => EnemyConfig?.projectileDamage ?? 6;
+        private float m_burstCooldown => EnemyConfig?.fireRate ?? 3f;
+        private int m_burstCount => EnemyConfig?.burstCount ?? 2;
+        private float m_burstDelay => EnemyConfig?.burstDelay ?? 0.2f;
+        private float m_projectileSpeed => EnemyConfig?.projectileSpeed ?? 9f;
+        private int m_projectileDamage => EnemyConfig?.projectileDamage ?? 6;
 
         [Header("Visual")]
-        [SerializeField] private SpriteRenderer _spriteRenderer;
-        [SerializeField] private TrailRenderer _trailRenderer;
-        [SerializeField] private FizzerVisuals _visuals;
-        [SerializeField] private Color _electricColor = new Color(0.2f, 0.8f, 1f); // Electric cyan-blue
+        [SerializeField] private SpriteRenderer m_spriteRenderer;
+        [SerializeField] private TrailRenderer m_trailRenderer;
+        [SerializeField] private FizzerVisuals m_visuals;
+        [SerializeField] private Color m_electricColor = new Color(0.2f, 0.8f, 1f); // Electric cyan-blue
 
         [Header("Vapor Trail")]
-        [SerializeField] private bool _enableVaporTrail = true;
-        private ParticleSystem _vaporParticles;
+        [SerializeField] private bool m_enableVaporTrail = true;
+        private ParticleSystem m_vaporParticles;
 
         // Note: MMFeedbacks removed
 
         // Movement state
-        private Vector2 _currentDirection;
-        private float _directionTimer;
-        private float _zigzagOffset;
-        private float _zigzagPhase;
+        private Vector2 m_currentDirection;
+        private float m_directionTimer;
+        private float m_zigzagOffset;
+        private float m_zigzagPhase;
 
         // Attack state
-        private float _burstTimer;
-        private bool _isFiringBurst;
-        private bool _visualsGenerated;
+        private float m_burstTimer;
+        private bool m_isFiringBurst;
+        private bool m_visualsGenerated;
 
         protected override void OnInitialize()
         {
             base.OnInitialize();
 
-            _currentDirection = GetDirectionToPlayer();
-            _directionTimer = 0f;
-            _zigzagOffset = Random.Range(0f, Mathf.PI * 2f); // Random start phase
-            _zigzagPhase = 0f;
-            _burstTimer = _burstCooldown * Random.Range(0.3f, 0.7f); // Random initial delay
-            _isFiringBurst = false;
+            m_currentDirection = GetDirectionToPlayer();
+            m_directionTimer = 0f;
+            m_zigzagOffset = Random.Range(0f, Mathf.PI * 2f); // Random start phase
+            m_zigzagPhase = 0f;
+            m_burstTimer = m_burstCooldown * Random.Range(0.3f, 0.7f); // Random initial delay
+            m_isFiringBurst = false;
 
             // Setup trail renderer with material and color
-            if (_trailRenderer != null)
+            if (m_trailRenderer != null)
             {
                 // Load trail material if not assigned
-                if (_trailRenderer.sharedMaterial == null)
+                if (m_trailRenderer.sharedMaterial == null)
                 {
                     var trailMaterial = Resources.Load<Material>("Materials/VFX/FizzerTrail");
                     if (trailMaterial != null)
                     {
-                        _trailRenderer.sharedMaterial = trailMaterial;
+                        m_trailRenderer.sharedMaterial = trailMaterial;
                     }
                     else
                     {
@@ -84,21 +84,21 @@ namespace NeuralBreak.Entities
                     }
                 }
 
-                _trailRenderer.startColor = _electricColor;
-                _trailRenderer.endColor = new Color(_electricColor.r, _electricColor.g, _electricColor.b, 0f);
-                _trailRenderer.time = 0.3f;
-                _trailRenderer.widthMultiplier = 0.2f;
+                m_trailRenderer.startColor = m_electricColor;
+                m_trailRenderer.endColor = new Color(m_electricColor.r, m_electricColor.g, m_electricColor.b, 0f);
+                m_trailRenderer.time = 0.3f;
+                m_trailRenderer.widthMultiplier = 0.2f;
             }
 
             // Generate procedural visuals if not yet done
-            if (!_visualsGenerated)
+            if (!m_visualsGenerated)
             {
                 EnsureVisuals();
-                _visualsGenerated = true;
+                m_visualsGenerated = true;
             }
 
             // Setup vapor trail particles
-            if (_enableVaporTrail)
+            if (m_enableVaporTrail)
             {
                 EnsureVaporTrail();
             }
@@ -106,38 +106,38 @@ namespace NeuralBreak.Entities
 
         private void EnsureVaporTrail()
         {
-            if (_vaporParticles != null) return;
+            if (m_vaporParticles != null) return;
 
             // Create vapor trail particle system
             var vaporGO = new GameObject("VaporTrail");
             vaporGO.transform.SetParent(transform, false);
             vaporGO.transform.localPosition = Vector3.zero;
 
-            _vaporParticles = vaporGO.AddComponent<ParticleSystem>();
+            m_vaporParticles = vaporGO.AddComponent<ParticleSystem>();
 
-            var main = _vaporParticles.main;
+            var main = m_vaporParticles.main;
             main.startLifetime = 0.4f;
             main.startSpeed = 0.5f;
             main.startSize = new ParticleSystem.MinMaxCurve(0.15f, 0.3f);
-            main.startColor = new Color(_electricColor.r, _electricColor.g, _electricColor.b, 0.4f);
+            main.startColor = new Color(m_electricColor.r, m_electricColor.g, m_electricColor.b, 0.4f);
             main.simulationSpace = ParticleSystemSimulationSpace.World;
             main.maxParticles = 50;
 
-            var emission = _vaporParticles.emission;
+            var emission = m_vaporParticles.emission;
             emission.rateOverTime = 30f;
 
-            var shape = _vaporParticles.shape;
+            var shape = m_vaporParticles.shape;
             shape.shapeType = ParticleSystemShapeType.Sphere;
             shape.radius = 0.1f;
 
-            var colorOverLifetime = _vaporParticles.colorOverLifetime;
+            var colorOverLifetime = m_vaporParticles.colorOverLifetime;
             colorOverLifetime.enabled = true;
             var gradient = new Gradient();
             gradient.SetKeys(
                 new GradientColorKey[] {
-                    new GradientColorKey(_electricColor, 0f),
+                    new GradientColorKey(m_electricColor, 0f),
                     new GradientColorKey(Color.white, 0.5f),
-                    new GradientColorKey(_electricColor, 1f)
+                    new GradientColorKey(m_electricColor, 1f)
                 },
                 new GradientAlphaKey[] {
                     new GradientAlphaKey(0.5f, 0f),
@@ -147,7 +147,7 @@ namespace NeuralBreak.Entities
             );
             colorOverLifetime.color = gradient;
 
-            var sizeOverLifetime = _vaporParticles.sizeOverLifetime;
+            var sizeOverLifetime = m_vaporParticles.sizeOverLifetime;
             sizeOverLifetime.enabled = true;
             sizeOverLifetime.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(
                 new Keyframe(0f, 0.5f),
@@ -188,17 +188,17 @@ namespace NeuralBreak.Entities
 
         private void EnsureVisuals()
         {
-            if (_visuals == null)
+            if (m_visuals == null)
             {
-                _visuals = GetComponentInChildren<FizzerVisuals>();
+                m_visuals = GetComponentInChildren<FizzerVisuals>();
             }
 
-            if (_visuals == null)
+            if (m_visuals == null)
             {
                 var visualsGO = new GameObject("Visuals");
                 visualsGO.transform.SetParent(transform, false);
                 visualsGO.transform.localPosition = Vector3.zero;
-                _visuals = visualsGO.AddComponent<FizzerVisuals>();
+                m_visuals = visualsGO.AddComponent<FizzerVisuals>();
             }
         }
 
@@ -211,22 +211,22 @@ namespace NeuralBreak.Entities
         private void UpdateMovement()
         {
             // Change direction periodically for erratic behavior
-            _directionTimer += Time.deltaTime;
-            if (_directionTimer >= _directionChangeInterval)
+            m_directionTimer += Time.deltaTime;
+            if (m_directionTimer >= m_directionChangeInterval)
             {
                 UpdateDirection();
-                _directionTimer = 0f;
+                m_directionTimer = 0f;
             }
 
             // Calculate zigzag offset perpendicular to movement
-            _zigzagPhase += Time.deltaTime * _zigzagFrequency;
-            float zigzag = Mathf.Sin(_zigzagPhase + _zigzagOffset) * _zigzagAmplitude;
+            m_zigzagPhase += Time.deltaTime * m_zigzagFrequency;
+            float zigzag = Mathf.Sin(m_zigzagPhase + m_zigzagOffset) * m_zigzagAmplitude;
 
             // Perpendicular direction for zigzag
-            Vector2 perpendicular = new Vector2(-_currentDirection.y, _currentDirection.x);
+            Vector2 perpendicular = new Vector2(-m_currentDirection.y, m_currentDirection.x);
 
             // Combined movement: toward player + zigzag
-            Vector2 movement = (_currentDirection * _speed + perpendicular * zigzag) * Time.deltaTime;
+            Vector2 movement = (m_currentDirection * m_speed + perpendicular * zigzag) * Time.deltaTime;
             transform.position = (Vector2)transform.position + movement;
 
             // Visual rotation based on velocity
@@ -247,7 +247,7 @@ namespace NeuralBreak.Entities
             float cos = Mathf.Cos(randomAngle);
             float sin = Mathf.Sin(randomAngle);
 
-            _currentDirection = new Vector2(
+            m_currentDirection = new Vector2(
                 toPlayer.x * cos - toPlayer.y * sin,
                 toPlayer.x * sin + toPlayer.y * cos
             ).normalized;
@@ -255,32 +255,32 @@ namespace NeuralBreak.Entities
 
         private void UpdateAttack()
         {
-            if (_isFiringBurst) return;
+            if (m_isFiringBurst) return;
 
-            _burstTimer += Time.deltaTime;
-            if (_burstTimer >= _burstCooldown)
+            m_burstTimer += Time.deltaTime;
+            if (m_burstTimer >= m_burstCooldown)
             {
                 StartCoroutine(FireBurst());
-                _burstTimer = 0f;
+                m_burstTimer = 0f;
             }
         }
 
         private System.Collections.IEnumerator FireBurst()
         {
-            _isFiringBurst = true;
+            m_isFiringBurst = true;
             // Feedback (Feel removed)
 
-            for (int i = 0; i < _burstCount; i++)
+            for (int i = 0; i < m_burstCount; i++)
             {
                 FireProjectile();
 
-                if (i < _burstCount - 1)
+                if (i < m_burstCount - 1)
                 {
-                    yield return new WaitForSeconds(_burstDelay);
+                    yield return new WaitForSeconds(m_burstDelay);
                 }
             }
 
-            _isFiringBurst = false;
+            m_isFiringBurst = false;
         }
 
         private void FireProjectile()
@@ -293,9 +293,9 @@ namespace NeuralBreak.Entities
             EnemyProjectilePool.Instance.Fire(
                 firePos,
                 direction,
-                _projectileSpeed,
-                _projectileDamage,
-                _electricColor
+                m_projectileSpeed,
+                m_projectileDamage,
+                m_electricColor
             );
         }
 
@@ -313,7 +313,7 @@ namespace NeuralBreak.Entities
         private void DealDeathDamage()
         {
             // Find all enemies in radius and damage them
-            Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, _deathDamageRadius);
+            Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, m_deathDamageRadius);
 
             foreach (var hit in hits)
             {
@@ -322,7 +322,7 @@ namespace NeuralBreak.Entities
                 EnemyBase enemy = hit.GetComponent<EnemyBase>();
                 if (enemy != null && enemy.IsAlive)
                 {
-                    enemy.TakeDamage(_deathDamageAmount, transform.position);
+                    enemy.TakeDamage(m_deathDamageAmount, transform.position);
                 }
             }
         }
@@ -332,29 +332,29 @@ namespace NeuralBreak.Entities
             base.OnStateChanged(newState);
 
             // Control vapor trail based on state
-            if (_vaporParticles != null)
+            if (m_vaporParticles != null)
             {
-                var emission = _vaporParticles.emission;
+                var emission = m_vaporParticles.emission;
                 emission.enabled = (newState == EnemyState.Alive);
             }
 
-            if (_trailRenderer != null)
+            if (m_trailRenderer != null)
             {
-                _trailRenderer.enabled = (newState == EnemyState.Alive);
+                m_trailRenderer.enabled = (newState == EnemyState.Alive);
             }
 
-            if (_spriteRenderer == null) return;
+            if (m_spriteRenderer == null) return;
 
             switch (newState)
             {
                 case EnemyState.Spawning:
-                    _spriteRenderer.color = new Color(_electricColor.r, _electricColor.g, _electricColor.b, 0.5f);
+                    m_spriteRenderer.color = new Color(m_electricColor.r, m_electricColor.g, m_electricColor.b, 0.5f);
                     break;
                 case EnemyState.Alive:
-                    _spriteRenderer.color = _electricColor;
+                    m_spriteRenderer.color = m_electricColor;
                     break;
                 case EnemyState.Dying:
-                    _spriteRenderer.color = Color.white;
+                    m_spriteRenderer.color = Color.white;
                     break;
             }
         }
@@ -364,15 +364,15 @@ namespace NeuralBreak.Entities
             base.OnReturnToPool();
 
             // Clear vapor trail
-            if (_vaporParticles != null)
+            if (m_vaporParticles != null)
             {
-                _vaporParticles.Clear();
+                m_vaporParticles.Clear();
             }
 
             // Clear trail renderer
-            if (_trailRenderer != null)
+            if (m_trailRenderer != null)
             {
-                _trailRenderer.Clear();
+                m_trailRenderer.Clear();
             }
         }
 
@@ -382,7 +382,7 @@ namespace NeuralBreak.Entities
 
             // Death damage radius
             Gizmos.color = new Color(0.2f, 0.8f, 1f, 0.3f);
-            Gizmos.DrawSphere(transform.position, _deathDamageRadius);
+            Gizmos.DrawSphere(transform.position, m_deathDamageRadius);
         }
     }
 }

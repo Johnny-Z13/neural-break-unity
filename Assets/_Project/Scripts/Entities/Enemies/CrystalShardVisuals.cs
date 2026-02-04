@@ -9,27 +9,27 @@ namespace NeuralBreak.Entities
     public class CrystalShardVisuals : MonoBehaviour
     {
         [Header("Colors")]
-        [SerializeField] private Color _coreColor = new Color(0f, 1f, 1f, 0.6f); // Cyan
-        [SerializeField] private Color _wireframeColor = new Color(0f, 1f, 1f, 0.9f); // Bright cyan
-        [SerializeField] private Color _shardColor = new Color(0f, 0.8f, 1f, 0.8f); // Light cyan
-        [SerializeField] private Color _lightningColor = new Color(0f, 1f, 1f, 0.8f); // Cyan
+        [SerializeField] private Color m_coreColor = new Color(0f, 1f, 1f, 0.6f); // Cyan
+        [SerializeField] private Color m_wireframeColor = new Color(0f, 1f, 1f, 0.9f); // Bright cyan
+        [SerializeField] private Color m_shardColor = new Color(0f, 0.8f, 1f, 0.8f); // Light cyan
+        [SerializeField] private Color m_lightningColor = new Color(0f, 1f, 1f, 0.8f); // Cyan
 
         [Header("Settings")]
-        [SerializeField] private float _coreRadius = 0.4f;
-        [SerializeField] private int _shardCount = 6;
-        [SerializeField] private float _orbitRadius = 2f;
+        [SerializeField] private float m_coreRadius = 0.4f;
+        [SerializeField] private int m_shardCount = 6;
+        [SerializeField] private float m_orbitRadius = 2f;
 
         // Components
-        private Transform _core;
-        private Transform _coreWireframe;
-        private Transform[] _shards;
-        private Transform[] _shardTips;
-        private Transform[] _rings;
-        private LineRenderer[] _lightning;
+        private Transform m_core;
+        private Transform m_coreWireframe;
+        private Transform[] m_shards;
+        private Transform[] m_shardTips;
+        private Transform[] m_rings;
+        private LineRenderer[] m_lightning;
 
-        private float _time;
-        private float[] _shardAngles;
-        private float[] _shardRadii;
+        private float m_time;
+        private float[] m_shardAngles;
+        private float[] m_shardRadii;
 
         private void Start()
         {
@@ -41,8 +41,8 @@ namespace NeuralBreak.Entities
             ClearChildren();
 
             // Central core
-            _core = CreateDiamond("Core", _coreRadius, _coreColor, 10);
-            _coreWireframe = CreateDiamondOutline("CoreWireframe", _coreRadius * 1.1f, _wireframeColor, 11);
+            m_core = CreateDiamond("Core", m_coreRadius, m_coreColor, 10);
+            m_coreWireframe = CreateDiamondOutline("CoreWireframe", m_coreRadius * 1.1f, m_wireframeColor, 11);
 
             // Orbiting shards
             CreateShards();
@@ -56,15 +56,15 @@ namespace NeuralBreak.Entities
 
         private void CreateShards()
         {
-            _shards = new Transform[_shardCount];
-            _shardTips = new Transform[_shardCount];
-            _shardAngles = new float[_shardCount];
-            _shardRadii = new float[_shardCount];
+            m_shards = new Transform[m_shardCount];
+            m_shardTips = new Transform[m_shardCount];
+            m_shardAngles = new float[m_shardCount];
+            m_shardRadii = new float[m_shardCount];
 
-            for (int i = 0; i < _shardCount; i++)
+            for (int i = 0; i < m_shardCount; i++)
             {
-                _shardAngles[i] = (i / (float)_shardCount) * Mathf.PI * 2f;
-                _shardRadii[i] = _orbitRadius + Random.Range(-0.3f, 0.3f);
+                m_shardAngles[i] = (i / (float)m_shardCount) * Mathf.PI * 2f;
+                m_shardRadii[i] = m_orbitRadius + Random.Range(-0.3f, 0.3f);
 
                 // Shard container
                 var shard = new GameObject($"Shard{i}");
@@ -89,7 +89,7 @@ namespace NeuralBreak.Entities
                 wire.transform.SetParent(shard.transform, false);
                 var wireSr = wire.AddComponent<SpriteRenderer>();
                 wireSr.sprite = CreateShardOutlineSprite();
-                wireSr.color = _wireframeColor;
+                wireSr.color = m_wireframeColor;
                 wireSr.sortingOrder = 16;
                 wire.transform.localScale = new Vector3(0.32f, 0.92f, 1f);
 
@@ -102,32 +102,32 @@ namespace NeuralBreak.Entities
                 tipSr.sortingOrder = 17;
                 tip.transform.localPosition = new Vector3(0, 0.45f, 0);
                 tip.transform.localScale = Vector3.one * 0.15f;
-                _shardTips[i] = tip.transform;
+                m_shardTips[i] = tip.transform;
 
-                _shards[i] = shard.transform;
+                m_shards[i] = shard.transform;
             }
         }
 
         private void CreateRings()
         {
-            _rings = new Transform[3];
+            m_rings = new Transform[3];
             for (int i = 0; i < 3; i++)
             {
-                float ringRadius = _orbitRadius * (0.9f + i * 0.15f);
+                float ringRadius = m_orbitRadius * (0.9f + i * 0.15f);
                 float hue = 0.5f + i * 0.1f;
                 Color ringCol = Color.HSVToRGB(hue, 0.6f, 0.8f);
                 ringCol.a = 0.4f - i * 0.1f;
 
                 var ring = CreateRing($"Ring{i}", ringRadius * 0.95f, ringRadius, ringCol, 5 + i);
-                _rings[i] = ring;
+                m_rings[i] = ring;
             }
         }
 
         private void CreateLightning()
         {
-            _lightning = new LineRenderer[_shardCount];
+            m_lightning = new LineRenderer[m_shardCount];
 
-            for (int i = 0; i < _shardCount; i++)
+            for (int i = 0; i < m_shardCount; i++)
             {
                 var lightningGO = new GameObject($"Lightning{i}");
                 lightningGO.transform.SetParent(transform, false);
@@ -136,78 +136,78 @@ namespace NeuralBreak.Entities
                 lr.positionCount = 4;
                 lr.startWidth = 0.05f;
                 lr.endWidth = 0.02f;
-                lr.startColor = _lightningColor;
-                lr.endColor = new Color(_lightningColor.r, _lightningColor.g, _lightningColor.b, 0.3f);
+                lr.startColor = m_lightningColor;
+                lr.endColor = new Color(m_lightningColor.r, m_lightningColor.g, m_lightningColor.b, 0.3f);
                 lr.material = new Material(Shader.Find("Sprites/Default"));
                 lr.sortingOrder = 12;
                 lr.useWorldSpace = false;
 
-                _lightning[i] = lr;
+                m_lightning[i] = lr;
             }
         }
 
         private void Update()
         {
-            if (_core == null) return;
+            if (m_core == null) return;
 
-            _time += Time.deltaTime;
+            m_time += Time.deltaTime;
 
             // Core rotation and pulse
-            _core.Rotate(0, 0, Time.deltaTime * 60f);
-            float corePulse = 1f + Mathf.Sin(_time * 4f) * 0.1f;
-            _core.localScale = Vector3.one * _coreRadius * 2f * corePulse;
+            m_core.Rotate(0, 0, Time.deltaTime * 60f);
+            float corePulse = 1f + Mathf.Sin(m_time * 4f) * 0.1f;
+            m_core.localScale = Vector3.one * m_coreRadius * 2f * corePulse;
 
-            if (_coreWireframe != null)
+            if (m_coreWireframe != null)
             {
-                _coreWireframe.Rotate(0, 0, Time.deltaTime * -45f);
-                _coreWireframe.localScale = Vector3.one * _coreRadius * 2.2f * corePulse;
+                m_coreWireframe.Rotate(0, 0, Time.deltaTime * -45f);
+                m_coreWireframe.localScale = Vector3.one * m_coreRadius * 2.2f * corePulse;
             }
 
             // Animate shards
-            if (_shards != null)
+            if (m_shards != null)
             {
-                for (int i = 0; i < _shards.Length; i++)
+                for (int i = 0; i < m_shards.Length; i++)
                 {
-                    if (_shards[i] == null) continue;
+                    if (m_shards[i] == null) continue;
 
                     // Orbit
-                    _shardAngles[i] += Time.deltaTime * 1.5f;
-                    float radius = _shardRadii[i] + Mathf.Sin(_time * 2f + i) * 0.3f;
+                    m_shardAngles[i] += Time.deltaTime * 1.5f;
+                    float radius = m_shardRadii[i] + Mathf.Sin(m_time * 2f + i) * 0.3f;
 
                     Vector3 pos = new Vector3(
-                        Mathf.Cos(_shardAngles[i]) * radius,
-                        Mathf.Sin(_shardAngles[i]) * radius,
+                        Mathf.Cos(m_shardAngles[i]) * radius,
+                        Mathf.Sin(m_shardAngles[i]) * radius,
                         0
                     );
-                    _shards[i].localPosition = pos;
+                    m_shards[i].localPosition = pos;
 
                     // Point outward
-                    float angle = _shardAngles[i] * Mathf.Rad2Deg + 90f;
-                    _shards[i].localRotation = Quaternion.Euler(0, 0, angle);
+                    float angle = m_shardAngles[i] * Mathf.Rad2Deg + 90f;
+                    m_shards[i].localRotation = Quaternion.Euler(0, 0, angle);
 
                     // Shard spin
-                    _shards[i].GetChild(0).Rotate(0, 0, Time.deltaTime * 120f);
+                    m_shards[i].GetChild(0).Rotate(0, 0, Time.deltaTime * 120f);
 
                     // Rainbow color shifting like original TypeScript
-                    var bodySr = _shards[i].GetChild(0).GetComponent<SpriteRenderer>();
+                    var bodySr = m_shards[i].GetChild(0).GetComponent<SpriteRenderer>();
                     if (bodySr != null)
                     {
-                        float hue = (_time * 0.25f + i * 0.12f) % 1f;
+                        float hue = (m_time * 0.25f + i * 0.12f) % 1f;
                         Color rainbow = Color.HSVToRGB(hue, 0.9f, 0.9f);
                         rainbow.a = 0.85f;
                         bodySr.color = rainbow;
                     }
 
                     // Tip pulse with color
-                    if (_shardTips[i] != null)
+                    if (m_shardTips[i] != null)
                     {
-                        float tipPulse = 0.12f + Mathf.Sin(_time * 8f + i) * 0.06f;
-                        _shardTips[i].localScale = Vector3.one * tipPulse;
+                        float tipPulse = 0.12f + Mathf.Sin(m_time * 8f + i) * 0.06f;
+                        m_shardTips[i].localScale = Vector3.one * tipPulse;
 
-                        var tipSr = _shardTips[i].GetComponent<SpriteRenderer>();
+                        var tipSr = m_shardTips[i].GetComponent<SpriteRenderer>();
                         if (tipSr != null)
                         {
-                            float tipHue = (_time * 0.4f + i * 0.15f) % 1f;
+                            float tipHue = (m_time * 0.4f + i * 0.15f) % 1f;
                             Color tipColor = Color.HSVToRGB(tipHue, 0.7f, 1f);
                             tipColor.a = 0.9f;
                             tipSr.color = tipColor;
@@ -217,48 +217,48 @@ namespace NeuralBreak.Entities
             }
 
             // Rotate rings
-            if (_rings != null)
+            if (m_rings != null)
             {
-                for (int i = 0; i < _rings.Length; i++)
+                for (int i = 0; i < m_rings.Length; i++)
                 {
-                    if (_rings[i] == null) continue;
+                    if (m_rings[i] == null) continue;
                     float speed = 20f + i * 15f;
                     float dir = (i % 2 == 0) ? 1f : -1f;
-                    _rings[i].Rotate(0, 0, Time.deltaTime * speed * dir);
+                    m_rings[i].Rotate(0, 0, Time.deltaTime * speed * dir);
                 }
             }
 
             // Update lightning
-            if (_lightning != null && _shards != null)
+            if (m_lightning != null && m_shards != null)
             {
-                for (int i = 0; i < _lightning.Length; i++)
+                for (int i = 0; i < m_lightning.Length; i++)
                 {
-                    if (_lightning[i] == null || _shards[i] == null) continue;
+                    if (m_lightning[i] == null || m_shards[i] == null) continue;
 
-                    int nextIdx = (i + 1) % _shards.Length;
-                    if (_shards[nextIdx] == null) continue;
+                    int nextIdx = (i + 1) % m_shards.Length;
+                    if (m_shards[nextIdx] == null) continue;
 
-                    Vector3 start = _shards[i].localPosition;
-                    Vector3 end = _shards[nextIdx].localPosition;
+                    Vector3 start = m_shards[i].localPosition;
+                    Vector3 end = m_shards[nextIdx].localPosition;
                     Vector3 mid1 = Vector3.Lerp(start, end, 0.33f) + Random.insideUnitSphere * 0.2f;
                     mid1.z = 0;
                     Vector3 mid2 = Vector3.Lerp(start, end, 0.66f) + Random.insideUnitSphere * 0.2f;
                     mid2.z = 0;
 
-                    _lightning[i].SetPosition(0, start);
-                    _lightning[i].SetPosition(1, mid1);
-                    _lightning[i].SetPosition(2, mid2);
-                    _lightning[i].SetPosition(3, end);
+                    m_lightning[i].SetPosition(0, start);
+                    m_lightning[i].SetPosition(1, mid1);
+                    m_lightning[i].SetPosition(2, mid2);
+                    m_lightning[i].SetPosition(3, end);
 
                     // Rainbow color shifting like original TypeScript
-                    float lightningHue = (_time * 0.6f + i * 0.12f) % 1f;
+                    float lightningHue = (m_time * 0.6f + i * 0.12f) % 1f;
                     Color lightningRainbow = Color.HSVToRGB(lightningHue, 1f, 0.9f);
 
                     // Flicker
-                    float alpha = 0.5f + Mathf.Sin(_time * 25f + i * 2f) * 0.4f;
+                    float alpha = 0.5f + Mathf.Sin(m_time * 25f + i * 2f) * 0.4f;
                     lightningRainbow.a = alpha;
-                    _lightning[i].startColor = lightningRainbow;
-                    _lightning[i].endColor = new Color(lightningRainbow.r, lightningRainbow.g, lightningRainbow.b, alpha * 0.3f);
+                    m_lightning[i].startColor = lightningRainbow;
+                    m_lightning[i].endColor = new Color(lightningRainbow.r, lightningRainbow.g, lightningRainbow.b, alpha * 0.3f);
                 }
             }
         }

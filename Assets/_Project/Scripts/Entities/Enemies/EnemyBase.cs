@@ -22,42 +22,42 @@ namespace NeuralBreak.Entities
     public abstract class EnemyBase : MonoBehaviour
     {
         [Header("Enemy Stats")]
-        [SerializeField] protected int _maxHealth = 1;
-        [SerializeField] protected float _speed = 1.5f;
-        [SerializeField] protected int _damage = 5;
-        [SerializeField] protected int _xpValue = 1;
-        [SerializeField] protected int _scoreValue = 100;
-        [SerializeField] protected float _collisionRadius = 0.5f;
+        [SerializeField] protected int m_maxHealth = 1;
+        [SerializeField] protected float m_speed = 1.5f;
+        [SerializeField] protected int m_damage = 5;
+        [SerializeField] protected int m_xpValue = 1;
+        [SerializeField] protected int m_scoreValue = 100;
+        [SerializeField] protected float m_collisionRadius = 0.5f;
 
         [Header("Spawn Settings")]
-        [SerializeField] protected float _spawnDuration = 0.25f;
-        [SerializeField] protected bool _invulnerableDuringSpawn = true;
+        [SerializeField] protected float m_spawnDuration = 0.25f;
+        [SerializeField] protected bool m_invulnerableDuringSpawn = true;
 
         [Header("Death Settings")]
-        [SerializeField] protected float _deathDuration = 0.5f;
+        [SerializeField] protected float m_deathDuration = 0.5f;
 
         // Note: MMFeedbacks removed
 
         // State
-        protected EnemyState _state = EnemyState.Dead;
-        protected int _currentHealth;
-        protected float _stateTimer;
+        protected EnemyState m_state = EnemyState.Dead;
+        protected int m_currentHealth;
+        protected float m_stateTimer;
 
         // Target reference
-        protected Transform _playerTarget;
+        protected Transform m_playerTarget;
 
         // Pool callback
-        protected System.Action<EnemyBase> _returnToPool;
+        protected System.Action<EnemyBase> m_returnToPool;
 
         // Public accessors
-        public EnemyState State => _state;
-        public bool IsAlive => _state == EnemyState.Alive;
-        public bool IsActive => _state == EnemyState.Spawning || _state == EnemyState.Alive;
-        public int CurrentHealth => _currentHealth;
-        public int MaxHealth => _maxHealth;
-        public float HealthPercent => (float)_currentHealth / _maxHealth;
-        public float CollisionRadius => _collisionRadius;
-        public int Damage => _damage;
+        public EnemyState State => m_state;
+        public bool IsAlive => m_state == EnemyState.Alive;
+        public bool IsActive => m_state == EnemyState.Spawning || m_state == EnemyState.Alive;
+        public int CurrentHealth => m_currentHealth;
+        public int MaxHealth => m_maxHealth;
+        public float HealthPercent => (float)m_currentHealth / m_maxHealth;
+        public float CollisionRadius => m_collisionRadius;
+        public int Damage => m_damage;
         public abstract EnemyType EnemyType { get; }
 
         /// <summary>
@@ -86,8 +86,8 @@ namespace NeuralBreak.Entities
             }
 
             transform.position = position;
-            _playerTarget = playerTarget;
-            _returnToPool = returnToPool;
+            m_playerTarget = playerTarget;
+            m_returnToPool = returnToPool;
 
             // Apply config-driven values
             ApplyConfigValues();
@@ -95,8 +95,8 @@ namespace NeuralBreak.Entities
             // Auto-create feedbacks if not assigned (runtime juiciness)
             EnsureFeedbacks();
 
-            _currentHealth = _maxHealth;
-            _stateTimer = _spawnDuration;
+            m_currentHealth = m_maxHealth;
+            m_stateTimer = m_spawnDuration;
 
             SetState(EnemyState.Spawning);
             // Feedback (Feel removed)
@@ -128,25 +128,25 @@ namespace NeuralBreak.Entities
             if (config == null) return;
 
             // Apply stats from config
-            _maxHealth = config.health;
-            _speed = config.speed;
-            _damage = config.contactDamage;
-            _xpValue = config.xpValue;
-            _scoreValue = config.scoreValue;
-            _collisionRadius = config.collisionRadius;
-            _spawnDuration = config.spawnDuration;
-            _deathDuration = config.deathDuration;
+            m_maxHealth = config.health;
+            m_speed = config.speed;
+            m_damage = config.contactDamage;
+            m_xpValue = config.xpValue;
+            m_scoreValue = config.scoreValue;
+            m_collisionRadius = config.collisionRadius;
+            m_spawnDuration = config.spawnDuration;
+            m_deathDuration = config.deathDuration;
 
             // Apply collision radius to CircleCollider2D if present
             var circleCollider = GetComponent<CircleCollider2D>();
             if (circleCollider != null)
             {
-                circleCollider.radius = _collisionRadius;
+                circleCollider.radius = m_collisionRadius;
                 circleCollider.isTrigger = true; // Must be trigger for OnTriggerEnter2D
             }
 
             // Scale visual to match collision radius (visual is typically 2x the collision)
-            float visualScale = _collisionRadius * 2f;
+            float visualScale = m_collisionRadius * 2f;
             transform.localScale = Vector3.one * visualScale;
 
             // Apply generated sprite based on enemy type
@@ -186,7 +186,7 @@ namespace NeuralBreak.Entities
 
         protected virtual void Update()
         {
-            switch (_state)
+            switch (m_state)
             {
                 case EnemyState.Spawning:
                     UpdateSpawning();
@@ -202,9 +202,9 @@ namespace NeuralBreak.Entities
 
         protected virtual void UpdateSpawning()
         {
-            _stateTimer -= Time.deltaTime;
+            m_stateTimer -= Time.deltaTime;
 
-            if (_stateTimer <= 0f)
+            if (m_stateTimer <= 0f)
             {
                 SetState(EnemyState.Alive);
             }
@@ -212,7 +212,7 @@ namespace NeuralBreak.Entities
 
         protected virtual void UpdateAlive()
         {
-            if (_playerTarget == null) return;
+            if (m_playerTarget == null) return;
 
             // Override in subclasses for AI behavior
             UpdateAI();
@@ -226,7 +226,7 @@ namespace NeuralBreak.Entities
         /// </summary>
         protected virtual void ApplyEnemySeparation()
         {
-            float separationRadius = _collisionRadius * 2.5f;
+            float separationRadius = m_collisionRadius * 2.5f;
             float separationStrength = 3f;
             Vector2 separationForce = Vector2.zero;
 
@@ -240,7 +240,7 @@ namespace NeuralBreak.Entities
 
                 Vector2 toThis = (Vector2)transform.position - (Vector2)otherEnemy.transform.position;
                 float distance = toThis.magnitude;
-                float minDist = _collisionRadius + otherEnemy.CollisionRadius;
+                float minDist = m_collisionRadius + otherEnemy.CollisionRadius;
 
                 if (distance < minDist && distance > 0.01f)
                 {
@@ -258,12 +258,12 @@ namespace NeuralBreak.Entities
 
         protected virtual void UpdateDying()
         {
-            _stateTimer -= Time.deltaTime;
+            m_stateTimer -= Time.deltaTime;
 
-            if (_stateTimer <= 0f)
+            if (m_stateTimer <= 0f)
             {
                 SetState(EnemyState.Dead);
-                _returnToPool?.Invoke(this);
+                m_returnToPool?.Invoke(this);
             }
         }
 
@@ -288,15 +288,15 @@ namespace NeuralBreak.Entities
             }
 
             // Can't damage during spawn or already dying
-            if (_state == EnemyState.Spawning && _invulnerableDuringSpawn)
+            if (m_state == EnemyState.Spawning && m_invulnerableDuringSpawn)
             {
                 Debug.LogWarning($"[EnemyBase] Cannot damage {EnemyType} - invulnerable during spawn!");
                 return;
             }
 
-            if (_state != EnemyState.Alive)
+            if (m_state != EnemyState.Alive)
             {
-                Debug.LogWarning($"[EnemyBase] Cannot damage {EnemyType} - not alive (state: {_state})!");
+                Debug.LogWarning($"[EnemyBase] Cannot damage {EnemyType} - not alive (state: {m_state})!");
                 return;
             }
 
@@ -309,7 +309,7 @@ namespace NeuralBreak.Entities
                 return;
             }
 
-            _currentHealth -= damage;
+            m_currentHealth -= damage;
 
             // Feedback (Feel removed)
 
@@ -324,11 +324,11 @@ namespace NeuralBreak.Entities
             {
                 enemyType = EnemyType,
                 damage = damage,
-                currentHealth = _currentHealth,
+                currentHealth = m_currentHealth,
                 position = transform.position
             });
 
-            if (_currentHealth <= 0)
+            if (m_currentHealth <= 0)
             {
                 Kill();
             }
@@ -339,9 +339,9 @@ namespace NeuralBreak.Entities
         /// </summary>
         public virtual void Kill()
         {
-            if (_state == EnemyState.Dying || _state == EnemyState.Dead) return;
+            if (m_state == EnemyState.Dying || m_state == EnemyState.Dead) return;
 
-            _stateTimer = _deathDuration;
+            m_stateTimer = m_deathDuration;
             SetState(EnemyState.Dying);
 
             // Feedback (Feel removed)
@@ -354,8 +354,8 @@ namespace NeuralBreak.Entities
             }
 
             // Publish kill event for scoring (elite enemies give bonus XP/score)
-            int finalScore = _scoreValue;
-            int finalXP = _xpValue;
+            int finalScore = m_scoreValue;
+            int finalXP = m_xpValue;
             if (eliteModifier != null && eliteModifier.IsElite)
             {
                 finalScore = Mathf.RoundToInt(finalScore * 2f);
@@ -377,7 +377,7 @@ namespace NeuralBreak.Entities
         public virtual void KillInstant()
         {
             SetState(EnemyState.Dead);
-            _returnToPool?.Invoke(this);
+            m_returnToPool?.Invoke(this);
         }
 
         #endregion
@@ -386,16 +386,16 @@ namespace NeuralBreak.Entities
 
         protected void SetState(EnemyState newState)
         {
-            if (_state == newState) return;
+            if (m_state == newState) return;
 
             // Validate state transitions
-            if (_state == EnemyState.Dead && newState != EnemyState.Spawning)
+            if (m_state == EnemyState.Dead && newState != EnemyState.Spawning)
             {
-                Debug.LogWarning($"[EnemyBase] Invalid state transition: {_state} -> {newState}. Dead enemies can only transition to Spawning!");
+                Debug.LogWarning($"[EnemyBase] Invalid state transition: {m_state} -> {newState}. Dead enemies can only transition to Spawning!");
                 return;
             }
 
-            _state = newState;
+            m_state = newState;
             OnStateChanged(newState);
         }
 
@@ -463,7 +463,7 @@ namespace NeuralBreak.Entities
                 if (playerHealth != null && !playerHealth.IsDead)
                 {
                     // Player takes damage from enemy contact (only if alive)
-                    playerHealth.TakeDamage(_damage, transform.position);
+                    playerHealth.TakeDamage(m_damage, transform.position);
                 }
                 else if (playerHealth == null)
                 {
@@ -498,7 +498,7 @@ namespace NeuralBreak.Entities
         {
             Vector2 toOther = (Vector2)(other.transform.position - transform.position);
             float distance = toOther.magnitude;
-            float minDistance = _collisionRadius + other.CollisionRadius;
+            float minDistance = m_collisionRadius + other.CollisionRadius;
 
             // Only push if overlapping
             if (distance < minDistance && distance > 0.001f)
@@ -522,8 +522,8 @@ namespace NeuralBreak.Entities
         /// </summary>
         protected Vector2 GetDirectionToPlayer()
         {
-            if (_playerTarget == null) return Vector2.zero;
-            return ((Vector2)_playerTarget.position - (Vector2)transform.position).normalized;
+            if (m_playerTarget == null) return Vector2.zero;
+            return ((Vector2)m_playerTarget.position - (Vector2)transform.position).normalized;
         }
 
         /// <summary>
@@ -531,8 +531,8 @@ namespace NeuralBreak.Entities
         /// </summary>
         protected float GetDistanceToPlayer()
         {
-            if (_playerTarget == null) return float.MaxValue;
-            return Vector2.Distance(transform.position, _playerTarget.position);
+            if (m_playerTarget == null) return float.MaxValue;
+            return Vector2.Distance(transform.position, m_playerTarget.position);
         }
 
         /// <summary>
@@ -540,8 +540,8 @@ namespace NeuralBreak.Entities
         /// </summary>
         public virtual void OnReturnToPool()
         {
-            _state = EnemyState.Dead;
-            _playerTarget = null;
+            m_state = EnemyState.Dead;
+            m_playerTarget = null;
 
             // Re-enable visuals for next spawn
             ShowVisuals();
@@ -562,13 +562,13 @@ namespace NeuralBreak.Entities
         {
             // Collision radius
             Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(transform.position, _collisionRadius);
+            Gizmos.DrawWireSphere(transform.position, m_collisionRadius);
 
             // Direction to player
-            if (_playerTarget != null)
+            if (m_playerTarget != null)
             {
                 Gizmos.color = Color.yellow;
-                Gizmos.DrawLine(transform.position, _playerTarget.position);
+                Gizmos.DrawLine(transform.position, m_playerTarget.position);
             }
         }
 

@@ -45,15 +45,15 @@ namespace NeuralBreak.UI.Builders
 
             // Add screen component
             var screen = screenRoot.gameObject.AddComponent<UpgradeSelectionScreen>();
-            SetPrivateField(screen, "_screenRoot", screenRoot.gameObject);
-            SetPrivateField(screen, "_cardContainer", cardContainer);
+            SetPrivateField(screen, "m_screenRoot", screenRoot.gameObject);
+            SetPrivateField(screen, "m_cardContainer", cardContainer);
 
             var titleText = contentPanel.Find("TitleText")?.GetComponent<TextMeshProUGUI>();
-            SetPrivateField(screen, "_titleText", titleText);
+            SetPrivateField(screen, "m_titleText", titleText);
 
             // Find subtitle if it exists (for backwards compat)
             var subtitleText = contentPanel.Find("SubtitleText")?.GetComponent<TextMeshProUGUI>();
-            SetPrivateField(screen, "_subtitleText", subtitleText);
+            SetPrivateField(screen, "m_subtitleText", subtitleText);
 
             screenRoot.gameObject.SetActive(false);
 
@@ -299,24 +299,24 @@ namespace NeuralBreak.UI.Builders
 
             // Add card component
             var card = cardRect.gameObject.AddComponent<UpgradeCard>();
-            SetPrivateField(card, "_background", bgImg);
-            SetPrivateField(card, "_button", button);
+            SetPrivateField(card, "m_background", bgImg);
+            SetPrivateField(card, "m_button", button);
 
             var iconImg = cardRect.Find("Icon/IconImage")?.GetComponent<Image>();
             var nameText = cardRect.Find("NameText")?.GetComponent<TextMeshProUGUI>();
             var descText = cardRect.Find("DescriptionText")?.GetComponent<TextMeshProUGUI>();
             var tierText = cardRect.Find("TierBadge/TierText")?.GetComponent<TextMeshProUGUI>();
 
-            SetPrivateField(card, "_icon", iconImg);
-            SetPrivateField(card, "_nameText", nameText);
-            SetPrivateField(card, "_descriptionText", descText);
-            SetPrivateField(card, "_tierText", tierText);
+            SetPrivateField(card, "m_icon", iconImg);
+            SetPrivateField(card, "m_nameText", nameText);
+            SetPrivateField(card, "m_descriptionText", descText);
+            SetPrivateField(card, "m_tierText", tierText);
 
             var canvasGroup = cardRect.gameObject.AddComponent<CanvasGroup>();
 
             var animator = cardRect.gameObject.AddComponent<UpgradeCardAnimator>();
-            SetPrivateField(animator, "_background", bgImg);
-            SetPrivateField(animator, "_canvasGroup", canvasGroup);
+            SetPrivateField(animator, "m_background", bgImg);
+            SetPrivateField(animator, "m_canvasGroup", canvasGroup);
 
             return card;
         }

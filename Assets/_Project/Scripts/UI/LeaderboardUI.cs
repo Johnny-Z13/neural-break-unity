@@ -14,24 +14,24 @@ namespace NeuralBreak.UI
     public class LeaderboardUI : MonoBehaviour
     {
         [Header("Settings")]
-        [SerializeField] private bool _createOnAwake = true;
-        [SerializeField] private Color _backgroundColor = new Color(0f, 0f, 0.1f, 0.95f);
-        [SerializeField] private Color _headerColor = new Color(0f, 0.8f, 1f);
-        [SerializeField] private Color _labelColor = new Color(0.7f, 0.7f, 0.7f);
-        [SerializeField] private Color _valueColor = Color.white;
-        [SerializeField] private Color _newRecordColor = new Color(1f, 0.8f, 0f);
+        [SerializeField] private bool m_createOnAwake = true;
+        [SerializeField] private Color m_backgroundColor = new Color(0f, 0f, 0.1f, 0.95f);
+        [SerializeField] private Color m_headerColor = new Color(0f, 0.8f, 1f);
+        [SerializeField] private Color m_labelColor = new Color(0.7f, 0.7f, 0.7f);
+        [SerializeField] private Color m_valueColor = Color.white;
+        [SerializeField] private Color m_newRecordColor = new Color(1f, 0.8f, 0f);
 
         // UI Components
-        private Canvas _canvas;
-        private CanvasGroup _canvasGroup;
-        private RectTransform _panel;
-        private TextMeshProUGUI _titleText;
-        private List<StatRow> _statRows = new List<StatRow>();
-        private Button _closeButton;
-        private TextMeshProUGUI _closeButtonText;
+        private Canvas m_canvas;
+        private CanvasGroup m_canvasGroup;
+        private RectTransform m_panel;
+        private TextMeshProUGUI m_titleText;
+        private List<StatRow> m_statRows = new List<StatRow>();
+        private Button m_closeButton;
+        private TextMeshProUGUI m_closeButtonText;
 
-        private bool _isVisible;
-        private HashSet<HighScoreType> _newRecords = new HashSet<HighScoreType>();
+        private bool m_isVisible;
+        private HashSet<HighScoreType> m_newRecords = new HashSet<HighScoreType>();
 
         private class StatRow
         {
@@ -44,7 +44,7 @@ namespace NeuralBreak.UI
 
         private void Awake()
         {
-            if (_createOnAwake)
+            if (m_createOnAwake)
             {
                 CreateUI();
                 Hide();
@@ -71,7 +71,7 @@ namespace NeuralBreak.UI
 
         private void Update()
         {
-            if (_isVisible)
+            if (m_isVisible)
             {
                 var keyboard = Keyboard.current;
                 if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame)
@@ -83,12 +83,12 @@ namespace NeuralBreak.UI
 
         private void OnNewHighScore(HighScoreType type, int value)
         {
-            _newRecords.Add(type);
+            m_newRecords.Add(type);
         }
 
         private void OnNewHighScoreFloat(HighScoreType type, float value)
         {
-            _newRecords.Add(type);
+            m_newRecords.Add(type);
         }
 
         private void CreateUI()
@@ -96,9 +96,9 @@ namespace NeuralBreak.UI
             // Create canvas
             var canvasGO = new GameObject("LeaderboardCanvas");
             canvasGO.transform.SetParent(transform);
-            _canvas = canvasGO.AddComponent<Canvas>();
-            _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            _canvas.sortingOrder = 250;
+            m_canvas = canvasGO.AddComponent<Canvas>();
+            m_canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            m_canvas.sortingOrder = 250;
 
             var scaler = canvasGO.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -106,8 +106,8 @@ namespace NeuralBreak.UI
 
             canvasGO.AddComponent<GraphicRaycaster>();
 
-            _canvasGroup = canvasGO.AddComponent<CanvasGroup>();
-            _canvasGroup.alpha = 0;
+            m_canvasGroup = canvasGO.AddComponent<CanvasGroup>();
+            m_canvasGroup.alpha = 0;
 
             // Background overlay
             var bgGO = new GameObject("Background");
@@ -119,23 +119,23 @@ namespace NeuralBreak.UI
             bgRect.offsetMax = Vector2.zero;
 
             var bgImage = bgGO.AddComponent<Image>();
-            bgImage.color = _backgroundColor;
+            bgImage.color = m_backgroundColor;
 
             // Panel
             var panelGO = new GameObject("Panel");
             panelGO.transform.SetParent(canvasGO.transform);
-            _panel = panelGO.AddComponent<RectTransform>();
-            _panel.anchorMin = new Vector2(0.5f, 0.5f);
-            _panel.anchorMax = new Vector2(0.5f, 0.5f);
-            _panel.pivot = new Vector2(0.5f, 0.5f);
-            _panel.sizeDelta = new Vector2(500, 550);
+            m_panel = panelGO.AddComponent<RectTransform>();
+            m_panel.anchorMin = new Vector2(0.5f, 0.5f);
+            m_panel.anchorMax = new Vector2(0.5f, 0.5f);
+            m_panel.pivot = new Vector2(0.5f, 0.5f);
+            m_panel.sizeDelta = new Vector2(500, 550);
 
             var panelImage = panelGO.AddComponent<Image>();
             panelImage.color = new Color(0.1f, 0.1f, 0.15f, 0.95f);
 
             // Title
             var titleGO = new GameObject("Title");
-            titleGO.transform.SetParent(_panel);
+            titleGO.transform.SetParent(m_panel);
             var titleRect = titleGO.AddComponent<RectTransform>();
             titleRect.anchorMin = new Vector2(0.5f, 1f);
             titleRect.anchorMax = new Vector2(0.5f, 1f);
@@ -143,12 +143,12 @@ namespace NeuralBreak.UI
             titleRect.anchoredPosition = new Vector2(0, -20);
             titleRect.sizeDelta = new Vector2(400, 50);
 
-            _titleText = titleGO.AddComponent<TextMeshProUGUI>();
-            _titleText.text = "HIGH SCORES";
-            _titleText.fontSize = 36;
-            _titleText.fontStyle = FontStyles.Bold;
-            _titleText.color = _headerColor;
-            _titleText.alignment = TextAlignmentOptions.Center;
+            m_titleText = titleGO.AddComponent<TextMeshProUGUI>();
+            m_titleText.text = "HIGH SCORES";
+            m_titleText.fontSize = 36;
+            m_titleText.fontStyle = FontStyles.Bold;
+            m_titleText.color = m_headerColor;
+            m_titleText.alignment = TextAlignmentOptions.Center;
 
             // Create stat rows
             CreateStatRows();
@@ -193,12 +193,12 @@ namespace NeuralBreak.UI
                 if (string.IsNullOrEmpty(labels[i]))
                 {
                     // Spacer
-                    _statRows.Add(null);
+                    m_statRows.Add(null);
                     continue;
                 }
 
                 var row = CreateStatRow(labels[i], startY - (i * rowHeight), types[i]);
-                _statRows.Add(row);
+                m_statRows.Add(row);
             }
         }
 
@@ -207,7 +207,7 @@ namespace NeuralBreak.UI
             var row = new StatRow { type = type };
 
             var rowGO = new GameObject($"Row_{label}");
-            rowGO.transform.SetParent(_panel);
+            rowGO.transform.SetParent(m_panel);
             row.row = rowGO.AddComponent<RectTransform>();
             row.row.anchorMin = new Vector2(0.5f, 1f);
             row.row.anchorMax = new Vector2(0.5f, 1f);
@@ -228,7 +228,7 @@ namespace NeuralBreak.UI
             row.label = labelGO.AddComponent<TextMeshProUGUI>();
             row.label.text = label;
             row.label.fontSize = 22;
-            row.label.color = _labelColor;
+            row.label.color = m_labelColor;
             row.label.alignment = TextAlignmentOptions.Left;
 
             // Value
@@ -245,7 +245,7 @@ namespace NeuralBreak.UI
             row.value.text = "0";
             row.value.fontSize = 24;
             row.value.fontStyle = FontStyles.Bold;
-            row.value.color = _valueColor;
+            row.value.color = m_valueColor;
             row.value.alignment = TextAlignmentOptions.Right;
 
             return row;
@@ -254,7 +254,7 @@ namespace NeuralBreak.UI
         private void CreateCloseButton()
         {
             var buttonGO = new GameObject("CloseButton");
-            buttonGO.transform.SetParent(_panel);
+            buttonGO.transform.SetParent(m_panel);
             var buttonRect = buttonGO.AddComponent<RectTransform>();
             buttonRect.anchorMin = new Vector2(0.5f, 0f);
             buttonRect.anchorMax = new Vector2(0.5f, 0f);
@@ -265,8 +265,8 @@ namespace NeuralBreak.UI
             var buttonImage = buttonGO.AddComponent<Image>();
             buttonImage.color = new Color(0.2f, 0.6f, 0.9f);
 
-            _closeButton = buttonGO.AddComponent<Button>();
-            _closeButton.onClick.AddListener(Hide);
+            m_closeButton = buttonGO.AddComponent<Button>();
+            m_closeButton.onClick.AddListener(Hide);
 
             var textGO = new GameObject("Text");
             textGO.transform.SetParent(buttonGO.transform);
@@ -276,37 +276,37 @@ namespace NeuralBreak.UI
             textRect.offsetMin = Vector2.zero;
             textRect.offsetMax = Vector2.zero;
 
-            _closeButtonText = textGO.AddComponent<TextMeshProUGUI>();
-            _closeButtonText.text = "CLOSE";
-            _closeButtonText.fontSize = 22;
-            _closeButtonText.fontStyle = FontStyles.Bold;
-            _closeButtonText.color = Color.white;
-            _closeButtonText.alignment = TextAlignmentOptions.Center;
+            m_closeButtonText = textGO.AddComponent<TextMeshProUGUI>();
+            m_closeButtonText.text = "CLOSE";
+            m_closeButtonText.fontSize = 22;
+            m_closeButtonText.fontStyle = FontStyles.Bold;
+            m_closeButtonText.color = Color.white;
+            m_closeButtonText.alignment = TextAlignmentOptions.Center;
         }
 
         public void Show()
         {
-            if (_canvas == null)
+            if (m_canvas == null)
             {
                 CreateUI();
             }
 
             UpdateValues();
-            _isVisible = true;
-            _canvasGroup.alpha = 1f;
-            _canvasGroup.blocksRaycasts = true;
+            m_isVisible = true;
+            m_canvasGroup.alpha = 1f;
+            m_canvasGroup.blocksRaycasts = true;
 
             // Clear new records after showing
-            _newRecords.Clear();
+            m_newRecords.Clear();
         }
 
         public void Hide()
         {
-            _isVisible = false;
-            if (_canvasGroup != null)
+            m_isVisible = false;
+            if (m_canvasGroup != null)
             {
-                _canvasGroup.alpha = 0f;
-                _canvasGroup.blocksRaycasts = false;
+                m_canvasGroup.alpha = 0f;
+                m_canvasGroup.blocksRaycasts = false;
             }
         }
 
@@ -329,20 +329,20 @@ namespace NeuralBreak.UI
 
         private void SetRowValue(int index, string value, HighScoreType? type = null)
         {
-            if (index < 0 || index >= _statRows.Count || _statRows[index] == null) return;
+            if (index < 0 || index >= m_statRows.Count || m_statRows[index] == null) return;
 
-            var row = _statRows[index];
+            var row = m_statRows[index];
             row.value.text = value;
 
             // Highlight new records
-            if (type.HasValue && _newRecords.Contains(type.Value))
+            if (type.HasValue && m_newRecords.Contains(type.Value))
             {
-                row.value.color = _newRecordColor;
+                row.value.color = m_newRecordColor;
                 row.label.text = row.label.text.Replace(" (NEW!)", "") + " (NEW!)";
             }
             else
             {
-                row.value.color = _valueColor;
+                row.value.color = m_valueColor;
             }
         }
 

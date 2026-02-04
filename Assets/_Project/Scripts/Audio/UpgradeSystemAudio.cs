@@ -11,30 +11,30 @@ namespace NeuralBreak.Audio
     public class UpgradeSystemAudio : MonoBehaviour
     {
         [Header("References")]
-        [SerializeField] private AudioSource _audioSource;
+        [SerializeField] private AudioSource m_audioSource;
 
         [Header("Audio Clips (Optional)")]
-        [SerializeField] private AudioClip _screenOpenClip;
-        [SerializeField] private AudioClip _hoverClip;
-        [SerializeField] private AudioClip _selectClip;
-        [SerializeField] private AudioClip _appliedClip;
+        [SerializeField] private AudioClip m_screenOpenClip;
+        [SerializeField] private AudioClip m_hoverClip;
+        [SerializeField] private AudioClip m_selectClip;
+        [SerializeField] private AudioClip m_appliedClip;
 
         [Header("Volume")]
-        [SerializeField, Range(0f, 1f)] private float _masterVolume = 0.7f;
+        [SerializeField, Range(0f, 1f)] private float m_masterVolume = 0.7f;
 
         private void Awake()
         {
-            if (_audioSource == null)
+            if (m_audioSource == null)
             {
-                _audioSource = GetComponent<AudioSource>();
-                if (_audioSource == null)
+                m_audioSource = GetComponent<AudioSource>();
+                if (m_audioSource == null)
                 {
-                    _audioSource = gameObject.AddComponent<AudioSource>();
+                    m_audioSource = gameObject.AddComponent<AudioSource>();
                 }
             }
 
-            _audioSource.playOnAwake = false;
-            _audioSource.spatialBlend = 0f; // 2D sound
+            m_audioSource.playOnAwake = false;
+            m_audioSource.spatialBlend = 0f; // 2D sound
         }
 
         private void Start()
@@ -69,23 +69,23 @@ namespace NeuralBreak.Audio
 
         public void PlayScreenOpenSound()
         {
-            if (_screenOpenClip != null)
+            if (m_screenOpenClip != null)
             {
-                _audioSource.PlayOneShot(_screenOpenClip, _masterVolume);
+                m_audioSource.PlayOneShot(m_screenOpenClip, m_masterVolume);
             }
         }
 
         public void PlayHoverSound()
         {
-            if (_hoverClip != null)
+            if (m_hoverClip != null)
             {
-                _audioSource.PlayOneShot(_hoverClip, _masterVolume * 0.3f);
+                m_audioSource.PlayOneShot(m_hoverClip, m_masterVolume * 0.3f);
             }
         }
 
         public void PlaySelectSound(UpgradeTier tier)
         {
-            if (_selectClip != null)
+            if (m_selectClip != null)
             {
                 float pitch = tier switch
                 {
@@ -96,17 +96,17 @@ namespace NeuralBreak.Audio
                     _ => 1.0f
                 };
 
-                _audioSource.pitch = pitch;
-                _audioSource.PlayOneShot(_selectClip, _masterVolume);
-                _audioSource.pitch = 1.0f;
+                m_audioSource.pitch = pitch;
+                m_audioSource.PlayOneShot(m_selectClip, m_masterVolume);
+                m_audioSource.pitch = 1.0f;
             }
         }
 
         public void PlayAppliedSound()
         {
-            if (_appliedClip != null)
+            if (m_appliedClip != null)
             {
-                _audioSource.PlayOneShot(_appliedClip, _masterVolume * 0.8f);
+                m_audioSource.PlayOneShot(m_appliedClip, m_masterVolume * 0.8f);
             }
         }
     }

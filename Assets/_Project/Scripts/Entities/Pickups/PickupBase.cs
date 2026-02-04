@@ -13,8 +13,8 @@ namespace NeuralBreak.Entities
     public abstract class PickupBase : MonoBehaviour
     {
         [Header("Pickup Settings")]
-        [SerializeField] protected float _flashStartTime = 5f;
-        [SerializeField] protected float _flashSpeed = 10f;
+        [SerializeField] protected float m_flashStartTime = 5f;
+        [SerializeField] protected float m_flashSpeed = 10f;
 
         // Config-driven properties (read from GameBalanceConfig based on pickup type)
         protected float Lifetime => GetPickupConfig()?.lifetime ?? 15f;
@@ -31,23 +31,23 @@ namespace NeuralBreak.Entities
         }
 
         [Header("Collection")]
-        [SerializeField] protected float _collectionRadius = 1f;
+        [SerializeField] protected float m_collectionRadius = 1f;
 
         [Header("Visual")]
-        [SerializeField] protected SpriteRenderer _spriteRenderer;
-        [SerializeField] protected float _bobSpeed = 2f;
-        [SerializeField] protected float _bobAmount = 0.15f;
-        [SerializeField] protected float _rotateSpeed = 90f;
+        [SerializeField] protected SpriteRenderer m_spriteRenderer;
+        [SerializeField] protected float m_bobSpeed = 2f;
+        [SerializeField] protected float m_bobAmount = 0.15f;
+        [SerializeField] protected float m_rotateSpeed = 90f;
 
         // Note: MMFeedbacks removed
 
         // State
-        protected Transform _playerTarget;
-        protected System.Action<PickupBase> _returnToPoolCallback;
-        protected float _lifeTimer;
-        protected bool _isCollected;
-        protected Vector2 _startPosition;
-        protected float _bobPhase;
+        protected Transform m_playerTarget;
+        protected System.Action<PickupBase> m_returnToPoolCallback;
+        protected float m_lifeTimer;
+        protected bool m_isCollected;
+        protected Vector2 m_startPosition;
+        protected float m_bobPhase;
 
         // Abstract members
         public abstract PickupType PickupType { get; }
@@ -55,7 +55,7 @@ namespace NeuralBreak.Entities
         protected abstract Color GetPickupColor();
 
         // Public accessors
-        public bool IsActive => gameObject.activeInHierarchy && !_isCollected;
+        public bool IsActive => gameObject.activeInHierarchy && !m_isCollected;
         public Vector2 Position => transform.position;
 
         /// <summary>
@@ -83,12 +83,12 @@ namespace NeuralBreak.Entities
             }
 
             transform.position = position;
-            _startPosition = position;
-            _playerTarget = playerTarget;
-            _returnToPoolCallback = returnCallback;
-            _lifeTimer = lifetime;
-            _isCollected = false;
-            _bobPhase = Random.Range(0f, Mathf.PI * 2f);
+            m_startPosition = position;
+            m_playerTarget = playerTarget;
+            m_returnToPoolCallback = returnCallback;
+            m_lifeTimer = lifetime;
+            m_isCollected = false;
+            m_bobPhase = Random.Range(0f, Mathf.PI * 2f);
 
             gameObject.SetActive(true);
 
@@ -103,23 +103,23 @@ namespace NeuralBreak.Entities
         /// </summary>
         protected virtual void ApplyGeneratedSprite()
         {
-            if (_spriteRenderer == null)
+            if (m_spriteRenderer == null)
             {
-                _spriteRenderer = GetComponent<SpriteRenderer>();
-                if (_spriteRenderer == null) return;
+                m_spriteRenderer = GetComponent<SpriteRenderer>();
+                if (m_spriteRenderer == null) return;
             }
 
             Color color = GetPickupColor();
 
             // All pickups use glow sprites for a nice effect
             var sprite = Graphics.SpriteGenerator.CreateGlow(64, color, $"Pickup_{PickupType}");
-            _spriteRenderer.sprite = sprite;
-            _spriteRenderer.color = Color.white; // Color is baked into sprite
+            m_spriteRenderer.sprite = sprite;
+            m_spriteRenderer.color = Color.white; // Color is baked into sprite
         }
 
         protected virtual void Update()
         {
-            if (_isCollected) return;
+            if (m_isCollected) return;
 
             UpdateLifetime();
             UpdateMagnetism();
@@ -131,19 +131,19 @@ namespace NeuralBreak.Entities
 
         protected virtual void UpdateLifetime()
         {
-            _lifeTimer -= Time.deltaTime;
+            m_lifeTimer -= Time.deltaTime;
 
             // Flash when about to expire
-            if (_lifeTimer <= _flashStartTime && _spriteRenderer != null)
+            if (m_lifeTimer <= m_flashStartTime && m_spriteRenderer != null)
             {
-                float flash = Mathf.Sin(Time.time * _flashSpeed);
+                float flash = Mathf.Sin(Time.time * m_flashSpeed);
                 Color c = GetPickupColor();
                 c.a = 0.5f + (flash + 1f) * 0.25f;
-                _spriteRenderer.color = c;
+                m_spriteRenderer.color = c;
             }
 
             // Expire
-            if (_lifeTimer <= 0f)
+            if (m_lifeTimer <= 0f)
             {
                 ReturnToPool();
             }
@@ -155,9 +155,9 @@ namespace NeuralBreak.Entities
 
         protected virtual void UpdateMagnetism()
         {
-            if (_playerTarget == null) return;
+            if (m_playerTarget == null) return;
 
-            float distance = Vector2.Distance(transform.position, _playerTarget.position);
+            float distance = Vector2.Distance(transform.position, m_playerTarget.position);
             float magnetRadius = MagnetRadius;
 
             if (distance <= magnetRadius && distance > 0.01f)
@@ -167,7 +167,7 @@ namespace NeuralBreak.Entities
                 pullFactor = pullFactor * pullFactor; // Quadratic falloff
 
                 // Direction to player
-                Vector2 direction = ((Vector2)_playerTarget.position - (Vector2)transform.position).normalized;
+                Vector2 direction = ((Vector2)m_playerTarget.position - (Vector2)transform.position).normalized;
 
                 // Apply magnetism (config-driven)
                 float pullSpeed = Mathf.Min(MagnetStrength * pullFactor, MaxMagnetSpeed);
@@ -182,16 +182,16 @@ namespace NeuralBreak.Entities
         protected virtual void UpdateVisuals()
         {
             // Bob up and down
-            _bobPhase += Time.deltaTime * _bobSpeed;
-            float bob = Mathf.Sin(_bobPhase) * _bobAmount;
+            m_bobPhase += Time.deltaTime * m_bobSpeed;
+            float bob = Mathf.Sin(m_bobPhase) * m_bobAmount;
 
             // Only bob, don't override magnetism position
             // Visual bob effect handled by child sprite or offset
 
             // Rotate
-            if (_rotateSpeed > 0)
+            if (m_rotateSpeed > 0)
             {
-                transform.Rotate(0, 0, _rotateSpeed * Time.deltaTime);
+                transform.Rotate(0, 0, m_rotateSpeed * Time.deltaTime);
             }
         }
 
@@ -201,11 +201,11 @@ namespace NeuralBreak.Entities
 
         protected virtual void CheckCollection()
         {
-            if (_playerTarget == null) return;
+            if (m_playerTarget == null) return;
 
-            float distance = Vector2.Distance(transform.position, _playerTarget.position);
+            float distance = Vector2.Distance(transform.position, m_playerTarget.position);
 
-            if (distance <= _collectionRadius)
+            if (distance <= m_collectionRadius)
             {
                 Collect();
             }
@@ -213,7 +213,7 @@ namespace NeuralBreak.Entities
 
         protected virtual void Collect()
         {
-            CollectByPlayer(_playerTarget?.gameObject);
+            CollectByPlayer(m_playerTarget?.gameObject);
         }
 
         /// <summary>
@@ -221,7 +221,7 @@ namespace NeuralBreak.Entities
         /// </summary>
         protected virtual void CollectByPlayer(GameObject player)
         {
-            if (_isCollected)
+            if (m_isCollected)
             {
                 Debug.LogWarning($"[PickupBase] Pickup {PickupType} already collected!");
                 return;
@@ -233,7 +233,7 @@ namespace NeuralBreak.Entities
                 return;
             }
 
-            _isCollected = true;
+            m_isCollected = true;
 
             try
             {
@@ -265,13 +265,13 @@ namespace NeuralBreak.Entities
 
         public virtual void OnReturnToPool()
         {
-            _isCollected = true;
+            m_isCollected = true;
             gameObject.SetActive(false);
         }
 
         protected virtual void ReturnToPool()
         {
-            _returnToPoolCallback?.Invoke(this);
+            m_returnToPoolCallback?.Invoke(this);
         }
 
         #endregion
@@ -280,7 +280,7 @@ namespace NeuralBreak.Entities
 
         protected virtual void OnTriggerEnter2D(Collider2D other)
         {
-            if (_isCollected) return;
+            if (m_isCollected) return;
 
             if (other == null)
             {
@@ -303,7 +303,7 @@ namespace NeuralBreak.Entities
         {
             // Collection radius
             Gizmos.color = Color.green;
-            Gizmos.DrawWireSphere(transform.position, _collectionRadius);
+            Gizmos.DrawWireSphere(transform.position, m_collectionRadius);
 
             // Magnet radius (config-driven)
             Gizmos.color = Color.cyan;

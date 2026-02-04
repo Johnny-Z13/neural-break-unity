@@ -13,40 +13,40 @@ namespace NeuralBreak.UI
     public class UpgradeCard : MonoBehaviour
     {
         [Header("UI References")]
-        [SerializeField] private Image _background;
-        [SerializeField] private Image _icon;
-        [SerializeField] private Image _tierGlow;
-        [SerializeField] private TextMeshProUGUI _nameText;
-        [SerializeField] private TextMeshProUGUI _descriptionText;
-        [SerializeField] private TextMeshProUGUI _tierText;
-        [SerializeField] private Button _button;
+        [SerializeField] private Image m_background;
+        [SerializeField] private Image m_icon;
+        [SerializeField] private Image m_tierGlow;
+        [SerializeField] private TextMeshProUGUI m_nameText;
+        [SerializeField] private TextMeshProUGUI m_descriptionText;
+        [SerializeField] private TextMeshProUGUI m_tierText;
+        [SerializeField] private Button m_button;
 
         [Header("Animation")]
-        [SerializeField] private float _hoverScale = 1.05f;
-        [SerializeField] private float _animationSpeed = 10f;
+        [SerializeField] private float m_hoverScale = 1.05f;
+        [SerializeField] private float m_animationSpeed = 10f;
 
-        private UpgradeDefinition _upgrade;
-        private System.Action _onSelected;
-        private Vector3 _originalScale;
-        private bool _isHovered;
+        private UpgradeDefinition m_upgrade;
+        private System.Action m_onSelected;
+        private Vector3 m_originalScale;
+        private bool m_isHovered;
 
         // Optional components for polish
-        private UpgradeCardAnimator _animator;
-        private Audio.UpgradeSystemAudio _audioManager;
+        private UpgradeCardAnimator m_animator;
+        private Audio.UpgradeSystemAudio m_audioManager;
 
-        public Button Button => _button;
+        public Button Button => m_button;
 
         private void Awake()
         {
-            _originalScale = transform.localScale;
+            m_originalScale = transform.localScale;
 
             // Get optional components
-            _animator = GetComponent<UpgradeCardAnimator>();
-            _audioManager = FindFirstObjectByType<Audio.UpgradeSystemAudio>();
+            m_animator = GetComponent<UpgradeCardAnimator>();
+            m_audioManager = FindFirstObjectByType<Audio.UpgradeSystemAudio>();
 
             // Setup button if it exists (for prefab-based cards)
             // For programmatically built cards, this is done in Initialize()
-            if (_button != null)
+            if (m_button != null)
             {
                 SetupButtonListener();
             }
@@ -55,8 +55,8 @@ namespace NeuralBreak.UI
         private void Update()
         {
             // Smooth scale animation
-            Vector3 targetScale = _isHovered ? _originalScale * _hoverScale : _originalScale;
-            transform.localScale = Vector3.Lerp(transform.localScale, targetScale, Time.unscaledDeltaTime * _animationSpeed);
+            Vector3 targetScale = m_isHovered ? m_originalScale * m_hoverScale : m_originalScale;
+            transform.localScale = Vector3.Lerp(transform.localScale, targetScale, Time.unscaledDeltaTime * m_animationSpeed);
         }
 
         /// <summary>
@@ -64,14 +64,14 @@ namespace NeuralBreak.UI
         /// </summary>
         public void Initialize(UpgradeDefinition upgrade, System.Action onSelected)
         {
-            _upgrade = upgrade;
-            _onSelected = onSelected;
+            m_upgrade = upgrade;
+            m_onSelected = onSelected;
 
             // Re-capture original scale (in case it was set before transform was configured)
-            _originalScale = transform.localScale;
-            if (_originalScale == Vector3.zero)
+            m_originalScale = transform.localScale;
+            if (m_originalScale == Vector3.zero)
             {
-                _originalScale = Vector3.one;
+                m_originalScale = Vector3.one;
             }
 
             // Ensure UI components exist
@@ -81,15 +81,15 @@ namespace NeuralBreak.UI
             SetupButtonListener();
 
             // Get animator reference if not set
-            if (_animator == null)
+            if (m_animator == null)
             {
-                _animator = GetComponent<UpgradeCardAnimator>();
+                m_animator = GetComponent<UpgradeCardAnimator>();
             }
 
             // Update visuals
             UpdateVisuals();
 
-            Debug.Log($"[UpgradeCard] Initialized: {upgrade.displayName}, Button={_button != null}, NameText={_nameText != null}, DescText={_descriptionText != null}");
+            Debug.Log($"[UpgradeCard] Initialized: {upgrade.displayName}, Button={m_button != null}, NameText={m_nameText != null}, DescText={m_descriptionText != null}");
         }
 
         /// <summary>
@@ -97,17 +97,17 @@ namespace NeuralBreak.UI
         /// </summary>
         private void SetupButtonListener()
         {
-            if (_button == null) return;
+            if (m_button == null) return;
 
             // Remove existing listeners and add fresh
-            _button.onClick.RemoveListener(OnClick);
-            _button.onClick.AddListener(OnClick);
+            m_button.onClick.RemoveListener(OnClick);
+            m_button.onClick.AddListener(OnClick);
 
             // Setup hover effects if not already done
-            var existingTrigger = _button.GetComponent<UnityEngine.EventSystems.EventTrigger>();
+            var existingTrigger = m_button.GetComponent<UnityEngine.EventSystems.EventTrigger>();
             if (existingTrigger == null)
             {
-                var trigger = _button.gameObject.AddComponent<UnityEngine.EventSystems.EventTrigger>();
+                var trigger = m_button.gameObject.AddComponent<UnityEngine.EventSystems.EventTrigger>();
 
                 var pointerEnter = new UnityEngine.EventSystems.EventTrigger.Entry
                 {
@@ -142,114 +142,114 @@ namespace NeuralBreak.UI
         private void EnsureUIComponents()
         {
             // Create UI elements if they don't exist
-            if (_background == null)
+            if (m_background == null)
             {
-                _background = GetComponent<Image>();
-                if (_background == null)
+                m_background = GetComponent<Image>();
+                if (m_background == null)
                 {
-                    _background = gameObject.AddComponent<Image>();
+                    m_background = gameObject.AddComponent<Image>();
                 }
             }
 
-            if (_button == null)
+            if (m_button == null)
             {
-                _button = GetComponent<Button>();
-                if (_button == null)
+                m_button = GetComponent<Button>();
+                if (m_button == null)
                 {
-                    _button = gameObject.AddComponent<Button>();
-                    _button.onClick.AddListener(OnClick);
+                    m_button = gameObject.AddComponent<Button>();
+                    m_button.onClick.AddListener(OnClick);
                 }
             }
 
             // Create text elements if they don't exist
-            if (_nameText == null)
+            if (m_nameText == null)
             {
                 var nameObj = transform.Find("NameText");
                 if (nameObj != null)
                 {
-                    _nameText = nameObj.GetComponent<TextMeshProUGUI>();
+                    m_nameText = nameObj.GetComponent<TextMeshProUGUI>();
                 }
             }
 
-            if (_descriptionText == null)
+            if (m_descriptionText == null)
             {
                 var descObj = transform.Find("DescriptionText");
                 if (descObj != null)
                 {
-                    _descriptionText = descObj.GetComponent<TextMeshProUGUI>();
+                    m_descriptionText = descObj.GetComponent<TextMeshProUGUI>();
                 }
             }
 
-            if (_tierText == null)
+            if (m_tierText == null)
             {
                 var tierObj = transform.Find("TierText");
                 if (tierObj != null)
                 {
-                    _tierText = tierObj.GetComponent<TextMeshProUGUI>();
+                    m_tierText = tierObj.GetComponent<TextMeshProUGUI>();
                 }
             }
 
-            if (_icon == null)
+            if (m_icon == null)
             {
                 var iconObj = transform.Find("Icon");
                 if (iconObj != null)
                 {
-                    _icon = iconObj.GetComponent<Image>();
+                    m_icon = iconObj.GetComponent<Image>();
                 }
             }
 
-            if (_tierGlow == null)
+            if (m_tierGlow == null)
             {
                 var glowObj = transform.Find("TierGlow");
                 if (glowObj != null)
                 {
-                    _tierGlow = glowObj.GetComponent<Image>();
+                    m_tierGlow = glowObj.GetComponent<Image>();
                 }
             }
         }
 
         private void UpdateVisuals()
         {
-            if (_upgrade == null) return;
+            if (m_upgrade == null) return;
 
             // Set name
-            if (_nameText != null)
+            if (m_nameText != null)
             {
-                _nameText.text = _upgrade.displayName.ToUpper();
-                _nameText.color = GetTierColor(_upgrade.tier);
+                m_nameText.text = m_upgrade.displayName.ToUpper();
+                m_nameText.color = GetTierColor(m_upgrade.tier);
             }
 
             // Set description
-            if (_descriptionText != null)
+            if (m_descriptionText != null)
             {
-                _descriptionText.text = _upgrade.description;
-                _descriptionText.color = UITheme.TextSecondary;
+                m_descriptionText.text = m_upgrade.description;
+                m_descriptionText.color = UITheme.TextSecondary;
             }
 
             // Set tier
-            if (_tierText != null)
+            if (m_tierText != null)
             {
-                _tierText.text = $"[{_upgrade.tier.ToString().ToUpper()}]";
-                _tierText.color = GetTierColor(_upgrade.tier);
+                m_tierText.text = $"[{m_upgrade.tier.ToString().ToUpper()}]";
+                m_tierText.color = GetTierColor(m_upgrade.tier);
             }
 
             // Set icon
-            if (_icon != null && _upgrade.icon != null)
+            if (m_icon != null && m_upgrade.icon != null)
             {
-                _icon.sprite = _upgrade.icon;
-                _icon.color = _upgrade.iconColor;
+                m_icon.sprite = m_upgrade.icon;
+                m_icon.color = m_upgrade.iconColor;
             }
 
             // Set background color
-            if (_background != null)
+            if (m_background != null)
             {
-                _background.color = UITheme.BackgroundMedium;
+                m_background.color = UITheme.BackgroundMedium;
             }
 
             // Set tier glow
-            if (_tierGlow != null)
+            if (m_tierGlow != null)
             {
-                _tierGlow.color = GetTierColor(_upgrade.tier).WithAlpha(0.2f);
+                m_tierGlow.color = GetTierColor(m_upgrade.tier).WithAlpha(0.2f);
             }
         }
 
@@ -267,23 +267,23 @@ namespace NeuralBreak.UI
 
         private void OnClick()
         {
-            LogHelper.Log($"[UpgradeCard] Selected: {_upgrade?.displayName}");
+            LogHelper.Log($"[UpgradeCard] Selected: {m_upgrade?.displayName}");
 
             // Play select effect before invoking callback
             PlaySelectEffect();
 
-            _onSelected?.Invoke();
+            m_onSelected?.Invoke();
         }
 
         private void OnPointerEnter()
         {
-            _isHovered = true;
+            m_isHovered = true;
             PlayHoverEffect();
         }
 
         private void OnPointerExit()
         {
-            _isHovered = false;
+            m_isHovered = false;
         }
 
         /// <summary>
@@ -291,26 +291,26 @@ namespace NeuralBreak.UI
         /// </summary>
         public void SetHighlighted(bool highlighted)
         {
-            _isHovered = highlighted;
+            m_isHovered = highlighted;
 
             // Update background color for visual feedback
-            if (_background != null)
+            if (m_background != null)
             {
-                _background.color = highlighted
+                m_background.color = highlighted
                     ? UITheme.BackgroundLight
                     : UITheme.BackgroundMedium;
             }
 
             // Trigger animator hover effects
-            if (_animator != null)
+            if (m_animator != null)
             {
                 if (highlighted)
                 {
-                    _animator.PlayHoverEffect();
+                    m_animator.PlayHoverEffect();
                 }
                 else
                 {
-                    _animator.StopHoverEffect();
+                    m_animator.StopHoverEffect();
                 }
             }
         }
@@ -318,30 +318,30 @@ namespace NeuralBreak.UI
         public void PlayHoverEffect()
         {
             // Trigger animator
-            if (_animator != null)
+            if (m_animator != null)
             {
-                _animator.PlayHoverEffect();
+                m_animator.PlayHoverEffect();
             }
 
             // Play sound
-            if (_audioManager != null)
+            if (m_audioManager != null)
             {
-                _audioManager.PlayHoverSound();
+                m_audioManager.PlayHoverSound();
             }
         }
 
         public void PlaySelectEffect()
         {
             // Trigger animator
-            if (_animator != null)
+            if (m_animator != null)
             {
-                _animator.PlaySelectEffect();
+                m_animator.PlaySelectEffect();
             }
 
             // Play sound
-            if (_audioManager != null)
+            if (m_audioManager != null)
             {
-                _audioManager.PlaySelectSound(UpgradeTier.Common); // Use tier from _upgrade if needed
+                m_audioManager.PlaySelectSound(UpgradeTier.Common); // Use tier from m_upgrade if needed
             }
         }
     }

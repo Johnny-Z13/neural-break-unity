@@ -13,61 +13,61 @@ namespace NeuralBreak.UI
     public class XPBarDisplay : MonoBehaviour
     {
         [Header("Settings")]
-        [SerializeField] private float _fillSpeed = 3f;
-        [SerializeField] private float _levelUpFlashDuration = 0.5f;
-        [SerializeField] private int _levelUpFlashCount = 3;
+        [SerializeField] private float m_fillSpeed = 3f;
+        [SerializeField] private float m_levelUpFlashDuration = 0.5f;
+        [SerializeField] private int m_levelUpFlashCount = 3;
 
         [Header("Colors (Uses UITheme)")]
-        [SerializeField] private bool _useThemeColors = true;
+        [SerializeField] private bool m_useThemeColors = true;
 
-        private Color BarColor => _useThemeColors ? UITheme.Primary : _customBarColor;
-        private Color BarBackgroundColor => _useThemeColors ? UITheme.BarBackground : _customBarBackgroundColor;
-        private Color LevelUpFlashColor => _useThemeColors ? UITheme.Good : _customLevelUpColor;
-        private Color LevelTextColor => _useThemeColors ? UITheme.TextPrimary : Color.white;
+        private Color BarColor => m_useThemeColors ? UITheme.Primary : m_customBarColor;
+        private Color BarBackgroundColor => m_useThemeColors ? UITheme.BarBackground : m_customBarBackgroundColor;
+        private Color LevelUpFlashColor => m_useThemeColors ? UITheme.Good : m_customLevelUpColor;
+        private Color LevelTextColor => m_useThemeColors ? UITheme.TextPrimary : Color.white;
 
-        [SerializeField] private Color _customBarColor = new Color(0.4f, 0.8f, 1f);
-        [SerializeField] private Color _customBarBackgroundColor = new Color(0.1f, 0.1f, 0.15f);
-        [SerializeField] private Color _customLevelUpColor = new Color(1f, 1f, 0.4f);
+        [SerializeField] private Color m_customBarColor = new Color(0.4f, 0.8f, 1f);
+        [SerializeField] private Color m_customBarBackgroundColor = new Color(0.1f, 0.1f, 0.15f);
+        [SerializeField] private Color m_customLevelUpColor = new Color(1f, 1f, 0.4f);
 
         [Header("Layout")]
-        [SerializeField] private float _barWidth = 200f;
-        [SerializeField] private float _barHeight = 12f;
+        [SerializeField] private float m_barWidth = 200f;
+        [SerializeField] private float m_barHeight = 12f;
 #pragma warning disable CS0414 // Reserved for rounded corners feature
-        [SerializeField] private float _cornerRadius = 4f;
+        [SerializeField] private float m_cornerRadius = 4f;
 #pragma warning restore CS0414
 
         // UI Components
-        private Canvas _canvas;
-        private RectTransform _container;
-        private Image _backgroundBar;
-        private Image _fillBar;
-        private TextMeshProUGUI _levelText;
-        private TextMeshProUGUI _xpText;
+        private Canvas m_canvas;
+        private RectTransform m_container;
+        private Image m_backgroundBar;
+        private Image m_fillBar;
+        private TextMeshProUGUI m_levelText;
+        private TextMeshProUGUI m_xpText;
 
         // Animation state
-        private float _currentFill;
-        private float _targetFill;
-        private bool _isLevelingUp;
-        private Coroutine _levelUpCoroutine;
+        private float m_currentFill;
+        private float m_targetFill;
+        private bool m_isLevelingUp;
+        private Coroutine m_levelUpCoroutine;
 
         // Cached reference - avoids FindFirstObjectByType every frame!
-        private PlayerLevelSystem _levelSystem;
+        private PlayerLevelSystem m_levelSystem;
 
         private void Start()
         {
             CreateUI();
             CacheReferences();
 
-            if (_levelSystem != null)
+            if (m_levelSystem != null)
             {
-                _levelSystem.OnXPChanged += OnXPChanged;
-                _levelSystem.OnLevelUp += OnLevelUp;
+                m_levelSystem.OnXPChanged += OnXPChanged;
+                m_levelSystem.OnLevelUp += OnLevelUp;
 
                 // Initialize with current values
                 UpdateDisplay(
-                    _levelSystem.CurrentXP,
-                    _levelSystem.XPForCurrentLevel,
-                    _levelSystem.CurrentLevel
+                    m_levelSystem.CurrentXP,
+                    m_levelSystem.XPForCurrentLevel,
+                    m_levelSystem.CurrentLevel
                 );
             }
 
@@ -76,16 +76,16 @@ namespace NeuralBreak.UI
 
         private void CacheReferences()
         {
-            if (_levelSystem == null)
-                _levelSystem = FindFirstObjectByType<PlayerLevelSystem>();
+            if (m_levelSystem == null)
+                m_levelSystem = FindFirstObjectByType<PlayerLevelSystem>();
         }
 
         private void OnDestroy()
         {
-            if (_levelSystem != null)
+            if (m_levelSystem != null)
             {
-                _levelSystem.OnXPChanged -= OnXPChanged;
-                _levelSystem.OnLevelUp -= OnLevelUp;
+                m_levelSystem.OnXPChanged -= OnXPChanged;
+                m_levelSystem.OnLevelUp -= OnLevelUp;
             }
 
             EventBus.Unsubscribe<GameStartedEvent>(OnGameStarted);
@@ -94,10 +94,10 @@ namespace NeuralBreak.UI
         private void Update()
         {
             // Smooth fill animation
-            if (!_isLevelingUp && Mathf.Abs(_currentFill - _targetFill) > 0.001f)
+            if (!m_isLevelingUp && Mathf.Abs(m_currentFill - m_targetFill) > 0.001f)
             {
-                _currentFill = Mathf.Lerp(_currentFill, _targetFill, Time.unscaledDeltaTime * _fillSpeed);
-                UpdateFillBar(_currentFill);
+                m_currentFill = Mathf.Lerp(m_currentFill, m_targetFill, Time.unscaledDeltaTime * m_fillSpeed);
+                UpdateFillBar(m_currentFill);
             }
         }
 
@@ -106,9 +106,9 @@ namespace NeuralBreak.UI
             // Create canvas
             var canvasGO = new GameObject("XPBarCanvas");
             canvasGO.transform.SetParent(transform);
-            _canvas = canvasGO.AddComponent<Canvas>();
-            _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            _canvas.sortingOrder = UITheme.SortOrder.XPBar;
+            m_canvas = canvasGO.AddComponent<Canvas>();
+            m_canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            m_canvas.sortingOrder = UITheme.SortOrder.XPBar;
 
             var scaler = canvasGO.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -119,16 +119,16 @@ namespace NeuralBreak.UI
             // Create container (top-center, below level text)
             var containerGO = new GameObject("Container");
             containerGO.transform.SetParent(canvasGO.transform);
-            _container = containerGO.AddComponent<RectTransform>();
-            _container.anchorMin = new Vector2(0.5f, 1f);
-            _container.anchorMax = new Vector2(0.5f, 1f);
-            _container.pivot = new Vector2(0.5f, 1f);
-            _container.anchoredPosition = new Vector2(0, -60);
-            _container.sizeDelta = new Vector2(_barWidth + 80, _barHeight + 30);
+            m_container = containerGO.AddComponent<RectTransform>();
+            m_container.anchorMin = new Vector2(0.5f, 1f);
+            m_container.anchorMax = new Vector2(0.5f, 1f);
+            m_container.pivot = new Vector2(0.5f, 1f);
+            m_container.anchoredPosition = new Vector2(0, -60);
+            m_container.sizeDelta = new Vector2(m_barWidth + 80, m_barHeight + 30);
 
             // Level text (left of bar)
             var levelGO = new GameObject("LevelText");
-            levelGO.transform.SetParent(_container);
+            levelGO.transform.SetParent(m_container);
             var levelRect = levelGO.AddComponent<RectTransform>();
             levelRect.anchorMin = new Vector2(0, 0.5f);
             levelRect.anchorMax = new Vector2(0, 0.5f);
@@ -136,22 +136,22 @@ namespace NeuralBreak.UI
             levelRect.anchoredPosition = new Vector2(-5, 0);
             levelRect.sizeDelta = new Vector2(50, 30);
 
-            _levelText = levelGO.AddComponent<TextMeshProUGUI>();
-            _levelText.text = "LV 1";
-            _levelText.fontSize = 16;
-            _levelText.fontStyle = FontStyles.Bold;
-            _levelText.color = LevelTextColor;
-            _levelText.alignment = TextAlignmentOptions.MidlineRight;
+            m_levelText = levelGO.AddComponent<TextMeshProUGUI>();
+            m_levelText.text = "LV 1";
+            m_levelText.fontSize = 16;
+            m_levelText.fontStyle = FontStyles.Bold;
+            m_levelText.color = LevelTextColor;
+            m_levelText.alignment = TextAlignmentOptions.MidlineRight;
 
             // Bar container
             var barContainerGO = new GameObject("BarContainer");
-            barContainerGO.transform.SetParent(_container);
+            barContainerGO.transform.SetParent(m_container);
             var barContainerRect = barContainerGO.AddComponent<RectTransform>();
             barContainerRect.anchorMin = new Vector2(0.5f, 0.5f);
             barContainerRect.anchorMax = new Vector2(0.5f, 0.5f);
             barContainerRect.pivot = new Vector2(0.5f, 0.5f);
             barContainerRect.anchoredPosition = new Vector2(15, 0);
-            barContainerRect.sizeDelta = new Vector2(_barWidth, _barHeight);
+            barContainerRect.sizeDelta = new Vector2(m_barWidth, m_barHeight);
 
             // Background bar
             var bgGO = new GameObject("Background");
@@ -162,10 +162,10 @@ namespace NeuralBreak.UI
             bgRect.offsetMin = Vector2.zero;
             bgRect.offsetMax = Vector2.zero;
 
-            _backgroundBar = bgGO.AddComponent<Image>();
-            _backgroundBar.color = BarBackgroundColor;
-            _backgroundBar.sprite = CreateRoundedRectSprite();
-            _backgroundBar.type = Image.Type.Sliced;
+            m_backgroundBar = bgGO.AddComponent<Image>();
+            m_backgroundBar.color = BarBackgroundColor;
+            m_backgroundBar.sprite = CreateRoundedRectSprite();
+            m_backgroundBar.type = Image.Type.Sliced;
 
             // Fill bar
             var fillGO = new GameObject("Fill");
@@ -177,14 +177,14 @@ namespace NeuralBreak.UI
             fillRect.offsetMin = new Vector2(2, 2);
             fillRect.offsetMax = new Vector2(-2, -2);
 
-            _fillBar = fillGO.AddComponent<Image>();
-            _fillBar.color = BarColor;
-            _fillBar.sprite = CreateRoundedRectSprite();
-            _fillBar.type = Image.Type.Sliced;
+            m_fillBar = fillGO.AddComponent<Image>();
+            m_fillBar.color = BarColor;
+            m_fillBar.sprite = CreateRoundedRectSprite();
+            m_fillBar.type = Image.Type.Sliced;
 
             // XP text (right of bar)
             var xpGO = new GameObject("XPText");
-            xpGO.transform.SetParent(_container);
+            xpGO.transform.SetParent(m_container);
             var xpRect = xpGO.AddComponent<RectTransform>();
             xpRect.anchorMin = new Vector2(1, 0.5f);
             xpRect.anchorMax = new Vector2(1, 0.5f);
@@ -192,11 +192,11 @@ namespace NeuralBreak.UI
             xpRect.anchoredPosition = new Vector2(5, 0);
             xpRect.sizeDelta = new Vector2(80, 20);
 
-            _xpText = xpGO.AddComponent<TextMeshProUGUI>();
-            _xpText.text = "0/10";
-            _xpText.fontSize = 11;
-            _xpText.color = new Color(0.7f, 0.7f, 0.7f);
-            _xpText.alignment = TextAlignmentOptions.MidlineLeft;
+            m_xpText = xpGO.AddComponent<TextMeshProUGUI>();
+            m_xpText.text = "0/10";
+            m_xpText.fontSize = 11;
+            m_xpText.color = new Color(0.7f, 0.7f, 0.7f);
+            m_xpText.alignment = TextAlignmentOptions.MidlineLeft;
 
             // Initialize bar at zero
             UpdateFillBar(0);
@@ -262,76 +262,76 @@ namespace NeuralBreak.UI
 
         private void OnLevelUp(int newLevel)
         {
-            if (_levelUpCoroutine != null)
+            if (m_levelUpCoroutine != null)
             {
-                StopCoroutine(_levelUpCoroutine);
+                StopCoroutine(m_levelUpCoroutine);
             }
-            _levelUpCoroutine = StartCoroutine(LevelUpAnimation(newLevel));
+            m_levelUpCoroutine = StartCoroutine(LevelUpAnimation(newLevel));
         }
 
         private void OnGameStarted(GameStartedEvent evt)
         {
             // Reset display
-            _currentFill = 0;
-            _targetFill = 0;
+            m_currentFill = 0;
+            m_targetFill = 0;
             UpdateFillBar(0);
-            _levelText.text = "LV 1";
-            _xpText.text = "0/10";
-            _levelText.color = LevelTextColor;
-            _fillBar.color = BarColor;
+            m_levelText.text = "LV 1";
+            m_xpText.text = "0/10";
+            m_levelText.color = LevelTextColor;
+            m_fillBar.color = BarColor;
         }
 
         private void UpdateDisplay(int currentXP, int xpForLevel, int level)
         {
-            _targetFill = xpForLevel > 0 ? (float)currentXP / xpForLevel : 0;
-            _levelText.text = $"LV {level}";
-            _xpText.text = $"{currentXP}/{xpForLevel}";
+            m_targetFill = xpForLevel > 0 ? (float)currentXP / xpForLevel : 0;
+            m_levelText.text = $"LV {level}";
+            m_xpText.text = $"{currentXP}/{xpForLevel}";
         }
 
         private void UpdateFillBar(float fill)
         {
-            if (_fillBar == null) return;
+            if (m_fillBar == null) return;
 
-            RectTransform rect = _fillBar.rectTransform;
-            float maxWidth = _barWidth - 4; // Account for padding
+            RectTransform rect = m_fillBar.rectTransform;
+            float maxWidth = m_barWidth - 4; // Account for padding
             rect.sizeDelta = new Vector2(maxWidth * Mathf.Clamp01(fill), rect.sizeDelta.y);
         }
 
         private IEnumerator LevelUpAnimation(int newLevel)
         {
-            _isLevelingUp = true;
+            m_isLevelingUp = true;
 
             // Flash the bar and level text
-            for (int i = 0; i < _levelUpFlashCount; i++)
+            for (int i = 0; i < m_levelUpFlashCount; i++)
             {
                 // Flash on
-                _fillBar.color = LevelUpFlashColor;
-                _levelText.color = LevelUpFlashColor;
-                _backgroundBar.color = new Color(0.3f, 0.3f, 0.2f);
+                m_fillBar.color = LevelUpFlashColor;
+                m_levelText.color = LevelUpFlashColor;
+                m_backgroundBar.color = new Color(0.3f, 0.3f, 0.2f);
 
-                yield return new WaitForSecondsRealtime(_levelUpFlashDuration / (_levelUpFlashCount * 2));
+                yield return new WaitForSecondsRealtime(m_levelUpFlashDuration / (m_levelUpFlashCount * 2));
 
                 // Flash off
-                _fillBar.color = BarColor;
-                _levelText.color = LevelTextColor;
-                _backgroundBar.color = BarBackgroundColor;
+                m_fillBar.color = BarColor;
+                m_levelText.color = LevelTextColor;
+                m_backgroundBar.color = BarBackgroundColor;
 
-                yield return new WaitForSecondsRealtime(_levelUpFlashDuration / (_levelUpFlashCount * 2));
+                yield return new WaitForSecondsRealtime(m_levelUpFlashDuration / (m_levelUpFlashCount * 2));
             }
 
             // Reset bar to start of new level
-            _currentFill = 0;
+            m_currentFill = 0;
             UpdateFillBar(0);
 
             // Update target from current system state (use cached reference)
-            if (_levelSystem != null)
+            if (m_levelSystem != null)
             {
-                _targetFill = _levelSystem.LevelProgress;
-                _xpText.text = $"{_levelSystem.CurrentXP}/{_levelSystem.XPForCurrentLevel}";
+                m_targetFill = m_levelSystem.LevelProgress;
+                m_xpText.text = $"{m_levelSystem.CurrentXP}/{m_levelSystem.XPForCurrentLevel}";
             }
 
-            _isLevelingUp = false;
-            _levelUpCoroutine = null;
+            m_isLevelingUp = false;
+            m_levelUpCoroutine = null;
         }
 
         #region Debug
@@ -339,25 +339,25 @@ namespace NeuralBreak.UI
         [ContextMenu("Debug: Fill 50%")]
         private void DebugFill50()
         {
-            _targetFill = 0.5f;
-            _xpText.text = "5/10";
+            m_targetFill = 0.5f;
+            m_xpText.text = "5/10";
         }
 
         [ContextMenu("Debug: Fill 100%")]
         private void DebugFill100()
         {
-            _targetFill = 1f;
-            _xpText.text = "10/10";
+            m_targetFill = 1f;
+            m_xpText.text = "10/10";
         }
 
         [ContextMenu("Debug: Level Up")]
         private void DebugLevelUp()
         {
-            if (_levelUpCoroutine != null)
+            if (m_levelUpCoroutine != null)
             {
-                StopCoroutine(_levelUpCoroutine);
+                StopCoroutine(m_levelUpCoroutine);
             }
-            _levelUpCoroutine = StartCoroutine(LevelUpAnimation(2));
+            m_levelUpCoroutine = StartCoroutine(LevelUpAnimation(2));
         }
 
         #endregion

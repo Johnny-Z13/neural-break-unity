@@ -15,47 +15,47 @@ namespace NeuralBreak.Combat
     {
         [Header("Smart Bomb Settings (from GameBalanceConfig)")]
         [Tooltip("These values are loaded from GameBalanceConfig at runtime")]
-        [SerializeField] private int _startingBombs = 0;
-        [SerializeField] private int _maxBombs = 3;
-        [SerializeField] private float _activationDuration = 0.5f;
+        [SerializeField] private int m_startingBombs = 0;
+        [SerializeField] private int m_maxBombs = 3;
+        [SerializeField] private float m_activationDuration = 0.5f;
 
         [Header("Visual Effects")]
-        [SerializeField] private ParticleSystem _explosionParticles;
-        [SerializeField] private Color _explosionStartColor = new Color(1f, 0.8f, 0.2f, 1f);
-        [SerializeField] private Color _explosionEndColor = new Color(1f, 0.3f, 0.1f, 0f);
+        [SerializeField] private ParticleSystem m_explosionParticles;
+        [SerializeField] private Color m_explosionStartColor = new Color(1f, 0.8f, 0.2f, 1f);
+        [SerializeField] private Color m_explosionEndColor = new Color(1f, 0.3f, 0.1f, 0f);
 
         // Note: MMFeedbacks removed
 
         [Header("Audio")]
-        [SerializeField] private AudioClip _epicExplosionSound;
-        [SerializeField] private float _explosionVolume = 0.8f;
+        [SerializeField] private AudioClip m_epicExplosionSound;
+        [SerializeField] private float m_explosionVolume = 0.8f;
 
         // State
-        private int _currentBombs;
-        private bool _isActivating;
-        private float _activationTimer;
-        private AudioSource _audioSource;
-        private int _bonusBombs;
+        private int m_currentBombs;
+        private bool m_isActivating;
+        private float m_activationTimer;
+        private AudioSource m_audioSource;
+        private int m_bonusBombs;
 
         // Cached reference - avoids FindObjectsByType every bomb!
-        private Entities.EnemySpawner _enemySpawner;
+        private Entities.EnemySpawner m_enemySpawner;
 
         // Public accessors
-        public int CurrentBombs => _currentBombs;
-        public int MaxBombs => _maxBombs + _bonusBombs;
-        public bool CanUseBomb => _currentBombs > 0 && !_isActivating;
+        public int CurrentBombs => m_currentBombs;
+        public int MaxBombs => m_maxBombs + m_bonusBombs;
+        public bool CanUseBomb => m_currentBombs > 0 && !m_isActivating;
 
         private void Awake()
         {
             // Load settings from GameBalanceConfig
             LoadConfigValues();
 
-            _currentBombs = _startingBombs;
+            m_currentBombs = m_startingBombs;
 
             // Create audio source
-            _audioSource = gameObject.AddComponent<AudioSource>();
-            _audioSource.playOnAwake = false;
-            _audioSource.spatialBlend = 0f; // 2D sound
+            m_audioSource = gameObject.AddComponent<AudioSource>();
+            m_audioSource.playOnAwake = false;
+            m_audioSource.spatialBlend = 0f; // 2D sound
         }
 
         private void LoadConfigValues()
@@ -63,10 +63,10 @@ namespace NeuralBreak.Combat
             var config = ConfigProvider.Balance?.smartBomb;
             if (config != null)
             {
-                _startingBombs = config.startingBombs;
-                _maxBombs = config.maxBombs;
-                _activationDuration = config.activationDuration;
-                Debug.Log($"[SmartBombSystem] Loaded config: starting={_startingBombs}, max={_maxBombs}");
+                m_startingBombs = config.startingBombs;
+                m_maxBombs = config.maxBombs;
+                m_activationDuration = config.activationDuration;
+                Debug.Log($"[SmartBombSystem] Loaded config: starting={m_startingBombs}, max={m_maxBombs}");
             }
             else
             {
@@ -94,12 +94,12 @@ namespace NeuralBreak.Combat
             // Publish initial state
             EventBus.Publish(new SmartBombCountChangedEvent
             {
-                count = _currentBombs,
+                count = m_currentBombs,
                 maxCount = MaxBombs
             });
 
             // Ensure particles are set up
-            if (_explosionParticles != null)
+            if (m_explosionParticles != null)
             {
                 SetupExplosionParticles();
             }
@@ -119,35 +119,35 @@ namespace NeuralBreak.Combat
 
         private void OnModifiersChanged(WeaponModifiersChangedEvent evt)
         {
-            int bombDelta = evt.modifiers.bonusSmartBombs - _bonusBombs;
+            int bombDelta = evt.modifiers.bonusSmartBombs - m_bonusBombs;
             if (bombDelta != 0)
             {
-                _bonusBombs = evt.modifiers.bonusSmartBombs;
+                m_bonusBombs = evt.modifiers.bonusSmartBombs;
 
                 // If bonus increased, add bombs
                 if (bombDelta > 0)
                 {
-                    _currentBombs = Mathf.Min(_currentBombs + bombDelta, MaxBombs);
+                    m_currentBombs = Mathf.Min(m_currentBombs + bombDelta, MaxBombs);
                 }
 
                 EventBus.Publish(new SmartBombCountChangedEvent
                 {
-                    count = _currentBombs,
+                    count = m_currentBombs,
                     maxCount = MaxBombs
                 });
 
-                Debug.Log($"[SmartBombSystem] Bomb bonus changed: +{_bonusBombs}. Max bombs: {MaxBombs}");
+                Debug.Log($"[SmartBombSystem] Bomb bonus changed: +{m_bonusBombs}. Max bombs: {MaxBombs}");
             }
         }
 
         private void Update()
         {
-            if (_isActivating)
+            if (m_isActivating)
             {
-                _activationTimer -= Time.deltaTime;
-                if (_activationTimer <= 0f)
+                m_activationTimer -= Time.deltaTime;
+                if (m_activationTimer <= 0f)
                 {
-                    _isActivating = false;
+                    m_isActivating = false;
                 }
             }
         }
@@ -157,7 +157,7 @@ namespace NeuralBreak.Combat
         /// </summary>
         public void TryActivateBomb()
         {
-            Debug.Log($"[SmartBombSystem] TryActivateBomb called! Bombs: {_currentBombs}, IsActivating: {_isActivating}, CanUseBomb: {CanUseBomb}");
+            Debug.Log($"[SmartBombSystem] TryActivateBomb called! Bombs: {m_currentBombs}, IsActivating: {m_isActivating}, CanUseBomb: {CanUseBomb}");
 
             if (!CanUseBomb)
             {
@@ -170,22 +170,22 @@ namespace NeuralBreak.Combat
 
         private void ActivateBomb()
         {
-            _currentBombs--;
-            _isActivating = true;
-            _activationTimer = _activationDuration;
+            m_currentBombs--;
+            m_isActivating = true;
+            m_activationTimer = m_activationDuration;
 
             // Epic audio
-            if (_epicExplosionSound != null && _audioSource != null)
+            if (m_epicExplosionSound != null && m_audioSource != null)
             {
-                _audioSource.PlayOneShot(_epicExplosionSound, _explosionVolume);
+                m_audioSource.PlayOneShot(m_epicExplosionSound, m_explosionVolume);
             }
 
             // Feedback (Feel removed)
 
             // Visual effect
-            if (_explosionParticles != null)
+            if (m_explosionParticles != null)
             {
-                _explosionParticles.Play();
+                m_explosionParticles.Play();
             }
 
             // Kill all enemies
@@ -195,25 +195,25 @@ namespace NeuralBreak.Combat
             EventBus.Publish(new SmartBombActivatedEvent { position = transform.position });
             EventBus.Publish(new SmartBombCountChangedEvent
             {
-                count = _currentBombs,
+                count = m_currentBombs,
                 maxCount = MaxBombs
             });
 
-            Debug.Log($"[SmartBombSystem] SMART BOMB ACTIVATED! Bombs remaining: {_currentBombs}");
+            Debug.Log($"[SmartBombSystem] SMART BOMB ACTIVATED! Bombs remaining: {m_currentBombs}");
         }
 
         private void KillAllEnemies()
         {
             // Use cached EnemySpawner.ActiveEnemies instead of FindObjectsByType
-            if (_enemySpawner == null)
-                _enemySpawner = FindFirstObjectByType<Entities.EnemySpawner>();
+            if (m_enemySpawner == null)
+                m_enemySpawner = FindFirstObjectByType<Entities.EnemySpawner>();
 
             int killedCount = 0;
 
-            if (_enemySpawner != null)
+            if (m_enemySpawner != null)
             {
                 // Iterate the cached active enemies list
-                var enemies = _enemySpawner.ActiveEnemies;
+                var enemies = m_enemySpawner.ActiveEnemies;
                 foreach (var enemy in enemies)
                 {
                     // Only kill enemies that are alive (not spawning, not already dead)
@@ -246,20 +246,20 @@ namespace NeuralBreak.Combat
         /// </summary>
         public void AddBomb()
         {
-            if (_currentBombs >= MaxBombs)
+            if (m_currentBombs >= MaxBombs)
             {
                 Debug.LogWarning($"[SmartBombSystem] Already at max bombs ({MaxBombs})!");
                 return;
             }
 
-            _currentBombs++;
+            m_currentBombs++;
             EventBus.Publish(new SmartBombCountChangedEvent
             {
-                count = _currentBombs,
+                count = m_currentBombs,
                 maxCount = MaxBombs
             });
 
-            Debug.Log($"[SmartBombSystem] Smart bomb added! Total: {_currentBombs}/{MaxBombs}");
+            Debug.Log($"[SmartBombSystem] Smart bomb added! Total: {m_currentBombs}/{MaxBombs}");
         }
 
         /// <summary>
@@ -267,13 +267,13 @@ namespace NeuralBreak.Combat
         /// </summary>
         public void Reset()
         {
-            _currentBombs = _startingBombs;
-            _isActivating = false;
-            _activationTimer = 0f;
+            m_currentBombs = m_startingBombs;
+            m_isActivating = false;
+            m_activationTimer = 0f;
 
             EventBus.Publish(new SmartBombCountChangedEvent
             {
-                count = _currentBombs,
+                count = m_currentBombs,
                 maxCount = MaxBombs
             });
         }
@@ -285,29 +285,29 @@ namespace NeuralBreak.Combat
 
         private void SetupExplosionParticles()
         {
-            var main = _explosionParticles.main;
-            main.startColor = new ParticleSystem.MinMaxGradient(_explosionStartColor, _explosionEndColor);
+            var main = m_explosionParticles.main;
+            main.startColor = new ParticleSystem.MinMaxGradient(m_explosionStartColor, m_explosionEndColor);
             main.startLifetime = 1f;
             main.startSpeed = new ParticleSystem.MinMaxCurve(10f, 20f);
             main.startSize = new ParticleSystem.MinMaxCurve(0.5f, 2f);
             main.maxParticles = 500;
             main.loop = false;
 
-            var emission = _explosionParticles.emission;
+            var emission = m_explosionParticles.emission;
             emission.rateOverTime = 0;
             emission.SetBursts(new ParticleSystem.Burst[]
             {
                 new ParticleSystem.Burst(0f, 500)
             });
 
-            var shape = _explosionParticles.shape;
+            var shape = m_explosionParticles.shape;
             shape.shapeType = ParticleSystemShapeType.Sphere;
             shape.radius = 15f; // Cover full screen
 
-            var colorOverLifetime = _explosionParticles.colorOverLifetime;
+            var colorOverLifetime = m_explosionParticles.colorOverLifetime;
             colorOverLifetime.enabled = true;
 
-            var sizeOverLifetime = _explosionParticles.sizeOverLifetime;
+            var sizeOverLifetime = m_explosionParticles.sizeOverLifetime;
             sizeOverLifetime.enabled = true;
         }
 

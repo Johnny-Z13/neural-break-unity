@@ -12,41 +12,41 @@ namespace NeuralBreak.Audio
         public static AudioManager Instance { get; private set; }
 
         [Header("Volume Settings")]
-        [SerializeField] [Range(0f, 1f)] private float _masterVolume = 1f;
-        [SerializeField] [Range(0f, 1f)] private float _sfxVolume = 0.8f;
-        [SerializeField] [Range(0f, 1f)] private float _musicVolume = 0.4f;
-        [SerializeField] [Range(0f, 1f)] private float _uiVolume = 0.6f;
+        [SerializeField] [Range(0f, 1f)] private float m_masterVolume = 1f;
+        [SerializeField] [Range(0f, 1f)] private float m_sfxVolume = 0.8f;
+        [SerializeField] [Range(0f, 1f)] private float m_musicVolume = 0.4f;
+        [SerializeField] [Range(0f, 1f)] private float m_uiVolume = 0.6f;
 
         [Header("Audio Sources")]
-        [SerializeField] private AudioSource _sfxSource;
-        [SerializeField] private AudioSource _musicSource;
-        [SerializeField] private AudioSource _uiSource;
+        [SerializeField] private AudioSource m_sfxSource;
+        [SerializeField] private AudioSource m_musicSource;
+        [SerializeField] private AudioSource m_uiSource;
 
         [Header("Override Clips (optional)")]
-        [SerializeField] private AudioClip _shootClipOverride;
-        [SerializeField] private AudioClip _hitClipOverride;
-        [SerializeField] private AudioClip _explosionClipOverride;
-        [SerializeField] private AudioClip _damageClipOverride;
-        [SerializeField] private AudioClip _pickupClipOverride;
-        [SerializeField] private AudioClip _menuClickClipOverride;
+        [SerializeField] private AudioClip m_shootClipOverride;
+        [SerializeField] private AudioClip m_hitClipOverride;
+        [SerializeField] private AudioClip m_explosionClipOverride;
+        [SerializeField] private AudioClip m_damageClipOverride;
+        [SerializeField] private AudioClip m_pickupClipOverride;
+        [SerializeField] private AudioClip m_menuClickClipOverride;
 
         // Procedural clips
-        private AudioClip _shootClip;
-        private AudioClip _hitClip;
-        private AudioClip _explosionClip;
-        private AudioClip _damageClip;
-        private AudioClip _pickupClip;
-        private AudioClip _menuClickClip;
-        private AudioClip _shieldHitClip;
-        private AudioClip _levelUpClip;
-        private AudioClip _gameOverClip;
-        private AudioClip _overheatClip;
-        private AudioClip _bgmClip;
-        private AudioClip[] _enemyDeathClips;
+        private AudioClip m_shootClip;
+        private AudioClip m_hitClip;
+        private AudioClip m_explosionClip;
+        private AudioClip m_damageClip;
+        private AudioClip m_pickupClip;
+        private AudioClip m_menuClickClip;
+        private AudioClip m_shieldHitClip;
+        private AudioClip m_levelUpClip;
+        private AudioClip m_gameOverClip;
+        private AudioClip m_overheatClip;
+        private AudioClip m_bgmClip;
+        private AudioClip[] m_enemyDeathClips;
 
         // Combo pitch tracking
-        private int _currentCombo;
-        private float _comboPitchBonus;
+        private int m_currentCombo;
+        private float m_comboPitchBonus;
 
         private void Awake()
         {
@@ -90,36 +90,36 @@ namespace NeuralBreak.Audio
             float startTime = Time.realtimeSinceStartup;
 
             // Generate short clips first (fast)
-            _shootClip = _shootClipOverride != null ? _shootClipOverride : ProceduralSFX.CreateShoot();
-            _hitClip = _hitClipOverride != null ? _hitClipOverride : ProceduralSFX.CreateHit();
-            _menuClickClip = _menuClickClipOverride != null ? _menuClickClipOverride : ProceduralSFX.CreateMenuClick();
+            m_shootClip = m_shootClipOverride != null ? m_shootClipOverride : ProceduralSFX.CreateShoot();
+            m_hitClip = m_hitClipOverride != null ? m_hitClipOverride : ProceduralSFX.CreateHit();
+            m_menuClickClip = m_menuClickClipOverride != null ? m_menuClickClipOverride : ProceduralSFX.CreateMenuClick();
             yield return null; // Allow other systems to initialize
 
-            _explosionClip = _explosionClipOverride != null ? _explosionClipOverride : ProceduralSFX.CreateExplosion();
-            _damageClip = _damageClipOverride != null ? _damageClipOverride : ProceduralSFX.CreateDamage();
-            _pickupClip = _pickupClipOverride != null ? _pickupClipOverride : ProceduralSFX.CreatePickup();
+            m_explosionClip = m_explosionClipOverride != null ? m_explosionClipOverride : ProceduralSFX.CreateExplosion();
+            m_damageClip = m_damageClipOverride != null ? m_damageClipOverride : ProceduralSFX.CreateDamage();
+            m_pickupClip = m_pickupClipOverride != null ? m_pickupClipOverride : ProceduralSFX.CreatePickup();
             yield return null;
 
-            _shieldHitClip = ProceduralSFX.CreateShieldHit();
-            _levelUpClip = ProceduralSFX.CreateLevelUp();
-            _gameOverClip = ProceduralSFX.CreateGameOver();
-            _overheatClip = ProceduralSFX.CreateOverheatWarning();
+            m_shieldHitClip = ProceduralSFX.CreateShieldHit();
+            m_levelUpClip = ProceduralSFX.CreateLevelUp();
+            m_gameOverClip = ProceduralSFX.CreateGameOver();
+            m_overheatClip = ProceduralSFX.CreateOverheatWarning();
             yield return null;
 
             // Generate varied enemy death sounds (one per enemy type)
-            _enemyDeathClips = new AudioClip[8];
+            m_enemyDeathClips = new AudioClip[8];
             for (int i = 0; i < 8; i++)
             {
-                _enemyDeathClips[i] = ProceduralSFX.CreateEnemyDeath(i);
+                m_enemyDeathClips[i] = ProceduralSFX.CreateEnemyDeath(i);
                 if (i % 2 == 1) yield return null; // Yield every 2 clips
             }
 
             // Background music is the heaviest - generate last
             yield return null;
-            _bgmClip = ProceduralSFX.CreateBackgroundMusic();
+            m_bgmClip = ProceduralSFX.CreateBackgroundMusic();
 
             float elapsed = Time.realtimeSinceStartup - startTime;
-            Debug.Log($"[AudioManager] Clips generated in {elapsed:F2}s: shoot={_shootClip != null}, hit={_hitClip != null}, bgm={_bgmClip != null}");
+            Debug.Log($"[AudioManager] Clips generated in {elapsed:F2}s: shoot={m_shootClip != null}, hit={m_hitClip != null}, bgm={m_bgmClip != null}");
         }
 
         // Note: GenerateProceduralClips moved to GenerateProceduralClipsAsync() coroutine
@@ -127,30 +127,30 @@ namespace NeuralBreak.Audio
 
         private void EnsureAudioSources()
         {
-            if (_sfxSource == null)
+            if (m_sfxSource == null)
             {
                 var sfxGO = new GameObject("SFX_Source");
                 sfxGO.transform.SetParent(transform);
-                _sfxSource = sfxGO.AddComponent<AudioSource>();
-                _sfxSource.playOnAwake = false;
+                m_sfxSource = sfxGO.AddComponent<AudioSource>();
+                m_sfxSource.playOnAwake = false;
             }
 
-            if (_uiSource == null)
+            if (m_uiSource == null)
             {
                 var uiGO = new GameObject("UI_Source");
                 uiGO.transform.SetParent(transform);
-                _uiSource = uiGO.AddComponent<AudioSource>();
-                _uiSource.playOnAwake = false;
-                _uiSource.ignoreListenerPause = true; // UI sounds during pause
+                m_uiSource = uiGO.AddComponent<AudioSource>();
+                m_uiSource.playOnAwake = false;
+                m_uiSource.ignoreListenerPause = true; // UI sounds during pause
             }
 
-            if (_musicSource == null)
+            if (m_musicSource == null)
             {
                 var musicGO = new GameObject("Music_Source");
                 musicGO.transform.SetParent(transform);
-                _musicSource = musicGO.AddComponent<AudioSource>();
-                _musicSource.playOnAwake = false;
-                _musicSource.loop = true;
+                m_musicSource = musicGO.AddComponent<AudioSource>();
+                m_musicSource.playOnAwake = false;
+                m_musicSource.loop = true;
             }
         }
 
@@ -194,85 +194,85 @@ namespace NeuralBreak.Audio
 
         private void OnProjectileFired(ProjectileFiredEvent evt)
         {
-            PlaySFX(_shootClip, 0.3f, Random.Range(0.95f, 1.05f));
+            PlaySFX(m_shootClip, 0.3f, Random.Range(0.95f, 1.05f));
         }
 
         private void OnEnemyKilled(EnemyKilledEvent evt)
         {
             // Play enemy-type specific death sound with combo pitch bonus
             int typeIndex = (int)evt.enemyType;
-            if (typeIndex >= 0 && typeIndex < _enemyDeathClips.Length && _enemyDeathClips[typeIndex] != null)
+            if (typeIndex >= 0 && typeIndex < m_enemyDeathClips.Length && m_enemyDeathClips[typeIndex] != null)
             {
-                float pitch = Random.Range(0.95f, 1.05f) + _comboPitchBonus;
-                PlaySFX(_enemyDeathClips[typeIndex], 0.5f, pitch);
+                float pitch = Random.Range(0.95f, 1.05f) + m_comboPitchBonus;
+                PlaySFX(m_enemyDeathClips[typeIndex], 0.5f, pitch);
             }
 
             // Also play explosion
-            PlaySFX(_explosionClip, 0.4f, Random.Range(0.9f, 1.1f) + _comboPitchBonus * 0.5f);
+            PlaySFX(m_explosionClip, 0.4f, Random.Range(0.9f, 1.1f) + m_comboPitchBonus * 0.5f);
         }
 
         private void OnEnemyDamaged(EnemyDamagedEvent evt)
         {
-            PlaySFX(_hitClip, 0.4f, Random.Range(0.95f, 1.05f));
+            PlaySFX(m_hitClip, 0.4f, Random.Range(0.95f, 1.05f));
         }
 
         private void OnPlayerDamaged(PlayerDamagedEvent evt)
         {
-            PlaySFX(_damageClip, 0.8f);
+            PlaySFX(m_damageClip, 0.8f);
         }
 
         private void OnShieldChanged(ShieldChangedEvent evt)
         {
             // Play shield hit sound (implied shield was just used)
-            PlaySFX(_shieldHitClip, 0.7f);
+            PlaySFX(m_shieldHitClip, 0.7f);
         }
 
         private void OnPickupCollected(PickupCollectedEvent evt)
         {
-            PlaySFX(_pickupClip, 0.6f);
+            PlaySFX(m_pickupClip, 0.6f);
         }
 
         private void OnWeaponOverheated(WeaponOverheatedEvent evt)
         {
-            PlaySFX(_overheatClip, 0.6f);
+            PlaySFX(m_overheatClip, 0.6f);
         }
 
         private void OnLevelStarted(LevelStartedEvent evt)
         {
             if (evt.levelNumber > 1)
             {
-                PlaySFX(_levelUpClip, 0.7f);
+                PlaySFX(m_levelUpClip, 0.7f);
             }
         }
 
         private void OnGameOver(GameOverEvent evt)
         {
-            PlaySFX(_gameOverClip, 0.8f);
+            PlaySFX(m_gameOverClip, 0.8f);
         }
 
         private void OnVictory(VictoryEvent evt)
         {
-            PlaySFX(_levelUpClip, 1f); // Use level up sound for victory
+            PlaySFX(m_levelUpClip, 1f); // Use level up sound for victory
         }
 
         private void OnGameStarted(GameStartedEvent evt)
         {
             // Start background music
             PlayMusic();
-            _currentCombo = 0;
-            _comboPitchBonus = 0f;
+            m_currentCombo = 0;
+            m_comboPitchBonus = 0f;
         }
 
         private void OnComboChanged(ComboChangedEvent evt)
         {
-            _currentCombo = evt.comboCount;
+            m_currentCombo = evt.comboCount;
             // Increase pitch slightly with combo (max +0.3 semitones)
-            _comboPitchBonus = Mathf.Min(evt.comboCount * 0.01f, 0.3f);
+            m_comboPitchBonus = Mathf.Min(evt.comboCount * 0.01f, 0.3f);
 
             // Reset on combo break
             if (evt.comboCount == 0)
             {
-                _comboPitchBonus = 0f;
+                m_comboPitchBonus = 0f;
             }
         }
 
@@ -285,10 +285,10 @@ namespace NeuralBreak.Audio
         /// </summary>
         public void PlaySFX(AudioClip clip, float volumeMultiplier = 1f, float pitchMultiplier = 1f)
         {
-            if (clip == null || _sfxSource == null) return;
+            if (clip == null || m_sfxSource == null) return;
 
-            _sfxSource.pitch = pitchMultiplier;
-            _sfxSource.PlayOneShot(clip, _masterVolume * _sfxVolume * volumeMultiplier);
+            m_sfxSource.pitch = pitchMultiplier;
+            m_sfxSource.PlayOneShot(clip, m_masterVolume * m_sfxVolume * volumeMultiplier);
         }
 
         /// <summary>
@@ -296,9 +296,9 @@ namespace NeuralBreak.Audio
         /// </summary>
         public void PlayUI(AudioClip clip, float volumeMultiplier = 1f)
         {
-            if (clip == null || _uiSource == null) return;
+            if (clip == null || m_uiSource == null) return;
 
-            _uiSource.PlayOneShot(clip, _masterVolume * _uiVolume * volumeMultiplier);
+            m_uiSource.PlayOneShot(clip, m_masterVolume * m_uiVolume * volumeMultiplier);
         }
 
         /// <summary>
@@ -306,7 +306,7 @@ namespace NeuralBreak.Audio
         /// </summary>
         public void PlayMenuClick()
         {
-            PlayUI(_menuClickClip);
+            PlayUI(m_menuClickClip);
         }
 
         /// <summary>
@@ -314,11 +314,11 @@ namespace NeuralBreak.Audio
         /// </summary>
         public void PlayMusic()
         {
-            if (_musicSource == null || _bgmClip == null) return;
+            if (m_musicSource == null || m_bgmClip == null) return;
 
-            _musicSource.clip = _bgmClip;
-            _musicSource.volume = _masterVolume * _musicVolume;
-            _musicSource.Play();
+            m_musicSource.clip = m_bgmClip;
+            m_musicSource.volume = m_masterVolume * m_musicVolume;
+            m_musicSource.Play();
         }
 
         /// <summary>
@@ -326,9 +326,9 @@ namespace NeuralBreak.Audio
         /// </summary>
         public void StopMusic()
         {
-            if (_musicSource != null)
+            if (m_musicSource != null)
             {
-                _musicSource.Stop();
+                m_musicSource.Stop();
             }
         }
 
@@ -337,7 +337,7 @@ namespace NeuralBreak.Audio
         /// </summary>
         public void SetMasterVolume(float volume)
         {
-            _masterVolume = Mathf.Clamp01(volume);
+            m_masterVolume = Mathf.Clamp01(volume);
         }
 
         /// <summary>
@@ -345,7 +345,7 @@ namespace NeuralBreak.Audio
         /// </summary>
         public void SetSFXVolume(float volume)
         {
-            _sfxVolume = Mathf.Clamp01(volume);
+            m_sfxVolume = Mathf.Clamp01(volume);
         }
 
         /// <summary>
@@ -353,7 +353,7 @@ namespace NeuralBreak.Audio
         /// </summary>
         public void SetUIVolume(float volume)
         {
-            _uiVolume = Mathf.Clamp01(volume);
+            m_uiVolume = Mathf.Clamp01(volume);
         }
 
         /// <summary>
@@ -361,10 +361,10 @@ namespace NeuralBreak.Audio
         /// </summary>
         public void SetMusicVolume(float volume)
         {
-            _musicVolume = Mathf.Clamp01(volume);
-            if (_musicSource != null)
+            m_musicVolume = Mathf.Clamp01(volume);
+            if (m_musicSource != null)
             {
-                _musicSource.volume = _masterVolume * _musicVolume;
+                m_musicSource.volume = m_masterVolume * m_musicVolume;
             }
         }
 
@@ -373,22 +373,22 @@ namespace NeuralBreak.Audio
         #region Debug
 
         [ContextMenu("Debug: Play Shoot")]
-        private void DebugShoot() => PlaySFX(_shootClip);
+        private void DebugShoot() => PlaySFX(m_shootClip);
 
         [ContextMenu("Debug: Play Explosion")]
-        private void DebugExplosion() => PlaySFX(_explosionClip);
+        private void DebugExplosion() => PlaySFX(m_explosionClip);
 
         [ContextMenu("Debug: Play Damage")]
-        private void DebugDamage() => PlaySFX(_damageClip);
+        private void DebugDamage() => PlaySFX(m_damageClip);
 
         [ContextMenu("Debug: Play Pickup")]
-        private void DebugPickup() => PlaySFX(_pickupClip);
+        private void DebugPickup() => PlaySFX(m_pickupClip);
 
         [ContextMenu("Debug: Play Level Up")]
-        private void DebugLevelUp() => PlaySFX(_levelUpClip);
+        private void DebugLevelUp() => PlaySFX(m_levelUpClip);
 
         [ContextMenu("Debug: Play Game Over")]
-        private void DebugGameOver() => PlaySFX(_gameOverClip);
+        private void DebugGameOver() => PlaySFX(m_gameOverClip);
 
         [ContextMenu("Debug: Play Music")]
         private void DebugMusic() => PlayMusic();

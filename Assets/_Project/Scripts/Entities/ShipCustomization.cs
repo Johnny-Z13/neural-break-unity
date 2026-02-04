@@ -12,15 +12,15 @@ namespace NeuralBreak.Entities
     {
 
         [Header("Settings")]
-        [SerializeField] private string _currentSkinId = "default";
+        [SerializeField] private string m_currentSkinId = "default";
 
         // Subsystems
-        private ShipVisualsRenderer _visualsRenderer;
-        private ShipCustomizationSaveSystem _saveSystem;
-        private PlayerController _player;
-        private ShipSkin _currentSkin;
+        private ShipVisualsRenderer m_visualsRenderer;
+        private ShipCustomizationSaveSystem m_saveSystem;
+        private PlayerController m_player;
+        private ShipSkin m_currentSkin;
 
-        public ShipSkin CurrentSkin => _currentSkin;
+        public ShipSkin CurrentSkin => m_currentSkin;
         public System.Collections.Generic.IReadOnlyList<ShipSkin> AllSkins => ShipCustomizationData.GetAllSkins();
 
         public event Action<ShipSkin> OnSkinChanged;
@@ -30,9 +30,9 @@ namespace NeuralBreak.Entities
         {
 
             // Initialize subsystems
-            _visualsRenderer = new ShipVisualsRenderer();
-            _saveSystem = new ShipCustomizationSaveSystem();
-            _saveSystem.OnSkinUnlocked += HandleSkinUnlocked;
+            m_visualsRenderer = new ShipVisualsRenderer();
+            m_saveSystem = new ShipCustomizationSaveSystem();
+            m_saveSystem.OnSkinUnlocked += HandleSkinUnlocked;
         }
 
         private void Start()
@@ -41,13 +41,13 @@ namespace NeuralBreak.Entities
             var playerGO = GameObject.FindGameObjectWithTag("Player");
             if (playerGO != null)
             {
-                _player = playerGO.GetComponent<PlayerController>();
-                _visualsRenderer.Initialize(_player);
+                m_player = playerGO.GetComponent<PlayerController>();
+                m_visualsRenderer.Initialize(m_player);
             }
 
             // Load and apply saved skin
-            _currentSkinId = _saveSystem.LoadSelectedSkinId();
-            ApplySkin(_currentSkinId);
+            m_currentSkinId = m_saveSystem.LoadSelectedSkinId();
+            ApplySkin(m_currentSkinId);
 
             // Subscribe to events for unlock checking
             EventBus.Subscribe<EnemyKilledEvent>(OnGameEvent);
@@ -63,9 +63,9 @@ namespace NeuralBreak.Entities
             EventBus.Unsubscribe<PlayerLevelUpEvent>(OnGameEvent);
             EventBus.Unsubscribe<AchievementUnlockedEvent>(OnGameEvent);
 
-            if (_saveSystem != null)
+            if (m_saveSystem != null)
             {
-                _saveSystem.OnSkinUnlocked -= HandleSkinUnlocked;
+                m_saveSystem.OnSkinUnlocked -= HandleSkinUnlocked;
             }
 
         }
@@ -84,17 +84,17 @@ namespace NeuralBreak.Entities
                 return false;
             }
 
-            if (!_saveSystem.IsSkinUnlocked(skinId))
+            if (!m_saveSystem.IsSkinUnlocked(skinId))
             {
                 Debug.LogWarning($"[ShipCustomization] Skin not unlocked: {skinId}");
                 return false;
             }
 
-            _currentSkin = skin;
-            _currentSkinId = skinId;
+            m_currentSkin = skin;
+            m_currentSkinId = skinId;
 
-            _visualsRenderer.ApplyVisuals(skin);
-            _saveSystem.SaveSelectedSkinId(skinId);
+            m_visualsRenderer.ApplyVisuals(skin);
+            m_saveSystem.SaveSelectedSkinId(skinId);
 
             OnSkinChanged?.Invoke(skin);
             Debug.Log($"[ShipCustomization] Applied skin: {skin.name}");
@@ -106,7 +106,7 @@ namespace NeuralBreak.Entities
         /// </summary>
         public bool IsSkinUnlocked(string skinId)
         {
-            return _saveSystem.IsSkinUnlocked(skinId);
+            return m_saveSystem.IsSkinUnlocked(skinId);
         }
 
         /// <summary>
@@ -114,7 +114,7 @@ namespace NeuralBreak.Entities
         /// </summary>
         public (int current, int required) GetUnlockProgress(string skinId)
         {
-            return _saveSystem.GetUnlockProgress(skinId);
+            return m_saveSystem.GetUnlockProgress(skinId);
         }
 
         #endregion
@@ -123,7 +123,7 @@ namespace NeuralBreak.Entities
 
         private void OnGameEvent<T>(T evt)
         {
-            _saveSystem.CheckAndUnlockSkins();
+            m_saveSystem.CheckAndUnlockSkins();
         }
 
         private void HandleSkinUnlocked(ShipSkin skin)
@@ -148,7 +148,7 @@ namespace NeuralBreak.Entities
         [ContextMenu("Debug: Unlock All Skins")]
         private void DebugUnlockAll()
         {
-            _saveSystem.UnlockAllSkins();
+            m_saveSystem.UnlockAllSkins();
         }
 
         [ContextMenu("Debug: Apply Random Skin")]

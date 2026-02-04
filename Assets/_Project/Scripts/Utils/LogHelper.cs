@@ -1,67 +1,34 @@
-using System.Diagnostics;
-using UnityEngine;
+// LogHelper is now provided by Z13.Core package.
+// This file provides a namespace alias for backward compatibility.
 
 namespace NeuralBreak.Utils
 {
     /// <summary>
-    /// Performance-optimized logging helper that strips debug logs from production builds.
-    /// Uses [Conditional] attribute for zero runtime overhead when not in editor.
+    /// LogHelper alias for backward compatibility.
+    /// The actual implementation is in Z13.Core.LogHelper.
     /// </summary>
     public static class LogHelper
     {
-        /// <summary>
-        /// Logs an informational message. Only included in editor builds.
-        /// Zero overhead in production builds due to [Conditional] attribute.
-        /// </summary>
-        [Conditional("UNITY_EDITOR")]
+        [System.Diagnostics.Conditional("UNITY_EDITOR")]
         public static void Log(string message)
-        {
-            UnityEngine.Debug.Log(message);
-        }
+            => Z13.Core.LogHelper.Log(message);
 
-        /// <summary>
-        /// Logs an informational message with context. Only included in editor builds.
-        /// </summary>
-        [Conditional("UNITY_EDITOR")]
-        public static void Log(string message, Object context)
-        {
-            UnityEngine.Debug.Log(message, context);
-        }
+        [System.Diagnostics.Conditional("UNITY_EDITOR")]
+        public static void Log(string message, UnityEngine.Object context)
+            => Z13.Core.LogHelper.Log(message, context);
 
-        /// <summary>
-        /// Logs a warning message. Only included in editor builds.
-        /// Zero overhead in production builds due to [Conditional] attribute.
-        /// </summary>
-        [Conditional("UNITY_EDITOR")]
+        [System.Diagnostics.Conditional("UNITY_EDITOR")]
         public static void LogWarning(string message)
-        {
-            UnityEngine.Debug.LogWarning(message);
-        }
+            => Z13.Core.LogHelper.LogWarning(message);
 
-        /// <summary>
-        /// Logs a warning message with context. Only included in editor builds.
-        /// </summary>
-        [Conditional("UNITY_EDITOR")]
-        public static void LogWarning(string message, Object context)
-        {
-            UnityEngine.Debug.LogWarning(message, context);
-        }
+        [System.Diagnostics.Conditional("UNITY_EDITOR")]
+        public static void LogWarning(string message, UnityEngine.Object context)
+            => Z13.Core.LogHelper.LogWarning(message, context);
 
-        /// <summary>
-        /// Logs an error message. Always included in all builds.
-        /// Errors are important for production debugging and crash reports.
-        /// </summary>
         public static void LogError(string message)
-        {
-            UnityEngine.Debug.LogError(message);
-        }
+            => Z13.Core.LogHelper.LogError(message);
 
-        /// <summary>
-        /// Logs an error message with context. Always included in all builds.
-        /// </summary>
-        public static void LogError(string message, Object context)
-        {
-            UnityEngine.Debug.LogError(message, context);
-        }
+        public static void LogError(string message, UnityEngine.Object context)
+            => Z13.Core.LogHelper.LogError(message, context);
     }
 }

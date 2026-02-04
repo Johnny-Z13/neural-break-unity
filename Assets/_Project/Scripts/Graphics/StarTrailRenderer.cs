@@ -11,15 +11,15 @@ namespace NeuralBreak.Graphics
     public class StarTrailRenderer : MonoBehaviour
     {
         [Header("Trail Settings")]
-        [SerializeField] private float _trailThreshold = 0.8f; // Stars closer than this get trails (0-1)
-        [SerializeField] private float _minTrailLength = 0.1f;
-        [SerializeField] private float _maxTrailLength = 1.5f;
-        [SerializeField] private float _trailAlpha = 0.6f;
-        [SerializeField] private float _trailWidthMultiplier = 0.4f;
+        [SerializeField] private float m_trailThreshold = 0.8f; // Stars closer than this get trails (0-1)
+        [SerializeField] private float m_minTrailLength = 0.1f;
+        [SerializeField] private float m_maxTrailLength = 1.5f;
+        [SerializeField] private float m_trailAlpha = 0.6f;
+        [SerializeField] private float m_trailWidthMultiplier = 0.4f;
 
-        private Material _trailMaterial;
-        private List<TrailData> _activeTrails = new List<TrailData>();
-        private bool _isEnabled = true;
+        private Material m_trailMaterial;
+        private List<TrailData> m_activeTrails = new List<TrailData>();
+        private bool m_isEnabled = true;
 
         private struct TrailData
         {
@@ -41,12 +41,12 @@ namespace NeuralBreak.Graphics
             if (shader == null)
                 shader = Shader.Find("Sprites/Default");
 
-            _trailMaterial = new Material(shader);
-            _trailMaterial.hideFlags = HideFlags.HideAndDontSave;
-            _trailMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            _trailMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.One);
-            _trailMaterial.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
-            _trailMaterial.SetInt("_ZWrite", 0);
+            m_trailMaterial = new Material(shader);
+            m_trailMaterial.hideFlags = HideFlags.HideAndDontSave;
+            m_trailMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            m_trailMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.One);
+            m_trailMaterial.SetInt("_Cull", (int)UnityEngine.Rendering.CullMode.Off);
+            m_trailMaterial.SetInt("_ZWrite", 0);
         }
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void ClearTrails()
         {
-            _activeTrails.Clear();
+            m_activeTrails.Clear();
         }
 
         /// <summary>
@@ -62,16 +62,16 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void AddTrail(Vector3 currentPos, Vector3 previousPos, float depthFactor, Color color, float speed)
         {
-            if (!_isEnabled) return;
+            if (!m_isEnabled) return;
 
             // Only draw trails for close stars (high depthFactor = close to camera)
-            if (depthFactor < _trailThreshold) return;
+            if (depthFactor < m_trailThreshold) return;
 
             // Calculate trail length based on speed and depth
-            float trailIntensity = (depthFactor - _trailThreshold) / (1f - _trailThreshold);
+            float trailIntensity = (depthFactor - m_trailThreshold) / (1f - m_trailThreshold);
             trailIntensity = Mathf.Clamp01(trailIntensity);
 
-            float trailLength = Mathf.Lerp(_minTrailLength, _maxTrailLength, trailIntensity * speed * 0.2f);
+            float trailLength = Mathf.Lerp(m_minTrailLength, m_maxTrailLength, trailIntensity * speed * 0.2f);
 
             // Calculate trail direction (from previous to current position)
             Vector3 direction = (currentPos - previousPos).normalized;
@@ -80,14 +80,14 @@ namespace NeuralBreak.Graphics
 
             // Fade trail based on depth
             Color trailColor = color;
-            trailColor.a = _trailAlpha * trailIntensity;
+            trailColor.a = m_trailAlpha * trailIntensity;
 
-            _activeTrails.Add(new TrailData
+            m_activeTrails.Add(new TrailData
             {
                 startPos = trailStart,
                 endPos = trailEnd,
                 color = trailColor,
-                width = Mathf.Max(0.01f, trailIntensity * _trailWidthMultiplier)
+                width = Mathf.Max(0.01f, trailIntensity * m_trailWidthMultiplier)
             });
         }
 
@@ -97,17 +97,17 @@ namespace NeuralBreak.Graphics
         /// </summary>
         private void OnRenderObject()
         {
-            if (_activeTrails.Count == 0) return;
-            if (_trailMaterial == null) return;
+            if (m_activeTrails.Count == 0) return;
+            if (m_trailMaterial == null) return;
 
-            _trailMaterial.SetPass(0);
+            m_trailMaterial.SetPass(0);
 
             GL.PushMatrix();
             GL.MultMatrix(Matrix4x4.identity);
 
             GL.Begin(GL.LINES);
 
-            foreach (var trail in _activeTrails)
+            foreach (var trail in m_activeTrails)
             {
                 // Bright at star, fading toward tail
                 GL.Color(trail.color);
@@ -125,14 +125,14 @@ namespace NeuralBreak.Graphics
 
         public void SetEnabled(bool enabled)
         {
-            _isEnabled = enabled;
+            m_isEnabled = enabled;
         }
 
         private void OnDestroy()
         {
-            if (_trailMaterial != null)
+            if (m_trailMaterial != null)
             {
-                DestroyImmediate(_trailMaterial);
+                DestroyImmediate(m_trailMaterial);
             }
         }
     }

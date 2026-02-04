@@ -66,10 +66,10 @@ namespace NeuralBreak.UI.Builders
 
             // Wire HUDController
             var hudCtrl = hud.gameObject.GetComponent<HUDController>();
-            SetPrivateField(hudCtrl, "_healthDisplay", healthDisplay);
-            SetPrivateField(hudCtrl, "_scoreDisplay", scoreDisplay);
-            SetPrivateField(hudCtrl, "_heatDisplay", heatDisplay);
-            SetPrivateField(hudCtrl, "_levelDisplay", levelDisplay);
+            SetPrivateField(hudCtrl, "m_healthDisplay", healthDisplay);
+            SetPrivateField(hudCtrl, "m_scoreDisplay", scoreDisplay);
+            SetPrivateField(hudCtrl, "m_heatDisplay", heatDisplay);
+            SetPrivateField(hudCtrl, "m_levelDisplay", levelDisplay);
 
             // Add decorative scanline overlay
             BuildScanlineOverlay(hud);
@@ -191,10 +191,10 @@ namespace NeuralBreak.UI.Builders
             }
 
             // Wire display fields
-            SetPrivateField(display, "_healthFill", fillImg);
-            SetPrivateField(display, "_healthText", healthText);
-            SetPrivateField(display, "_shieldIcons", shieldIcons);
-            SetPrivateField(display, "_shieldContainer", shieldContainer.transform);
+            SetPrivateField(display, "m_healthFill", fillImg);
+            SetPrivateField(display, "m_healthText", healthText);
+            SetPrivateField(display, "m_shieldIcons", shieldIcons);
+            SetPrivateField(display, "m_shieldContainer", shieldContainer.transform);
 
             return display;
         }
@@ -314,12 +314,12 @@ namespace NeuralBreak.UI.Builders
             milestoneRect.gameObject.SetActive(false);
 
             // Wire display fields
-            SetPrivateField(display, "_scoreText", scoreText);
-            SetPrivateField(display, "_deltaText", deltaText);
-            SetPrivateField(display, "_comboText", comboText);
-            SetPrivateField(display, "_multiplierText", multText);
-            SetPrivateField(display, "_comboContainer", comboContainer.gameObject);
-            SetPrivateField(display, "_milestoneText", milestoneText);
+            SetPrivateField(display, "m_scoreText", scoreText);
+            SetPrivateField(display, "m_deltaText", deltaText);
+            SetPrivateField(display, "m_comboText", comboText);
+            SetPrivateField(display, "m_multiplierText", multText);
+            SetPrivateField(display, "m_comboContainer", comboContainer.gameObject);
+            SetPrivateField(display, "m_milestoneText", milestoneText);
 
             return display;
         }
@@ -372,7 +372,7 @@ namespace NeuralBreak.UI.Builders
             levelText.characterSpacing = 4f;
             levelText.alignment = TextAlignmentOptions.Center;
 
-            SetPrivateField(display, "_levelText", levelText);
+            SetPrivateField(display, "m_levelText", levelText);
 
             return display;
         }
@@ -456,10 +456,10 @@ namespace NeuralBreak.UI.Builders
             warningRect.gameObject.SetActive(false);
 
             // Wire display fields
-            SetPrivateField(display, "_heatFill", fillImg);
-            SetPrivateField(display, "_overheatText", warningText);
-            SetPrivateField(display, "_warningContainer", warningRect.gameObject);
-            SetPrivateField(display, "_powerLevelText", powerText);
+            SetPrivateField(display, "m_heatFill", fillImg);
+            SetPrivateField(display, "m_overheatText", warningText);
+            SetPrivateField(display, "m_warningContainer", warningRect.gameObject);
+            SetPrivateField(display, "m_powerLevelText", powerText);
 
             return display;
         }

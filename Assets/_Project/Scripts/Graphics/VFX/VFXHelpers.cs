@@ -9,19 +9,19 @@ namespace NeuralBreak.Graphics.VFX
     public static class VFXHelpers
     {
         // Cached soft particle texture (generated once, reused)
-        private static Texture2D _softParticleTexture;
+        private static Texture2D s_softParticleTexture;
 
         /// <summary>
         /// Gets or creates a soft circular particle texture for proper particle rendering.
         /// </summary>
         public static Texture2D GetSoftParticleTexture()
         {
-            if (_softParticleTexture != null) return _softParticleTexture;
+            if (s_softParticleTexture != null) return s_softParticleTexture;
 
             int size = 64;
-            _softParticleTexture = new Texture2D(size, size, TextureFormat.RGBA32, false);
-            _softParticleTexture.filterMode = FilterMode.Bilinear;
-            _softParticleTexture.wrapMode = TextureWrapMode.Clamp;
+            s_softParticleTexture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            s_softParticleTexture.filterMode = FilterMode.Bilinear;
+            s_softParticleTexture.wrapMode = TextureWrapMode.Clamp;
 
             Color[] pixels = new Color[size * size];
             float center = size / 2f;
@@ -43,9 +43,9 @@ namespace NeuralBreak.Graphics.VFX
                 }
             }
 
-            _softParticleTexture.SetPixels(pixels);
-            _softParticleTexture.Apply();
-            return _softParticleTexture;
+            s_softParticleTexture.SetPixels(pixels);
+            s_softParticleTexture.Apply();
+            return s_softParticleTexture;
         }
 
         /// <summary>

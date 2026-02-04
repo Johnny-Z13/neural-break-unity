@@ -14,23 +14,23 @@ namespace NeuralBreak.UI
     public class ActiveUpgradesDisplay : MonoBehaviour
     {
         [Header("Settings")]
-        [SerializeField] private float _iconSize = 40f;
-        [SerializeField] private float _iconSpacing = 5f;
-        [SerializeField] private float _lowTimeThreshold = 3f;
+        [SerializeField] private float m_iconSize = 40f;
+        [SerializeField] private float m_iconSpacing = 5f;
+        [SerializeField] private float m_lowTimeThreshold = 3f;
 
         [Header("Colors")]
-        [SerializeField] private Color _spreadShotColor = new Color(1f, 0.6f, 0.2f);
-        [SerializeField] private Color _piercingColor = new Color(1f, 0.3f, 0.1f);
-        [SerializeField] private Color _rapidFireColor = new Color(0.2f, 0.6f, 1f);
-        [SerializeField] private Color _homingColor = new Color(0.3f, 1f, 0.4f);
-        [SerializeField] private Color _lowTimeColor = new Color(1f, 0.3f, 0.3f);
+        [SerializeField] private Color m_spreadShotColor = new Color(1f, 0.6f, 0.2f);
+        [SerializeField] private Color m_piercingColor = new Color(1f, 0.3f, 0.1f);
+        [SerializeField] private Color m_rapidFireColor = new Color(0.2f, 0.6f, 1f);
+        [SerializeField] private Color m_homingColor = new Color(0.3f, 1f, 0.4f);
+        [SerializeField] private Color m_lowTimeColor = new Color(1f, 0.3f, 0.3f);
 
-        private Canvas _canvas;
-        private RectTransform _container;
-        private Dictionary<PickupType, UpgradeIcon> _icons = new Dictionary<PickupType, UpgradeIcon>();
+        private Canvas m_canvas;
+        private RectTransform m_container;
+        private Dictionary<PickupType, UpgradeIcon> m_icons = new Dictionary<PickupType, UpgradeIcon>();
 
         // Cached reference - avoids FindFirstObjectByType every frame!
-        private WeaponUpgradeManager _upgradeManager;
+        private WeaponUpgradeManager m_upgradeManager;
 
         private class UpgradeIcon
         {
@@ -52,8 +52,8 @@ namespace NeuralBreak.UI
 
         private void CacheReferences()
         {
-            if (_upgradeManager == null)
-                _upgradeManager = FindFirstObjectByType<WeaponUpgradeManager>();
+            if (m_upgradeManager == null)
+                m_upgradeManager = FindFirstObjectByType<WeaponUpgradeManager>();
         }
 
         private void OnDestroy()
@@ -68,9 +68,9 @@ namespace NeuralBreak.UI
             // Create canvas
             var canvasGO = new GameObject("UpgradesCanvas");
             canvasGO.transform.SetParent(transform);
-            _canvas = canvasGO.AddComponent<Canvas>();
-            _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            _canvas.sortingOrder = 85;
+            m_canvas = canvasGO.AddComponent<Canvas>();
+            m_canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            m_canvas.sortingOrder = 85;
 
             var scaler = canvasGO.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -81,16 +81,16 @@ namespace NeuralBreak.UI
             // Create container (bottom-left positioning)
             var containerGO = new GameObject("Container");
             containerGO.transform.SetParent(canvasGO.transform);
-            _container = containerGO.AddComponent<RectTransform>();
-            _container.anchorMin = new Vector2(0, 0);
-            _container.anchorMax = new Vector2(0, 0);
-            _container.pivot = new Vector2(0, 0);
-            _container.anchoredPosition = new Vector2(20, 80);
-            _container.sizeDelta = new Vector2(300, 200);
+            m_container = containerGO.AddComponent<RectTransform>();
+            m_container.anchorMin = new Vector2(0, 0);
+            m_container.anchorMax = new Vector2(0, 0);
+            m_container.pivot = new Vector2(0, 0);
+            m_container.anchoredPosition = new Vector2(20, 80);
+            m_container.sizeDelta = new Vector2(300, 200);
 
             // Add horizontal layout
             var layout = containerGO.AddComponent<HorizontalLayoutGroup>();
-            layout.spacing = _iconSpacing;
+            layout.spacing = m_iconSpacing;
             layout.childAlignment = TextAnchor.LowerLeft;
             layout.childControlWidth = false;
             layout.childControlHeight = false;
@@ -104,10 +104,10 @@ namespace NeuralBreak.UI
 
             // Create icon container
             icon.gameObject = new GameObject(type.ToString());
-            icon.gameObject.transform.SetParent(_container);
+            icon.gameObject.transform.SetParent(m_container);
 
             var rect = icon.gameObject.AddComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(_iconSize, _iconSize + 20);
+            rect.sizeDelta = new Vector2(m_iconSize, m_iconSize + 20);
 
             var layout = icon.gameObject.AddComponent<VerticalLayoutGroup>();
             layout.spacing = 2;
@@ -119,7 +119,7 @@ namespace NeuralBreak.UI
             var bgGO = new GameObject("Background");
             bgGO.transform.SetParent(icon.gameObject.transform);
             var bgRect = bgGO.AddComponent<RectTransform>();
-            bgRect.sizeDelta = new Vector2(_iconSize, _iconSize);
+            bgRect.sizeDelta = new Vector2(m_iconSize, m_iconSize);
 
             icon.background = bgGO.AddComponent<Image>();
             icon.baseColor = GetColorForType(type);
@@ -149,7 +149,7 @@ namespace NeuralBreak.UI
             var timerGO = new GameObject("Timer");
             timerGO.transform.SetParent(icon.gameObject.transform);
             var timerRect = timerGO.AddComponent<RectTransform>();
-            timerRect.sizeDelta = new Vector2(_iconSize, 16);
+            timerRect.sizeDelta = new Vector2(m_iconSize, 16);
 
             var timerLayout = timerGO.AddComponent<LayoutElement>();
             timerLayout.preferredHeight = 16;
@@ -220,10 +220,10 @@ namespace NeuralBreak.UI
         {
             switch (type)
             {
-                case PickupType.SpreadShot: return _spreadShotColor;
-                case PickupType.Piercing: return _piercingColor;
-                case PickupType.RapidFire: return _rapidFireColor;
-                case PickupType.Homing: return _homingColor;
+                case PickupType.SpreadShot: return m_spreadShotColor;
+                case PickupType.Piercing: return m_piercingColor;
+                case PickupType.RapidFire: return m_rapidFireColor;
+                case PickupType.Homing: return m_homingColor;
                 default: return Color.white;
             }
         }
@@ -243,18 +243,18 @@ namespace NeuralBreak.UI
         private void Update()
         {
             // Use cached reference instead of FindFirstObjectByType every frame
-            if (_upgradeManager == null)
+            if (m_upgradeManager == null)
             {
                 CacheReferences();
-                if (_upgradeManager == null) return;
+                if (m_upgradeManager == null) return;
             }
 
-            foreach (var kvp in _icons)
+            foreach (var kvp in m_icons)
             {
                 PickupType type = kvp.Key;
                 UpgradeIcon icon = kvp.Value;
 
-                float remaining = _upgradeManager.GetRemainingTime(type);
+                float remaining = m_upgradeManager.GetRemainingTime(type);
 
                 if (remaining > 0)
                 {
@@ -266,10 +266,10 @@ namespace NeuralBreak.UI
                     icon.timer.text = remaining.ToString("F1") + "s";
 
                     // Pulse when low time
-                    if (remaining <= _lowTimeThreshold)
+                    if (remaining <= m_lowTimeThreshold)
                     {
                         float pulse = Mathf.Sin(Time.time * 10f) * 0.5f + 0.5f;
-                        icon.background.color = Color.Lerp(_lowTimeColor, icon.baseColor, pulse);
+                        icon.background.color = Color.Lerp(m_lowTimeColor, icon.baseColor, pulse);
                         icon.timer.color = Color.Lerp(Color.red, Color.white, pulse);
                     }
                     else
@@ -290,17 +290,17 @@ namespace NeuralBreak.UI
 
         private void OnUpgradeActivated(WeaponUpgradeActivatedEvent evt)
         {
-            if (!_icons.ContainsKey(evt.upgradeType))
+            if (!m_icons.ContainsKey(evt.upgradeType))
             {
-                _icons[evt.upgradeType] = CreateIcon(evt.upgradeType);
+                m_icons[evt.upgradeType] = CreateIcon(evt.upgradeType);
             }
 
-            _icons[evt.upgradeType].gameObject.SetActive(true);
+            m_icons[evt.upgradeType].gameObject.SetActive(true);
         }
 
         private void OnUpgradeExpired(WeaponUpgradeExpiredEvent evt)
         {
-            if (_icons.TryGetValue(evt.upgradeType, out var icon))
+            if (m_icons.TryGetValue(evt.upgradeType, out var icon))
             {
                 icon.gameObject.SetActive(false);
             }
@@ -308,7 +308,7 @@ namespace NeuralBreak.UI
 
         private void OnGameStarted(GameStartedEvent evt)
         {
-            foreach (var icon in _icons.Values)
+            foreach (var icon in m_icons.Values)
             {
                 icon.gameObject.SetActive(false);
             }

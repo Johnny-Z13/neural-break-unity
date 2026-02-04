@@ -9,20 +9,20 @@ namespace NeuralBreak.Entities
     public class ChaosWormVisuals : MonoBehaviour
     {
         [Header("Settings")]
-        [SerializeField] private int _segmentCount = 8;
-        [SerializeField] private float _baseRadius = 0.45f;
-        [SerializeField] private float _taperAmount = 0.03f;
-        [SerializeField] private float _segmentSpacing = 0.6f;
+        [SerializeField] private int m_segmentCount = 8;
+        [SerializeField] private float m_baseRadius = 0.45f;
+        [SerializeField] private float m_taperAmount = 0.03f;
+        [SerializeField] private float m_segmentSpacing = 0.6f;
 
         // Segments
-        private Transform[] _segments;
-        private Transform[] _auras;
-        private Transform[] _cores;
-        private SpriteRenderer[] _segmentRenderers;
-        private float[] _segmentOffsets;
+        private Transform[] m_segments;
+        private Transform[] m_auras;
+        private Transform[] m_cores;
+        private SpriteRenderer[] m_segmentRenderers;
+        private float[] m_segmentOffsets;
 
-        private float _time;
-        private float _hueOffset;
+        private float m_time;
+        private float m_hueOffset;
 
         private void Start()
         {
@@ -33,29 +33,29 @@ namespace NeuralBreak.Entities
         {
             ClearChildren();
 
-            _segments = new Transform[_segmentCount];
-            _auras = new Transform[_segmentCount];
-            _cores = new Transform[_segmentCount];
-            _segmentRenderers = new SpriteRenderer[_segmentCount];
-            _segmentOffsets = new float[_segmentCount];
+            m_segments = new Transform[m_segmentCount];
+            m_auras = new Transform[m_segmentCount];
+            m_cores = new Transform[m_segmentCount];
+            m_segmentRenderers = new SpriteRenderer[m_segmentCount];
+            m_segmentOffsets = new float[m_segmentCount];
 
-            for (int i = 0; i < _segmentCount; i++)
+            for (int i = 0; i < m_segmentCount; i++)
             {
                 CreateSegment(i);
-                _segmentOffsets[i] = i * 0.3f; // Wave offset
+                m_segmentOffsets[i] = i * 0.3f; // Wave offset
             }
         }
 
         private void CreateSegment(int index)
         {
-            float segmentRadius = _baseRadius - (index * _taperAmount);
-            float hue = (index / (float)_segmentCount);
+            float segmentRadius = m_baseRadius - (index * m_taperAmount);
+            float hue = (index / (float)m_segmentCount);
 
             // Segment container
             var segment = new GameObject($"Segment{index}");
             segment.transform.SetParent(transform, false);
-            segment.transform.localPosition = new Vector3(-index * _segmentSpacing, 0, 0);
-            _segments[index] = segment.transform;
+            segment.transform.localPosition = new Vector3(-index * m_segmentSpacing, 0, 0);
+            m_segments[index] = segment.transform;
 
             // Main body (diamond/octahedron approximation)
             var body = new GameObject("Body");
@@ -67,7 +67,7 @@ namespace NeuralBreak.Entities
             bodySr.color = bodyColor;
             bodySr.sortingOrder = 10 + index;
             body.transform.localScale = Vector3.one * segmentRadius * 2f;
-            _segmentRenderers[index] = bodySr;
+            m_segmentRenderers[index] = bodySr;
 
             // Wireframe
             var wireframe = new GameObject("Wireframe");
@@ -90,7 +90,7 @@ namespace NeuralBreak.Entities
             auraSr.color = auraColor;
             auraSr.sortingOrder = 8 + index;
             aura.transform.localScale = Vector3.one * segmentRadius * 3f;
-            _auras[index] = aura.transform;
+            m_auras[index] = aura.transform;
 
             // Core glow
             var core = new GameObject("Core");
@@ -102,62 +102,62 @@ namespace NeuralBreak.Entities
             coreSr.color = coreColor;
             coreSr.sortingOrder = 12 + index;
             core.transform.localScale = Vector3.one * segmentRadius * 0.5f;
-            _cores[index] = core.transform;
+            m_cores[index] = core.transform;
         }
 
         private void Update()
         {
-            if (_segments == null || _segments.Length == 0) return;
+            if (m_segments == null || m_segments.Length == 0) return;
 
-            _time += Time.deltaTime;
-            _hueOffset += Time.deltaTime * 0.1f; // Slow rainbow shift
+            m_time += Time.deltaTime;
+            m_hueOffset += Time.deltaTime * 0.1f; // Slow rainbow shift
 
             // Animate each segment
-            for (int i = 0; i < _segmentCount; i++)
+            for (int i = 0; i < m_segmentCount; i++)
             {
-                if (_segments[i] == null) continue;
+                if (m_segments[i] == null) continue;
 
                 // Wave motion
-                float waveY = Mathf.Sin(_time * 3f + _segmentOffsets[i]) * 0.2f;
-                float waveX = Mathf.Cos(_time * 2f + _segmentOffsets[i]) * 0.1f;
-                Vector3 basePos = new Vector3(-i * _segmentSpacing + waveX, waveY, 0);
-                _segments[i].localPosition = basePos;
+                float waveY = Mathf.Sin(m_time * 3f + m_segmentOffsets[i]) * 0.2f;
+                float waveX = Mathf.Cos(m_time * 2f + m_segmentOffsets[i]) * 0.1f;
+                Vector3 basePos = new Vector3(-i * m_segmentSpacing + waveX, waveY, 0);
+                m_segments[i].localPosition = basePos;
 
                 // Rotation
-                _segments[i].Rotate(0, 0, Time.deltaTime * (60f + i * 10f));
+                m_segments[i].Rotate(0, 0, Time.deltaTime * (60f + i * 10f));
 
                 // Scale pulse
-                float pulse = 1f + Mathf.Sin(_time * 4f + i * 0.5f) * 0.1f;
-                float segmentRadius = _baseRadius - (i * _taperAmount);
+                float pulse = 1f + Mathf.Sin(m_time * 4f + i * 0.5f) * 0.1f;
+                float segmentRadius = m_baseRadius - (i * m_taperAmount);
 
                 // Update body scale
-                if (_segments[i].childCount > 0)
+                if (m_segments[i].childCount > 0)
                 {
-                    _segments[i].GetChild(0).localScale = Vector3.one * segmentRadius * 2f * pulse;
+                    m_segments[i].GetChild(0).localScale = Vector3.one * segmentRadius * 2f * pulse;
                 }
 
                 // Update colors (rainbow shift)
-                if (_segmentRenderers[i] != null)
+                if (m_segmentRenderers[i] != null)
                 {
-                    float hue = ((i / (float)_segmentCount) + _hueOffset) % 1f;
+                    float hue = ((i / (float)m_segmentCount) + m_hueOffset) % 1f;
                     Color newColor = Color.HSVToRGB(hue, 0.9f, 0.6f);
                     newColor.a = 0.8f;
-                    _segmentRenderers[i].color = newColor;
+                    m_segmentRenderers[i].color = newColor;
                 }
 
                 // Aura pulse
-                if (_auras[i] != null)
+                if (m_auras[i] != null)
                 {
-                    float auraPulse = 1f + Mathf.Sin(_time * 5f + i * 0.3f) * 0.2f;
-                    _auras[i].localScale = Vector3.one * segmentRadius * 3f * auraPulse;
-                    _auras[i].Rotate(0, 0, Time.deltaTime * 30f);
+                    float auraPulse = 1f + Mathf.Sin(m_time * 5f + i * 0.3f) * 0.2f;
+                    m_auras[i].localScale = Vector3.one * segmentRadius * 3f * auraPulse;
+                    m_auras[i].Rotate(0, 0, Time.deltaTime * 30f);
                 }
 
                 // Core pulse
-                if (_cores[i] != null)
+                if (m_cores[i] != null)
                 {
-                    float corePulse = 1f + Mathf.Sin(_time * 6f + i * 0.4f) * 0.3f;
-                    _cores[i].localScale = Vector3.one * segmentRadius * 0.5f * corePulse;
+                    float corePulse = 1f + Mathf.Sin(m_time * 6f + i * 0.4f) * 0.3f;
+                    m_cores[i].localScale = Vector3.one * segmentRadius * 0.5f * corePulse;
                 }
             }
         }

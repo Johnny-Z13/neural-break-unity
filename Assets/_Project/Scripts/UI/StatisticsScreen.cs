@@ -13,30 +13,30 @@ namespace NeuralBreak.UI
     public class StatisticsScreen : MonoBehaviour
     {
         [Header("Settings")]
-        [SerializeField] private float _fadeInDuration = 0.5f;
-        [SerializeField] private float _statRevealDelay = 0.15f;
+        [SerializeField] private float m_fadeInDuration = 0.5f;
+        [SerializeField] private float m_statRevealDelay = 0.15f;
 #pragma warning disable CS0414 // Reserved for animated stat count-up feature
-        [SerializeField] private float _countUpSpeed = 0.5f;
+        [SerializeField] private float m_countUpSpeed = 0.5f;
 #pragma warning restore CS0414
 
         [Header("Colors")]
-        [SerializeField] private Color _backgroundColor = new Color(0f, 0f, 0f, 0.9f);
-        [SerializeField] private Color _titleColor = new Color(1f, 0.8f, 0.2f);
-        [SerializeField] private Color _labelColor = new Color(0.7f, 0.7f, 0.7f);
-        [SerializeField] private Color _valueColor = Color.white;
-        [SerializeField] private Color _highlightColor = new Color(0.3f, 1f, 0.4f);
+        [SerializeField] private Color m_backgroundColor = new Color(0f, 0f, 0f, 0.9f);
+        [SerializeField] private Color m_titleColor = new Color(1f, 0.8f, 0.2f);
+        [SerializeField] private Color m_labelColor = new Color(0.7f, 0.7f, 0.7f);
+        [SerializeField] private Color m_valueColor = Color.white;
+        [SerializeField] private Color m_highlightColor = new Color(0.3f, 1f, 0.4f);
 
         // UI Components
-        private Canvas _canvas;
-        private CanvasGroup _canvasGroup;
-        private RectTransform _container;
-        private TextMeshProUGUI _titleText;
-        private StatRow[] _statRows;
-        private TextMeshProUGUI _continueText;
+        private Canvas m_canvas;
+        private CanvasGroup m_canvasGroup;
+        private RectTransform m_container;
+        private TextMeshProUGUI m_titleText;
+        private StatRow[] m_statRows;
+        private TextMeshProUGUI m_continueText;
 
-        private bool _isVisible;
-        private bool _statsRevealed;
-        private Coroutine _revealCoroutine;
+        private bool m_isVisible;
+        private bool m_statsRevealed;
+        private Coroutine m_revealCoroutine;
 
         private class StatRow
         {
@@ -68,7 +68,7 @@ namespace NeuralBreak.UI
 
         private void Update()
         {
-            if (_isVisible && _statsRevealed)
+            if (m_isVisible && m_statsRevealed)
             {
                 // Any key/click to continue (using Input System)
                 if (UnityEngine.InputSystem.Keyboard.current != null && UnityEngine.InputSystem.Keyboard.current.anyKey.wasPressedThisFrame ||
@@ -84,9 +84,9 @@ namespace NeuralBreak.UI
             // Create canvas
             var canvasGO = new GameObject("StatisticsCanvas");
             canvasGO.transform.SetParent(transform);
-            _canvas = canvasGO.AddComponent<Canvas>();
-            _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            _canvas.sortingOrder = 300;
+            m_canvas = canvasGO.AddComponent<Canvas>();
+            m_canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            m_canvas.sortingOrder = 300;
 
             var scaler = canvasGO.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -94,8 +94,8 @@ namespace NeuralBreak.UI
 
             canvasGO.AddComponent<GraphicRaycaster>();
 
-            _canvasGroup = canvasGO.AddComponent<CanvasGroup>();
-            _canvasGroup.alpha = 0;
+            m_canvasGroup = canvasGO.AddComponent<CanvasGroup>();
+            m_canvasGroup.alpha = 0;
 
             // Background
             var bgGO = new GameObject("Background");
@@ -107,21 +107,21 @@ namespace NeuralBreak.UI
             bgRect.offsetMax = Vector2.zero;
 
             var bgImage = bgGO.AddComponent<Image>();
-            bgImage.color = _backgroundColor;
+            bgImage.color = m_backgroundColor;
 
             // Container
             var containerGO = new GameObject("Container");
             containerGO.transform.SetParent(canvasGO.transform);
-            _container = containerGO.AddComponent<RectTransform>();
-            _container.anchorMin = new Vector2(0.5f, 0.5f);
-            _container.anchorMax = new Vector2(0.5f, 0.5f);
-            _container.pivot = new Vector2(0.5f, 0.5f);
-            _container.anchoredPosition = Vector2.zero;
-            _container.sizeDelta = new Vector2(500, 600);
+            m_container = containerGO.AddComponent<RectTransform>();
+            m_container.anchorMin = new Vector2(0.5f, 0.5f);
+            m_container.anchorMax = new Vector2(0.5f, 0.5f);
+            m_container.pivot = new Vector2(0.5f, 0.5f);
+            m_container.anchoredPosition = Vector2.zero;
+            m_container.sizeDelta = new Vector2(500, 600);
 
             // Title
             var titleGO = new GameObject("Title");
-            titleGO.transform.SetParent(_container);
+            titleGO.transform.SetParent(m_container);
             var titleRect = titleGO.AddComponent<RectTransform>();
             titleRect.anchorMin = new Vector2(0.5f, 1f);
             titleRect.anchorMax = new Vector2(0.5f, 1f);
@@ -129,12 +129,12 @@ namespace NeuralBreak.UI
             titleRect.anchoredPosition = new Vector2(0, -20);
             titleRect.sizeDelta = new Vector2(400, 60);
 
-            _titleText = titleGO.AddComponent<TextMeshProUGUI>();
-            _titleText.text = "GAME OVER";
-            _titleText.fontSize = 48;
-            _titleText.fontStyle = FontStyles.Bold;
-            _titleText.color = _titleColor;
-            _titleText.alignment = TextAlignmentOptions.Center;
+            m_titleText = titleGO.AddComponent<TextMeshProUGUI>();
+            m_titleText.text = "GAME OVER";
+            m_titleText.fontSize = 48;
+            m_titleText.fontStyle = FontStyles.Bold;
+            m_titleText.color = m_titleColor;
+            m_titleText.alignment = TextAlignmentOptions.Center;
 
             // Create stat rows
             string[] labels = new string[]
@@ -151,18 +151,18 @@ namespace NeuralBreak.UI
                 "Achievements"
             };
 
-            _statRows = new StatRow[labels.Length];
+            m_statRows = new StatRow[labels.Length];
             float startY = -100f;
             float rowHeight = 40f;
 
             for (int i = 0; i < labels.Length; i++)
             {
-                _statRows[i] = CreateStatRow(_container, labels[i], startY - (i * rowHeight));
+                m_statRows[i] = CreateStatRow(m_container, labels[i], startY - (i * rowHeight));
             }
 
             // Continue text
             var continueGO = new GameObject("ContinueText");
-            continueGO.transform.SetParent(_container);
+            continueGO.transform.SetParent(m_container);
             var continueRect = continueGO.AddComponent<RectTransform>();
             continueRect.anchorMin = new Vector2(0.5f, 0f);
             continueRect.anchorMax = new Vector2(0.5f, 0f);
@@ -170,11 +170,11 @@ namespace NeuralBreak.UI
             continueRect.anchoredPosition = new Vector2(0, 30);
             continueRect.sizeDelta = new Vector2(400, 30);
 
-            _continueText = continueGO.AddComponent<TextMeshProUGUI>();
-            _continueText.text = "Press any key to continue";
-            _continueText.fontSize = 18;
-            _continueText.color = new Color(0.5f, 0.5f, 0.5f);
-            _continueText.alignment = TextAlignmentOptions.Center;
+            m_continueText = continueGO.AddComponent<TextMeshProUGUI>();
+            m_continueText.text = "Press any key to continue";
+            m_continueText.fontSize = 18;
+            m_continueText.color = new Color(0.5f, 0.5f, 0.5f);
+            m_continueText.alignment = TextAlignmentOptions.Center;
         }
 
         private StatRow CreateStatRow(RectTransform parent, string label, float yPos)
@@ -207,7 +207,7 @@ namespace NeuralBreak.UI
             row.labelText = labelGO.AddComponent<TextMeshProUGUI>();
             row.labelText.text = label;
             row.labelText.fontSize = 20;
-            row.labelText.color = _labelColor;
+            row.labelText.color = m_labelColor;
             row.labelText.alignment = TextAlignmentOptions.Left;
 
             // Value (right)
@@ -224,7 +224,7 @@ namespace NeuralBreak.UI
             row.valueText.text = "0";
             row.valueText.fontSize = 22;
             row.valueText.fontStyle = FontStyles.Bold;
-            row.valueText.color = _valueColor;
+            row.valueText.color = m_valueColor;
             row.valueText.alignment = TextAlignmentOptions.Right;
 
             return row;
@@ -232,15 +232,15 @@ namespace NeuralBreak.UI
 
         private void OnGameOver(GameOverEvent evt)
         {
-            _titleText.text = "GAME OVER";
-            _titleText.color = new Color(1f, 0.3f, 0.3f);
+            m_titleText.text = "GAME OVER";
+            m_titleText.color = new Color(1f, 0.3f, 0.3f);
             Show(evt.finalStats);
         }
 
         private void OnVictory(VictoryEvent evt)
         {
-            _titleText.text = "VICTORY!";
-            _titleText.color = _highlightColor;
+            m_titleText.text = "VICTORY!";
+            m_titleText.color = m_highlightColor;
             Show(evt.finalStats);
         }
 
@@ -251,25 +251,25 @@ namespace NeuralBreak.UI
 
         public void Show(GameStats stats)
         {
-            _isVisible = true;
-            _statsRevealed = false;
-            _canvasGroup.blocksRaycasts = true;
+            m_isVisible = true;
+            m_statsRevealed = false;
+            m_canvasGroup.blocksRaycasts = true;
 
-            if (_revealCoroutine != null)
+            if (m_revealCoroutine != null)
             {
-                StopCoroutine(_revealCoroutine);
+                StopCoroutine(m_revealCoroutine);
             }
-            _revealCoroutine = StartCoroutine(RevealStats(stats));
+            m_revealCoroutine = StartCoroutine(RevealStats(stats));
         }
 
         public void Hide()
         {
-            _isVisible = false;
-            _canvasGroup.alpha = 0;
-            _canvasGroup.blocksRaycasts = false;
+            m_isVisible = false;
+            m_canvasGroup.alpha = 0;
+            m_canvasGroup.blocksRaycasts = false;
 
             // Reset row visibility
-            foreach (var row in _statRows)
+            foreach (var row in m_statRows)
             {
                 row.canvasGroup.alpha = 0;
             }
@@ -279,13 +279,13 @@ namespace NeuralBreak.UI
         {
             // Fade in background
             float elapsed = 0f;
-            while (elapsed < _fadeInDuration)
+            while (elapsed < m_fadeInDuration)
             {
                 elapsed += Time.unscaledDeltaTime;
-                _canvasGroup.alpha = elapsed / _fadeInDuration;
+                m_canvasGroup.alpha = elapsed / m_fadeInDuration;
                 yield return null;
             }
-            _canvasGroup.alpha = 1f;
+            m_canvasGroup.alpha = 1f;
 
             // Prepare values
             string[] values = new string[]
@@ -303,9 +303,9 @@ namespace NeuralBreak.UI
             };
 
             // Reveal each row with delay
-            for (int i = 0; i < _statRows.Length; i++)
+            for (int i = 0; i < m_statRows.Length; i++)
             {
-                _statRows[i].valueText.text = values[i];
+                m_statRows[i].valueText.text = values[i];
 
                 // Fade in row
                 elapsed = 0f;
@@ -313,39 +313,39 @@ namespace NeuralBreak.UI
                 while (elapsed < fadeDuration)
                 {
                     elapsed += Time.unscaledDeltaTime;
-                    _statRows[i].canvasGroup.alpha = elapsed / fadeDuration;
+                    m_statRows[i].canvasGroup.alpha = elapsed / fadeDuration;
                     yield return null;
                 }
-                _statRows[i].canvasGroup.alpha = 1f;
+                m_statRows[i].canvasGroup.alpha = 1f;
 
                 // Highlight special values
                 if (i == 0 && stats.score > 100000) // High score
                 {
-                    _statRows[i].valueText.color = _highlightColor;
+                    m_statRows[i].valueText.color = m_highlightColor;
                 }
                 else if (i == 4 && stats.highestCombo >= 50) // High combo
                 {
-                    _statRows[i].valueText.color = _highlightColor;
+                    m_statRows[i].valueText.color = m_highlightColor;
                 }
 
-                yield return new WaitForSecondsRealtime(_statRevealDelay);
+                yield return new WaitForSecondsRealtime(m_statRevealDelay);
             }
 
             // Show continue text
-            _continueText.gameObject.SetActive(true);
+            m_continueText.gameObject.SetActive(true);
             StartCoroutine(PulseContinueText());
 
-            _statsRevealed = true;
+            m_statsRevealed = true;
         }
 
         private IEnumerator PulseContinueText()
         {
-            while (_isVisible)
+            while (m_isVisible)
             {
                 float pulse = Mathf.Sin(Time.unscaledTime * 3f) * 0.3f + 0.7f;
-                Color c = _continueText.color;
+                Color c = m_continueText.color;
                 c.a = pulse;
-                _continueText.color = c;
+                m_continueText.color = c;
                 yield return null;
             }
         }

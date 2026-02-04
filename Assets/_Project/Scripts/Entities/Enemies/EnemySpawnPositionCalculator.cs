@@ -11,9 +11,9 @@ namespace NeuralBreak.Entities
     public class EnemySpawnPositionCalculator
     {
         // Configuration
-        private readonly Transform _playerTarget;
-        private readonly float _minEnemySpacing;
-        private readonly int _maxSpawnAttempts;
+        private readonly Transform m_playerTarget;
+        private readonly float m_minEnemySpacing;
+        private readonly int m_maxSpawnAttempts;
 
         // Config access
         private float ArenaRadius => ConfigProvider.Player.arenaRadius;
@@ -25,9 +25,9 @@ namespace NeuralBreak.Entities
             float minEnemySpacing = 2.0f,
             int maxSpawnAttempts = 10)
         {
-            _playerTarget = playerTarget;
-            _minEnemySpacing = minEnemySpacing;
-            _maxSpawnAttempts = maxSpawnAttempts;
+            m_playerTarget = playerTarget;
+            m_minEnemySpacing = minEnemySpacing;
+            m_maxSpawnAttempts = maxSpawnAttempts;
         }
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace NeuralBreak.Entities
         public Vector2 GetSpawnPosition(IReadOnlyList<EnemyBase> activeEnemies)
         {
             // Try multiple times to find a non-overlapping position
-            for (int attempt = 0; attempt < _maxSpawnAttempts; attempt++)
+            for (int attempt = 0; attempt < m_maxSpawnAttempts; attempt++)
             {
                 Vector2 candidatePos = GetRandomSpawnPosition();
 
@@ -55,7 +55,7 @@ namespace NeuralBreak.Entities
         /// </summary>
         private Vector2 GetRandomSpawnPosition()
         {
-            if (_playerTarget == null)
+            if (m_playerTarget == null)
             {
                 return Random.insideUnitCircle * ArenaRadius;
             }
@@ -64,7 +64,7 @@ namespace NeuralBreak.Entities
             float distance = Random.Range(MinSpawnDistance, MaxSpawnDistance);
 
             Vector2 offset = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * distance;
-            Vector2 spawnPos = (Vector2)_playerTarget.position + offset;
+            Vector2 spawnPos = (Vector2)m_playerTarget.position + offset;
 
             // Clamp to arena bounds
             spawnPos.x = Mathf.Clamp(spawnPos.x, -ArenaRadius, ArenaRadius);
@@ -92,7 +92,7 @@ namespace NeuralBreak.Entities
                 if (enemy == null || !enemy.IsActive) continue;
 
                 float distSq = ((Vector2)enemy.transform.position - position).sqrMagnitude;
-                if (distSq < _minEnemySpacing * _minEnemySpacing)
+                if (distSq < m_minEnemySpacing * m_minEnemySpacing)
                 {
                     return true;
                 }
@@ -113,12 +113,12 @@ namespace NeuralBreak.Entities
             Gizmos.color = Color.cyan;
             Gizmos.DrawWireSphere(Vector3.zero, arenaRadius);
 
-            if (_playerTarget != null)
+            if (m_playerTarget != null)
             {
                 Gizmos.color = Color.green;
-                Gizmos.DrawWireSphere(_playerTarget.position, minDist);
+                Gizmos.DrawWireSphere(m_playerTarget.position, minDist);
                 Gizmos.color = Color.yellow;
-                Gizmos.DrawWireSphere(_playerTarget.position, maxDist);
+                Gizmos.DrawWireSphere(m_playerTarget.position, maxDist);
             }
         }
     }

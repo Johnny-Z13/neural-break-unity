@@ -16,50 +16,50 @@ namespace NeuralBreak.Core
     public class SceneReferenceWiring : MonoBehaviour
     {
         [Header("Required Scene References - Drag from Hierarchy")]
-        [SerializeField] private PlayerController _player;
-        [SerializeField] private CameraController _cameraController;
-        [SerializeField] private EnemySpawner _enemySpawner;
-        [SerializeField] private EnemyProjectilePool _enemyProjectilePool;
-        [SerializeField] private GameManager _gameManager;
-        [SerializeField] private LevelManager _levelManager;
+        [SerializeField] private PlayerController m_player;
+        [SerializeField] private CameraController m_cameraController;
+        [SerializeField] private EnemySpawner m_enemySpawner;
+        [SerializeField] private EnemyProjectilePool m_enemyProjectilePool;
+        [SerializeField] private GameManager m_gameManager;
+        [SerializeField] private LevelManager m_levelManager;
 
         [Header("Optional System References (Leave empty to auto-create)")]
-        [SerializeField] private SpawnWarningIndicator _spawnWarningIndicator;
-        [SerializeField] private LowHealthVignette _lowHealthVignette;
-        [SerializeField] private HighScoreManager _highScoreManager;
-        [SerializeField] private BossHealthBar _bossHealthBar;
-        [SerializeField] private ControlsOverlay _controlsOverlay;
-        [SerializeField] private Combat.WeaponUpgradeManager _weaponUpgradeManager;
-        [SerializeField] private ActiveUpgradesDisplay _activeUpgradesDisplay;
-        [SerializeField] private PlayerLevelSystem _playerLevelSystem;
-        [SerializeField] private UI.XPBarDisplay _xpBarDisplay;
-        [SerializeField] private UI.LevelUpAnnouncement _levelUpAnnouncement;
-        [SerializeField] private UI.DamageNumberPopup _damageNumberPopup;
-        [SerializeField] private UI.WaveAnnouncement _waveAnnouncement;
-        [SerializeField] private UI.StatisticsScreen _statisticsScreen;
-        [SerializeField] private Graphics.ArenaManager _arenaManager;
-        [SerializeField] private Input.GamepadRumble _gamepadRumble;
-        [SerializeField] private UI.Minimap _minimap;
-        [SerializeField] private AccessibilityManager _accessibilityManager;
-        [SerializeField] private SaveSystem _saveSystem;
-        [SerializeField] private Audio.MusicManager _musicManager;
-        [SerializeField] private Graphics.EnvironmentParticles _environmentParticles;
-        [SerializeField] private Entities.ShipCustomization _shipCustomization;
-        [SerializeField] private Graphics.EnemyDeathVFX _enemyDeathVFX;
-        [SerializeField] private UI.UIFeedbacks _uiFeedbacks;
-        [SerializeField] private AchievementSystem _achievementSystem;
+        [SerializeField] private SpawnWarningIndicator m_spawnWarningIndicator;
+        [SerializeField] private LowHealthVignette m_lowHealthVignette;
+        [SerializeField] private HighScoreManager m_highScoreManager;
+        [SerializeField] private BossHealthBar m_bossHealthBar;
+        [SerializeField] private ControlsOverlay m_controlsOverlay;
+        [SerializeField] private Combat.WeaponUpgradeManager m_weaponUpgradeManager;
+        [SerializeField] private ActiveUpgradesDisplay m_activeUpgradesDisplay;
+        [SerializeField] private PlayerLevelSystem m_playerLevelSystem;
+        [SerializeField] private UI.XPBarDisplay m_xpBarDisplay;
+        [SerializeField] private UI.LevelUpAnnouncement m_levelUpAnnouncement;
+        [SerializeField] private UI.DamageNumberPopup m_damageNumberPopup;
+        [SerializeField] private UI.WaveAnnouncement m_waveAnnouncement;
+        [SerializeField] private UI.StatisticsScreen m_statisticsScreen;
+        [SerializeField] private Graphics.ArenaManager m_arenaManager;
+        [SerializeField] private Input.GamepadRumble m_gamepadRumble;
+        [SerializeField] private UI.Minimap m_minimap;
+        [SerializeField] private AccessibilityManager m_accessibilityManager;
+        [SerializeField] private SaveSystem m_saveSystem;
+        [SerializeField] private Audio.MusicManager m_musicManager;
+        [SerializeField] private Graphics.EnvironmentParticles m_environmentParticles;
+        [SerializeField] private Entities.ShipCustomization m_shipCustomization;
+        [SerializeField] private Graphics.EnemyDeathVFX m_enemyDeathVFX;
+        [SerializeField] private UI.UIFeedbacks m_uiFeedbacks;
+        [SerializeField] private AchievementSystem m_achievementSystem;
 
         [Header("Prefab References - Drag from Project")]
-        [SerializeField] private Projectile _projectilePrefab;
-        [SerializeField] private EnemyProjectile _enemyProjectilePrefab;
-        [SerializeField] private DataMite _dataMitePrefab;
-        [SerializeField] private ScanDrone _scanDronePrefab;
-        [SerializeField] private Fizzer _fizzerPrefab;
-        [SerializeField] private UFO _ufoPrefab;
-        [SerializeField] private ChaosWorm _chaosWormPrefab;
-        [SerializeField] private VoidSphere _voidSpherePrefab;
-        [SerializeField] private CrystalShard _crystalShardPrefab;
-        [SerializeField] private Boss _bossPrefab;
+        [SerializeField] private Projectile m_projectilePrefab;
+        [SerializeField] private EnemyProjectile m_enemyProjectilePrefab;
+        [SerializeField] private DataMite m_dataMitePrefab;
+        [SerializeField] private ScanDrone m_scanDronePrefab;
+        [SerializeField] private Fizzer m_fizzerPrefab;
+        [SerializeField] private UFO m_ufoPrefab;
+        [SerializeField] private ChaosWorm m_chaosWormPrefab;
+        [SerializeField] private VoidSphere m_voidSpherePrefab;
+        [SerializeField] private CrystalShard m_crystalShardPrefab;
+        [SerializeField] private Boss m_bossPrefab;
 
         /// <summary>
         /// Wires up all scene references using reflection where necessary.
@@ -72,7 +72,7 @@ namespace NeuralBreak.Core
             // Auto-find required references if not assigned in Inspector
             AutoFindRequiredReferences();
 
-            if (_player == null)
+            if (m_player == null)
             {
                 Debug.LogError("[SceneReferenceWiring] Player reference is missing! Could not find PlayerController in scene.");
                 return;
@@ -103,20 +103,20 @@ namespace NeuralBreak.Core
 
         private void SetupCamera()
         {
-            if (_cameraController == null)
+            if (m_cameraController == null)
             {
                 Debug.LogWarning("[SceneReferenceWiring] CameraController reference is missing!");
                 return;
             }
 
-            _cameraController.SetTarget(_player.transform);
-            _cameraController.SnapToTarget();
+            m_cameraController.SetTarget(m_player.transform);
+            m_cameraController.SnapToTarget();
             Debug.Log("[SceneReferenceWiring] Camera target set to Player");
         }
 
         private void SetupEnemySpawner()
         {
-            if (_enemySpawner == null)
+            if (m_enemySpawner == null)
             {
                 Debug.LogWarning("[SceneReferenceWiring] EnemySpawner reference is missing!");
                 return;
@@ -127,32 +127,32 @@ namespace NeuralBreak.Core
             var bindingFlags = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
 
             // Set player target
-            spawnerType.GetField("_playerTarget", bindingFlags)?.SetValue(_enemySpawner, _player.transform);
+            spawnerType.GetField("m_playerTarget", bindingFlags)?.SetValue(m_enemySpawner, m_player.transform);
 
             // Set enemy prefabs
-            if (_dataMitePrefab != null)
-                spawnerType.GetField("_dataMitePrefab", bindingFlags)?.SetValue(_enemySpawner, _dataMitePrefab);
-            if (_scanDronePrefab != null)
-                spawnerType.GetField("_scanDronePrefab", bindingFlags)?.SetValue(_enemySpawner, _scanDronePrefab);
-            if (_fizzerPrefab != null)
-                spawnerType.GetField("_fizzerPrefab", bindingFlags)?.SetValue(_enemySpawner, _fizzerPrefab);
-            if (_ufoPrefab != null)
-                spawnerType.GetField("_ufoPrefab", bindingFlags)?.SetValue(_enemySpawner, _ufoPrefab);
-            if (_chaosWormPrefab != null)
-                spawnerType.GetField("_chaosWormPrefab", bindingFlags)?.SetValue(_enemySpawner, _chaosWormPrefab);
-            if (_voidSpherePrefab != null)
-                spawnerType.GetField("_voidSpherePrefab", bindingFlags)?.SetValue(_enemySpawner, _voidSpherePrefab);
-            if (_crystalShardPrefab != null)
-                spawnerType.GetField("_crystalShardPrefab", bindingFlags)?.SetValue(_enemySpawner, _crystalShardPrefab);
-            if (_bossPrefab != null)
-                spawnerType.GetField("_bossPrefab", bindingFlags)?.SetValue(_enemySpawner, _bossPrefab);
+            if (m_dataMitePrefab != null)
+                spawnerType.GetField("m_dataMitePrefab", bindingFlags)?.SetValue(m_enemySpawner, m_dataMitePrefab);
+            if (m_scanDronePrefab != null)
+                spawnerType.GetField("m_scanDronePrefab", bindingFlags)?.SetValue(m_enemySpawner, m_scanDronePrefab);
+            if (m_fizzerPrefab != null)
+                spawnerType.GetField("m_fizzerPrefab", bindingFlags)?.SetValue(m_enemySpawner, m_fizzerPrefab);
+            if (m_ufoPrefab != null)
+                spawnerType.GetField("m_ufoPrefab", bindingFlags)?.SetValue(m_enemySpawner, m_ufoPrefab);
+            if (m_chaosWormPrefab != null)
+                spawnerType.GetField("m_chaosWormPrefab", bindingFlags)?.SetValue(m_enemySpawner, m_chaosWormPrefab);
+            if (m_voidSpherePrefab != null)
+                spawnerType.GetField("m_voidSpherePrefab", bindingFlags)?.SetValue(m_enemySpawner, m_voidSpherePrefab);
+            if (m_crystalShardPrefab != null)
+                spawnerType.GetField("m_crystalShardPrefab", bindingFlags)?.SetValue(m_enemySpawner, m_crystalShardPrefab);
+            if (m_bossPrefab != null)
+                spawnerType.GetField("m_bossPrefab", bindingFlags)?.SetValue(m_enemySpawner, m_bossPrefab);
 
             Debug.Log("[SceneReferenceWiring] EnemySpawner configured");
         }
 
         private void SetupWeaponSystem()
         {
-            var weapon = _player.GetComponent<WeaponSystem>();
+            var weapon = m_player.GetComponent<WeaponSystem>();
             if (weapon == null)
             {
                 Debug.LogWarning("[SceneReferenceWiring] WeaponSystem not found on Player!");
@@ -162,13 +162,13 @@ namespace NeuralBreak.Core
             var weaponType = typeof(WeaponSystem);
             var bindingFlags = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
 
-            if (_projectilePrefab != null)
+            if (m_projectilePrefab != null)
             {
-                weaponType.GetField("_projectilePrefab", bindingFlags)?.SetValue(weapon, _projectilePrefab);
+                weaponType.GetField("m_projectilePrefab", bindingFlags)?.SetValue(weapon, m_projectilePrefab);
             }
 
             // Create projectile container if needed
-            var containerField = weaponType.GetField("_projectileContainer", bindingFlags);
+            var containerField = weaponType.GetField("m_projectileContainer", bindingFlags);
             if (containerField != null)
             {
                 var existingContainer = containerField.GetValue(weapon) as Transform;
@@ -185,7 +185,7 @@ namespace NeuralBreak.Core
 
         private void SetupEnemyProjectilePool()
         {
-            if (_enemyProjectilePool == null)
+            if (m_enemyProjectilePool == null)
             {
                 Debug.LogWarning("[SceneReferenceWiring] EnemyProjectilePool reference is missing!");
                 return;
@@ -194,9 +194,9 @@ namespace NeuralBreak.Core
             var poolType = typeof(EnemyProjectilePool);
             var bindingFlags = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
 
-            if (_enemyProjectilePrefab != null)
+            if (m_enemyProjectilePrefab != null)
             {
-                poolType.GetField("_projectilePrefab", bindingFlags)?.SetValue(_enemyProjectilePool, _enemyProjectilePrefab);
+                poolType.GetField("m_projectilePrefab", bindingFlags)?.SetValue(m_enemyProjectilePool, m_enemyProjectilePrefab);
             }
 
             Debug.Log("[SceneReferenceWiring] EnemyProjectilePool configured");
@@ -204,7 +204,7 @@ namespace NeuralBreak.Core
 
         private void SetupGameManager()
         {
-            if (_gameManager == null)
+            if (m_gameManager == null)
             {
                 Debug.LogWarning("[SceneReferenceWiring] GameManager reference is missing!");
                 return;
@@ -213,12 +213,12 @@ namespace NeuralBreak.Core
             var gmType = typeof(GameManager);
             var bindingFlags = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
 
-            gmType.GetField("_player", bindingFlags)?.SetValue(_gameManager, _player);
-            gmType.GetField("_enemySpawner", bindingFlags)?.SetValue(_gameManager, _enemySpawner);
+            gmType.GetField("m_player", bindingFlags)?.SetValue(m_gameManager, m_player);
+            gmType.GetField("m_enemySpawner", bindingFlags)?.SetValue(m_gameManager, m_enemySpawner);
 
-            if (_levelManager != null)
+            if (m_levelManager != null)
             {
-                gmType.GetField("_levelManager", bindingFlags)?.SetValue(_gameManager, _levelManager);
+                gmType.GetField("m_levelManager", bindingFlags)?.SetValue(m_gameManager, m_levelManager);
             }
 
             Debug.Log("[SceneReferenceWiring] GameManager configured");
@@ -228,29 +228,29 @@ namespace NeuralBreak.Core
         {
             // Create optional systems only if they don't exist in the scene
             // and no SerializeField reference was provided
-            EnsureSystemExists(ref _spawnWarningIndicator, "SpawnWarningIndicator");
-            EnsureSystemExists(ref _lowHealthVignette, "LowHealthVignette");
-            EnsureSystemExists(ref _highScoreManager, "HighScoreManager");
-            EnsureSystemExists(ref _bossHealthBar, "BossHealthBar");
-            EnsureSystemExists(ref _controlsOverlay, "ControlsOverlay");
-            EnsureSystemExists(ref _weaponUpgradeManager, "WeaponUpgradeManager");
-            EnsureSystemExists(ref _activeUpgradesDisplay, "ActiveUpgradesDisplay");
-            EnsureSystemExists(ref _playerLevelSystem, "PlayerLevelSystem");
-            EnsureSystemExists(ref _xpBarDisplay, "XPBarDisplay");
-            EnsureSystemExists(ref _levelUpAnnouncement, "LevelUpAnnouncement");
-            EnsureSystemExists(ref _damageNumberPopup, "DamageNumberPopup");
-            EnsureSystemExists(ref _waveAnnouncement, "WaveAnnouncement");
-            EnsureSystemExists(ref _statisticsScreen, "StatisticsScreen");
-            EnsureSystemExists(ref _arenaManager, "ArenaManager");
-            EnsureSystemExists(ref _gamepadRumble, "GamepadRumble");
-            EnsureSystemExists(ref _minimap, "Minimap");
-            EnsureSystemExists(ref _accessibilityManager, "AccessibilityManager");
-            EnsureSystemExists(ref _saveSystem, "SaveSystem");
-            EnsureSystemExists(ref _musicManager, "MusicManager");
-            EnsureSystemExists(ref _environmentParticles, "EnvironmentParticles");
-            EnsureSystemExists(ref _shipCustomization, "ShipCustomization");
-            EnsureSystemExists(ref _enemyDeathVFX, "EnemyDeathVFX");
-            EnsureSystemExists(ref _uiFeedbacks, "UIFeedbacks");
+            EnsureSystemExists(ref m_spawnWarningIndicator, "SpawnWarningIndicator");
+            EnsureSystemExists(ref m_lowHealthVignette, "LowHealthVignette");
+            EnsureSystemExists(ref m_highScoreManager, "HighScoreManager");
+            EnsureSystemExists(ref m_bossHealthBar, "BossHealthBar");
+            EnsureSystemExists(ref m_controlsOverlay, "ControlsOverlay");
+            EnsureSystemExists(ref m_weaponUpgradeManager, "WeaponUpgradeManager");
+            EnsureSystemExists(ref m_activeUpgradesDisplay, "ActiveUpgradesDisplay");
+            EnsureSystemExists(ref m_playerLevelSystem, "PlayerLevelSystem");
+            EnsureSystemExists(ref m_xpBarDisplay, "XPBarDisplay");
+            EnsureSystemExists(ref m_levelUpAnnouncement, "LevelUpAnnouncement");
+            EnsureSystemExists(ref m_damageNumberPopup, "DamageNumberPopup");
+            EnsureSystemExists(ref m_waveAnnouncement, "WaveAnnouncement");
+            EnsureSystemExists(ref m_statisticsScreen, "StatisticsScreen");
+            EnsureSystemExists(ref m_arenaManager, "ArenaManager");
+            EnsureSystemExists(ref m_gamepadRumble, "GamepadRumble");
+            EnsureSystemExists(ref m_minimap, "Minimap");
+            EnsureSystemExists(ref m_accessibilityManager, "AccessibilityManager");
+            EnsureSystemExists(ref m_saveSystem, "SaveSystem");
+            EnsureSystemExists(ref m_musicManager, "MusicManager");
+            EnsureSystemExists(ref m_environmentParticles, "EnvironmentParticles");
+            EnsureSystemExists(ref m_shipCustomization, "ShipCustomization");
+            EnsureSystemExists(ref m_enemyDeathVFX, "EnemyDeathVFX");
+            EnsureSystemExists(ref m_uiFeedbacks, "UIFeedbacks");
 
             // Special case for AchievementSystem - needs AchievementPopup too
             EnsureAchievementSystemExists();
@@ -271,10 +271,10 @@ namespace NeuralBreak.Core
 
         private void EnsureAchievementSystemExists()
         {
-            if (_achievementSystem == null)
+            if (m_achievementSystem == null)
             {
                 var achievementGO = new GameObject("AchievementSystem");
-                _achievementSystem = achievementGO.AddComponent<AchievementSystem>();
+                m_achievementSystem = achievementGO.AddComponent<AchievementSystem>();
                 achievementGO.AddComponent<UI.AchievementPopup>();
                 Debug.Log("[SceneReferenceWiring] AchievementSystem created");
             }
@@ -286,20 +286,20 @@ namespace NeuralBreak.Core
         private void AutoFindRequiredReferences()
         {
             // Find required scene objects
-            if (_player == null) _player = UnityEngine.Object.FindFirstObjectByType<PlayerController>();
-            if (_cameraController == null) _cameraController = UnityEngine.Object.FindFirstObjectByType<CameraController>();
-            if (_enemySpawner == null) _enemySpawner = UnityEngine.Object.FindFirstObjectByType<EnemySpawner>();
-            if (_enemyProjectilePool == null) _enemyProjectilePool = UnityEngine.Object.FindFirstObjectByType<EnemyProjectilePool>();
-            if (_gameManager == null) _gameManager = UnityEngine.Object.FindFirstObjectByType<GameManager>();
-            if (_levelManager == null) _levelManager = UnityEngine.Object.FindFirstObjectByType<LevelManager>();
+            if (m_player == null) m_player = UnityEngine.Object.FindFirstObjectByType<PlayerController>();
+            if (m_cameraController == null) m_cameraController = UnityEngine.Object.FindFirstObjectByType<CameraController>();
+            if (m_enemySpawner == null) m_enemySpawner = UnityEngine.Object.FindFirstObjectByType<EnemySpawner>();
+            if (m_enemyProjectilePool == null) m_enemyProjectilePool = UnityEngine.Object.FindFirstObjectByType<EnemyProjectilePool>();
+            if (m_gameManager == null) m_gameManager = UnityEngine.Object.FindFirstObjectByType<GameManager>();
+            if (m_levelManager == null) m_levelManager = UnityEngine.Object.FindFirstObjectByType<LevelManager>();
 
             // Log what was found
-            if (_player != null) Debug.Log("[SceneReferenceWiring] Auto-found Player");
-            if (_cameraController != null) Debug.Log("[SceneReferenceWiring] Auto-found CameraController");
-            if (_enemySpawner != null) Debug.Log("[SceneReferenceWiring] Auto-found EnemySpawner");
-            if (_enemyProjectilePool != null) Debug.Log("[SceneReferenceWiring] Auto-found EnemyProjectilePool");
-            if (_gameManager != null) Debug.Log("[SceneReferenceWiring] Auto-found GameManager");
-            if (_levelManager != null) Debug.Log("[SceneReferenceWiring] Auto-found LevelManager");
+            if (m_player != null) Debug.Log("[SceneReferenceWiring] Auto-found Player");
+            if (m_cameraController != null) Debug.Log("[SceneReferenceWiring] Auto-found CameraController");
+            if (m_enemySpawner != null) Debug.Log("[SceneReferenceWiring] Auto-found EnemySpawner");
+            if (m_enemyProjectilePool != null) Debug.Log("[SceneReferenceWiring] Auto-found EnemyProjectilePool");
+            if (m_gameManager != null) Debug.Log("[SceneReferenceWiring] Auto-found GameManager");
+            if (m_levelManager != null) Debug.Log("[SceneReferenceWiring] Auto-found LevelManager");
         }
 
         #region Editor Helper
@@ -308,38 +308,38 @@ namespace NeuralBreak.Core
         private void AutoFindAllReferences()
         {
             // Find required scene objects
-            if (_player == null) _player = UnityEngine.Object.FindFirstObjectByType<PlayerController>();
-            if (_cameraController == null) _cameraController = UnityEngine.Object.FindFirstObjectByType<CameraController>();
-            if (_enemySpawner == null) _enemySpawner = UnityEngine.Object.FindFirstObjectByType<EnemySpawner>();
-            if (_enemyProjectilePool == null) _enemyProjectilePool = UnityEngine.Object.FindFirstObjectByType<EnemyProjectilePool>();
-            if (_gameManager == null) _gameManager = UnityEngine.Object.FindFirstObjectByType<GameManager>();
-            if (_levelManager == null) _levelManager = UnityEngine.Object.FindFirstObjectByType<LevelManager>();
+            if (m_player == null) m_player = UnityEngine.Object.FindFirstObjectByType<PlayerController>();
+            if (m_cameraController == null) m_cameraController = UnityEngine.Object.FindFirstObjectByType<CameraController>();
+            if (m_enemySpawner == null) m_enemySpawner = UnityEngine.Object.FindFirstObjectByType<EnemySpawner>();
+            if (m_enemyProjectilePool == null) m_enemyProjectilePool = UnityEngine.Object.FindFirstObjectByType<EnemyProjectilePool>();
+            if (m_gameManager == null) m_gameManager = UnityEngine.Object.FindFirstObjectByType<GameManager>();
+            if (m_levelManager == null) m_levelManager = UnityEngine.Object.FindFirstObjectByType<LevelManager>();
 
             // Find optional scene objects
-            if (_spawnWarningIndicator == null) _spawnWarningIndicator = UnityEngine.Object.FindFirstObjectByType<SpawnWarningIndicator>();
-            if (_lowHealthVignette == null) _lowHealthVignette = UnityEngine.Object.FindFirstObjectByType<LowHealthVignette>();
-            if (_highScoreManager == null) _highScoreManager = UnityEngine.Object.FindFirstObjectByType<HighScoreManager>();
-            if (_bossHealthBar == null) _bossHealthBar = UnityEngine.Object.FindFirstObjectByType<BossHealthBar>();
-            if (_controlsOverlay == null) _controlsOverlay = UnityEngine.Object.FindFirstObjectByType<ControlsOverlay>();
-            if (_weaponUpgradeManager == null) _weaponUpgradeManager = UnityEngine.Object.FindFirstObjectByType<Combat.WeaponUpgradeManager>();
-            if (_activeUpgradesDisplay == null) _activeUpgradesDisplay = UnityEngine.Object.FindFirstObjectByType<ActiveUpgradesDisplay>();
-            if (_playerLevelSystem == null) _playerLevelSystem = UnityEngine.Object.FindFirstObjectByType<PlayerLevelSystem>();
-            if (_xpBarDisplay == null) _xpBarDisplay = UnityEngine.Object.FindFirstObjectByType<UI.XPBarDisplay>();
-            if (_levelUpAnnouncement == null) _levelUpAnnouncement = UnityEngine.Object.FindFirstObjectByType<UI.LevelUpAnnouncement>();
-            if (_damageNumberPopup == null) _damageNumberPopup = UnityEngine.Object.FindFirstObjectByType<UI.DamageNumberPopup>();
-            if (_waveAnnouncement == null) _waveAnnouncement = UnityEngine.Object.FindFirstObjectByType<UI.WaveAnnouncement>();
-            if (_statisticsScreen == null) _statisticsScreen = UnityEngine.Object.FindFirstObjectByType<UI.StatisticsScreen>();
-            if (_arenaManager == null) _arenaManager = UnityEngine.Object.FindFirstObjectByType<Graphics.ArenaManager>();
-            if (_gamepadRumble == null) _gamepadRumble = UnityEngine.Object.FindFirstObjectByType<Input.GamepadRumble>();
-            if (_minimap == null) _minimap = UnityEngine.Object.FindFirstObjectByType<UI.Minimap>();
-            if (_accessibilityManager == null) _accessibilityManager = UnityEngine.Object.FindFirstObjectByType<AccessibilityManager>();
-            if (_saveSystem == null) _saveSystem = UnityEngine.Object.FindFirstObjectByType<SaveSystem>();
-            if (_musicManager == null) _musicManager = UnityEngine.Object.FindFirstObjectByType<Audio.MusicManager>();
-            if (_environmentParticles == null) _environmentParticles = UnityEngine.Object.FindFirstObjectByType<Graphics.EnvironmentParticles>();
-            if (_shipCustomization == null) _shipCustomization = UnityEngine.Object.FindFirstObjectByType<Entities.ShipCustomization>();
-            if (_enemyDeathVFX == null) _enemyDeathVFX = UnityEngine.Object.FindFirstObjectByType<Graphics.EnemyDeathVFX>();
-            if (_uiFeedbacks == null) _uiFeedbacks = UnityEngine.Object.FindFirstObjectByType<UI.UIFeedbacks>();
-            if (_achievementSystem == null) _achievementSystem = UnityEngine.Object.FindFirstObjectByType<AchievementSystem>();
+            if (m_spawnWarningIndicator == null) m_spawnWarningIndicator = UnityEngine.Object.FindFirstObjectByType<SpawnWarningIndicator>();
+            if (m_lowHealthVignette == null) m_lowHealthVignette = UnityEngine.Object.FindFirstObjectByType<LowHealthVignette>();
+            if (m_highScoreManager == null) m_highScoreManager = UnityEngine.Object.FindFirstObjectByType<HighScoreManager>();
+            if (m_bossHealthBar == null) m_bossHealthBar = UnityEngine.Object.FindFirstObjectByType<BossHealthBar>();
+            if (m_controlsOverlay == null) m_controlsOverlay = UnityEngine.Object.FindFirstObjectByType<ControlsOverlay>();
+            if (m_weaponUpgradeManager == null) m_weaponUpgradeManager = UnityEngine.Object.FindFirstObjectByType<Combat.WeaponUpgradeManager>();
+            if (m_activeUpgradesDisplay == null) m_activeUpgradesDisplay = UnityEngine.Object.FindFirstObjectByType<ActiveUpgradesDisplay>();
+            if (m_playerLevelSystem == null) m_playerLevelSystem = UnityEngine.Object.FindFirstObjectByType<PlayerLevelSystem>();
+            if (m_xpBarDisplay == null) m_xpBarDisplay = UnityEngine.Object.FindFirstObjectByType<UI.XPBarDisplay>();
+            if (m_levelUpAnnouncement == null) m_levelUpAnnouncement = UnityEngine.Object.FindFirstObjectByType<UI.LevelUpAnnouncement>();
+            if (m_damageNumberPopup == null) m_damageNumberPopup = UnityEngine.Object.FindFirstObjectByType<UI.DamageNumberPopup>();
+            if (m_waveAnnouncement == null) m_waveAnnouncement = UnityEngine.Object.FindFirstObjectByType<UI.WaveAnnouncement>();
+            if (m_statisticsScreen == null) m_statisticsScreen = UnityEngine.Object.FindFirstObjectByType<UI.StatisticsScreen>();
+            if (m_arenaManager == null) m_arenaManager = UnityEngine.Object.FindFirstObjectByType<Graphics.ArenaManager>();
+            if (m_gamepadRumble == null) m_gamepadRumble = UnityEngine.Object.FindFirstObjectByType<Input.GamepadRumble>();
+            if (m_minimap == null) m_minimap = UnityEngine.Object.FindFirstObjectByType<UI.Minimap>();
+            if (m_accessibilityManager == null) m_accessibilityManager = UnityEngine.Object.FindFirstObjectByType<AccessibilityManager>();
+            if (m_saveSystem == null) m_saveSystem = UnityEngine.Object.FindFirstObjectByType<SaveSystem>();
+            if (m_musicManager == null) m_musicManager = UnityEngine.Object.FindFirstObjectByType<Audio.MusicManager>();
+            if (m_environmentParticles == null) m_environmentParticles = UnityEngine.Object.FindFirstObjectByType<Graphics.EnvironmentParticles>();
+            if (m_shipCustomization == null) m_shipCustomization = UnityEngine.Object.FindFirstObjectByType<Entities.ShipCustomization>();
+            if (m_enemyDeathVFX == null) m_enemyDeathVFX = UnityEngine.Object.FindFirstObjectByType<Graphics.EnemyDeathVFX>();
+            if (m_uiFeedbacks == null) m_uiFeedbacks = UnityEngine.Object.FindFirstObjectByType<UI.UIFeedbacks>();
+            if (m_achievementSystem == null) m_achievementSystem = UnityEngine.Object.FindFirstObjectByType<AchievementSystem>();
 
             Debug.Log("[SceneReferenceWiring] Auto-find complete! Check Inspector for results.");
         }

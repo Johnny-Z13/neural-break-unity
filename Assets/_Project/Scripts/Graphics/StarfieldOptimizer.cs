@@ -9,19 +9,19 @@ namespace NeuralBreak.Graphics
     public class StarfieldOptimizer
     {
         // Cached vectors for star updates
-        private Vector3 _cachedStarPosition;
-        private Vector3 _cachedWorldPos;
-        private Vector3 _cachedNebulaPos;
-        private Vector3 _cachedGridPos;
-        private Vector3 _cachedScale;
+        private Vector3 m_cachedStarPosition;
+        private Vector3 m_cachedWorldPos;
+        private Vector3 m_cachedNebulaPos;
+        private Vector3 m_cachedGridPos;
+        private Vector3 m_cachedScale;
 
         // Cached colors for particle updates
-        private Color _cachedParticleColor;
-        private Color _cachedNebulaColor;
-        private Color _cachedGridColor;
+        private Color m_cachedParticleColor;
+        private Color m_cachedNebulaColor;
+        private Color m_cachedGridColor;
 
         // Cached vector3.zero for comparisons
-        private readonly Vector3 _zero = Vector3.zero;
+        private readonly Vector3 m_zero = Vector3.zero;
 
         /// <summary>
         /// Calculate world position for star particle (allocation-free)
@@ -32,11 +32,11 @@ namespace NeuralBreak.Graphics
             float scale = starFieldDepth / Mathf.Max(z, 1f);
 
             // Lock to world origin - stars don't follow camera
-            _cachedWorldPos.x = starPos.x * scale * 0.1f;
-            _cachedWorldPos.y = starPos.y * scale * 0.1f;
-            _cachedWorldPos.z = z * 0.5f - 10f; // Push behind the play area
+            m_cachedWorldPos.x = starPos.x * scale * 0.1f;
+            m_cachedWorldPos.y = starPos.y * scale * 0.1f;
+            m_cachedWorldPos.z = z * 0.5f - 10f; // Push behind the play area
 
-            return _cachedWorldPos;
+            return m_cachedWorldPos;
         }
 
         /// <summary>
@@ -54,12 +54,12 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public Color CalculateParticleColor(Color baseColor, float brightness)
         {
-            _cachedParticleColor.r = baseColor.r * brightness;
-            _cachedParticleColor.g = baseColor.g * brightness;
-            _cachedParticleColor.b = baseColor.b * brightness;
-            _cachedParticleColor.a = brightness;
+            m_cachedParticleColor.r = baseColor.r * brightness;
+            m_cachedParticleColor.g = baseColor.g * brightness;
+            m_cachedParticleColor.b = baseColor.b * brightness;
+            m_cachedParticleColor.a = brightness;
 
-            return _cachedParticleColor;
+            return m_cachedParticleColor;
         }
 
         /// <summary>
@@ -68,10 +68,10 @@ namespace NeuralBreak.Graphics
         public Color CalculateNebulaColor(float hue, float alpha)
         {
             // HSVToRGB creates allocation, but we do it once and cache
-            _cachedNebulaColor = Color.HSVToRGB(hue, 1f, 0.5f);
-            _cachedNebulaColor.a = alpha;
+            m_cachedNebulaColor = Color.HSVToRGB(hue, 1f, 0.5f);
+            m_cachedNebulaColor.a = alpha;
 
-            return _cachedNebulaColor;
+            return m_cachedNebulaColor;
         }
 
         /// <summary>
@@ -79,11 +79,11 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public Vector3 UpdateNebulaPosition(Vector3 currentPos, float xOffset, float yOffset, float deltaTime)
         {
-            _cachedNebulaPos.x = currentPos.x + xOffset * deltaTime;
-            _cachedNebulaPos.y = currentPos.y + yOffset * deltaTime;
-            _cachedNebulaPos.z = currentPos.z;
+            m_cachedNebulaPos.x = currentPos.x + xOffset * deltaTime;
+            m_cachedNebulaPos.y = currentPos.y + yOffset * deltaTime;
+            m_cachedNebulaPos.z = currentPos.z;
 
-            return _cachedNebulaPos;
+            return m_cachedNebulaPos;
         }
 
         /// <summary>
@@ -92,11 +92,11 @@ namespace NeuralBreak.Graphics
         public Vector3 CalculateNebulaScale(float baseSize, float pulse)
         {
             float scale = baseSize * pulse;
-            _cachedScale.x = scale;
-            _cachedScale.y = scale;
-            _cachedScale.z = scale;
+            m_cachedScale.x = scale;
+            m_cachedScale.y = scale;
+            m_cachedScale.z = scale;
 
-            return _cachedScale;
+            return m_cachedScale;
         }
 
         /// <summary>
@@ -104,11 +104,11 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public Vector3 UpdateGridPosition(Vector3 currentPos, float newZ)
         {
-            _cachedGridPos.x = currentPos.x;
-            _cachedGridPos.y = currentPos.y;
-            _cachedGridPos.z = newZ;
+            m_cachedGridPos.x = currentPos.x;
+            m_cachedGridPos.y = currentPos.y;
+            m_cachedGridPos.z = newZ;
 
-            return _cachedGridPos;
+            return m_cachedGridPos;
         }
 
         /// <summary>
@@ -116,12 +116,12 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public Color CalculateGridColor(Color baseColor, float alphaMultiplier)
         {
-            _cachedGridColor.r = baseColor.r;
-            _cachedGridColor.g = baseColor.g;
-            _cachedGridColor.b = baseColor.b;
-            _cachedGridColor.a = baseColor.a * alphaMultiplier;
+            m_cachedGridColor.r = baseColor.r;
+            m_cachedGridColor.g = baseColor.g;
+            m_cachedGridColor.b = baseColor.b;
+            m_cachedGridColor.a = baseColor.a * alphaMultiplier;
 
-            return _cachedGridColor;
+            return m_cachedGridColor;
         }
 
         /// <summary>
@@ -129,11 +129,11 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public Vector3 CreateStarPosition(float angle, float distance, float z)
         {
-            _cachedStarPosition.x = Mathf.Cos(angle) * distance;
-            _cachedStarPosition.y = Mathf.Sin(angle) * distance;
-            _cachedStarPosition.z = z;
+            m_cachedStarPosition.x = Mathf.Cos(angle) * distance;
+            m_cachedStarPosition.y = Mathf.Sin(angle) * distance;
+            m_cachedStarPosition.z = z;
 
-            return _cachedStarPosition;
+            return m_cachedStarPosition;
         }
     }
 }

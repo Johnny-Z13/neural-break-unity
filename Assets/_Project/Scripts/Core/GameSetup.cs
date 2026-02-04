@@ -11,12 +11,12 @@ namespace NeuralBreak.Core
     public class GameSetup : MonoBehaviour
     {
         [Header("Setup Components")]
-        [SerializeField] private SceneReferenceWiring _referenceWiring;
-        [SerializeField] private PrefabSpriteSetup _spriteSetup;
+        [SerializeField] private SceneReferenceWiring m_referenceWiring;
+        [SerializeField] private PrefabSpriteSetup m_spriteSetup;
 
         [Header("Auto-Find Settings")]
-        [SerializeField] private bool _autoSetupOnAwake = true;
-        [SerializeField] private bool _autoStartGame = false; // DISABLED - let user choose mode via UI
+        [SerializeField] private bool m_autoSetupOnAwake = true;
+        [SerializeField] private bool m_autoStartGame = false; // DISABLED - let user choose mode via UI
 
         // Static sprite accessors for backward compatibility
         public static Sprite CircleSprite => PrefabSpriteSetup.CircleSprite;
@@ -26,7 +26,7 @@ namespace NeuralBreak.Core
         {
             Debug.Log($"[GameSetup] Awake START at {Time.realtimeSinceStartup:F3}s");
 
-            if (_autoSetupOnAwake)
+            if (m_autoSetupOnAwake)
             {
                 Debug.Log($"[GameSetup] SetupReferences START at {Time.realtimeSinceStartup:F3}s");
                 SetupReferences();
@@ -44,7 +44,7 @@ namespace NeuralBreak.Core
         {
             Debug.Log("[GameSetup] Start called");
 
-            if (_autoStartGame)
+            if (m_autoStartGame)
             {
                 // Give a frame for everything to initialize
                 StartCoroutine(AutoStartGame());
@@ -84,25 +84,25 @@ namespace NeuralBreak.Core
 
         private void SetupSprites()
         {
-            if (_spriteSetup == null)
+            if (m_spriteSetup == null)
             {
                 Debug.LogError("[GameSetup] PrefabSpriteSetup component is missing! Please assign it in the Inspector.");
                 return;
             }
 
-            _spriteSetup.SetupAllSprites();
+            m_spriteSetup.SetupAllSprites();
         }
 
         [ContextMenu("Setup References")]
         public void SetupReferences()
         {
-            if (_referenceWiring == null)
+            if (m_referenceWiring == null)
             {
                 Debug.LogError("[GameSetup] SceneReferenceWiring component is missing! Please assign it in the Inspector.");
                 return;
             }
 
-            _referenceWiring.WireSceneReferences();
+            m_referenceWiring.WireSceneReferences();
         }
     }
 }

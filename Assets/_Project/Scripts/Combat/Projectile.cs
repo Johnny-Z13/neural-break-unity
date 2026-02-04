@@ -16,113 +16,113 @@ namespace NeuralBreak.Combat
     {
         [Header("Settings")]
         // Base radius now read from ConfigProvider.WeaponSystem.projectileSize
-        private float _baseRadius;
+        private float m_baseRadius;
 
         [Header("Visuals")]
-        [SerializeField] private SpriteRenderer _spriteRenderer;
-        [SerializeField] private TrailRenderer _trailRenderer;
+        [SerializeField] private SpriteRenderer m_spriteRenderer;
+        [SerializeField] private TrailRenderer m_trailRenderer;
 
         // Physics
-        private Rigidbody2D _rb;
-        private CircleCollider2D _collider;
+        private Rigidbody2D m_rb;
+        private CircleCollider2D m_collider;
 
         // Runtime state - FIXED AT SPAWN TIME (each bullet is independent)
-        private Vector2 _direction;
-        private Vector2 _initialDirection; // For homing: original aim direction
-        private float _speed; // Stored at spawn - never changes
-        private int _damage;
-        private int _powerLevel;
-        private float _lifeTimer;
-        private bool _isActive;
-        private bool _isPiercing;
-        private bool _isHoming;
-        private int _pierceCount;
+        private Vector2 m_direction;
+        private Vector2 m_initialDirection; // For homing: original aim direction
+        private float m_speed; // Stored at spawn - never changes
+        private int m_damage;
+        private int m_powerLevel;
+        private float m_lifeTimer;
+        private bool m_isActive;
+        private bool m_isPiercing;
+        private bool m_isHoming;
+        private int m_pierceCount;
         private const int MAX_PIERCE = 5;
 
         // Homing target lock
-        private Transform _lockedTarget;
-        private float _reacquireTimer;
+        private Transform m_lockedTarget;
+        private float m_reacquireTimer;
         private const float REACQUIRE_DELAY = 0.2f;
         private const float AIM_CONE_ANGLE = 45f;
         private const float AIM_PRIORITY_MULTIPLIER = 0.5f;
 
         // Cached reference - avoids FindFirstObjectByType every frame!
-        private static WeaponUpgradeManager _cachedUpgradeManager;
+        private static WeaponUpgradeManager s_cachedUpgradeManager;
 
         // Pool callback
-        private System.Action<Projectile> _returnToPool;
+        private System.Action<Projectile> m_returnToPool;
 
         // Public accessors
-        public bool IsActive => _isActive;
-        public bool IsPiercing => _isPiercing;
-        public bool IsHoming => _isHoming;
-        public float Radius => _baseRadius * (1f + _powerLevel * 0.06f); // Scale with power level
+        public bool IsActive => m_isActive;
+        public bool IsPiercing => m_isPiercing;
+        public bool IsHoming => m_isHoming;
+        public float Radius => m_baseRadius * (1f + m_powerLevel * 0.06f); // Scale with power level
 
         private void Awake()
         {
             // Setup Rigidbody2D for trigger collision detection
-            _rb = GetComponent<Rigidbody2D>();
-            if (_rb == null)
+            m_rb = GetComponent<Rigidbody2D>();
+            if (m_rb == null)
             {
-                _rb = gameObject.AddComponent<Rigidbody2D>();
+                m_rb = gameObject.AddComponent<Rigidbody2D>();
             }
-            _rb.gravityScale = 0f;
-            _rb.bodyType = RigidbodyType2D.Kinematic; // We control movement manually
-            _rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+            m_rb.gravityScale = 0f;
+            m_rb.bodyType = RigidbodyType2D.Kinematic; // We control movement manually
+            m_rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
             // Setup collider as trigger
-            _collider = GetComponent<CircleCollider2D>();
-            if (_collider == null)
+            m_collider = GetComponent<CircleCollider2D>();
+            if (m_collider == null)
             {
-                _collider = gameObject.AddComponent<CircleCollider2D>();
+                m_collider = gameObject.AddComponent<CircleCollider2D>();
             }
-            _collider.isTrigger = true;
+            m_collider.isTrigger = true;
             // Collider radius will be set in Initialize() from config
 
             // Get sprite renderer reference if not assigned
-            if (_spriteRenderer == null)
+            if (m_spriteRenderer == null)
             {
-                _spriteRenderer = GetComponent<SpriteRenderer>();
+                m_spriteRenderer = GetComponent<SpriteRenderer>();
             }
-            
+
             // Ensure sprite renderer has a sprite and is visible
-            if (_spriteRenderer != null)
+            if (m_spriteRenderer != null)
             {
-                if (_spriteRenderer.sprite == null)
+                if (m_spriteRenderer.sprite == null)
                 {
                     // Create a default sprite if none exists
-                    _spriteRenderer.sprite = Graphics.SpriteGenerator.CreateCircle(32, new Color(0.2f, 0.9f, 1f), "ProjectileSprite");
+                    m_spriteRenderer.sprite = Graphics.SpriteGenerator.CreateCircle(32, new Color(0.2f, 0.9f, 1f), "ProjectileSprite");
                 }
-                _spriteRenderer.sortingOrder = 100; // High sorting order to be visible above everything
-                _spriteRenderer.enabled = true;
+                m_spriteRenderer.sortingOrder = 100; // High sorting order to be visible above everything
+                m_spriteRenderer.enabled = true;
             }
 
             // Get trail renderer reference if not assigned
-            if (_trailRenderer == null)
+            if (m_trailRenderer == null)
             {
-                _trailRenderer = GetComponent<TrailRenderer>();
+                m_trailRenderer = GetComponent<TrailRenderer>();
             }
         }
 
         private void Update()
         {
-            if (!_isActive) return;
+            if (!m_isActive) return;
 
             // Homing behavior (only thing that can change direction)
-            if (_isHoming)
+            if (m_isHoming)
             {
                 UpdateHoming();
                 // Update rotation only for homing projectiles since direction changes
-                float homingAngle = Mathf.Atan2(_direction.y, _direction.x) * Mathf.Rad2Deg;
+                float homingAngle = Mathf.Atan2(m_direction.y, m_direction.x) * Mathf.Rad2Deg;
                 transform.rotation = Quaternion.Euler(0, 0, homingAngle - 90f);
             }
 
             // Move using stored speed and direction (fixed at spawn)
-            transform.position += (Vector3)(_direction * _speed * Time.deltaTime);
+            transform.position += (Vector3)(m_direction * m_speed * Time.deltaTime);
 
             // Lifetime check
-            _lifeTimer -= Time.deltaTime;
-            if (_lifeTimer <= 0f)
+            m_lifeTimer -= Time.deltaTime;
+            if (m_lifeTimer <= 0f)
             {
                 Deactivate();
             }
@@ -131,29 +131,29 @@ namespace NeuralBreak.Combat
         private void UpdateHoming()
         {
             // Use cached reference instead of FindFirstObjectByType every frame
-            if (_cachedUpgradeManager == null)
-                _cachedUpgradeManager = FindFirstObjectByType<WeaponUpgradeManager>();
-            if (_cachedUpgradeManager == null) return;
+            if (s_cachedUpgradeManager == null)
+                s_cachedUpgradeManager = FindFirstObjectByType<WeaponUpgradeManager>();
+            if (s_cachedUpgradeManager == null) return;
 
-            float range = _cachedUpgradeManager.HomingRange;
-            float strength = _cachedUpgradeManager.HomingStrength;
+            float range = s_cachedUpgradeManager.HomingRange;
+            float strength = s_cachedUpgradeManager.HomingStrength;
 
             // Check if we need to reacquire target
-            if (_lockedTarget == null || !IsTargetValid(_lockedTarget, range))
+            if (m_lockedTarget == null || !IsTargetValid(m_lockedTarget, range))
             {
-                _reacquireTimer -= Time.deltaTime;
-                if (_reacquireTimer <= 0f)
+                m_reacquireTimer -= Time.deltaTime;
+                if (m_reacquireTimer <= 0f)
                 {
-                    _lockedTarget = FindBestTarget(range);
-                    _reacquireTimer = REACQUIRE_DELAY;
+                    m_lockedTarget = FindBestTarget(range);
+                    m_reacquireTimer = REACQUIRE_DELAY;
                 }
             }
 
             // If we have a valid target, home toward it
-            if (_lockedTarget != null && IsTargetValid(_lockedTarget, range))
+            if (m_lockedTarget != null && IsTargetValid(m_lockedTarget, range))
             {
-                Vector2 toTarget = ((Vector2)_lockedTarget.position - (Vector2)transform.position).normalized;
-                _direction = Vector2.Lerp(_direction, toTarget, strength * Time.deltaTime).normalized;
+                Vector2 toTarget = ((Vector2)m_lockedTarget.position - (Vector2)transform.position).normalized;
+                m_direction = Vector2.Lerp(m_direction, toTarget, strength * Time.deltaTime).normalized;
             }
             // else: maintain current direction (fly straight)
         }
@@ -195,7 +195,7 @@ namespace NeuralBreak.Combat
 
                 // Calculate angle between initial aim direction and enemy direction
                 Vector2 toEnemyDir = toEnemy.normalized;
-                float dot = Vector2.Dot(_initialDirection, toEnemyDir);
+                float dot = Vector2.Dot(m_initialDirection, toEnemyDir);
                 float angleDeg = Mathf.Acos(Mathf.Clamp(dot, -1f, 1f)) * Mathf.Rad2Deg;
 
                 // Score = distance, with bonus for enemies in aim cone
@@ -231,50 +231,50 @@ namespace NeuralBreak.Combat
 
             // Set position and direction (FIXED - won't change unless homing)
             transform.position = position;
-            _direction = direction.normalized;
-            _initialDirection = _direction; // Store for homing target acquisition
+            m_direction = direction.normalized;
+            m_initialDirection = m_direction; // Store for homing target acquisition
 
             // Reset homing state
-            _lockedTarget = null;
-            _reacquireTimer = 0f;
+            m_lockedTarget = null;
+            m_reacquireTimer = 0f;
 
             // Store speed at spawn time (FIXED - each bullet has its own speed)
-            _speed = ConfigProvider.WeaponSystem.baseProjectileSpeed;
+            m_speed = ConfigProvider.WeaponSystem.baseProjectileSpeed;
 
             // Store damage at spawn time (FIXED)
-            _damage = damage;
-            _powerLevel = powerLevel;
-            _returnToPool = returnToPool;
+            m_damage = damage;
+            m_powerLevel = powerLevel;
+            m_returnToPool = returnToPool;
 
             // Store lifetime at spawn time (FIXED)
-            _lifeTimer = ConfigProvider.WeaponSystem.projectileLifetime;
+            m_lifeTimer = ConfigProvider.WeaponSystem.projectileLifetime;
 
-            _isActive = true;
-            _isPiercing = isPiercing;
-            _isHoming = isHoming;
-            _pierceCount = 0;
+            m_isActive = true;
+            m_isPiercing = isPiercing;
+            m_isHoming = isHoming;
+            m_pierceCount = 0;
 
             // Get projectile size from config
-            _baseRadius = ConfigProvider.WeaponSystem?.projectileSize ?? 0.15f;
+            m_baseRadius = ConfigProvider.WeaponSystem?.projectileSize ?? 0.15f;
 
             // Apply projectile size per level scaling from config
             float sizePerLevel = ConfigProvider.WeaponSystem?.powerLevels?.projectileSizePerLevel ?? 0.01f;
-            float scaledRadius = _baseRadius * (1f + powerLevel * sizePerLevel);
+            float scaledRadius = m_baseRadius * (1f + powerLevel * sizePerLevel);
 
             // Update collider radius
-            if (_collider != null)
+            if (m_collider != null)
             {
-                _collider.radius = scaledRadius;
+                m_collider.radius = scaledRadius;
             }
 
             // Acquire initial target for homing projectiles
-            if (_isHoming)
+            if (m_isHoming)
             {
                 // Use cached reference
-                if (_cachedUpgradeManager == null)
-                    _cachedUpgradeManager = FindFirstObjectByType<WeaponUpgradeManager>();
-                float range = _cachedUpgradeManager != null ? _cachedUpgradeManager.HomingRange : 10f;
-                _lockedTarget = FindBestTarget(range);
+                if (s_cachedUpgradeManager == null)
+                    s_cachedUpgradeManager = FindFirstObjectByType<WeaponUpgradeManager>();
+                float range = s_cachedUpgradeManager != null ? s_cachedUpgradeManager.HomingRange : 10f;
+                m_lockedTarget = FindBestTarget(range);
             }
 
             // Set rotation ONCE at spawn (won't update unless homing)
@@ -289,39 +289,39 @@ namespace NeuralBreak.Combat
             UpdateVisualForUpgrades();
 
             // Reset trail
-            if (_trailRenderer != null)
+            if (m_trailRenderer != null)
             {
-                _trailRenderer.Clear();
+                m_trailRenderer.Clear();
 
                 // Change trail color for special projectiles
-                if (_isPiercing || _isHoming)
+                if (m_isPiercing || m_isHoming)
                 {
-                    Color trailColor = _isPiercing ? new Color(1f, 0.5f, 0f) : new Color(0.5f, 1f, 0.5f);
-                    _trailRenderer.startColor = trailColor;
-                    _trailRenderer.endColor = new Color(trailColor.r, trailColor.g, trailColor.b, 0f);
+                    Color trailColor = m_isPiercing ? new Color(1f, 0.5f, 0f) : new Color(0.5f, 1f, 0.5f);
+                    m_trailRenderer.startColor = trailColor;
+                    m_trailRenderer.endColor = new Color(trailColor.r, trailColor.g, trailColor.b, 0f);
                 }
             }
         }
 
         private void UpdateVisualForUpgrades()
         {
-            if (_spriteRenderer == null) return;
+            if (m_spriteRenderer == null) return;
 
-            if (_isPiercing && _isHoming)
+            if (m_isPiercing && m_isHoming)
             {
-                _spriteRenderer.color = new Color(1f, 0.8f, 0.2f); // Gold
+                m_spriteRenderer.color = new Color(1f, 0.8f, 0.2f); // Gold
             }
-            else if (_isPiercing)
+            else if (m_isPiercing)
             {
-                _spriteRenderer.color = new Color(1f, 0.5f, 0f); // Orange
+                m_spriteRenderer.color = new Color(1f, 0.5f, 0f); // Orange
             }
-            else if (_isHoming)
+            else if (m_isHoming)
             {
-                _spriteRenderer.color = new Color(0.5f, 1f, 0.5f); // Green
+                m_spriteRenderer.color = new Color(0.5f, 1f, 0.5f); // Green
             }
             else
             {
-                _spriteRenderer.color = Color.white;
+                m_spriteRenderer.color = Color.white;
             }
         }
 
@@ -330,7 +330,7 @@ namespace NeuralBreak.Combat
         /// </summary>
         public int GetDamage()
         {
-            return _damage;
+            return m_damage;
         }
 
         /// <summary>
@@ -338,7 +338,7 @@ namespace NeuralBreak.Combat
         /// </summary>
         public void SetDirection(Vector2 direction)
         {
-            _direction = direction.normalized;
+            m_direction = direction.normalized;
         }
 
         /// <summary>
@@ -346,7 +346,7 @@ namespace NeuralBreak.Combat
         /// </summary>
         public Vector2 GetDirection()
         {
-            return _direction;
+            return m_direction;
         }
 
         /// <summary>
@@ -354,7 +354,7 @@ namespace NeuralBreak.Combat
         /// </summary>
         public void SetDamage(int damage)
         {
-            _damage = damage;
+            m_damage = damage;
         }
 
         /// <summary>
@@ -362,10 +362,10 @@ namespace NeuralBreak.Combat
         /// </summary>
         public void Deactivate()
         {
-            if (!_isActive) return;
+            if (!m_isActive) return;
 
-            _isActive = false;
-            _returnToPool?.Invoke(this);
+            m_isActive = false;
+            m_returnToPool?.Invoke(this);
         }
 
         /// <summary>
@@ -373,16 +373,16 @@ namespace NeuralBreak.Combat
         /// </summary>
         public void OnReturnToPool()
         {
-            _isActive = false;
-            if (_trailRenderer != null)
+            m_isActive = false;
+            if (m_trailRenderer != null)
             {
-                _trailRenderer.Clear();
+                m_trailRenderer.Clear();
             }
         }
 
         private void OnTriggerEnter2D(Collider2D other)
         {
-            if (!_isActive) return;
+            if (!m_isActive) return;
 
             // Check if hit enemy
             if (other.CompareTag("Enemy"))
@@ -393,7 +393,7 @@ namespace NeuralBreak.Combat
                 var enemy = other.GetComponent<EnemyBase>();
                 if (enemy != null && enemy.IsAlive)
                 {
-                    enemy.TakeDamage(_damage, transform.position);
+                    enemy.TakeDamage(m_damage, transform.position);
                     hitSomething = true;
                 }
                 else
@@ -402,7 +402,7 @@ namespace NeuralBreak.Combat
                     var wormSegment = other.GetComponent<WormSegment>();
                     if (wormSegment != null)
                     {
-                        wormSegment.TakeDamage(_damage, transform.position);
+                        wormSegment.TakeDamage(m_damage, transform.position);
                         hitSomething = true;
                     }
                 }
@@ -410,10 +410,10 @@ namespace NeuralBreak.Combat
                 if (hitSomething)
                 {
                     // Piercing: continue through enemies up to max pierce count
-                    if (_isPiercing)
+                    if (m_isPiercing)
                     {
-                        _pierceCount++;
-                        if (_pierceCount >= MAX_PIERCE)
+                        m_pierceCount++;
+                        if (m_pierceCount >= MAX_PIERCE)
                         {
                             Deactivate();
                         }
@@ -430,7 +430,7 @@ namespace NeuralBreak.Combat
         private void OnDrawGizmosSelected()
         {
             Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(transform.position, _baseRadius);
+            Gizmos.DrawWireSphere(transform.position, m_baseRadius);
         }
     }
 }

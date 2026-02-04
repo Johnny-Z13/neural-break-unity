@@ -18,104 +18,104 @@ namespace NeuralBreak.Entities
         public override EnemyType EnemyType => EnemyType.UFO;
 
         [Header("UFO Movement")]
-        [SerializeField] private float _dashSpeed = 12f;
-        [SerializeField] private float _normalSpeed = 3f;
-        [SerializeField] private float _strafeSpeed = 6f;
-        [SerializeField] private float _preferredDistance = 7f;
-        [SerializeField] private float _minDistance = 4f;
-        [SerializeField] private float _maxDistance = 12f;
+        [SerializeField] private float m_dashSpeed = 12f;
+        [SerializeField] private float m_normalSpeed = 3f;
+        [SerializeField] private float m_strafeSpeed = 6f;
+        [SerializeField] private float m_preferredDistance = 7f;
+        [SerializeField] private float m_minDistance = 4f;
+        [SerializeField] private float m_maxDistance = 12f;
 
         [Header("Behavior Timings")]
-        [SerializeField] private float _dashCooldown = 2f;
-        [SerializeField] private float _dashDuration = 0.3f;
-        [SerializeField] private float _hoverDuration = 1.5f;
-        [SerializeField] private float _strafeDuration = 2f;
+        [SerializeField] private float m_dashCooldown = 2f;
+        [SerializeField] private float m_dashDuration = 0.3f;
+        [SerializeField] private float m_hoverDuration = 1.5f;
+        [SerializeField] private float m_strafeDuration = 2f;
 
         [Header("Death Explosion")]
-        [SerializeField] private float _deathDamageRadius = 3f;
-        [SerializeField] private int _deathDamageAmount = 25;
+        [SerializeField] private float m_deathDamageRadius = 3f;
+        [SerializeField] private int m_deathDamageAmount = 25;
 
         // Config-driven shooting values
-        private float _fireRate => EnemyConfig?.fireRate ?? 2f;
-        private int _burstCount => EnemyConfig?.burstCount ?? 3;
-        private float _burstDelay => EnemyConfig?.burstDelay ?? 0.15f;
-        private float _projectileSpeed => EnemyConfig?.projectileSpeed ?? 8f;
-        private int _projectileDamage => EnemyConfig?.projectileDamage ?? 14;
+        private float m_fireRate => EnemyConfig?.fireRate ?? 2f;
+        private int m_burstCount => EnemyConfig?.burstCount ?? 3;
+        private float m_burstDelay => EnemyConfig?.burstDelay ?? 0.15f;
+        private float m_projectileSpeed => EnemyConfig?.projectileSpeed ?? 8f;
+        private int m_projectileDamage => EnemyConfig?.projectileDamage ?? 14;
 
         [Header("Visual")]
-        [SerializeField] private SpriteRenderer _spriteRenderer;
-        [SerializeField] private Transform _domeLight;
-        [SerializeField] private UFOVisuals _visuals;
-        [SerializeField] private Color _ufoColor = new Color(0.7f, 0.7f, 0.8f); // Silver
-        [SerializeField] private Color _domeColor = new Color(0.3f, 0.8f, 1f); // Cyan dome
-        [SerializeField] private float _wobbleSpeed = 3f;
-        [SerializeField] private float _wobbleAmount = 8f;
-        [SerializeField] private float _tiltAmount = 15f;
+        [SerializeField] private SpriteRenderer m_spriteRenderer;
+        [SerializeField] private Transform m_domeLight;
+        [SerializeField] private UFOVisuals m_visuals;
+        [SerializeField] private Color m_ufoColor = new Color(0.7f, 0.7f, 0.8f); // Silver
+        [SerializeField] private Color m_domeColor = new Color(0.3f, 0.8f, 1f); // Cyan dome
+        [SerializeField] private float m_wobbleSpeed = 3f;
+        [SerializeField] private float m_wobbleAmount = 8f;
+        [SerializeField] private float m_tiltAmount = 15f;
 
         // Note: MMFeedbacks removed
 
         // State
         private enum UFOState { Approaching, Hovering, Strafing, Dashing, FigureEight }
-        private UFOState _ufoState = UFOState.Approaching;
+        private UFOState m_ufoState = UFOState.Approaching;
 
-        private float _fireTimer;
-        private float _dashCooldownTimer;
-        private float _figure8Phase;
-        private float _strafeDirection;
-        private Vector2 _dashTarget;
-        private Vector2 _lastPosition;
-        private float _wobblePhase;
-        private float _tiltPhase;
-        private bool _visualsGenerated;
+        private float m_fireTimer;
+        private float m_dashCooldownTimer;
+        private float m_figure8Phase;
+        private float m_strafeDirection;
+        private Vector2 m_dashTarget;
+        private Vector2 m_lastPosition;
+        private float m_wobblePhase;
+        private float m_tiltPhase;
+        private bool m_visualsGenerated;
 
         protected override void OnInitialize()
         {
             base.OnInitialize();
 
-            _ufoState = UFOState.Approaching;
-            _fireTimer = _fireRate * 0.5f;
-            _stateTimer = 0f;
-            _dashCooldownTimer = _dashCooldown;
-            _figure8Phase = Random.Range(0f, Mathf.PI * 2f);
-            _strafeDirection = Random.value > 0.5f ? 1f : -1f;
-            _wobblePhase = Random.Range(0f, Mathf.PI * 2f);
-            _tiltPhase = 0f;
-            _lastPosition = transform.position;
+            m_ufoState = UFOState.Approaching;
+            m_fireTimer = m_fireRate * 0.5f;
+            m_stateTimer = 0f;
+            m_dashCooldownTimer = m_dashCooldown;
+            m_figure8Phase = Random.Range(0f, Mathf.PI * 2f);
+            m_strafeDirection = Random.value > 0.5f ? 1f : -1f;
+            m_wobblePhase = Random.Range(0f, Mathf.PI * 2f);
+            m_tiltPhase = 0f;
+            m_lastPosition = transform.position;
 
             // Generate procedural visuals if not yet done
-            if (!_visualsGenerated)
+            if (!m_visualsGenerated)
             {
                 EnsureVisuals();
-                _visualsGenerated = true;
+                m_visualsGenerated = true;
             }
         }
 
         private void EnsureVisuals()
         {
-            if (_visuals == null)
+            if (m_visuals == null)
             {
-                _visuals = GetComponentInChildren<UFOVisuals>();
+                m_visuals = GetComponentInChildren<UFOVisuals>();
             }
 
-            if (_visuals == null)
+            if (m_visuals == null)
             {
                 var visualsGO = new GameObject("Visuals");
                 visualsGO.transform.SetParent(transform, false);
                 visualsGO.transform.localPosition = Vector3.zero;
-                _visuals = visualsGO.AddComponent<UFOVisuals>();
+                m_visuals = visualsGO.AddComponent<UFOVisuals>();
             }
         }
 
         protected override void UpdateAI()
         {
             float distanceToPlayer = GetDistanceToPlayer();
-            _lastPosition = transform.position;
+            m_lastPosition = transform.position;
 
             // Update dash cooldown
-            _dashCooldownTimer -= Time.deltaTime;
+            m_dashCooldownTimer -= Time.deltaTime;
 
             // State machine
-            switch (_ufoState)
+            switch (m_ufoState)
             {
                 case UFOState.Approaching:
                     UpdateApproaching(distanceToPlayer);
@@ -148,10 +148,10 @@ namespace NeuralBreak.Entities
         private void UpdateApproaching(float distanceToPlayer)
         {
             // Move toward preferred distance
-            if (distanceToPlayer > _preferredDistance + 2f)
+            if (distanceToPlayer > m_preferredDistance + 2f)
             {
                 Vector2 direction = GetDirectionToPlayer();
-                transform.position = (Vector2)transform.position + direction * _normalSpeed * Time.deltaTime;
+                transform.position = (Vector2)transform.position + direction * m_normalSpeed * Time.deltaTime;
             }
             else
             {
@@ -167,29 +167,29 @@ namespace NeuralBreak.Entities
             if (roll < 0.3f)
             {
                 // Hover and shoot
-                _ufoState = UFOState.Hovering;
-                _stateTimer = _hoverDuration;
+                m_ufoState = UFOState.Hovering;
+                m_stateTimer = m_hoverDuration;
                 // Feedback (Feel removed)
             }
             else if (roll < 0.6f)
             {
                 // Strafe around player
-                _ufoState = UFOState.Strafing;
-                _stateTimer = _strafeDuration;
-                _strafeDirection = Random.value > 0.5f ? 1f : -1f;
+                m_ufoState = UFOState.Strafing;
+                m_stateTimer = m_strafeDuration;
+                m_strafeDirection = Random.value > 0.5f ? 1f : -1f;
             }
             else
             {
                 // Figure-8 pattern
-                _ufoState = UFOState.FigureEight;
-                _stateTimer = 4f; // Full figure-8 cycle
-                _figure8Phase = 0f;
+                m_ufoState = UFOState.FigureEight;
+                m_stateTimer = 4f; // Full figure-8 cycle
+                m_figure8Phase = 0f;
             }
         }
 
         private void UpdateHovering(float distanceToPlayer)
         {
-            _stateTimer -= Time.deltaTime;
+            m_stateTimer -= Time.deltaTime;
 
             // Gentle floating motion
             float hoverX = Mathf.Sin(Time.time * 2f) * 0.5f;
@@ -202,13 +202,13 @@ namespace NeuralBreak.Entities
             MaintainDistance(distanceToPlayer);
 
             // Try to dash if cooldown ready
-            if (_dashCooldownTimer <= 0 && Random.value < 0.03f)
+            if (m_dashCooldownTimer <= 0 && Random.value < 0.03f)
             {
                 StartDash();
                 return;
             }
 
-            if (_stateTimer <= 0)
+            if (m_stateTimer <= 0)
             {
                 ChooseNextBehavior();
             }
@@ -216,17 +216,17 @@ namespace NeuralBreak.Entities
 
         private void UpdateStrafing(float distanceToPlayer)
         {
-            _stateTimer -= Time.deltaTime;
+            m_stateTimer -= Time.deltaTime;
 
             // Circle-strafe around player
             Vector2 toPlayer = GetDirectionToPlayer();
-            Vector2 perpendicular = new Vector2(-toPlayer.y, toPlayer.x) * _strafeDirection;
+            Vector2 perpendicular = new Vector2(-toPlayer.y, toPlayer.x) * m_strafeDirection;
 
             // Move perpendicular to player
-            Vector2 movement = perpendicular * _strafeSpeed * Time.deltaTime;
+            Vector2 movement = perpendicular * m_strafeSpeed * Time.deltaTime;
 
             // Also maintain distance
-            float distanceError = distanceToPlayer - _preferredDistance;
+            float distanceError = distanceToPlayer - m_preferredDistance;
             movement += toPlayer * distanceError * 2f * Time.deltaTime;
 
             transform.position = (Vector2)transform.position + movement;
@@ -234,17 +234,17 @@ namespace NeuralBreak.Entities
             // Occasionally reverse direction
             if (Random.value < 0.01f)
             {
-                _strafeDirection *= -1f;
+                m_strafeDirection *= -1f;
             }
 
             // Try to dash
-            if (_dashCooldownTimer <= 0 && Random.value < 0.02f)
+            if (m_dashCooldownTimer <= 0 && Random.value < 0.02f)
             {
                 StartDash();
                 return;
             }
 
-            if (_stateTimer <= 0)
+            if (m_stateTimer <= 0)
             {
                 ChooseNextBehavior();
             }
@@ -252,30 +252,30 @@ namespace NeuralBreak.Entities
 
         private void StartDash()
         {
-            _ufoState = UFOState.Dashing;
-            _stateTimer = _dashDuration;
-            _dashCooldownTimer = _dashCooldown;
+            m_ufoState = UFOState.Dashing;
+            m_stateTimer = m_dashDuration;
+            m_dashCooldownTimer = m_dashCooldown;
 
             // Pick a random dash target - either toward player, away, or to the side
             float roll = Random.value;
-            Vector2 playerPos = _playerTarget != null ? (Vector2)_playerTarget.position : Vector2.zero;
+            Vector2 playerPos = m_playerTarget != null ? (Vector2)m_playerTarget.position : Vector2.zero;
 
             if (roll < 0.3f)
             {
                 // Dash toward player (aggressive)
-                _dashTarget = playerPos + GetDirectionToPlayer() * -_minDistance;
+                m_dashTarget = playerPos + GetDirectionToPlayer() * -m_minDistance;
             }
             else if (roll < 0.6f)
             {
                 // Dash away (evasive)
-                _dashTarget = (Vector2)transform.position - GetDirectionToPlayer() * 6f;
+                m_dashTarget = (Vector2)transform.position - GetDirectionToPlayer() * 6f;
             }
             else
             {
                 // Dash to random position around player
                 float angle = Random.Range(0f, Mathf.PI * 2f);
-                float dist = Random.Range(_minDistance, _maxDistance);
-                _dashTarget = playerPos + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * dist;
+                float dist = Random.Range(m_minDistance, m_maxDistance);
+                m_dashTarget = playerPos + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * dist;
             }
 
             // Feedback (Feel removed)
@@ -283,14 +283,14 @@ namespace NeuralBreak.Entities
 
         private void UpdateDashing()
         {
-            _stateTimer -= Time.deltaTime;
+            m_stateTimer -= Time.deltaTime;
 
             // Quick teleport-like dash
-            Vector2 direction = (_dashTarget - (Vector2)transform.position).normalized;
-            transform.position = (Vector2)transform.position + direction * _dashSpeed * Time.deltaTime;
+            Vector2 direction = (m_dashTarget - (Vector2)transform.position).normalized;
+            transform.position = (Vector2)transform.position + direction * m_dashSpeed * Time.deltaTime;
 
             // Check if reached target or time expired
-            if (_stateTimer <= 0 || Vector2.Distance(transform.position, _dashTarget) < 0.5f)
+            if (m_stateTimer <= 0 || Vector2.Distance(transform.position, m_dashTarget) < 0.5f)
             {
                 ChooseNextBehavior();
             }
@@ -298,30 +298,30 @@ namespace NeuralBreak.Entities
 
         private void UpdateFigureEight(float distanceToPlayer)
         {
-            _stateTimer -= Time.deltaTime;
-            _figure8Phase += Time.deltaTime * 1.5f;
+            m_stateTimer -= Time.deltaTime;
+            m_figure8Phase += Time.deltaTime * 1.5f;
 
             // Figure-8 (lemniscate) parametric equations
-            float t = _figure8Phase;
+            float t = m_figure8Phase;
             float scale = 4f;
             float x = scale * Mathf.Cos(t) / (1f + Mathf.Sin(t) * Mathf.Sin(t));
             float y = scale * Mathf.Sin(t) * Mathf.Cos(t) / (1f + Mathf.Sin(t) * Mathf.Sin(t));
 
             // Offset from player position
-            Vector2 playerPos = _playerTarget != null ? (Vector2)_playerTarget.position : Vector2.zero;
-            Vector2 targetPos = playerPos + new Vector2(x, y) + Vector2.up * _preferredDistance * 0.5f;
+            Vector2 playerPos = m_playerTarget != null ? (Vector2)m_playerTarget.position : Vector2.zero;
+            Vector2 targetPos = playerPos + new Vector2(x, y) + Vector2.up * m_preferredDistance * 0.5f;
 
             // Smooth movement to target
             transform.position = Vector2.Lerp(transform.position, targetPos, Time.deltaTime * 3f);
 
             // Try to dash
-            if (_dashCooldownTimer <= 0 && Random.value < 0.015f)
+            if (m_dashCooldownTimer <= 0 && Random.value < 0.015f)
             {
                 StartDash();
                 return;
             }
 
-            if (_stateTimer <= 0)
+            if (m_stateTimer <= 0)
             {
                 ChooseNextBehavior();
             }
@@ -329,40 +329,40 @@ namespace NeuralBreak.Entities
 
         private void MaintainDistance(float distanceToPlayer)
         {
-            if (distanceToPlayer < _minDistance)
+            if (distanceToPlayer < m_minDistance)
             {
                 // Too close, move away
                 Vector2 away = -GetDirectionToPlayer();
-                transform.position = (Vector2)transform.position + away * _normalSpeed * Time.deltaTime;
+                transform.position = (Vector2)transform.position + away * m_normalSpeed * Time.deltaTime;
             }
-            else if (distanceToPlayer > _maxDistance)
+            else if (distanceToPlayer > m_maxDistance)
             {
                 // Too far, move closer
                 Vector2 toward = GetDirectionToPlayer();
-                transform.position = (Vector2)transform.position + toward * _normalSpeed * Time.deltaTime;
+                transform.position = (Vector2)transform.position + toward * m_normalSpeed * Time.deltaTime;
             }
         }
 
         private void UpdateFiring()
         {
-            _fireTimer += Time.deltaTime;
+            m_fireTimer += Time.deltaTime;
 
-            if (_fireTimer >= _fireRate)
+            if (m_fireTimer >= m_fireRate)
             {
                 // Fire a burst
                 StartCoroutine(FireBurst());
-                _fireTimer = 0f;
+                m_fireTimer = 0f;
             }
         }
 
         private System.Collections.IEnumerator FireBurst()
         {
-            for (int i = 0; i < _burstCount; i++)
+            for (int i = 0; i < m_burstCount; i++)
             {
                 FireAtPlayer();
-                if (i < _burstCount - 1)
+                if (i < m_burstCount - 1)
                 {
-                    yield return new WaitForSeconds(_burstDelay);
+                    yield return new WaitForSeconds(m_burstDelay);
                 }
             }
         }
@@ -385,9 +385,9 @@ namespace NeuralBreak.Entities
             EnemyProjectilePool.Instance.Fire(
                 firePos,
                 direction,
-                _projectileSpeed,
-                _projectileDamage,
-                _domeColor
+                m_projectileSpeed,
+                m_projectileDamage,
+                m_domeColor
             );
 
             // Feedback (Feel removed)
@@ -395,19 +395,19 @@ namespace NeuralBreak.Entities
 
         private void UpdateVisuals()
         {
-            _wobblePhase += Time.deltaTime * _wobbleSpeed;
+            m_wobblePhase += Time.deltaTime * m_wobbleSpeed;
 
             // Calculate movement direction for tilt (with safety check)
             if (Time.deltaTime > 0.0001f)
             {
-                Vector2 velocity = ((Vector2)transform.position - _lastPosition) / Time.deltaTime;
-                float targetTilt = Mathf.Clamp(-velocity.x * _tiltAmount, -45f, 45f); // Clamp to reasonable angle
-                _tiltPhase = Mathf.Lerp(_tiltPhase, targetTilt, Time.deltaTime * 5f);
+                Vector2 velocity = ((Vector2)transform.position - m_lastPosition) / Time.deltaTime;
+                float targetTilt = Mathf.Clamp(-velocity.x * m_tiltAmount, -45f, 45f); // Clamp to reasonable angle
+                m_tiltPhase = Mathf.Lerp(m_tiltPhase, targetTilt, Time.deltaTime * 5f);
             }
 
             // Combine wobble and tilt
-            float wobble = Mathf.Sin(_wobblePhase) * _wobbleAmount;
-            float finalAngle = Mathf.Clamp(wobble + _tiltPhase, -90f, 90f); // Clamp final angle
+            float wobble = Mathf.Sin(m_wobblePhase) * m_wobbleAmount;
+            float finalAngle = Mathf.Clamp(wobble + m_tiltPhase, -90f, 90f); // Clamp final angle
             transform.rotation = Quaternion.Euler(0, 0, finalAngle);
         }
 
@@ -420,7 +420,7 @@ namespace NeuralBreak.Entities
 
         private void DealDeathDamage()
         {
-            Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, _deathDamageRadius);
+            Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, m_deathDamageRadius);
 
             foreach (var hit in hits)
             {
@@ -429,7 +429,7 @@ namespace NeuralBreak.Entities
                 EnemyBase enemy = hit.GetComponent<EnemyBase>();
                 if (enemy != null && enemy.IsAlive)
                 {
-                    enemy.TakeDamage(_deathDamageAmount, transform.position);
+                    enemy.TakeDamage(m_deathDamageAmount, transform.position);
                 }
             }
         }
@@ -438,18 +438,18 @@ namespace NeuralBreak.Entities
         {
             base.OnStateChanged(newState);
 
-            if (_spriteRenderer == null) return;
+            if (m_spriteRenderer == null) return;
 
             switch (newState)
             {
                 case EnemyState.Spawning:
-                    _spriteRenderer.color = new Color(_ufoColor.r, _ufoColor.g, _ufoColor.b, 0.5f);
+                    m_spriteRenderer.color = new Color(m_ufoColor.r, m_ufoColor.g, m_ufoColor.b, 0.5f);
                     break;
                 case EnemyState.Alive:
-                    _spriteRenderer.color = _ufoColor;
+                    m_spriteRenderer.color = m_ufoColor;
                     break;
                 case EnemyState.Dying:
-                    _spriteRenderer.color = Color.white;
+                    m_spriteRenderer.color = Color.white;
                     break;
             }
         }
@@ -460,25 +460,25 @@ namespace NeuralBreak.Entities
 
             // Preferred distance
             Gizmos.color = Color.cyan;
-            if (_playerTarget != null)
+            if (m_playerTarget != null)
             {
-                Gizmos.DrawWireSphere(_playerTarget.position, _preferredDistance);
+                Gizmos.DrawWireSphere(m_playerTarget.position, m_preferredDistance);
                 Gizmos.color = Color.green;
-                Gizmos.DrawWireSphere(_playerTarget.position, _minDistance);
+                Gizmos.DrawWireSphere(m_playerTarget.position, m_minDistance);
                 Gizmos.color = Color.yellow;
-                Gizmos.DrawWireSphere(_playerTarget.position, _maxDistance);
+                Gizmos.DrawWireSphere(m_playerTarget.position, m_maxDistance);
             }
 
             // Death damage radius
             Gizmos.color = new Color(1f, 0.5f, 0f, 0.3f);
-            Gizmos.DrawSphere(transform.position, _deathDamageRadius);
+            Gizmos.DrawSphere(transform.position, m_deathDamageRadius);
 
             // Dash target
-            if (_ufoState == UFOState.Dashing)
+            if (m_ufoState == UFOState.Dashing)
             {
                 Gizmos.color = Color.red;
-                Gizmos.DrawLine(transform.position, _dashTarget);
-                Gizmos.DrawWireSphere(_dashTarget, 0.5f);
+                Gizmos.DrawLine(transform.position, m_dashTarget);
+                Gizmos.DrawWireSphere(m_dashTarget, 0.5f);
             }
         }
     }

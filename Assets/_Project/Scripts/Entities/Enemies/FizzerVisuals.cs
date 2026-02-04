@@ -10,26 +10,26 @@ namespace NeuralBreak.Entities
     public class FizzerVisuals : MonoBehaviour
     {
         [Header("Colors")]
-        [SerializeField] private Color _coreColor = new Color(0.2f, 0.8f, 1f, 0.9f); // Electric cyan-blue
-        [SerializeField] private Color _innerColor = new Color(1f, 1f, 1f, 0.95f); // White hot center
-        [SerializeField] private Color _spikeColor = new Color(0f, 1f, 1f, 0.8f); // Cyan
-        [SerializeField] private Color _sparkColor1 = new Color(0.2f, 0.8f, 1f, 0.9f); // Cyan
-        [SerializeField] private Color _sparkColor2 = new Color(0f, 1f, 1f, 0.9f); // Bright cyan
-        [SerializeField] private Color _ringColor = new Color(0.2f, 0.8f, 1f, 0.6f); // Cyan
+        [SerializeField] private Color m_coreColor = new Color(0.2f, 0.8f, 1f, 0.9f); // Electric cyan-blue
+        [SerializeField] private Color m_innerColor = new Color(1f, 1f, 1f, 0.95f); // White hot center
+        [SerializeField] private Color m_spikeColor = new Color(0f, 1f, 1f, 0.8f); // Cyan
+        [SerializeField] private Color m_sparkColor1 = new Color(0.2f, 0.8f, 1f, 0.9f); // Cyan
+        [SerializeField] private Color m_sparkColor2 = new Color(0f, 1f, 1f, 0.9f); // Bright cyan
+        [SerializeField] private Color m_ringColor = new Color(0.2f, 0.8f, 1f, 0.6f); // Cyan
 
         [Header("Scale")]
-        [SerializeField] private float _radius = 0.25f;
+        [SerializeField] private float m_radius = 0.25f;
 
         // Components
-        private Transform _core;
-        private Transform _inner;
-        private Transform _ring;
-        private Transform[] _spikes;
-        private Transform[] _sparks;
-        private SpriteRenderer[] _allRenderers;
+        private Transform m_core;
+        private Transform m_inner;
+        private Transform m_ring;
+        private Transform[] m_spikes;
+        private Transform[] m_sparks;
+        private SpriteRenderer[] m_allRenderers;
 
-        private float _time;
-        private float[] _spikePhases;
+        private float m_time;
+        private float[] m_spikePhases;
 
         private void Start()
         {
@@ -41,13 +41,13 @@ namespace NeuralBreak.Entities
             ClearChildren();
 
             // Core sphere
-            _core = CreateCircle("Core", _radius, _coreColor, 10);
+            m_core = CreateCircle("Core", m_radius, m_coreColor, 10);
 
             // Inner hot center
-            _inner = CreateCircle("Inner", _radius * 0.6f, _innerColor, 12);
+            m_inner = CreateCircle("Inner", m_radius * 0.6f, m_innerColor, 12);
 
             // Pulsing ring
-            _ring = CreateRing("Ring", _radius * 1.1f, _radius * 1.3f, _ringColor, 8);
+            m_ring = CreateRing("Ring", m_radius * 1.1f, m_radius * 1.3f, m_ringColor, 8);
 
             // Random direction spikes
             CreateSpikes();
@@ -55,42 +55,42 @@ namespace NeuralBreak.Entities
             // Orbiting sparks
             CreateSparks();
 
-            _allRenderers = GetComponentsInChildren<SpriteRenderer>();
+            m_allRenderers = GetComponentsInChildren<SpriteRenderer>();
         }
 
         private void CreateSpikes()
         {
-            _spikes = new Transform[8];
-            _spikePhases = new float[8];
+            m_spikes = new Transform[8];
+            m_spikePhases = new float[8];
 
             for (int i = 0; i < 8; i++)
             {
                 float angle = Random.Range(0f, Mathf.PI * 2f);
-                _spikePhases[i] = Random.Range(0f, Mathf.PI * 2f);
+                m_spikePhases[i] = Random.Range(0f, Mathf.PI * 2f);
 
                 var spike = new GameObject($"Spike{i}");
                 spike.transform.SetParent(transform, false);
 
                 var sr = spike.AddComponent<SpriteRenderer>();
                 sr.sprite = CreateSpikeSprite();
-                sr.color = _spikeColor;
+                sr.color = m_spikeColor;
                 sr.sortingOrder = 11;
 
                 spike.transform.localPosition = new Vector3(
-                    Mathf.Cos(angle) * _radius * 0.7f,
-                    Mathf.Sin(angle) * _radius * 0.7f,
+                    Mathf.Cos(angle) * m_radius * 0.7f,
+                    Mathf.Sin(angle) * m_radius * 0.7f,
                     0
                 );
                 spike.transform.localRotation = Quaternion.Euler(0, 0, angle * Mathf.Rad2Deg);
                 spike.transform.localScale = new Vector3(0.08f, 0.2f, 1f);
 
-                _spikes[i] = spike.transform;
+                m_spikes[i] = spike.transform;
             }
         }
 
         private void CreateSparks()
         {
-            _sparks = new Transform[4];
+            m_sparks = new Transform[4];
 
             for (int i = 0; i < 4; i++)
             {
@@ -99,74 +99,74 @@ namespace NeuralBreak.Entities
 
                 var sr = spark.AddComponent<SpriteRenderer>();
                 sr.sprite = CreateCircleSprite(16);
-                sr.color = (i % 2 == 0) ? _sparkColor1 : _sparkColor2;
+                sr.color = (i % 2 == 0) ? m_sparkColor1 : m_sparkColor2;
                 sr.sortingOrder = 15;
 
                 spark.transform.localScale = Vector3.one * 0.08f;
-                _sparks[i] = spark.transform;
+                m_sparks[i] = spark.transform;
             }
         }
 
         private void Update()
         {
-            if (_core == null) return;
+            if (m_core == null) return;
 
-            _time += Time.deltaTime;
+            m_time += Time.deltaTime;
 
             // Rapid overall rotation
             transform.Rotate(0, 0, Time.deltaTime * 360f);
 
             // Fast pulsing scale
-            float pulse = 1f + Mathf.Sin(_time * 12f) * 0.15f;
-            _core.localScale = Vector3.one * _radius * 2f * pulse;
+            float pulse = 1f + Mathf.Sin(m_time * 12f) * 0.15f;
+            m_core.localScale = Vector3.one * m_radius * 2f * pulse;
 
             // Inner pulse
-            if (_inner != null)
+            if (m_inner != null)
             {
-                float innerPulse = 1f + Mathf.Sin(_time * 15f) * 0.2f;
-                _inner.localScale = Vector3.one * _radius * 1.2f * innerPulse;
+                float innerPulse = 1f + Mathf.Sin(m_time * 15f) * 0.2f;
+                m_inner.localScale = Vector3.one * m_radius * 1.2f * innerPulse;
             }
 
             // Ring rotation and pulse
-            if (_ring != null)
+            if (m_ring != null)
             {
-                _ring.Rotate(0, 0, Time.deltaTime * 180f);
-                var sr = _ring.GetComponent<SpriteRenderer>();
+                m_ring.Rotate(0, 0, Time.deltaTime * 180f);
+                var sr = m_ring.GetComponent<SpriteRenderer>();
                 if (sr != null)
                 {
-                    float alpha = 0.4f + Mathf.Sin(_time * 10f) * 0.3f;
-                    sr.color = new Color(_ringColor.r, _ringColor.g, _ringColor.b, alpha);
+                    float alpha = 0.4f + Mathf.Sin(m_time * 10f) * 0.3f;
+                    sr.color = new Color(m_ringColor.r, m_ringColor.g, m_ringColor.b, alpha);
                 }
             }
 
             // Spike extension/retraction
-            if (_spikes != null)
+            if (m_spikes != null)
             {
-                for (int i = 0; i < _spikes.Length; i++)
+                for (int i = 0; i < m_spikes.Length; i++)
                 {
-                    if (_spikes[i] == null) continue;
-                    float ext = 0.15f + Mathf.Sin(_time * 8f + _spikePhases[i]) * 0.1f;
-                    _spikes[i].localScale = new Vector3(0.08f, ext, 1f);
+                    if (m_spikes[i] == null) continue;
+                    float ext = 0.15f + Mathf.Sin(m_time * 8f + m_spikePhases[i]) * 0.1f;
+                    m_spikes[i].localScale = new Vector3(0.08f, ext, 1f);
                 }
             }
 
             // Orbiting sparks
-            if (_sparks != null)
+            if (m_sparks != null)
             {
-                for (int i = 0; i < _sparks.Length; i++)
+                for (int i = 0; i < m_sparks.Length; i++)
                 {
-                    if (_sparks[i] == null) continue;
-                    float angle = _time * 6f + (i / 4f) * Mathf.PI * 2f;
-                    float dist = _radius * 1.5f;
-                    _sparks[i].localPosition = new Vector3(
+                    if (m_sparks[i] == null) continue;
+                    float angle = m_time * 6f + (i / 4f) * Mathf.PI * 2f;
+                    float dist = m_radius * 1.5f;
+                    m_sparks[i].localPosition = new Vector3(
                         Mathf.Cos(angle) * dist,
                         Mathf.Sin(angle) * dist,
                         0
                     );
 
                     // Spark pulse
-                    float sparkPulse = 0.06f + Mathf.Sin(_time * 20f + i) * 0.03f;
-                    _sparks[i].localScale = Vector3.one * sparkPulse;
+                    float sparkPulse = 0.06f + Mathf.Sin(m_time * 20f + i) * 0.03f;
+                    m_sparks[i].localScale = Vector3.one * sparkPulse;
                 }
             }
         }

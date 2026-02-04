@@ -60,23 +60,23 @@ namespace NeuralBreak.UI
             }
         }
 
-        private int _lastComboMilestone = 0;
+        private int m_lastComboMilestone = 0;
         private void OnComboChanged(ComboChangedEvent evt)
         {
             // Check for milestone
             foreach (var milestone in UITheme.ComboMilestones)
             {
-                if (evt.comboCount >= milestone.threshold && milestone.threshold > _lastComboMilestone)
+                if (evt.comboCount >= milestone.threshold && milestone.threshold > m_lastComboMilestone)
                 {
                     // Feedback (Feel removed) - Combo milestone
-                    _lastComboMilestone = milestone.threshold;
+                    m_lastComboMilestone = milestone.threshold;
                     break;
                 }
             }
 
             if (evt.comboCount == 0)
             {
-                _lastComboMilestone = 0;
+                m_lastComboMilestone = 0;
             }
 
             if (evt.multiplier >= 5f)

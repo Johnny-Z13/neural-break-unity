@@ -10,15 +10,15 @@ namespace NeuralBreak.Graphics
     /// </summary>
     public class StarGridRenderer
     {
-        private readonly LineRenderer _gridRenderer;
-        private readonly StarfieldOptimizer _optimizer;
-        private readonly Transform _gridTransform;
-        private readonly float _gridSize;
+        private readonly LineRenderer m_gridRenderer;
+        private readonly StarfieldOptimizer m_optimizer;
+        private readonly Transform m_gridTransform;
+        private readonly float m_gridSize;
 
-        private Color _gridColor;
-        private float _speed;
-        private float _time;
-        private readonly float _gridHorizonY;
+        private Color m_gridColor;
+        private float m_speed;
+        private float m_time;
+        private readonly float m_gridHorizonY;
 
         private const float BASE_Z_OFFSET = 30f;
         private const float SCROLL_SPEED_MULTIPLIER = 2f;
@@ -31,27 +31,27 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public StarGridRenderer(Transform parent, Color gridColor, float gridHorizonY, StarfieldOptimizer optimizer)
         {
-            _gridColor = gridColor;
-            _gridHorizonY = gridHorizonY;
-            _optimizer = optimizer;
+            m_gridColor = gridColor;
+            m_gridHorizonY = gridHorizonY;
+            m_optimizer = optimizer;
 
             // Size grid to match arena boundary
             float arenaRadius = ConfigProvider.Player?.arenaRadius ?? 30f;
-            _gridSize = arenaRadius * 1.5f;
+            m_gridSize = arenaRadius * 1.5f;
 
             GameObject gridObj = new GameObject("Grid");
             gridObj.transform.SetParent(parent);
-            gridObj.transform.localPosition = new Vector3(0, _gridHorizonY - 15f, BASE_Z_OFFSET);
+            gridObj.transform.localPosition = new Vector3(0, m_gridHorizonY - 15f, BASE_Z_OFFSET);
             gridObj.transform.localRotation = Quaternion.Euler(75f, 0f, 0f);
 
-            _gridTransform = gridObj.transform;
-            _gridRenderer = gridObj.AddComponent<LineRenderer>();
-            _gridRenderer.material = new Material(Shader.Find("Sprites/Default"));
-            _gridRenderer.startColor = _gridColor;
-            _gridRenderer.endColor = _gridColor;
-            _gridRenderer.startWidth = 0.05f;
-            _gridRenderer.endWidth = 0.05f;
-            _gridRenderer.sortingOrder = -50;
+            m_gridTransform = gridObj.transform;
+            m_gridRenderer = gridObj.AddComponent<LineRenderer>();
+            m_gridRenderer.material = new Material(Shader.Find("Sprites/Default"));
+            m_gridRenderer.startColor = m_gridColor;
+            m_gridRenderer.endColor = m_gridColor;
+            m_gridRenderer.startWidth = 0.05f;
+            m_gridRenderer.endWidth = 0.05f;
+            m_gridRenderer.sortingOrder = -50;
 
             CreateGridLines();
         }
@@ -63,23 +63,23 @@ namespace NeuralBreak.Graphics
         {
             const int gridLines = 20;
             int totalPoints = (gridLines * 2 + 1) * 4;
-            _gridRenderer.positionCount = totalPoints;
+            m_gridRenderer.positionCount = totalPoints;
 
             int index = 0;
-            float spacing = _gridSize / gridLines;
+            float spacing = m_gridSize / gridLines;
 
             // Horizontal lines (perpendicular to camera)
             for (int i = -gridLines; i <= gridLines; i++)
             {
-                _gridRenderer.SetPosition(index++, new Vector3(-_gridSize, 0, i * spacing));
-                _gridRenderer.SetPosition(index++, new Vector3(_gridSize, 0, i * spacing));
+                m_gridRenderer.SetPosition(index++, new Vector3(-m_gridSize, 0, i * spacing));
+                m_gridRenderer.SetPosition(index++, new Vector3(m_gridSize, 0, i * spacing));
             }
 
             // Vertical lines (going into distance)
             for (int i = -gridLines; i <= gridLines; i++)
             {
-                _gridRenderer.SetPosition(index++, new Vector3(i * spacing, 0, -_gridSize));
-                _gridRenderer.SetPosition(index++, new Vector3(i * spacing, 0, _gridSize));
+                m_gridRenderer.SetPosition(index++, new Vector3(i * spacing, 0, -m_gridSize));
+                m_gridRenderer.SetPosition(index++, new Vector3(i * spacing, 0, m_gridSize));
             }
         }
 
@@ -88,21 +88,21 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void UpdateGrid(float deltaTime, float speed)
         {
-            if (_gridRenderer == null) return;
+            if (m_gridRenderer == null) return;
 
-            _time += deltaTime;
-            _speed = speed;
+            m_time += deltaTime;
+            m_speed = speed;
 
             // Scroll grid based on speed for motion effect (allocation-free)
-            float newZ = BASE_Z_OFFSET + ((_time * _speed) % 4f);
-            Vector3 newPos = _optimizer.UpdateGridPosition(_gridTransform.localPosition, newZ);
-            _gridTransform.localPosition = newPos;
+            float newZ = BASE_Z_OFFSET + ((m_time * m_speed) % 4f);
+            Vector3 newPos = m_optimizer.UpdateGridPosition(m_gridTransform.localPosition, newZ);
+            m_gridTransform.localPosition = newPos;
 
             // Fade grid color based on time (allocation-free)
-            float alphaMultiplier = BASE_ALPHA + Mathf.Sin(_time * PULSE_SPEED) * PULSE_AMPLITUDE;
-            Color fadedColor = _optimizer.CalculateGridColor(_gridColor, alphaMultiplier);
-            _gridRenderer.startColor = fadedColor;
-            _gridRenderer.endColor = fadedColor;
+            float alphaMultiplier = BASE_ALPHA + Mathf.Sin(m_time * PULSE_SPEED) * PULSE_AMPLITUDE;
+            Color fadedColor = m_optimizer.CalculateGridColor(m_gridColor, alphaMultiplier);
+            m_gridRenderer.startColor = fadedColor;
+            m_gridRenderer.endColor = fadedColor;
         }
 
         /// <summary>
@@ -110,7 +110,7 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void SetGridColor(Color color)
         {
-            _gridColor = color;
+            m_gridColor = color;
         }
 
         /// <summary>
@@ -118,9 +118,9 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void SetVisible(bool visible)
         {
-            if (_gridRenderer != null && _gridRenderer.gameObject != null)
+            if (m_gridRenderer != null && m_gridRenderer.gameObject != null)
             {
-                _gridRenderer.gameObject.SetActive(visible);
+                m_gridRenderer.gameObject.SetActive(visible);
             }
         }
 
@@ -129,9 +129,9 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void Destroy()
         {
-            if (_gridRenderer != null && _gridRenderer.gameObject != null)
+            if (m_gridRenderer != null && m_gridRenderer.gameObject != null)
             {
-                Object.Destroy(_gridRenderer.gameObject);
+                Object.Destroy(m_gridRenderer.gameObject);
             }
         }
     }

@@ -14,33 +14,33 @@ namespace NeuralBreak.UI
     public class UIBuilder : MonoBehaviour
     {
         [Header("References")]
-        [SerializeField] private UIManager _uiManager;
-        [SerializeField] private HUDController _hudController;
+        [SerializeField] private UIManager m_uiManager;
+        [SerializeField] private HUDController m_hudController;
 
         [Header("Font")]
-        [SerializeField] private TMP_FontAsset _fontAsset;
+        [SerializeField] private TMP_FontAsset m_fontAsset;
 
         [Header("Colors (Uses UITheme if not overridden)")]
-        [SerializeField] private bool _useThemeColors = true;
+        [SerializeField] private bool m_useThemeColors = true;
 
-        [SerializeField] private Color _customBackgroundColor = new Color(0.05f, 0.05f, 0.1f, 0.9f);
-        [SerializeField] private Color _customPrimaryColor = new Color(0f, 1f, 1f, 1f);
-        [SerializeField] private Color _customAccentColor = new Color(1f, 0.3f, 0.5f, 1f);
-        [SerializeField] private Color _customTextColor = Color.white;
+        [SerializeField] private Color m_customBackgroundColor = new Color(0.05f, 0.05f, 0.1f, 0.9f);
+        [SerializeField] private Color m_customPrimaryColor = new Color(0f, 1f, 1f, 1f);
+        [SerializeField] private Color m_customAccentColor = new Color(1f, 0.3f, 0.5f, 1f);
+        [SerializeField] private Color m_customTextColor = Color.white;
 
         // Specialized builders
-        private HUDBuilderArcade _hudBuilder;
-        private StartScreenBuilder _startScreenBuilder;
-        private PauseMenuBuilder _pauseMenuBuilder;
-        private GameOverScreenBuilder _gameOverScreenBuilder;
-        private UpgradeSelectionBuilder _upgradeSelectionBuilder;
+        private HUDBuilderArcade m_hudBuilder;
+        private StartScreenBuilder m_startScreenBuilder;
+        private PauseMenuBuilder m_pauseMenuBuilder;
+        private GameOverScreenBuilder m_gameOverScreenBuilder;
+        private UpgradeSelectionBuilder m_upgradeSelectionBuilder;
 
         // Built references
-        private GameObject _hudRoot;
-        private StartScreen _startScreen;
-        private PauseScreen _pauseScreen;
-        private GameOverScreen _gameOverScreen;
-        private UpgradeSelectionScreen _upgradeSelectionScreen;
+        private GameObject m_hudRoot;
+        private StartScreen m_startScreen;
+        private PauseScreen m_pauseScreen;
+        private GameOverScreen m_gameOverScreen;
+        private UpgradeSelectionScreen m_upgradeSelectionScreen;
 
         private void Awake()
         {
@@ -50,7 +50,7 @@ namespace NeuralBreak.UI
             // Load font if not assigned
             LoadFont();
 
-            Debug.Log($"[UIBuilder] Building UI with font: {(_fontAsset != null ? _fontAsset.name : "NULL")}");
+            Debug.Log($"[UIBuilder] Building UI with font: {(m_fontAsset != null ? m_fontAsset.name : "NULL")}");
 
             // Initialize builders
             InitializeBuilders();
@@ -68,17 +68,17 @@ namespace NeuralBreak.UI
 
         private void LoadFont()
         {
-            if (_fontAsset != null)
+            if (m_fontAsset != null)
             {
-                Debug.Log($"[UIBuilder] Font already assigned: {_fontAsset.name}");
+                Debug.Log($"[UIBuilder] Font already assigned: {m_fontAsset.name}");
                 return;
             }
 
             Debug.Log("[UIBuilder] No font asset assigned, attempting to load...");
 
             // Try Resources folder
-            _fontAsset = Resources.Load<TMP_FontAsset>("Fonts & Materials/Lato SDF");
-            if (_fontAsset != null)
+            m_fontAsset = Resources.Load<TMP_FontAsset>("Fonts & Materials/Lato SDF");
+            if (m_fontAsset != null)
             {
                 Debug.Log("[UIBuilder] Loaded font from Resources");
                 return;
@@ -86,9 +86,9 @@ namespace NeuralBreak.UI
 
             // Try AssetDatabase (Editor only)
             #if UNITY_EDITOR
-            _fontAsset = UnityEditor.AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(
+            m_fontAsset = UnityEditor.AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(
                 "Assets/Feel/MMTools/Demos/MMTween/Fonts/Lato/SDF/Lato SDF.asset");
-            if (_fontAsset != null)
+            if (m_fontAsset != null)
             {
                 Debug.Log("[UIBuilder] Loaded font from AssetDatabase");
                 return;
@@ -96,15 +96,15 @@ namespace NeuralBreak.UI
             #endif
 
             // Try TMP default font
-            _fontAsset = Resources.Load<TMP_FontAsset>("Fonts & Materials/LiberationSans SDF");
-            if (_fontAsset != null) return;
+            m_fontAsset = Resources.Load<TMP_FontAsset>("Fonts & Materials/LiberationSans SDF");
+            if (m_fontAsset != null) return;
 
             // Try TMP Settings
             try
             {
                 if (TMP_Settings.instance != null)
                 {
-                    _fontAsset = TMP_Settings.defaultFontAsset;
+                    m_fontAsset = TMP_Settings.defaultFontAsset;
                 }
             }
             catch (System.Exception e)
@@ -112,7 +112,7 @@ namespace NeuralBreak.UI
                 Debug.LogWarning($"[UIBuilder] TMP_Settings access failed: {e.Message}");
             }
 
-            if (_fontAsset == null)
+            if (m_fontAsset == null)
             {
                 Debug.LogError("[UIBuilder] CRITICAL: No font found! Text will not render!");
             }
@@ -124,11 +124,11 @@ namespace NeuralBreak.UI
 
         private void InitializeBuilders()
         {
-            _hudBuilder = new HUDBuilderArcade(_fontAsset, _useThemeColors);
-            _startScreenBuilder = new StartScreenBuilder(_fontAsset, _useThemeColors);
-            _pauseMenuBuilder = new PauseMenuBuilder(_fontAsset, _useThemeColors);
-            _gameOverScreenBuilder = new GameOverScreenBuilder(_fontAsset, _useThemeColors);
-            _upgradeSelectionBuilder = new UpgradeSelectionBuilder(_fontAsset);
+            m_hudBuilder = new HUDBuilderArcade(m_fontAsset, m_useThemeColors);
+            m_startScreenBuilder = new StartScreenBuilder(m_fontAsset, m_useThemeColors);
+            m_pauseMenuBuilder = new PauseMenuBuilder(m_fontAsset, m_useThemeColors);
+            m_gameOverScreenBuilder = new GameOverScreenBuilder(m_fontAsset, m_useThemeColors);
+            m_upgradeSelectionBuilder = new UpgradeSelectionBuilder(m_fontAsset);
         }
 
         #endregion
@@ -138,20 +138,20 @@ namespace NeuralBreak.UI
         private void BuildAllUI()
         {
             // Build HUD
-            _hudRoot = _hudBuilder.BuildHUD(transform);
+            m_hudRoot = m_hudBuilder.BuildHUD(transform);
 
             // Build Screens
-            var startScreenGO = _startScreenBuilder.BuildStartScreen(transform);
-            _startScreen = startScreenGO.GetComponent<StartScreen>();
+            var startScreenGO = m_startScreenBuilder.BuildStartScreen(transform);
+            m_startScreen = startScreenGO.GetComponent<StartScreen>();
 
-            var pauseScreenGO = _pauseMenuBuilder.BuildPauseScreen(transform);
-            _pauseScreen = pauseScreenGO.GetComponent<PauseScreen>();
+            var pauseScreenGO = m_pauseMenuBuilder.BuildPauseScreen(transform);
+            m_pauseScreen = pauseScreenGO.GetComponent<PauseScreen>();
 
-            var gameOverScreenGO = _gameOverScreenBuilder.BuildGameOverScreen(transform);
-            _gameOverScreen = gameOverScreenGO.GetComponent<GameOverScreen>();
+            var gameOverScreenGO = m_gameOverScreenBuilder.BuildGameOverScreen(transform);
+            m_gameOverScreen = gameOverScreenGO.GetComponent<GameOverScreen>();
 
             // Build Upgrade Selection Screen
-            _upgradeSelectionScreen = _upgradeSelectionBuilder.Build(transform);
+            m_upgradeSelectionScreen = m_upgradeSelectionBuilder.Build(transform);
         }
 
         #endregion
@@ -161,15 +161,15 @@ namespace NeuralBreak.UI
         private void WireReferences()
         {
             // Find UIManager
-            if (_uiManager == null)
+            if (m_uiManager == null)
             {
                 var uiManagerGO = GameObject.Find("UIManager");
                 if (uiManagerGO != null)
                 {
-                    _uiManager = uiManagerGO.GetComponent<UIManager>();
+                    m_uiManager = uiManagerGO.GetComponent<UIManager>();
                 }
 
-                if (_uiManager == null)
+                if (m_uiManager == null)
                 {
                     Debug.LogError("[UIBuilder] UIManager not found! Ensure UIManager exists in scene.");
                     return;
@@ -178,21 +178,21 @@ namespace NeuralBreak.UI
 
             // Wire UIManager fields via reflection
             var type = typeof(UIManager);
-            type.GetField("_startScreen", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                ?.SetValue(_uiManager, _startScreen);
-            type.GetField("_pauseScreen", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                ?.SetValue(_uiManager, _pauseScreen);
-            type.GetField("_gameOverScreen", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                ?.SetValue(_uiManager, _gameOverScreen);
-            type.GetField("_upgradeSelectionScreen", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                ?.SetValue(_uiManager, _upgradeSelectionScreen);
-            type.GetField("_hudRoot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                ?.SetValue(_uiManager, _hudRoot);
+            type.GetField("m_startScreen", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.SetValue(m_uiManager, m_startScreen);
+            type.GetField("m_pauseScreen", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.SetValue(m_uiManager, m_pauseScreen);
+            type.GetField("m_gameOverScreen", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.SetValue(m_uiManager, m_gameOverScreen);
+            type.GetField("m_upgradeSelectionScreen", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.SetValue(m_uiManager, m_upgradeSelectionScreen);
+            type.GetField("m_hudRoot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                ?.SetValue(m_uiManager, m_hudRoot);
 
             // Wire HUDController
-            if (_hudController == null)
+            if (m_hudController == null)
             {
-                _hudController = _hudRoot.GetComponent<HUDController>();
+                m_hudController = m_hudRoot.GetComponent<HUDController>();
             }
         }
 

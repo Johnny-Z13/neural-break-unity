@@ -12,31 +12,31 @@ namespace NeuralBreak.Graphics
     public class ArenaBoundary : MonoBehaviour
     {
         [Header("Appearance")]
-        [SerializeField] private Color _boundaryColor = new Color(0.2f, 0.6f, 1f, 0.5f);
-        [SerializeField] private Color _warningColor = new Color(1f, 0.3f, 0.2f, 0.8f);
-        [SerializeField] private float _lineWidth = 0.15f;
-        [SerializeField] private int _segments = 64;
+        [SerializeField] private Color m_boundaryColor = new Color(0.2f, 0.6f, 1f, 0.5f);
+        [SerializeField] private Color m_warningColor = new Color(1f, 0.3f, 0.2f, 0.8f);
+        [SerializeField] private float m_lineWidth = 0.15f;
+        [SerializeField] private int m_segments = 64;
 
         [Header("Warning Effect")]
-        [SerializeField] private float _warningDistance = 3f;
-        [SerializeField] private float _pulseSpeed = 3f;
+        [SerializeField] private float m_warningDistance = 3f;
+        [SerializeField] private float m_pulseSpeed = 3f;
 
-        private LineRenderer _lineRenderer;
-        private float _radius;
-        private Transform _playerTransform;
-        private Material _lineMaterial;
-        private float _pulseTimer;
+        private LineRenderer m_lineRenderer;
+        private float m_radius;
+        private Transform m_playerTransform;
+        private Material m_lineMaterial;
+        private float m_pulseTimer;
 
         private void Awake()
         {
-            _lineRenderer = GetComponent<LineRenderer>();
+            m_lineRenderer = GetComponent<LineRenderer>();
             SetupLineRenderer();
         }
 
         private void Start()
         {
             // Get arena radius from config
-            _radius = ConfigProvider.Player?.arenaRadius ?? 30f;
+            m_radius = ConfigProvider.Player?.arenaRadius ?? 30f;
 
             // Subscribe to game events
             EventBus.Subscribe<GameStartedEvent>(OnGameStarted);
@@ -48,76 +48,76 @@ namespace NeuralBreak.Graphics
         private void OnGameStarted(GameStartedEvent evt)
         {
             // Clear cached player reference on new game
-            _playerTransform = null;
+            m_playerTransform = null;
         }
 
         private void Update()
         {
             // Cache player transform on first use
-            if (_playerTransform == null)
+            if (m_playerTransform == null)
             {
                 var playerGO = GameObject.FindGameObjectWithTag("Player");
                 if (playerGO != null)
                 {
-                    _playerTransform = playerGO.transform;
+                    m_playerTransform = playerGO.transform;
                 }
             }
 
             // Pulse when player is near boundary
-            if (_playerTransform != null)
+            if (m_playerTransform != null)
             {
-                float playerDistance = _playerTransform.position.magnitude;
-                float distanceToEdge = _radius - playerDistance;
+                float playerDistance = m_playerTransform.position.magnitude;
+                float distanceToEdge = m_radius - playerDistance;
 
-                if (distanceToEdge < _warningDistance)
+                if (distanceToEdge < m_warningDistance)
                 {
                     // Pulse warning color
-                    _pulseTimer += Time.deltaTime * _pulseSpeed;
-                    float pulse = (Mathf.Sin(_pulseTimer * Mathf.PI * 2f) + 1f) * 0.5f;
-                    float intensity = 1f - (distanceToEdge / _warningDistance);
+                    m_pulseTimer += Time.deltaTime * m_pulseSpeed;
+                    float pulse = (Mathf.Sin(m_pulseTimer * Mathf.PI * 2f) + 1f) * 0.5f;
+                    float intensity = 1f - (distanceToEdge / m_warningDistance);
 
-                    Color currentColor = Color.Lerp(_boundaryColor, _warningColor, intensity * pulse);
-                    _lineRenderer.startColor = currentColor;
-                    _lineRenderer.endColor = currentColor;
+                    Color currentColor = Color.Lerp(m_boundaryColor, m_warningColor, intensity * pulse);
+                    m_lineRenderer.startColor = currentColor;
+                    m_lineRenderer.endColor = currentColor;
                 }
                 else
                 {
-                    _lineRenderer.startColor = _boundaryColor;
-                    _lineRenderer.endColor = _boundaryColor;
-                    _pulseTimer = 0f;
+                    m_lineRenderer.startColor = m_boundaryColor;
+                    m_lineRenderer.endColor = m_boundaryColor;
+                    m_pulseTimer = 0f;
                 }
             }
         }
 
         private void SetupLineRenderer()
         {
-            _lineRenderer.useWorldSpace = true;
-            _lineRenderer.loop = true;
-            _lineRenderer.startWidth = _lineWidth;
-            _lineRenderer.endWidth = _lineWidth;
-            _lineRenderer.startColor = _boundaryColor;
-            _lineRenderer.endColor = _boundaryColor;
+            m_lineRenderer.useWorldSpace = true;
+            m_lineRenderer.loop = true;
+            m_lineRenderer.startWidth = m_lineWidth;
+            m_lineRenderer.endWidth = m_lineWidth;
+            m_lineRenderer.startColor = m_boundaryColor;
+            m_lineRenderer.endColor = m_boundaryColor;
 
             // Create a simple additive material for glow
-            _lineMaterial = new Material(Shader.Find("Sprites/Default"));
-            _lineMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            _lineMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.One);
-            _lineRenderer.material = _lineMaterial;
+            m_lineMaterial = new Material(Shader.Find("Sprites/Default"));
+            m_lineMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            m_lineMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.One);
+            m_lineRenderer.material = m_lineMaterial;
 
             // Set sorting order to be behind most things but visible
-            _lineRenderer.sortingOrder = -100;
+            m_lineRenderer.sortingOrder = -100;
         }
 
         private void GenerateCircle()
         {
-            _lineRenderer.positionCount = _segments;
+            m_lineRenderer.positionCount = m_segments;
 
-            for (int i = 0; i < _segments; i++)
+            for (int i = 0; i < m_segments; i++)
             {
-                float angle = (float)i / _segments * Mathf.PI * 2f;
-                float x = Mathf.Cos(angle) * _radius;
-                float y = Mathf.Sin(angle) * _radius;
-                _lineRenderer.SetPosition(i, new Vector3(x, y, 0f));
+                float angle = (float)i / m_segments * Mathf.PI * 2f;
+                float x = Mathf.Cos(angle) * m_radius;
+                float y = Mathf.Sin(angle) * m_radius;
+                m_lineRenderer.SetPosition(i, new Vector3(x, y, 0f));
             }
         }
 
@@ -126,7 +126,7 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void SetRadius(float radius)
         {
-            _radius = radius;
+            m_radius = radius;
             GenerateCircle();
         }
 
@@ -134,17 +134,17 @@ namespace NeuralBreak.Graphics
         {
             EventBus.Unsubscribe<GameStartedEvent>(OnGameStarted);
 
-            if (_lineMaterial != null)
+            if (m_lineMaterial != null)
             {
-                Destroy(_lineMaterial);
+                Destroy(m_lineMaterial);
             }
         }
 
 #if UNITY_EDITOR
         private void OnDrawGizmos()
         {
-            float radius = Application.isPlaying ? _radius : (ConfigProvider.Player?.arenaRadius ?? 30f);
-            Gizmos.color = _boundaryColor;
+            float radius = Application.isPlaying ? m_radius : (ConfigProvider.Player?.arenaRadius ?? 30f);
+            Gizmos.color = m_boundaryColor;
             DrawGizmoCircle(Vector3.zero, radius, 64);
         }
 

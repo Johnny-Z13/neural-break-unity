@@ -18,33 +18,33 @@ namespace NeuralBreak.UI
     public class UpgradeSelectionScreen : ScreenBase
     {
         [Header("Upgrade Selection")]
-        [SerializeField] private Transform _cardContainer;
-        [SerializeField] private TextMeshProUGUI _titleText;
-        [SerializeField] private TextMeshProUGUI _subtitleText;
+        [SerializeField] private Transform m_cardContainer;
+        [SerializeField] private TextMeshProUGUI m_titleText;
+        [SerializeField] private TextMeshProUGUI m_subtitleText;
 
         [Header("Card Prefab")]
-        [SerializeField] private UpgradeCard _cardPrefab;
+        [SerializeField] private UpgradeCard m_cardPrefab;
 
         [Header("Font (for programmatic cards)")]
-        [SerializeField] private TMP_FontAsset _fontAsset;
+        [SerializeField] private TMP_FontAsset m_fontAsset;
 
         [Header("Input Settings")]
-        [SerializeField] private float _inputRepeatDelay = 0.3f;
+        [SerializeField] private float m_inputRepeatDelay = 0.3f;
 
         // Current selection state
-        private List<UpgradeCard> _activeCards = new List<UpgradeCard>();
-        private List<UpgradeDefinition> _currentOptions;
-        private int _selectedIndex = 0;
-        private bool _selectionLocked = false; // Prevent double-confirm
-        private float _lastInputTime;
+        private List<UpgradeCard> m_activeCards = new List<UpgradeCard>();
+        private List<UpgradeDefinition> m_currentOptions;
+        private int m_selectedIndex = 0;
+        private bool m_selectionLocked = false; // Prevent double-confirm
+        private float m_lastInputTime;
 
         // Manager references
-        private UpgradePoolManager _poolManager;
-        private PermanentUpgradeManager _upgradeManager;
-        private UpgradeSelectionBuilder _cardBuilder;
+        private UpgradePoolManager m_poolManager;
+        private PermanentUpgradeManager m_upgradeManager;
+        private UpgradeSelectionBuilder m_cardBuilder;
 
         // No upgrades state
-        private bool _noUpgradesMode = false;
+        private bool m_noUpgradesMode = false;
 
         protected override void Awake()
         {
@@ -60,15 +60,15 @@ namespace NeuralBreak.UI
         protected override void Update()
         {
             // Skip base Update (we handle input ourselves)
-            if (!_isVisible) return;
+            if (!m_isVisible) return;
 
-            if (_noUpgradesMode)
+            if (m_noUpgradesMode)
             {
                 HandleNoUpgradesInput();
                 return;
             }
 
-            if (_selectionLocked || _activeCards.Count == 0) return;
+            if (m_selectionLocked || m_activeCards.Count == 0) return;
 
             HandleNavigationInput();
             HandleConfirmInput();
@@ -99,18 +99,18 @@ namespace NeuralBreak.UI
                     direction = 1;
 
                 // Left stick with repeat delay
-                if (direction == 0 && Time.unscaledTime - _lastInputTime > _inputRepeatDelay)
+                if (direction == 0 && Time.unscaledTime - m_lastInputTime > m_inputRepeatDelay)
                 {
                     float stickX = gamepad.leftStick.x.ReadValue();
                     if (stickX < -0.5f)
                     {
                         direction = -1;
-                        _lastInputTime = Time.unscaledTime;
+                        m_lastInputTime = Time.unscaledTime;
                     }
                     else if (stickX > 0.5f)
                     {
                         direction = 1;
-                        _lastInputTime = Time.unscaledTime;
+                        m_lastInputTime = Time.unscaledTime;
                     }
                 }
             }
@@ -147,7 +147,7 @@ namespace NeuralBreak.UI
                 int clickedIndex = GetCardUnderMouse();
                 if (clickedIndex >= 0)
                 {
-                    if (clickedIndex != _selectedIndex)
+                    if (clickedIndex != m_selectedIndex)
                     {
                         SetSelection(clickedIndex);
                     }
@@ -170,7 +170,7 @@ namespace NeuralBreak.UI
                 }
             }
 
-            if (confirmPressed && _selectedIndex >= 0 && _selectedIndex < _activeCards.Count)
+            if (confirmPressed && m_selectedIndex >= 0 && m_selectedIndex < m_activeCards.Count)
             {
                 ConfirmSelection();
             }
@@ -191,11 +191,11 @@ namespace NeuralBreak.UI
 
             foreach (var result in results)
             {
-                for (int i = 0; i < _activeCards.Count; i++)
+                for (int i = 0; i < m_activeCards.Count; i++)
                 {
-                    if (_activeCards[i] != null &&
-                        (result.gameObject == _activeCards[i].gameObject ||
-                         result.gameObject.transform.IsChildOf(_activeCards[i].transform)))
+                    if (m_activeCards[i] != null &&
+                        (result.gameObject == m_activeCards[i].gameObject ||
+                         result.gameObject.transform.IsChildOf(m_activeCards[i].transform)))
                     {
                         return i;
                     }
@@ -207,10 +207,10 @@ namespace NeuralBreak.UI
 
         private void ChangeSelection(int direction)
         {
-            int newIndex = _selectedIndex + direction;
-            newIndex = Mathf.Clamp(newIndex, 0, _activeCards.Count - 1);
+            int newIndex = m_selectedIndex + direction;
+            newIndex = Mathf.Clamp(newIndex, 0, m_activeCards.Count - 1);
 
-            if (newIndex != _selectedIndex)
+            if (newIndex != m_selectedIndex)
             {
                 SetSelection(newIndex);
             }
@@ -219,21 +219,21 @@ namespace NeuralBreak.UI
         private void SetSelection(int index)
         {
             // Deselect previous
-            if (_selectedIndex >= 0 && _selectedIndex < _activeCards.Count)
+            if (m_selectedIndex >= 0 && m_selectedIndex < m_activeCards.Count)
             {
-                var prevCard = _activeCards[_selectedIndex];
+                var prevCard = m_activeCards[m_selectedIndex];
                 if (prevCard != null)
                 {
                     prevCard.SetHighlighted(false);
                 }
             }
 
-            _selectedIndex = index;
+            m_selectedIndex = index;
 
             // Select new
-            if (_selectedIndex >= 0 && _selectedIndex < _activeCards.Count)
+            if (m_selectedIndex >= 0 && m_selectedIndex < m_activeCards.Count)
             {
-                var newCard = _activeCards[_selectedIndex];
+                var newCard = m_activeCards[m_selectedIndex];
                 if (newCard != null)
                 {
                     newCard.SetHighlighted(true);
@@ -250,13 +250,13 @@ namespace NeuralBreak.UI
 
         private void ConfirmSelection()
         {
-            if (_selectionLocked) return;
-            if (_selectedIndex < 0 || _selectedIndex >= _currentOptions.Count) return;
+            if (m_selectionLocked) return;
+            if (m_selectedIndex < 0 || m_selectedIndex >= m_currentOptions.Count) return;
 
-            _selectionLocked = true;
+            m_selectionLocked = true;
 
-            var selectedUpgrade = _currentOptions[_selectedIndex];
-            var selectedCard = _activeCards[_selectedIndex];
+            var selectedUpgrade = m_currentOptions[m_selectedIndex];
+            var selectedCard = m_activeCards[m_selectedIndex];
 
             Debug.Log($"[UpgradeSelectionScreen] Confirming selection: {selectedUpgrade.displayName}");
 
@@ -277,9 +277,9 @@ namespace NeuralBreak.UI
             EnsureManagerReferences();
 
             // Add upgrade to permanent manager
-            if (_upgradeManager != null)
+            if (m_upgradeManager != null)
             {
-                _upgradeManager.AddUpgrade(upgrade);
+                m_upgradeManager.AddUpgrade(upgrade);
                 Debug.Log($"[UpgradeSelectionScreen] Applied upgrade: {upgrade.displayName}");
             }
             else
@@ -328,7 +328,7 @@ namespace NeuralBreak.UI
 
             if (firePressed)
             {
-                _noUpgradesMode = false;
+                m_noUpgradesMode = false;
                 EventBus.Publish(new UpgradeSelectedEvent { selected = null });
                 Hide();
             }
@@ -336,10 +336,10 @@ namespace NeuralBreak.UI
 
         private void EnsureManagerReferences()
         {
-            if (_poolManager == null)
-                _poolManager = UpgradePoolManager.Instance;
-            if (_upgradeManager == null)
-                _upgradeManager = PermanentUpgradeManager.Instance;
+            if (m_poolManager == null)
+                m_poolManager = UpgradePoolManager.Instance;
+            if (m_upgradeManager == null)
+                m_upgradeManager = PermanentUpgradeManager.Instance;
         }
 
         private void OnUpgradeSelectionStarted(UpgradeSelectionStartedEvent evt)
@@ -348,15 +348,15 @@ namespace NeuralBreak.UI
 
             EnsureManagerReferences();
 
-            if (_poolManager != null)
+            if (m_poolManager != null)
             {
-                _currentOptions = _poolManager.GenerateSelection();
-                Debug.Log($"[UpgradeSelectionScreen] Generated {_currentOptions.Count} options");
+                m_currentOptions = m_poolManager.GenerateSelection();
+                Debug.Log($"[UpgradeSelectionScreen] Generated {m_currentOptions.Count} options");
             }
             else
             {
                 Debug.LogWarning("[UpgradeSelectionScreen] UpgradePoolManager is null!");
-                _currentOptions = evt.options;
+                m_currentOptions = evt.options;
             }
 
             GenerateCards();
@@ -366,20 +366,20 @@ namespace NeuralBreak.UI
         {
             base.OnShow();
 
-            _selectionLocked = false;
-            _noUpgradesMode = false;
-            _selectedIndex = 0;
+            m_selectionLocked = false;
+            m_noUpgradesMode = false;
+            m_selectedIndex = 0;
 
-            if (_titleText != null)
+            if (m_titleText != null)
             {
                 int level = GameManager.Instance != null ? GameManager.Instance.Stats.level : 1;
-                _titleText.text = $"LEVEL {level} COMPLETE";
+                m_titleText.text = $"LEVEL {level} COMPLETE";
             }
 
-            if (_subtitleText != null)
+            if (m_subtitleText != null)
             {
-                _subtitleText.text = "CHOOSE YOUR UPGRADE";
-                _subtitleText.color = UITheme.TextSecondary;
+                m_subtitleText.text = "CHOOSE YOUR UPGRADE";
+                m_subtitleText.color = UITheme.TextSecondary;
             }
         }
 
@@ -387,32 +387,32 @@ namespace NeuralBreak.UI
         {
             base.OnHide();
             ClearCards();
-            _selectionLocked = false;
-            _noUpgradesMode = false;
+            m_selectionLocked = false;
+            m_noUpgradesMode = false;
         }
 
         private void GenerateCards()
         {
             ClearCards();
 
-            if (_currentOptions == null || _currentOptions.Count == 0)
+            if (m_currentOptions == null || m_currentOptions.Count == 0)
             {
                 Debug.LogError("[UpgradeSelectionScreen] No upgrade options!");
-                _noUpgradesMode = true;
+                m_noUpgradesMode = true;
 
-                if (_subtitleText != null)
+                if (m_subtitleText != null)
                 {
-                    _subtitleText.text = "NO UPGRADES AVAILABLE\nPress Fire to continue...";
-                    _subtitleText.color = Color.red;
+                    m_subtitleText.text = "NO UPGRADES AVAILABLE\nPress Fire to continue...";
+                    m_subtitleText.color = Color.red;
                 }
                 return;
             }
 
-            for (int i = 0; i < _currentOptions.Count; i++)
+            for (int i = 0; i < m_currentOptions.Count; i++)
             {
-                var upgrade = _currentOptions[i];
+                var upgrade = m_currentOptions[i];
                 UpgradeCard card = CreateCard(upgrade, i);
-                _activeCards.Add(card);
+                m_activeCards.Add(card);
 
                 var animator = card.GetComponent<UpgradeCardAnimator>();
                 if (animator != null)
@@ -428,7 +428,7 @@ namespace NeuralBreak.UI
         private System.Collections.IEnumerator DelayedInitialSelection()
         {
             yield return new WaitForSecondsRealtime(0.5f);
-            _selectedIndex = 0;
+            m_selectedIndex = 0;
             SetSelection(0);
         }
 
@@ -439,14 +439,14 @@ namespace NeuralBreak.UI
 
             UpgradeCard card;
 
-            if (_cardPrefab != null)
+            if (m_cardPrefab != null)
             {
-                card = Instantiate(_cardPrefab, _cardContainer);
+                card = Instantiate(m_cardPrefab, m_cardContainer);
             }
             else
             {
                 EnsureCardBuilder();
-                card = _cardBuilder.BuildCard(_cardContainer);
+                card = m_cardBuilder.BuildCard(m_cardContainer);
                 if (card == null)
                 {
                     Debug.LogError("[UpgradeSelectionScreen] Failed to build card!");
@@ -463,13 +463,13 @@ namespace NeuralBreak.UI
 
         private void EnsureCardContainer()
         {
-            if (_cardContainer != null) return;
+            if (m_cardContainer != null) return;
 
             // Try to find it by name
             var containerObj = transform.Find("ContentPanel/CardContainer");
             if (containerObj != null)
             {
-                _cardContainer = containerObj;
+                m_cardContainer = containerObj;
                 return;
             }
 
@@ -490,65 +490,65 @@ namespace NeuralBreak.UI
             hlg.childForceExpandWidth = true;
             hlg.childForceExpandHeight = true;
 
-            _cardContainer = containerGO.transform;
+            m_cardContainer = containerGO.transform;
         }
 
         private void EnsureCardBuilder()
         {
-            if (_cardBuilder != null) return;
+            if (m_cardBuilder != null) return;
 
-            if (_fontAsset == null)
+            if (m_fontAsset == null)
             {
                 // Try multiple fallback sources
-                if (_titleText != null)
-                    _fontAsset = _titleText.font;
-                else if (_subtitleText != null)
-                    _fontAsset = _subtitleText.font;
+                if (m_titleText != null)
+                    m_fontAsset = m_titleText.font;
+                else if (m_subtitleText != null)
+                    m_fontAsset = m_subtitleText.font;
 
-                if (_fontAsset == null)
+                if (m_fontAsset == null)
                 {
                     // Try common TMP font paths
-                    _fontAsset = Resources.Load<TMP_FontAsset>("Fonts & Materials/LiberationSans SDF");
+                    m_fontAsset = Resources.Load<TMP_FontAsset>("Fonts & Materials/LiberationSans SDF");
                 }
 
-                if (_fontAsset == null)
+                if (m_fontAsset == null)
                 {
-                    _fontAsset = Resources.Load<TMP_FontAsset>("Fonts/LiberationSans SDF");
+                    m_fontAsset = Resources.Load<TMP_FontAsset>("Fonts/LiberationSans SDF");
                 }
 
-                if (_fontAsset == null)
+                if (m_fontAsset == null)
                 {
                     // Last resort: find any TMP text in scene
                     var anyText = FindFirstObjectByType<TextMeshProUGUI>();
                     if (anyText != null)
-                        _fontAsset = anyText.font;
+                        m_fontAsset = anyText.font;
                 }
 
-                if (_fontAsset == null)
+                if (m_fontAsset == null)
                 {
                     Debug.LogError("[UpgradeSelectionScreen] Could not find any TMP font asset!");
                 }
             }
 
-            _cardBuilder = new UpgradeSelectionBuilder(_fontAsset);
+            m_cardBuilder = new UpgradeSelectionBuilder(m_fontAsset);
         }
 
         private void ClearCards()
         {
-            foreach (var card in _activeCards)
+            foreach (var card in m_activeCards)
             {
                 if (card != null && card.gameObject != null)
                     Destroy(card.gameObject);
             }
-            _activeCards.Clear();
-            _selectedIndex = 0;
+            m_activeCards.Clear();
+            m_selectedIndex = 0;
         }
 
         #region Debug
         [ContextMenu("Debug: Show Screen")]
         private void DebugShowScreen()
         {
-            _currentOptions = new List<UpgradeDefinition>();
+            m_currentOptions = new List<UpgradeDefinition>();
             Show();
         }
         #endregion

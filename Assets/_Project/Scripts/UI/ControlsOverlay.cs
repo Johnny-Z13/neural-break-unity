@@ -14,31 +14,31 @@ namespace NeuralBreak.UI
     public class ControlsOverlay : MonoBehaviour
     {
         [Header("Settings")]
-        [SerializeField] private float _fadeInDuration = 0.3f;
-        [SerializeField] private float _fadeOutDuration = 0.2f;
-        [SerializeField] private bool _showOnFirstPlay = true;
-        [SerializeField] private float _autoHideDelay = 0f; // 0 = don't auto-hide
+        [SerializeField] private float m_fadeInDuration = 0.3f;
+        [SerializeField] private float m_fadeOutDuration = 0.2f;
+        [SerializeField] private bool m_showOnFirstPlay = true;
+        [SerializeField] private float m_autoHideDelay = 0f; // 0 = don't auto-hide
 
         [Header("Colors")]
-        [SerializeField] private Color _backgroundColor = new Color(0f, 0f, 0f, 0.85f);
-        [SerializeField] private Color _headerColor = new Color(0f, 1f, 1f);
-        [SerializeField] private Color _keyColor = new Color(1f, 1f, 0f);
-        [SerializeField] private Color _descriptionColor = Color.white;
-        [SerializeField] private Color _hintColor = new Color(0.7f, 0.7f, 0.7f);
+        [SerializeField] private Color m_backgroundColor = new Color(0f, 0f, 0f, 0.85f);
+        [SerializeField] private Color m_headerColor = new Color(0f, 1f, 1f);
+        [SerializeField] private Color m_keyColor = new Color(1f, 1f, 0f);
+        [SerializeField] private Color m_descriptionColor = Color.white;
+        [SerializeField] private Color m_hintColor = new Color(0.7f, 0.7f, 0.7f);
 
         private const string PREF_FIRST_PLAY = "NeuralBreak_FirstPlay";
 
-        private Canvas _canvas;
-        private CanvasGroup _canvasGroup;
-        private RectTransform _container;
-        private bool _isVisible;
-        private bool _isFading;
+        private Canvas m_canvas;
+        private CanvasGroup m_canvasGroup;
+        private RectTransform m_container;
+        private bool m_isVisible;
+        private bool m_isFading;
 
         private void Awake()
         {
             CreateUI();
-            _canvasGroup.alpha = 0f;
-            _container.gameObject.SetActive(false);
+            m_canvasGroup.alpha = 0f;
+            m_container.gameObject.SetActive(false);
         }
 
         private void Start()
@@ -53,7 +53,7 @@ namespace NeuralBreak.UI
 
         private void OnGameStarted(GameStartedEvent evt)
         {
-            if (_showOnFirstPlay && IsFirstPlay())
+            if (m_showOnFirstPlay && IsFirstPlay())
             {
                 Show();
                 MarkFirstPlayComplete();
@@ -76,9 +76,9 @@ namespace NeuralBreak.UI
             // Create canvas
             var canvasGO = new GameObject("ControlsCanvas");
             canvasGO.transform.SetParent(transform);
-            _canvas = canvasGO.AddComponent<Canvas>();
-            _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            _canvas.sortingOrder = 200; // Above everything
+            m_canvas = canvasGO.AddComponent<Canvas>();
+            m_canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            m_canvas.sortingOrder = 200; // Above everything
 
             var scaler = canvasGO.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -86,8 +86,8 @@ namespace NeuralBreak.UI
 
             canvasGO.AddComponent<GraphicRaycaster>();
 
-            _canvasGroup = canvasGO.AddComponent<CanvasGroup>();
-            _canvasGroup.blocksRaycasts = true;
+            m_canvasGroup = canvasGO.AddComponent<CanvasGroup>();
+            m_canvasGroup.blocksRaycasts = true;
 
             // Create background
             var bgGO = new GameObject("Background");
@@ -99,16 +99,16 @@ namespace NeuralBreak.UI
             bgRect.offsetMax = Vector2.zero;
 
             var bgImage = bgGO.AddComponent<Image>();
-            bgImage.color = _backgroundColor;
+            bgImage.color = m_backgroundColor;
 
             // Create container
             var containerGO = new GameObject("Container");
             containerGO.transform.SetParent(canvasGO.transform);
-            _container = containerGO.AddComponent<RectTransform>();
-            _container.anchorMin = new Vector2(0.5f, 0.5f);
-            _container.anchorMax = new Vector2(0.5f, 0.5f);
-            _container.sizeDelta = new Vector2(600, 500);
-            _container.anchoredPosition = Vector2.zero;
+            m_container = containerGO.AddComponent<RectTransform>();
+            m_container.anchorMin = new Vector2(0.5f, 0.5f);
+            m_container.anchorMax = new Vector2(0.5f, 0.5f);
+            m_container.sizeDelta = new Vector2(600, 500);
+            m_container.anchoredPosition = Vector2.zero;
 
             // Add vertical layout
             var layout = containerGO.AddComponent<VerticalLayoutGroup>();
@@ -125,44 +125,44 @@ namespace NeuralBreak.UI
             sizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             // Title
-            CreateText(_container, "CONTROLS", 42, _headerColor, FontStyles.Bold, 60);
+            CreateText(m_container, "CONTROLS", 42, m_headerColor, FontStyles.Bold, 60);
 
             // Spacer
-            CreateSpacer(_container, 20);
+            CreateSpacer(m_container, 20);
 
             // Movement controls
-            CreateControlRow(_container, "WASD / Arrow Keys", "Move");
-            CreateControlRow(_container, "Shift / Right Click", "Dash (invincible)");
+            CreateControlRow(m_container, "WASD / Arrow Keys", "Move");
+            CreateControlRow(m_container, "Shift / Right Click", "Dash (invincible)");
 
             // Spacer
-            CreateSpacer(_container, 10);
+            CreateSpacer(m_container, 10);
 
             // Combat controls
-            CreateControlRow(_container, "Mouse / Left Stick", "Aim");
-            CreateControlRow(_container, "Left Click / RT", "Fire");
+            CreateControlRow(m_container, "Mouse / Left Stick", "Aim");
+            CreateControlRow(m_container, "Left Click / RT", "Fire");
 
             // Spacer
-            CreateSpacer(_container, 10);
+            CreateSpacer(m_container, 10);
 
             // System controls
-            CreateControlRow(_container, "Escape / Start", "Pause");
+            CreateControlRow(m_container, "Escape / Start", "Pause");
 
             // Spacer
-            CreateSpacer(_container, 30);
+            CreateSpacer(m_container, 30);
 
             // Tips header
-            CreateText(_container, "TIPS", 28, _headerColor, FontStyles.Bold, 40);
+            CreateText(m_container, "TIPS", 28, m_headerColor, FontStyles.Bold, 40);
 
             // Tips
-            CreateText(_container, "Dashing through enemies damages them", 20, _descriptionColor, FontStyles.Normal, 30);
-            CreateText(_container, "Build combos for higher score multipliers", 20, _descriptionColor, FontStyles.Normal, 30);
-            CreateText(_container, "Watch for spawn warning indicators", 20, _descriptionColor, FontStyles.Normal, 30);
+            CreateText(m_container, "Dashing through enemies damages them", 20, m_descriptionColor, FontStyles.Normal, 30);
+            CreateText(m_container, "Build combos for higher score multipliers", 20, m_descriptionColor, FontStyles.Normal, 30);
+            CreateText(m_container, "Watch for spawn warning indicators", 20, m_descriptionColor, FontStyles.Normal, 30);
 
             // Spacer
-            CreateSpacer(_container, 40);
+            CreateSpacer(m_container, 40);
 
             // Dismiss hint
-            CreateText(_container, "Press any key to continue...", 18, _hintColor, FontStyles.Italic, 30);
+            CreateText(m_container, "Press any key to continue...", 18, m_hintColor, FontStyles.Italic, 30);
         }
 
         private void CreateText(RectTransform parent, string text, int fontSize, Color color, FontStyles style, float height)
@@ -216,7 +216,7 @@ namespace NeuralBreak.UI
             var keyTmp = keyGO.AddComponent<TextMeshProUGUI>();
             keyTmp.text = key;
             keyTmp.fontSize = 22;
-            keyTmp.color = _keyColor;
+            keyTmp.color = m_keyColor;
             keyTmp.fontStyle = FontStyles.Bold;
             keyTmp.alignment = TextAlignmentOptions.Right;
 
@@ -231,7 +231,7 @@ namespace NeuralBreak.UI
             var descTmp = descGO.AddComponent<TextMeshProUGUI>();
             descTmp.text = description;
             descTmp.fontSize = 22;
-            descTmp.color = _descriptionColor;
+            descTmp.color = m_descriptionColor;
             descTmp.alignment = TextAlignmentOptions.Left;
         }
 
@@ -249,7 +249,7 @@ namespace NeuralBreak.UI
 
         private void Update()
         {
-            if (!_isVisible || _isFading) return;
+            if (!m_isVisible || m_isFading) return;
 
             // Dismiss on any key or mouse click
             var keyboard = Keyboard.current;
@@ -266,10 +266,10 @@ namespace NeuralBreak.UI
 
         public void Show()
         {
-            if (_isVisible) return;
+            if (m_isVisible) return;
 
-            _isVisible = true;
-            _container.gameObject.SetActive(true);
+            m_isVisible = true;
+            m_container.gameObject.SetActive(true);
             StartCoroutine(FadeIn());
 
             // Pause game while showing controls
@@ -281,51 +281,51 @@ namespace NeuralBreak.UI
 
         public void Hide()
         {
-            if (!_isVisible) return;
+            if (!m_isVisible) return;
 
             StartCoroutine(FadeOut());
         }
 
         private System.Collections.IEnumerator FadeIn()
         {
-            _isFading = true;
+            m_isFading = true;
             float elapsed = 0f;
 
-            while (elapsed < _fadeInDuration)
+            while (elapsed < m_fadeInDuration)
             {
                 elapsed += Time.unscaledDeltaTime;
-                _canvasGroup.alpha = elapsed / _fadeInDuration;
+                m_canvasGroup.alpha = elapsed / m_fadeInDuration;
                 yield return null;
             }
 
-            _canvasGroup.alpha = 1f;
-            _isFading = false;
+            m_canvasGroup.alpha = 1f;
+            m_isFading = false;
 
             // Auto-hide after delay if configured
-            if (_autoHideDelay > 0)
+            if (m_autoHideDelay > 0)
             {
-                yield return new WaitForSecondsRealtime(_autoHideDelay);
+                yield return new WaitForSecondsRealtime(m_autoHideDelay);
                 Hide();
             }
         }
 
         private System.Collections.IEnumerator FadeOut()
         {
-            _isFading = true;
+            m_isFading = true;
             float elapsed = 0f;
-            float startAlpha = _canvasGroup.alpha;
+            float startAlpha = m_canvasGroup.alpha;
 
-            while (elapsed < _fadeOutDuration)
+            while (elapsed < m_fadeOutDuration)
             {
                 elapsed += Time.unscaledDeltaTime;
-                _canvasGroup.alpha = Mathf.Lerp(startAlpha, 0f, elapsed / _fadeOutDuration);
+                m_canvasGroup.alpha = Mathf.Lerp(startAlpha, 0f, elapsed / m_fadeOutDuration);
                 yield return null;
             }
 
-            _canvasGroup.alpha = 0f;
-            _isVisible = false;
-            _isFading = false;
-            _container.gameObject.SetActive(false);
+            m_canvasGroup.alpha = 0f;
+            m_isVisible = false;
+            m_isFading = false;
+            m_container.gameObject.SetActive(false);
 
             // Resume game
             if (GameManager.Instance != null && GameManager.Instance.IsPlaying)

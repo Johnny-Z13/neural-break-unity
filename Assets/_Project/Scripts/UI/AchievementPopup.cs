@@ -14,35 +14,35 @@ namespace NeuralBreak.UI
     public class AchievementPopup : MonoBehaviour
     {
         [Header("Settings")]
-        [SerializeField] private float _slideInDuration = 0.3f;
-        [SerializeField] private float _displayDuration = 3f;
-        [SerializeField] private float _slideOutDuration = 0.3f;
-        [SerializeField] private float _slideDistance = 200f;
+        [SerializeField] private float m_slideInDuration = 0.3f;
+        [SerializeField] private float m_displayDuration = 3f;
+        [SerializeField] private float m_slideOutDuration = 0.3f;
+        [SerializeField] private float m_slideDistance = 200f;
 
         [Header("Colors (Uses UITheme)")]
-        [SerializeField] private bool _useThemeColors = true;
+        [SerializeField] private bool m_useThemeColors = true;
 
-        private Color BackgroundColor => _useThemeColors ? UITheme.BackgroundDark : _customBackgroundColor;
-        private Color BorderColor => _useThemeColors ? UITheme.Warning : _customBorderColor;
-        private Color TitleColor => _useThemeColors ? UITheme.Warning : _customTitleColor;
-        private Color TextColor => _useThemeColors ? UITheme.TextPrimary : Color.white;
+        private Color BackgroundColor => m_useThemeColors ? UITheme.BackgroundDark : m_customBackgroundColor;
+        private Color BorderColor => m_useThemeColors ? UITheme.Warning : m_customBorderColor;
+        private Color TitleColor => m_useThemeColors ? UITheme.Warning : m_customTitleColor;
+        private Color TextColor => m_useThemeColors ? UITheme.TextPrimary : Color.white;
 
-        [SerializeField] private Color _customBackgroundColor = new Color(0.1f, 0.1f, 0.15f, 0.95f);
-        [SerializeField] private Color _customBorderColor = new Color(1f, 0.8f, 0.2f);
-        [SerializeField] private Color _customTitleColor = new Color(1f, 0.8f, 0.2f);
+        [SerializeField] private Color m_customBackgroundColor = new Color(0.1f, 0.1f, 0.15f, 0.95f);
+        [SerializeField] private Color m_customBorderColor = new Color(1f, 0.8f, 0.2f);
+        [SerializeField] private Color m_customTitleColor = new Color(1f, 0.8f, 0.2f);
 
         // UI Components
-        private Canvas _canvas;
-        private CanvasGroup _canvasGroup;
-        private RectTransform _container;
-        private TextMeshProUGUI _titleText;
-        private TextMeshProUGUI _nameText;
-        private TextMeshProUGUI _descText;
-        private Image _iconImage;
+        private Canvas m_canvas;
+        private CanvasGroup m_canvasGroup;
+        private RectTransform m_container;
+        private TextMeshProUGUI m_titleText;
+        private TextMeshProUGUI m_nameText;
+        private TextMeshProUGUI m_descText;
+        private Image m_iconImage;
 
         // Queue
-        private Queue<AchievementUnlockedEvent> _queue = new Queue<AchievementUnlockedEvent>();
-        private bool _isShowingPopup;
+        private Queue<AchievementUnlockedEvent> m_queue = new Queue<AchievementUnlockedEvent>();
+        private bool m_isShowingPopup;
 
         private void Awake()
         {
@@ -64,9 +64,9 @@ namespace NeuralBreak.UI
             // Create canvas
             var canvasGO = new GameObject("AchievementPopupCanvas");
             canvasGO.transform.SetParent(transform);
-            _canvas = canvasGO.AddComponent<Canvas>();
-            _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            _canvas.sortingOrder = UITheme.SortOrder.Achievements;
+            m_canvas = canvasGO.AddComponent<Canvas>();
+            m_canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            m_canvas.sortingOrder = UITheme.SortOrder.Achievements;
 
             var scaler = canvasGO.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -74,23 +74,23 @@ namespace NeuralBreak.UI
 
             canvasGO.AddComponent<GraphicRaycaster>();
 
-            _canvasGroup = canvasGO.AddComponent<CanvasGroup>();
-            _canvasGroup.alpha = 0;
-            _canvasGroup.blocksRaycasts = false;
+            m_canvasGroup = canvasGO.AddComponent<CanvasGroup>();
+            m_canvasGroup.alpha = 0;
+            m_canvasGroup.blocksRaycasts = false;
 
             // Container (top-center)
             var containerGO = new GameObject("Container");
             containerGO.transform.SetParent(canvasGO.transform);
-            _container = containerGO.AddComponent<RectTransform>();
-            _container.anchorMin = new Vector2(0.5f, 1f);
-            _container.anchorMax = new Vector2(0.5f, 1f);
-            _container.pivot = new Vector2(0.5f, 1f);
-            _container.anchoredPosition = new Vector2(0, -20);
-            _container.sizeDelta = new Vector2(350, 90);
+            m_container = containerGO.AddComponent<RectTransform>();
+            m_container.anchorMin = new Vector2(0.5f, 1f);
+            m_container.anchorMax = new Vector2(0.5f, 1f);
+            m_container.pivot = new Vector2(0.5f, 1f);
+            m_container.anchoredPosition = new Vector2(0, -20);
+            m_container.sizeDelta = new Vector2(350, 90);
 
             // Background
             var bgGO = new GameObject("Background");
-            bgGO.transform.SetParent(_container);
+            bgGO.transform.SetParent(m_container);
             var bgRect = bgGO.AddComponent<RectTransform>();
             bgRect.anchorMin = Vector2.zero;
             bgRect.anchorMax = Vector2.one;
@@ -102,7 +102,7 @@ namespace NeuralBreak.UI
 
             // Border
             var borderGO = new GameObject("Border");
-            borderGO.transform.SetParent(_container);
+            borderGO.transform.SetParent(m_container);
             var borderRect = borderGO.AddComponent<RectTransform>();
             borderRect.anchorMin = new Vector2(0, 0);
             borderRect.anchorMax = new Vector2(0, 1);
@@ -115,7 +115,7 @@ namespace NeuralBreak.UI
 
             // Icon
             var iconGO = new GameObject("Icon");
-            iconGO.transform.SetParent(_container);
+            iconGO.transform.SetParent(m_container);
             var iconRect = iconGO.AddComponent<RectTransform>();
             iconRect.anchorMin = new Vector2(0, 0.5f);
             iconRect.anchorMax = new Vector2(0, 0.5f);
@@ -123,13 +123,13 @@ namespace NeuralBreak.UI
             iconRect.anchoredPosition = new Vector2(15, 0);
             iconRect.sizeDelta = new Vector2(50, 50);
 
-            _iconImage = iconGO.AddComponent<Image>();
-            _iconImage.sprite = CreateTrophySprite();
-            _iconImage.color = BorderColor;
+            m_iconImage = iconGO.AddComponent<Image>();
+            m_iconImage.sprite = CreateTrophySprite();
+            m_iconImage.color = BorderColor;
 
             // Title "ACHIEVEMENT UNLOCKED"
             var titleGO = new GameObject("Title");
-            titleGO.transform.SetParent(_container);
+            titleGO.transform.SetParent(m_container);
             var titleRect = titleGO.AddComponent<RectTransform>();
             titleRect.anchorMin = new Vector2(0, 1);
             titleRect.anchorMax = new Vector2(1, 1);
@@ -137,16 +137,16 @@ namespace NeuralBreak.UI
             titleRect.anchoredPosition = new Vector2(75, -10);
             titleRect.sizeDelta = new Vector2(260, 20);
 
-            _titleText = titleGO.AddComponent<TextMeshProUGUI>();
-            _titleText.text = "ACHIEVEMENT UNLOCKED";
-            _titleText.fontSize = 14;
-            _titleText.fontStyle = FontStyles.Bold;
-            _titleText.color = TitleColor;
-            _titleText.alignment = TextAlignmentOptions.Left;
+            m_titleText = titleGO.AddComponent<TextMeshProUGUI>();
+            m_titleText.text = "ACHIEVEMENT UNLOCKED";
+            m_titleText.fontSize = 14;
+            m_titleText.fontStyle = FontStyles.Bold;
+            m_titleText.color = TitleColor;
+            m_titleText.alignment = TextAlignmentOptions.Left;
 
             // Achievement name
             var nameGO = new GameObject("Name");
-            nameGO.transform.SetParent(_container);
+            nameGO.transform.SetParent(m_container);
             var nameRect = nameGO.AddComponent<RectTransform>();
             nameRect.anchorMin = new Vector2(0, 1);
             nameRect.anchorMax = new Vector2(1, 1);
@@ -154,16 +154,16 @@ namespace NeuralBreak.UI
             nameRect.anchoredPosition = new Vector2(75, -35);
             nameRect.sizeDelta = new Vector2(260, 25);
 
-            _nameText = nameGO.AddComponent<TextMeshProUGUI>();
-            _nameText.text = "First Blood";
-            _nameText.fontSize = 18;
-            _nameText.fontStyle = FontStyles.Bold;
-            _nameText.color = TextColor;
-            _nameText.alignment = TextAlignmentOptions.Left;
+            m_nameText = nameGO.AddComponent<TextMeshProUGUI>();
+            m_nameText.text = "First Blood";
+            m_nameText.fontSize = 18;
+            m_nameText.fontStyle = FontStyles.Bold;
+            m_nameText.color = TextColor;
+            m_nameText.alignment = TextAlignmentOptions.Left;
 
             // Description
             var descGO = new GameObject("Description");
-            descGO.transform.SetParent(_container);
+            descGO.transform.SetParent(m_container);
             var descRect = descGO.AddComponent<RectTransform>();
             descRect.anchorMin = new Vector2(0, 1);
             descRect.anchorMax = new Vector2(1, 1);
@@ -171,11 +171,11 @@ namespace NeuralBreak.UI
             descRect.anchoredPosition = new Vector2(75, -60);
             descRect.sizeDelta = new Vector2(260, 20);
 
-            _descText = descGO.AddComponent<TextMeshProUGUI>();
-            _descText.text = "Kill your first enemy";
-            _descText.fontSize = 13;
-            _descText.color = new Color(0.7f, 0.7f, 0.7f);
-            _descText.alignment = TextAlignmentOptions.Left;
+            m_descText = descGO.AddComponent<TextMeshProUGUI>();
+            m_descText.text = "Kill your first enemy";
+            m_descText.fontSize = 13;
+            m_descText.color = new Color(0.7f, 0.7f, 0.7f);
+            m_descText.alignment = TextAlignmentOptions.Left;
         }
 
         private Sprite CreateTrophySprite()
@@ -236,9 +236,9 @@ namespace NeuralBreak.UI
 
         private void OnAchievementUnlocked(AchievementUnlockedEvent evt)
         {
-            _queue.Enqueue(evt);
+            m_queue.Enqueue(evt);
 
-            if (!_isShowingPopup)
+            if (!m_isShowingPopup)
             {
                 StartCoroutine(ProcessQueue());
             }
@@ -246,67 +246,67 @@ namespace NeuralBreak.UI
 
         private IEnumerator ProcessQueue()
         {
-            _isShowingPopup = true;
+            m_isShowingPopup = true;
 
-            while (_queue.Count > 0)
+            while (m_queue.Count > 0)
             {
-                var evt = _queue.Dequeue();
+                var evt = m_queue.Dequeue();
                 yield return ShowPopup(evt);
 
                 // Small delay between popups
                 yield return new WaitForSecondsRealtime(0.3f);
             }
 
-            _isShowingPopup = false;
+            m_isShowingPopup = false;
         }
 
         private IEnumerator ShowPopup(AchievementUnlockedEvent evt)
         {
             // Set text
-            _nameText.text = evt.name;
-            _descText.text = evt.description;
+            m_nameText.text = evt.name;
+            m_descText.text = evt.description;
 
             // Start position (above screen)
-            Vector2 hiddenPos = new Vector2(0, _slideDistance);
+            Vector2 hiddenPos = new Vector2(0, m_slideDistance);
             Vector2 visiblePos = new Vector2(0, -20);
 
-            _container.anchoredPosition = hiddenPos;
-            _canvasGroup.alpha = 0;
+            m_container.anchoredPosition = hiddenPos;
+            m_canvasGroup.alpha = 0;
 
             // Slide down
             float elapsed = 0f;
-            while (elapsed < _slideInDuration)
+            while (elapsed < m_slideInDuration)
             {
                 elapsed += Time.unscaledDeltaTime;
-                float t = elapsed / _slideInDuration;
+                float t = elapsed / m_slideInDuration;
                 float easeT = 1f - Mathf.Pow(1f - t, 3f);
 
-                _container.anchoredPosition = Vector2.Lerp(hiddenPos, visiblePos, easeT);
-                _canvasGroup.alpha = easeT;
+                m_container.anchoredPosition = Vector2.Lerp(hiddenPos, visiblePos, easeT);
+                m_canvasGroup.alpha = easeT;
 
                 yield return null;
             }
 
-            _container.anchoredPosition = visiblePos;
-            _canvasGroup.alpha = 1f;
+            m_container.anchoredPosition = visiblePos;
+            m_canvasGroup.alpha = 1f;
 
             // Hold
-            yield return new WaitForSecondsRealtime(_displayDuration);
+            yield return new WaitForSecondsRealtime(m_displayDuration);
 
             // Slide up
             elapsed = 0f;
-            while (elapsed < _slideOutDuration)
+            while (elapsed < m_slideOutDuration)
             {
                 elapsed += Time.unscaledDeltaTime;
-                float t = elapsed / _slideOutDuration;
+                float t = elapsed / m_slideOutDuration;
 
-                _container.anchoredPosition = Vector2.Lerp(visiblePos, hiddenPos, t);
-                _canvasGroup.alpha = 1f - t;
+                m_container.anchoredPosition = Vector2.Lerp(visiblePos, hiddenPos, t);
+                m_canvasGroup.alpha = 1f - t;
 
                 yield return null;
             }
 
-            _canvasGroup.alpha = 0;
+            m_canvasGroup.alpha = 0;
         }
 
         #region Debug

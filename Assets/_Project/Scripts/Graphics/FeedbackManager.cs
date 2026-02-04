@@ -13,8 +13,8 @@ namespace NeuralBreak.Graphics
     {
 
         [Header("Camera Shake (Fallback - reads from config)")]
-        [SerializeField] private float _bossShakeIntensity = 5f;
-        [SerializeField] private float _bossShakeDuration = 0.6f;
+        [SerializeField] private float m_bossShakeIntensity = 5f;
+        [SerializeField] private float m_bossShakeDuration = 0.6f;
 
         // Config-driven shake settings (read from GameBalanceConfig.feedback)
         private float SmallShakeIntensity => ConfigProvider.Balance?.feedback?.smallShake?.intensity ?? 0.2f;
@@ -25,34 +25,34 @@ namespace NeuralBreak.Graphics
         private float LargeShakeDuration => ConfigProvider.Balance?.feedback?.largeShake?.duration ?? 0.5f;
 
         [Header("Hitstop (Freeze Frame)")]
-        [SerializeField] private bool _enableHitstop = true;
-        [SerializeField] private float _smallHitstopDuration = 0.02f;
-        [SerializeField] private float _mediumHitstopDuration = 0.05f;
-        [SerializeField] private float _largeHitstopDuration = 0.1f;
-        [SerializeField] private float _bossHitstopDuration = 0.2f;
+        [SerializeField] private bool m_enableHitstop = true;
+        [SerializeField] private float m_smallHitstopDuration = 0.02f;
+        [SerializeField] private float m_mediumHitstopDuration = 0.05f;
+        [SerializeField] private float m_largeHitstopDuration = 0.1f;
+        [SerializeField] private float m_bossHitstopDuration = 0.2f;
 
         [Header("Screen Flash")]
-        [SerializeField] private bool _enableScreenFlash = true;
-        [SerializeField] private Color _damageFlashColor = new Color(1f, 0f, 0f, 0.3f);
-        [SerializeField] private Color _healFlashColor = new Color(0f, 1f, 0f, 0.2f);
-        [SerializeField] private Color _powerUpFlashColor = new Color(1f, 0.8f, 0f, 0.2f);
-        [SerializeField] private float _flashDuration = 0.1f;
+        [SerializeField] private bool m_enableScreenFlash = true;
+        [SerializeField] private Color m_damageFlashColor = new Color(1f, 0f, 0f, 0.3f);
+        [SerializeField] private Color m_healFlashColor = new Color(0f, 1f, 0f, 0.2f);
+        [SerializeField] private Color m_powerUpFlashColor = new Color(1f, 0.8f, 0f, 0.2f);
+        [SerializeField] private float m_flashDuration = 0.1f;
 
         [Header("Time Scale")]
-        [SerializeField] private bool _enableSlowMotion = true;
-        [SerializeField] private float _slowMotionScale = 0.3f;
-        [SerializeField] private float _slowMotionDuration = 0.15f;
+        [SerializeField] private bool m_enableSlowMotion = true;
+        [SerializeField] private float m_slowMotionScale = 0.3f;
+        [SerializeField] private float m_slowMotionDuration = 0.15f;
 
         [Header("Combo Feedback")]
-        [SerializeField] private float _comboShakeMultiplier = 0.1f; // Shake increases with combo
-        [SerializeField] private int _comboMilestone = 10; // Every X kills = bigger feedback
+        [SerializeField] private float m_comboShakeMultiplier = 0.1f; // Shake increases with combo
+        [SerializeField] private int m_comboMilestone = 10; // Every X kills = bigger feedback
 
         [Header("References")]
-        [SerializeField] private CameraController _cameraController;
+        [SerializeField] private CameraController m_cameraController;
 
         // Cached references
-        private float _originalTimeScale = 1f;
-        private bool _isTimeScaled;
+        private float m_originalTimeScale = 1f;
+        private bool m_isTimeScaled;
 
         private void Awake()
         {
@@ -61,15 +61,15 @@ namespace NeuralBreak.Graphics
         private void Start()
         {
             // Cache camera controller via GameObject.Find
-            if (_cameraController == null)
+            if (m_cameraController == null)
             {
                 var camGO = GameObject.Find("MainCamera");
                 if (camGO != null)
                 {
-                    _cameraController = camGO.GetComponent<CameraController>();
+                    m_cameraController = camGO.GetComponent<CameraController>();
                 }
 
-                if (_cameraController == null)
+                if (m_cameraController == null)
                 {
                     Debug.LogWarning("[FeedbackManager] CameraController not found! Camera shake effects will not work.");
                 }
@@ -83,9 +83,9 @@ namespace NeuralBreak.Graphics
             UnsubscribeFromEvents();
 
             // Restore time scale
-            if (_isTimeScaled)
+            if (m_isTimeScaled)
             {
-                Time.timeScale = _originalTimeScale;
+                Time.timeScale = m_originalTimeScale;
             }
         }
 
@@ -133,24 +133,24 @@ namespace NeuralBreak.Graphics
                 case EnemyType.ScanDrone:
                 case EnemyType.UFO:
                     TriggerCameraShake(SmallShakeIntensity, SmallShakeDuration);
-                    TriggerHitstop(_smallHitstopDuration);
+                    TriggerHitstop(m_smallHitstopDuration);
                     break;
 
                 case EnemyType.ChaosWorm:
                 case EnemyType.CrystalShard:
                     TriggerCameraShake(MediumShakeIntensity, MediumShakeDuration);
-                    TriggerHitstop(_mediumHitstopDuration);
+                    TriggerHitstop(m_mediumHitstopDuration);
                     break;
 
                 case EnemyType.VoidSphere:
                     TriggerCameraShake(LargeShakeIntensity, LargeShakeDuration);
-                    TriggerHitstop(_largeHitstopDuration);
+                    TriggerHitstop(m_largeHitstopDuration);
                     TriggerSlowMotion();
                     break;
 
                 case EnemyType.Boss:
-                    TriggerCameraShake(_bossShakeIntensity, _bossShakeDuration);
-                    TriggerHitstop(_bossHitstopDuration);
+                    TriggerCameraShake(m_bossShakeIntensity, m_bossShakeDuration);
+                    TriggerHitstop(m_bossHitstopDuration);
                     TriggerSlowMotion();
                     break;
             }
@@ -159,13 +159,13 @@ namespace NeuralBreak.Graphics
         private void OnPlayerDamaged(PlayerDamagedEvent evt)
         {
             TriggerCameraShake(MediumShakeIntensity, MediumShakeDuration);
-            TriggerScreenFlash(_damageFlashColor);
-            TriggerHitstop(_mediumHitstopDuration);
+            TriggerScreenFlash(m_damageFlashColor);
+            TriggerHitstop(m_mediumHitstopDuration);
         }
 
         private void OnPlayerHealed(PlayerHealedEvent evt)
         {
-            TriggerScreenFlash(_healFlashColor);
+            TriggerScreenFlash(m_healFlashColor);
         }
 
         private void OnPickupCollected(PickupCollectedEvent evt)
@@ -173,7 +173,7 @@ namespace NeuralBreak.Graphics
             switch (evt.pickupType)
             {
                 case PickupType.PowerUp:
-                    TriggerScreenFlash(_powerUpFlashColor);
+                    TriggerScreenFlash(m_powerUpFlashColor);
                     TriggerCameraShake(SmallShakeIntensity, SmallShakeDuration);
                     break;
 
@@ -191,9 +191,9 @@ namespace NeuralBreak.Graphics
         private void OnComboChanged(ComboChangedEvent evt)
         {
             // Bigger feedback at combo milestones (config-driven)
-            if (evt.comboCount > 0 && evt.comboCount % _comboMilestone == 0)
+            if (evt.comboCount > 0 && evt.comboCount % m_comboMilestone == 0)
             {
-                float intensity = Mathf.Min(MediumShakeIntensity + (evt.comboCount * _comboShakeMultiplier), LargeShakeIntensity);
+                float intensity = Mathf.Min(MediumShakeIntensity + (evt.comboCount * m_comboShakeMultiplier), LargeShakeIntensity);
                 TriggerCameraShake(intensity, MediumShakeDuration);
 
                 // Flash based on multiplier
@@ -230,9 +230,9 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void TriggerCameraShake(float intensity, float duration)
         {
-            if (_cameraController != null)
+            if (m_cameraController != null)
             {
-                _cameraController.Shake(intensity, duration);
+                m_cameraController.Shake(intensity, duration);
             }
         }
 
@@ -241,7 +241,7 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void TriggerHitstop(float duration)
         {
-            if (!_enableHitstop || duration <= 0) return;
+            if (!m_enableHitstop || duration <= 0) return;
 
             StartCoroutine(HitstopCoroutine(duration));
         }
@@ -251,7 +251,7 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void TriggerSlowMotion()
         {
-            if (!_enableSlowMotion) return;
+            if (!m_enableSlowMotion) return;
 
             StartCoroutine(SlowMotionCoroutine());
         }
@@ -261,12 +261,12 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void TriggerScreenFlash(Color color)
         {
-            if (!_enableScreenFlash) return;
+            if (!m_enableScreenFlash) return;
 
             // Use ScreenFlash component
             if (FindFirstObjectByType<ScreenFlash>() != null)
             {
-                FindFirstObjectByType<ScreenFlash>().Flash(color, _flashDuration);
+                FindFirstObjectByType<ScreenFlash>().Flash(color, m_flashDuration);
             }
         }
 
@@ -276,41 +276,41 @@ namespace NeuralBreak.Graphics
 
         private System.Collections.IEnumerator HitstopCoroutine(float duration)
         {
-            if (_isTimeScaled) yield break;
+            if (m_isTimeScaled) yield break;
 
-            _isTimeScaled = true;
-            _originalTimeScale = Time.timeScale;
+            m_isTimeScaled = true;
+            m_originalTimeScale = Time.timeScale;
 
             Time.timeScale = 0f;
 
             // Use unscaled time to wait
             yield return new WaitForSecondsRealtime(duration);
 
-            Time.timeScale = _originalTimeScale;
-            _isTimeScaled = false;
+            Time.timeScale = m_originalTimeScale;
+            m_isTimeScaled = false;
         }
 
         private System.Collections.IEnumerator SlowMotionCoroutine()
         {
-            if (_isTimeScaled) yield break;
+            if (m_isTimeScaled) yield break;
 
-            _isTimeScaled = true;
-            _originalTimeScale = Time.timeScale;
+            m_isTimeScaled = true;
+            m_originalTimeScale = Time.timeScale;
 
-            Time.timeScale = _slowMotionScale;
+            Time.timeScale = m_slowMotionScale;
 
             // Lerp back to normal
             float elapsed = 0f;
-            while (elapsed < _slowMotionDuration)
+            while (elapsed < m_slowMotionDuration)
             {
                 elapsed += Time.unscaledDeltaTime;
-                float t = elapsed / _slowMotionDuration;
-                Time.timeScale = Mathf.Lerp(_slowMotionScale, _originalTimeScale, t);
+                float t = elapsed / m_slowMotionDuration;
+                Time.timeScale = Mathf.Lerp(m_slowMotionScale, m_originalTimeScale, t);
                 yield return null;
             }
 
-            Time.timeScale = _originalTimeScale;
-            _isTimeScaled = false;
+            Time.timeScale = m_originalTimeScale;
+            m_isTimeScaled = false;
         }
 
         #endregion
@@ -324,7 +324,7 @@ namespace NeuralBreak.Graphics
         private void DebugLargeShake() => TriggerCameraShake(LargeShakeIntensity, LargeShakeDuration);
 
         [ContextMenu("Debug: Hitstop")]
-        private void DebugHitstop() => TriggerHitstop(_mediumHitstopDuration);
+        private void DebugHitstop() => TriggerHitstop(m_mediumHitstopDuration);
 
         [ContextMenu("Debug: Slow Motion")]
         private void DebugSlowMotion() => TriggerSlowMotion();

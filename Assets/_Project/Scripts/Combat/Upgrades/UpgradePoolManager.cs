@@ -15,21 +15,21 @@ namespace NeuralBreak.Combat
         public static UpgradePoolManager Instance { get; private set; }
 
         [Header("Settings")]
-        [SerializeField] private int _cardsPerSelection = 3;
-        [SerializeField] private bool _allowDuplicates = false;
+        [SerializeField] private int m_cardsPerSelection = 3;
+        [SerializeField] private bool m_allowDuplicates = false;
 
         [Header("Rarity Weights")]
-        [SerializeField] private float _commonWeight = 60f;
-        [SerializeField] private float _rareWeight = 25f;
-        [SerializeField] private float _epicWeight = 12f;
-        [SerializeField] private float _legendaryWeight = 3f;
+        [SerializeField] private float m_commonWeight = 60f;
+        [SerializeField] private float m_rareWeight = 25f;
+        [SerializeField] private float m_epicWeight = 12f;
+        [SerializeField] private float m_legendaryWeight = 3f;
 
         [Header("Debug")]
-        [SerializeField] private bool _logSelections = true;
+        [SerializeField] private bool m_logSelections = true;
 
-        private List<UpgradeDefinition> _allUpgrades = new List<UpgradeDefinition>();
-        private PermanentUpgradeManager _permanentUpgrades;
-        private bool _isLoaded;
+        private List<UpgradeDefinition> m_allUpgrades = new List<UpgradeDefinition>();
+        private PermanentUpgradeManager m_permanentUpgrades;
+        private bool m_isLoaded;
 
         #region Lifecycle
 
@@ -50,8 +50,8 @@ namespace NeuralBreak.Combat
 
         private void Start()
         {
-            _permanentUpgrades = PermanentUpgradeManager.Instance;
-            if (_permanentUpgrades == null)
+            m_permanentUpgrades = PermanentUpgradeManager.Instance;
+            if (m_permanentUpgrades == null)
             {
                 LogHelper.LogWarning("[UpgradePoolManager] PermanentUpgradeManager not found");
             }
@@ -76,7 +76,7 @@ namespace NeuralBreak.Combat
         /// </summary>
         public void LoadUpgrades()
         {
-            _allUpgrades.Clear();
+            m_allUpgrades.Clear();
 
             // Load all UpgradeDefinition assets from Resources/Upgrades
             var upgrades = Resources.LoadAll<UpgradeDefinition>("Upgrades");
@@ -88,13 +88,13 @@ namespace NeuralBreak.Combat
                 Debug.Log($"[UpgradePoolManager]   Checking: {upgrade.name} - isPermanent: {upgrade.isPermanent}");
                 if (upgrade.isPermanent)
                 {
-                    _allUpgrades.Add(upgrade);
+                    m_allUpgrades.Add(upgrade);
                 }
             }
 
-            _isLoaded = true;
+            m_isLoaded = true;
 
-            Debug.Log($"[UpgradePoolManager] Loaded {_allUpgrades.Count} permanent upgrades from Resources");
+            Debug.Log($"[UpgradePoolManager] Loaded {m_allUpgrades.Count} permanent upgrades from Resources");
         }
 
         #endregion
@@ -106,13 +106,13 @@ namespace NeuralBreak.Combat
         /// </summary>
         public List<UpgradeDefinition> GenerateSelection()
         {
-            if (!_isLoaded)
+            if (!m_isLoaded)
             {
                 LogHelper.LogWarning("[UpgradePoolManager] Upgrades not loaded yet");
                 LoadUpgrades();
             }
 
-            if (_allUpgrades.Count == 0)
+            if (m_allUpgrades.Count == 0)
             {
                 LogHelper.LogError("[UpgradePoolManager] No upgrades available for selection");
                 return new List<UpgradeDefinition>();
@@ -128,7 +128,7 @@ namespace NeuralBreak.Combat
             }
 
             // Generate selection
-            for (int i = 0; i < _cardsPerSelection && eligible.Count > 0; i++)
+            for (int i = 0; i < m_cardsPerSelection && eligible.Count > 0; i++)
             {
                 var upgrade = SelectWeightedRandom(eligible);
                 if (upgrade != null)
@@ -136,14 +136,14 @@ namespace NeuralBreak.Combat
                     selection.Add(upgrade);
 
                     // Remove from eligible pool if duplicates not allowed
-                    if (!_allowDuplicates)
+                    if (!m_allowDuplicates)
                     {
                         eligible.Remove(upgrade);
                     }
                 }
             }
 
-            if (_logSelections)
+            if (m_logSelections)
             {
                 LogHelper.Log($"[UpgradePoolManager] Generated selection of {selection.Count} upgrades:");
                 foreach (var upgrade in selection)
@@ -162,17 +162,17 @@ namespace NeuralBreak.Combat
         {
             var eligible = new List<UpgradeDefinition>();
 
-            if (_permanentUpgrades == null)
+            if (m_permanentUpgrades == null)
             {
                 // If no manager, all upgrades are eligible
-                eligible.AddRange(_allUpgrades);
+                eligible.AddRange(m_allUpgrades);
                 return eligible;
             }
 
-            var activeUpgrades = _permanentUpgrades.GetActiveUpgrades();
+            var activeUpgrades = m_permanentUpgrades.GetActiveUpgrades();
             int playerLevel = GameManager.Instance != null ? GameManager.Instance.Stats.level : 1;
 
-            foreach (var upgrade in _allUpgrades)
+            foreach (var upgrade in m_allUpgrades)
             {
                 if (upgrade.IsEligible(playerLevel, activeUpgrades))
                 {
@@ -221,10 +221,10 @@ namespace NeuralBreak.Combat
         {
             return tier switch
             {
-                UpgradeTier.Common => _commonWeight,
-                UpgradeTier.Rare => _rareWeight,
-                UpgradeTier.Epic => _epicWeight,
-                UpgradeTier.Legendary => _legendaryWeight,
+                UpgradeTier.Common => m_commonWeight,
+                UpgradeTier.Rare => m_rareWeight,
+                UpgradeTier.Epic => m_epicWeight,
+                UpgradeTier.Legendary => m_legendaryWeight,
                 _ => 1f
             };
         }
@@ -243,8 +243,8 @@ namespace NeuralBreak.Combat
         [ContextMenu("Debug: Log All Upgrades")]
         private void DebugLogAllUpgrades()
         {
-            LogHelper.Log($"[UpgradePoolManager] Total Upgrades: {_allUpgrades.Count}");
-            foreach (var upgrade in _allUpgrades)
+            LogHelper.Log($"[UpgradePoolManager] Total Upgrades: {m_allUpgrades.Count}");
+            foreach (var upgrade in m_allUpgrades)
             {
                 LogHelper.Log($"  - {upgrade.displayName} ({upgrade.tier}) - ID: {upgrade.upgradeId}");
             }

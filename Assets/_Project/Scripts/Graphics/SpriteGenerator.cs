@@ -9,14 +9,14 @@ namespace NeuralBreak.Graphics
     /// </summary>
     public static class SpriteGenerator
     {
-        private static Dictionary<string, Sprite> _cache = new Dictionary<string, Sprite>();
+        private static Dictionary<string, Sprite> s_cache = new Dictionary<string, Sprite>();
 
         /// <summary>
         /// Create a circle sprite
         /// </summary>
         public static Sprite CreateCircle(int size, Color color, string cacheName = null)
         {
-            if (!string.IsNullOrEmpty(cacheName) && _cache.TryGetValue(cacheName, out var cached))
+            if (!string.IsNullOrEmpty(cacheName) && s_cache.TryGetValue(cacheName, out var cached))
                 return cached;
 
             Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
@@ -47,7 +47,7 @@ namespace NeuralBreak.Graphics
             var sprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
 
             if (!string.IsNullOrEmpty(cacheName))
-                _cache[cacheName] = sprite;
+                s_cache[cacheName] = sprite;
 
             return sprite;
         }
@@ -57,7 +57,7 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public static Sprite CreateDiamond(int size, Color color, string cacheName = null)
         {
-            if (!string.IsNullOrEmpty(cacheName) && _cache.TryGetValue(cacheName, out var cached))
+            if (!string.IsNullOrEmpty(cacheName) && s_cache.TryGetValue(cacheName, out var cached))
                 return cached;
 
             Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
@@ -89,7 +89,7 @@ namespace NeuralBreak.Graphics
             var sprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
 
             if (!string.IsNullOrEmpty(cacheName))
-                _cache[cacheName] = sprite;
+                s_cache[cacheName] = sprite;
 
             return sprite;
         }
@@ -99,7 +99,7 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public static Sprite CreateTriangle(int size, Color color, string cacheName = null)
         {
-            if (!string.IsNullOrEmpty(cacheName) && _cache.TryGetValue(cacheName, out var cached))
+            if (!string.IsNullOrEmpty(cacheName) && s_cache.TryGetValue(cacheName, out var cached))
                 return cached;
 
             Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
@@ -131,7 +131,7 @@ namespace NeuralBreak.Graphics
             var sprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
 
             if (!string.IsNullOrEmpty(cacheName))
-                _cache[cacheName] = sprite;
+                s_cache[cacheName] = sprite;
 
             return sprite;
         }
@@ -141,7 +141,7 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public static Sprite CreateHexagon(int size, Color color, string cacheName = null)
         {
-            if (!string.IsNullOrEmpty(cacheName) && _cache.TryGetValue(cacheName, out var cached))
+            if (!string.IsNullOrEmpty(cacheName) && s_cache.TryGetValue(cacheName, out var cached))
                 return cached;
 
             Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
@@ -178,7 +178,7 @@ namespace NeuralBreak.Graphics
             var sprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
 
             if (!string.IsNullOrEmpty(cacheName))
-                _cache[cacheName] = sprite;
+                s_cache[cacheName] = sprite;
 
             return sprite;
         }
@@ -188,7 +188,7 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public static Sprite CreateStar(int size, int points, Color color, string cacheName = null)
         {
-            if (!string.IsNullOrEmpty(cacheName) && _cache.TryGetValue(cacheName, out var cached))
+            if (!string.IsNullOrEmpty(cacheName) && s_cache.TryGetValue(cacheName, out var cached))
                 return cached;
 
             Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
@@ -227,7 +227,7 @@ namespace NeuralBreak.Graphics
             var sprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
 
             if (!string.IsNullOrEmpty(cacheName))
-                _cache[cacheName] = sprite;
+                s_cache[cacheName] = sprite;
 
             return sprite;
         }
@@ -237,7 +237,7 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public static Sprite CreateGlow(int size, Color color, string cacheName = null)
         {
-            if (!string.IsNullOrEmpty(cacheName) && _cache.TryGetValue(cacheName, out var cached))
+            if (!string.IsNullOrEmpty(cacheName) && s_cache.TryGetValue(cacheName, out var cached))
                 return cached;
 
             Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
@@ -270,7 +270,7 @@ namespace NeuralBreak.Graphics
             var sprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), size);
 
             if (!string.IsNullOrEmpty(cacheName))
-                _cache[cacheName] = sprite;
+                s_cache[cacheName] = sprite;
 
             return sprite;
         }
@@ -280,14 +280,14 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public static void ClearCache()
         {
-            foreach (var sprite in _cache.Values)
+            foreach (var sprite in s_cache.Values)
             {
                 if (sprite != null && sprite.texture != null)
                 {
                     Object.Destroy(sprite.texture);
                 }
             }
-            _cache.Clear();
+            s_cache.Clear();
         }
     }
 }

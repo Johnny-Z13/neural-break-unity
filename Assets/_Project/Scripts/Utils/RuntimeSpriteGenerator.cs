@@ -17,18 +17,18 @@ namespace NeuralBreak.Utils
             Triangle
         }
 
-        [SerializeField] private SpriteShape _shape = SpriteShape.Circle;
-        [SerializeField] private int _resolution = 64;
-        [SerializeField] private Color _color = Color.white;
-        [SerializeField] private bool _generateOnAwake = true;
+        [SerializeField] private SpriteShape m_shape = SpriteShape.Circle;
+        [SerializeField] private int m_resolution = 64;
+        [SerializeField] private Color m_color = Color.white;
+        [SerializeField] private bool m_generateOnAwake = true;
 
-        private SpriteRenderer _spriteRenderer;
+        private SpriteRenderer m_spriteRenderer;
 
         private void Awake()
         {
-            _spriteRenderer = GetComponent<SpriteRenderer>();
-            
-            if (_generateOnAwake)
+            m_spriteRenderer = GetComponent<SpriteRenderer>();
+
+            if (m_generateOnAwake)
             {
                 GenerateSprite();
             }
@@ -36,19 +36,19 @@ namespace NeuralBreak.Utils
 
         public void GenerateSprite()
         {
-            if (_spriteRenderer == null)
-                _spriteRenderer = GetComponent<SpriteRenderer>();
+            if (m_spriteRenderer == null)
+                m_spriteRenderer = GetComponent<SpriteRenderer>();
 
-            Texture2D texture = CreateTexture(_shape, _resolution);
+            Texture2D texture = CreateTexture(m_shape, m_resolution);
             Sprite sprite = Sprite.Create(
                 texture,
                 new Rect(0, 0, texture.width, texture.height),
                 new Vector2(0.5f, 0.5f),
-                _resolution
+                m_resolution
             );
 
-            _spriteRenderer.sprite = sprite;
-            _spriteRenderer.color = _color;
+            m_spriteRenderer.sprite = sprite;
+            m_spriteRenderer.color = m_color;
         }
 
         private Texture2D CreateTexture(SpriteShape shape, int size)

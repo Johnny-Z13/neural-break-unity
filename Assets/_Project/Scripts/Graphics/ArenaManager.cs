@@ -26,19 +26,19 @@ namespace NeuralBreak.Graphics
     {
 
         [Header("Settings")]
-        [SerializeField] private ArenaTheme _currentTheme = ArenaTheme.Cyber;
-        [SerializeField] private float _transitionDuration = 2f;
-        [SerializeField] private bool _autoChangeOnLevel = true;
-        [SerializeField] private int _levelsPerTheme = 15;
+        [SerializeField] private ArenaTheme m_currentTheme = ArenaTheme.Cyber;
+        [SerializeField] private float m_transitionDuration = 2f;
+        [SerializeField] private bool m_autoChangeOnLevel = true;
+        [SerializeField] private int m_levelsPerTheme = 15;
 
         [Header("Background")]
-        [SerializeField] private SpriteRenderer _backgroundRenderer;
-        [SerializeField] private Camera _mainCamera;
+        [SerializeField] private SpriteRenderer m_backgroundRenderer;
+        [SerializeField] private Camera m_mainCamera;
 
         [Header("Grid")]
-        [SerializeField] private bool _showGrid = true;
-        [SerializeField] private float _gridSize = 2f;
-        [SerializeField] private float _gridAlpha = 0.1f;
+        [SerializeField] private bool m_showGrid = true;
+        [SerializeField] private float m_gridSize = 2f;
+        [SerializeField] private float m_gridAlpha = 0.1f;
 
         // Theme colors
         private static readonly (Color primary, Color secondary, Color accent, Color background)[] ThemeColors = new[]
@@ -60,18 +60,18 @@ namespace NeuralBreak.Graphics
         };
 
         // State
-        private GameObject _gridObject;
-        private LineRenderer[] _gridLines;
-        private Coroutine _transitionCoroutine;
+        private GameObject m_gridObject;
+        private LineRenderer[] m_gridLines;
+        private Coroutine m_transitionCoroutine;
 
         // Cached references
-        private StarfieldController _starfield;
+        private StarfieldController m_starfield;
 
-        public ArenaTheme CurrentTheme => _currentTheme;
-        public Color PrimaryColor => ThemeColors[(int)_currentTheme].primary;
-        public Color SecondaryColor => ThemeColors[(int)_currentTheme].secondary;
-        public Color AccentColor => ThemeColors[(int)_currentTheme].accent;
-        public Color BackgroundColor => ThemeColors[(int)_currentTheme].background;
+        public ArenaTheme CurrentTheme => m_currentTheme;
+        public Color PrimaryColor => ThemeColors[(int)m_currentTheme].primary;
+        public Color SecondaryColor => ThemeColors[(int)m_currentTheme].secondary;
+        public Color AccentColor => ThemeColors[(int)m_currentTheme].accent;
+        public Color BackgroundColor => ThemeColors[(int)m_currentTheme].background;
 
         private void Awake()
         {
@@ -79,14 +79,14 @@ namespace NeuralBreak.Graphics
 
         private void Start()
         {
-            if (_mainCamera == null)
+            if (m_mainCamera == null)
             {
-                _mainCamera = Camera.main;
+                m_mainCamera = Camera.main;
             }
 
             CreateBackground();
-            if (_showGrid) CreateGrid();
-            ApplyTheme(_currentTheme, false);
+            if (m_showGrid) CreateGrid();
+            ApplyTheme(m_currentTheme, false);
 
             EventBus.Subscribe<LevelStartedEvent>(OnLevelStarted);
             EventBus.Subscribe<GameStartedEvent>(OnGameStarted);
@@ -101,19 +101,19 @@ namespace NeuralBreak.Graphics
 
         private void CreateBackground()
         {
-            if (_backgroundRenderer != null) return;
+            if (m_backgroundRenderer != null) return;
 
             var bgGO = new GameObject("ArenaBackground");
             bgGO.transform.SetParent(transform);
             bgGO.transform.position = new Vector3(0, 0, 10);
 
-            _backgroundRenderer = bgGO.AddComponent<SpriteRenderer>();
-            _backgroundRenderer.sprite = CreateBackgroundSprite();
-            _backgroundRenderer.sortingOrder = -1000;
+            m_backgroundRenderer = bgGO.AddComponent<SpriteRenderer>();
+            m_backgroundRenderer.sprite = CreateBackgroundSprite();
+            m_backgroundRenderer.sortingOrder = -1000;
 
             // Scale to fill view
-            float camHeight = _mainCamera != null ? _mainCamera.orthographicSize * 2f : 20f;
-            float camWidth = camHeight * (_mainCamera != null ? _mainCamera.aspect : 1.77f);
+            float camHeight = m_mainCamera != null ? m_mainCamera.orthographicSize * 2f : 20f;
+            float camWidth = camHeight * (m_mainCamera != null ? m_mainCamera.aspect : 1.77f);
             bgGO.transform.localScale = new Vector3(camWidth * 1.5f, camHeight * 1.5f, 1f);
         }
 
@@ -146,24 +146,24 @@ namespace NeuralBreak.Graphics
 
         private void CreateGrid()
         {
-            _gridObject = new GameObject("Grid");
-            _gridObject.transform.SetParent(transform);
-            _gridObject.transform.position = new Vector3(0, 0, 5);
+            m_gridObject = new GameObject("Grid");
+            m_gridObject.transform.SetParent(transform);
+            m_gridObject.transform.position = new Vector3(0, 0, 5);
 
-            float camHeight = _mainCamera != null ? _mainCamera.orthographicSize * 2f : 20f;
-            float camWidth = camHeight * (_mainCamera != null ? _mainCamera.aspect : 1.77f);
+            float camHeight = m_mainCamera != null ? m_mainCamera.orthographicSize * 2f : 20f;
+            float camWidth = camHeight * (m_mainCamera != null ? m_mainCamera.aspect : 1.77f);
 
-            int horizontalLines = Mathf.CeilToInt(camHeight / _gridSize) + 4;
-            int verticalLines = Mathf.CeilToInt(camWidth / _gridSize) + 4;
+            int horizontalLines = Mathf.CeilToInt(camHeight / m_gridSize) + 4;
+            int verticalLines = Mathf.CeilToInt(camWidth / m_gridSize) + 4;
 
-            _gridLines = new LineRenderer[horizontalLines + verticalLines];
+            m_gridLines = new LineRenderer[horizontalLines + verticalLines];
             int lineIndex = 0;
 
             // Horizontal lines
             for (int i = 0; i < horizontalLines; i++)
             {
-                float y = (i - horizontalLines / 2) * _gridSize;
-                _gridLines[lineIndex++] = CreateGridLine(
+                float y = (i - horizontalLines / 2) * m_gridSize;
+                m_gridLines[lineIndex++] = CreateGridLine(
                     new Vector3(-camWidth, y, 5),
                     new Vector3(camWidth, y, 5)
                 );
@@ -172,8 +172,8 @@ namespace NeuralBreak.Graphics
             // Vertical lines
             for (int i = 0; i < verticalLines; i++)
             {
-                float x = (i - verticalLines / 2) * _gridSize;
-                _gridLines[lineIndex++] = CreateGridLine(
+                float x = (i - verticalLines / 2) * m_gridSize;
+                m_gridLines[lineIndex++] = CreateGridLine(
                     new Vector3(x, -camHeight, 5),
                     new Vector3(x, camHeight, 5)
                 );
@@ -183,7 +183,7 @@ namespace NeuralBreak.Graphics
         private LineRenderer CreateGridLine(Vector3 start, Vector3 end)
         {
             var lineGO = new GameObject("GridLine");
-            lineGO.transform.SetParent(_gridObject.transform);
+            lineGO.transform.SetParent(m_gridObject.transform);
 
             var lr = lineGO.AddComponent<LineRenderer>();
             lr.positionCount = 2;
@@ -192,8 +192,8 @@ namespace NeuralBreak.Graphics
             lr.startWidth = 0.02f;
             lr.endWidth = 0.02f;
             lr.material = new Material(Shader.Find("Sprites/Default"));
-            lr.startColor = new Color(1f, 1f, 1f, _gridAlpha);
-            lr.endColor = new Color(1f, 1f, 1f, _gridAlpha);
+            lr.startColor = new Color(1f, 1f, 1f, m_gridAlpha);
+            lr.endColor = new Color(1f, 1f, 1f, m_gridAlpha);
             lr.sortingOrder = -999;
 
             return lr;
@@ -207,14 +207,14 @@ namespace NeuralBreak.Graphics
 
         private void OnLevelStarted(LevelStartedEvent evt)
         {
-            if (!_autoChangeOnLevel) return;
+            if (!m_autoChangeOnLevel) return;
 
             // Change theme based on level
-            int themeIndex = (evt.levelNumber - 1) / _levelsPerTheme;
+            int themeIndex = (evt.levelNumber - 1) / m_levelsPerTheme;
             themeIndex = themeIndex % ThemeColors.Length;
 
             ArenaTheme newTheme = (ArenaTheme)themeIndex;
-            if (newTheme != _currentTheme)
+            if (newTheme != m_currentTheme)
             {
                 SetTheme(newTheme, true);
             }
@@ -225,14 +225,14 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void SetTheme(ArenaTheme theme, bool animate = true)
         {
-            if (animate && _transitionCoroutine != null)
+            if (animate && m_transitionCoroutine != null)
             {
-                StopCoroutine(_transitionCoroutine);
+                StopCoroutine(m_transitionCoroutine);
             }
 
             if (animate)
             {
-                _transitionCoroutine = StartCoroutine(TransitionToTheme(theme));
+                m_transitionCoroutine = StartCoroutine(TransitionToTheme(theme));
             }
             else
             {
@@ -242,27 +242,27 @@ namespace NeuralBreak.Graphics
 
         private void ApplyTheme(ArenaTheme theme, bool instant)
         {
-            _currentTheme = theme;
+            m_currentTheme = theme;
             var colors = ThemeColors[(int)theme];
 
             // Apply background color
-            if (_mainCamera != null)
+            if (m_mainCamera != null)
             {
-                _mainCamera.backgroundColor = colors.background;
+                m_mainCamera.backgroundColor = colors.background;
             }
 
-            if (_backgroundRenderer != null)
+            if (m_backgroundRenderer != null)
             {
-                _backgroundRenderer.color = colors.background * 2f;
+                m_backgroundRenderer.color = colors.background * 2f;
             }
 
             // Apply grid color
-            if (_gridLines != null)
+            if (m_gridLines != null)
             {
                 Color gridColor = colors.primary;
-                gridColor.a = _gridAlpha;
+                gridColor.a = m_gridAlpha;
 
-                foreach (var line in _gridLines)
+                foreach (var line in m_gridLines)
                 {
                     if (line != null)
                     {
@@ -273,16 +273,16 @@ namespace NeuralBreak.Graphics
             }
 
             // Notify starfield if exists
-            if (_starfield == null)
+            if (m_starfield == null)
             {
                 var starfieldGO = GameObject.Find("Starfield");
                 if (starfieldGO != null)
                 {
-                    _starfield = starfieldGO.GetComponent<StarfieldController>();
+                    m_starfield = starfieldGO.GetComponent<StarfieldController>();
                 }
             }
 
-            if (_starfield != null)
+            if (m_starfield != null)
             {
                 // Could update starfield colors here
             }
@@ -292,37 +292,37 @@ namespace NeuralBreak.Graphics
 
         private IEnumerator TransitionToTheme(ArenaTheme newTheme)
         {
-            var oldColors = ThemeColors[(int)_currentTheme];
+            var oldColors = ThemeColors[(int)m_currentTheme];
             var newColors = ThemeColors[(int)newTheme];
 
             float elapsed = 0f;
-            while (elapsed < _transitionDuration)
+            while (elapsed < m_transitionDuration)
             {
                 elapsed += Time.deltaTime;
-                float t = elapsed / _transitionDuration;
+                float t = elapsed / m_transitionDuration;
                 t = Mathf.SmoothStep(0, 1, t);
 
                 // Lerp background
-                if (_mainCamera != null)
+                if (m_mainCamera != null)
                 {
-                    _mainCamera.backgroundColor = Color.Lerp(oldColors.background, newColors.background, t);
+                    m_mainCamera.backgroundColor = Color.Lerp(oldColors.background, newColors.background, t);
                 }
 
-                if (_backgroundRenderer != null)
+                if (m_backgroundRenderer != null)
                 {
-                    _backgroundRenderer.color = Color.Lerp(oldColors.background * 2f, newColors.background * 2f, t);
+                    m_backgroundRenderer.color = Color.Lerp(oldColors.background * 2f, newColors.background * 2f, t);
                 }
 
                 // Lerp grid
-                if (_gridLines != null)
+                if (m_gridLines != null)
                 {
                     Color oldGrid = oldColors.primary;
-                    oldGrid.a = _gridAlpha;
+                    oldGrid.a = m_gridAlpha;
                     Color newGrid = newColors.primary;
-                    newGrid.a = _gridAlpha;
+                    newGrid.a = m_gridAlpha;
                     Color currentGrid = Color.Lerp(oldGrid, newGrid, t);
 
-                    foreach (var line in _gridLines)
+                    foreach (var line in m_gridLines)
                     {
                         if (line != null)
                         {
@@ -335,9 +335,9 @@ namespace NeuralBreak.Graphics
                 yield return null;
             }
 
-            _currentTheme = newTheme;
+            m_currentTheme = newTheme;
             ApplyTheme(newTheme, true);
-            _transitionCoroutine = null;
+            m_transitionCoroutine = null;
         }
 
         /// <summary>
@@ -345,7 +345,7 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public Color GetThemeColor(int index)
         {
-            var colors = ThemeColors[(int)_currentTheme];
+            var colors = ThemeColors[(int)m_currentTheme];
             return index switch
             {
                 0 => colors.primary,
@@ -376,7 +376,7 @@ namespace NeuralBreak.Graphics
         [ContextMenu("Debug: Next Theme")]
         private void DebugNextTheme()
         {
-            int next = ((int)_currentTheme + 1) % ThemeColors.Length;
+            int next = ((int)m_currentTheme + 1) % ThemeColors.Length;
             SetTheme((ArenaTheme)next, true);
         }
 

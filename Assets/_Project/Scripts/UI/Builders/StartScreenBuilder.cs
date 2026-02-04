@@ -56,11 +56,11 @@ namespace NeuralBreak.UI.Builders
             var playBtn = CreateButton("PlayButton", container, "PLAY", new Vector2(0, -80), new Vector2(200, 60));
 
             // Wire StartScreen fields
-            SetPrivateField(startScreen, "_screenRoot", screen.gameObject);
-            SetPrivateField(startScreen, "_titleText", titleText);
-            SetPrivateField(startScreen, "_subtitleText", subText);
-            SetPrivateField(startScreen, "_playButton", playBtn);
-            SetPrivateField(startScreen, "_firstSelected", playBtn);
+            SetPrivateField(startScreen, "m_screenRoot", screen.gameObject);
+            SetPrivateField(startScreen, "m_titleText", titleText);
+            SetPrivateField(startScreen, "m_subtitleText", subText);
+            SetPrivateField(startScreen, "m_playButton", playBtn);
+            SetPrivateField(startScreen, "m_firstSelected", playBtn);
 
             return screen.gameObject;
         }

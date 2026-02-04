@@ -12,34 +12,34 @@ namespace NeuralBreak.Combat
     {
 
         [Header("Default Durations")]
-        [SerializeField] private float _spreadShotDuration = 10f;
-        [SerializeField] private float _piercingDuration = 8f;
-        [SerializeField] private float _rapidFireDuration = 6f;
-        [SerializeField] private float _homingDuration = 8f;
+        [SerializeField] private float m_spreadShotDuration = 10f;
+        [SerializeField] private float m_piercingDuration = 8f;
+        [SerializeField] private float m_rapidFireDuration = 6f;
+        [SerializeField] private float m_homingDuration = 8f;
 
         [Header("Upgrade Parameters")]
-        [SerializeField] private int _spreadShotCount = 3;
-        [SerializeField] private float _spreadAngle = 15f;
-        [SerializeField] private float _rapidFireMultiplier = 2f;
-        [SerializeField] private float _homingStrength = 5f;
-        [SerializeField] private float _homingRange = 10f;
+        [SerializeField] private int m_spreadShotCount = 3;
+        [SerializeField] private float m_spreadAngle = 15f;
+        [SerializeField] private float m_rapidFireMultiplier = 2f;
+        [SerializeField] private float m_homingStrength = 5f;
+        [SerializeField] private float m_homingRange = 10f;
 
         // Active upgrades with remaining time
-        private Dictionary<PickupType, float> _activeUpgrades = new Dictionary<PickupType, float>();
+        private Dictionary<PickupType, float> m_activeUpgrades = new Dictionary<PickupType, float>();
 
         // Public accessors
-        public bool HasSpreadShot => _activeUpgrades.ContainsKey(PickupType.SpreadShot);
-        public bool HasPiercing => _activeUpgrades.ContainsKey(PickupType.Piercing);
-        public bool HasRapidFire => _activeUpgrades.ContainsKey(PickupType.RapidFire);
-        public bool HasHoming => _activeUpgrades.ContainsKey(PickupType.Homing);
+        public bool HasSpreadShot => m_activeUpgrades.ContainsKey(PickupType.SpreadShot);
+        public bool HasPiercing => m_activeUpgrades.ContainsKey(PickupType.Piercing);
+        public bool HasRapidFire => m_activeUpgrades.ContainsKey(PickupType.RapidFire);
+        public bool HasHoming => m_activeUpgrades.ContainsKey(PickupType.Homing);
 
-        public int SpreadShotCount => _spreadShotCount;
-        public float SpreadAngle => _spreadAngle;
-        public float RapidFireMultiplier => _rapidFireMultiplier;
-        public float HomingStrength => _homingStrength;
-        public float HomingRange => _homingRange;
+        public int SpreadShotCount => m_spreadShotCount;
+        public float SpreadAngle => m_spreadAngle;
+        public float RapidFireMultiplier => m_rapidFireMultiplier;
+        public float HomingStrength => m_homingStrength;
+        public float HomingRange => m_homingRange;
 
-        public int ActiveUpgradeCount => _activeUpgrades.Count;
+        public int ActiveUpgradeCount => m_activeUpgrades.Count;
 
         private void Awake()
         {
@@ -63,16 +63,16 @@ namespace NeuralBreak.Combat
 
         private void UpdateUpgradeDurations()
         {
-            if (_activeUpgrades.Count == 0) return;
+            if (m_activeUpgrades.Count == 0) return;
 
             List<PickupType> expiredUpgrades = new List<PickupType>();
 
             // Update all timers
-            List<PickupType> keys = new List<PickupType>(_activeUpgrades.Keys);
+            List<PickupType> keys = new List<PickupType>(m_activeUpgrades.Keys);
             foreach (var key in keys)
             {
-                _activeUpgrades[key] -= Time.deltaTime;
-                if (_activeUpgrades[key] <= 0f)
+                m_activeUpgrades[key] -= Time.deltaTime;
+                if (m_activeUpgrades[key] <= 0f)
                 {
                     expiredUpgrades.Add(key);
                 }
@@ -81,7 +81,7 @@ namespace NeuralBreak.Combat
             // Remove expired upgrades
             foreach (var upgrade in expiredUpgrades)
             {
-                _activeUpgrades.Remove(upgrade);
+                m_activeUpgrades.Remove(upgrade);
 
                 EventBus.Publish(new WeaponUpgradeExpiredEvent
                 {
@@ -104,14 +104,14 @@ namespace NeuralBreak.Combat
             }
 
             // If already active, extend duration
-            if (_activeUpgrades.ContainsKey(upgradeType))
+            if (m_activeUpgrades.ContainsKey(upgradeType))
             {
-                _activeUpgrades[upgradeType] = Mathf.Max(_activeUpgrades[upgradeType], duration);
-                Debug.Log($"[WeaponUpgradeManager] {upgradeType} extended to {_activeUpgrades[upgradeType]:F1}s");
+                m_activeUpgrades[upgradeType] = Mathf.Max(m_activeUpgrades[upgradeType], duration);
+                Debug.Log($"[WeaponUpgradeManager] {upgradeType} extended to {m_activeUpgrades[upgradeType]:F1}s");
             }
             else
             {
-                _activeUpgrades[upgradeType] = duration;
+                m_activeUpgrades[upgradeType] = duration;
                 Debug.Log($"[WeaponUpgradeManager] {upgradeType} activated for {duration}s");
             }
 
@@ -127,7 +127,7 @@ namespace NeuralBreak.Combat
         /// </summary>
         public float GetRemainingTime(PickupType upgradeType)
         {
-            return _activeUpgrades.TryGetValue(upgradeType, out float time) ? time : 0f;
+            return m_activeUpgrades.TryGetValue(upgradeType, out float time) ? time : 0f;
         }
 
         /// <summary>
@@ -135,7 +135,7 @@ namespace NeuralBreak.Combat
         /// </summary>
         public bool IsUpgradeActive(PickupType upgradeType)
         {
-            return _activeUpgrades.ContainsKey(upgradeType);
+            return m_activeUpgrades.ContainsKey(upgradeType);
         }
 
         /// <summary>
@@ -143,17 +143,17 @@ namespace NeuralBreak.Combat
         /// </summary>
         public Dictionary<PickupType, float> GetActiveUpgrades()
         {
-            return new Dictionary<PickupType, float>(_activeUpgrades);
+            return new Dictionary<PickupType, float>(m_activeUpgrades);
         }
 
         private float GetDefaultDuration(PickupType type)
         {
             switch (type)
             {
-                case PickupType.SpreadShot: return _spreadShotDuration;
-                case PickupType.Piercing: return _piercingDuration;
-                case PickupType.RapidFire: return _rapidFireDuration;
-                case PickupType.Homing: return _homingDuration;
+                case PickupType.SpreadShot: return m_spreadShotDuration;
+                case PickupType.Piercing: return m_piercingDuration;
+                case PickupType.RapidFire: return m_rapidFireDuration;
+                case PickupType.Homing: return m_homingDuration;
                 default: return 10f;
             }
         }
@@ -163,14 +163,14 @@ namespace NeuralBreak.Combat
         /// </summary>
         public void ClearAllUpgrades()
         {
-            foreach (var upgrade in _activeUpgrades.Keys)
+            foreach (var upgrade in m_activeUpgrades.Keys)
             {
                 EventBus.Publish(new WeaponUpgradeExpiredEvent
                 {
                     upgradeType = upgrade
                 });
             }
-            _activeUpgrades.Clear();
+            m_activeUpgrades.Clear();
         }
 
         private void OnGameStarted(GameStartedEvent evt)

@@ -10,22 +10,22 @@ namespace NeuralBreak.Entities
     public class MedPackVisuals : MonoBehaviour
     {
         [Header("Colors")]
-        [SerializeField] private Color _baseColor = new Color(0f, 1f, 0f, 0.9f); // Bright green
-        [SerializeField] private Color _glowColor = new Color(0f, 1f, 0f, 0.6f); // Green glow
-        [SerializeField] private Color _crossColor = new Color(1f, 1f, 1f, 0.95f); // White cross
+        [SerializeField] private Color m_baseColor = new Color(0f, 1f, 0f, 0.9f); // Bright green
+        [SerializeField] private Color m_glowColor = new Color(0f, 1f, 0f, 0.6f); // Green glow
+        [SerializeField] private Color m_crossColor = new Color(1f, 1f, 1f, 0.95f); // White cross
 
         [Header("Scale")]
-        [SerializeField] private float _radius = 0.5f;
+        [SerializeField] private float m_radius = 0.5f;
 
         // Components
-        private Transform _glow;
-        private Transform _outerGlow;
-        private Transform _crossVertical;
-        private Transform _crossHorizontal;
-        private Transform _wireframe;
-        private Transform[] _particles;
+        private Transform m_glow;
+        private Transform m_outerGlow;
+        private Transform m_crossVertical;
+        private Transform m_crossHorizontal;
+        private Transform m_wireframe;
+        private Transform[] m_particles;
 
-        private float _time;
+        private float m_time;
 
         private void Start()
         {
@@ -37,21 +37,21 @@ namespace NeuralBreak.Entities
             ClearChildren();
 
             // Outer glow sphere
-            _outerGlow = CreateCircle("OuterGlow", _radius * 1.25f,
-                new Color(_glowColor.r, _glowColor.g, _glowColor.b, 0.3f), 1);
+            m_outerGlow = CreateCircle("OuterGlow", m_radius * 1.25f,
+                new Color(m_glowColor.r, m_glowColor.g, m_glowColor.b, 0.3f), 1);
 
             // Main glow sphere
-            _glow = CreateCircle("Glow", _radius, _glowColor, 5);
+            m_glow = CreateCircle("Glow", m_radius, m_glowColor, 5);
 
             // Cross shape - vertical bar
-            _crossVertical = CreateRect("CrossVertical", 0.15f, 0.56f, _crossColor, 10);
+            m_crossVertical = CreateRect("CrossVertical", 0.15f, 0.56f, m_crossColor, 10);
 
             // Cross shape - horizontal bar
-            _crossHorizontal = CreateRect("CrossHorizontal", 0.56f, 0.15f, _crossColor, 10);
+            m_crossHorizontal = CreateRect("CrossHorizontal", 0.56f, 0.15f, m_crossColor, 10);
 
             // Wireframe outline
-            _wireframe = CreateRing("Wireframe", _radius * 0.9f, _radius,
-                new Color(_baseColor.r, _baseColor.g, _baseColor.b, 0.7f), 8);
+            m_wireframe = CreateRing("Wireframe", m_radius * 0.9f, m_radius,
+                new Color(m_baseColor.r, m_baseColor.g, m_baseColor.b, 0.7f), 8);
 
             // Orbiting particles
             CreateParticles();
@@ -59,7 +59,7 @@ namespace NeuralBreak.Entities
 
         private void CreateParticles()
         {
-            _particles = new Transform[10];
+            m_particles = new Transform[10];
 
             for (int i = 0; i < 10; i++)
             {
@@ -68,78 +68,78 @@ namespace NeuralBreak.Entities
 
                 var sr = particle.AddComponent<SpriteRenderer>();
                 sr.sprite = CreateCircleSprite(8);
-                sr.color = new Color(_baseColor.r, _baseColor.g, _baseColor.b, 0.8f);
+                sr.color = new Color(m_baseColor.r, m_baseColor.g, m_baseColor.b, 0.8f);
                 sr.sortingOrder = 15;
 
                 particle.transform.localScale = Vector3.one * 0.06f;
-                _particles[i] = particle.transform;
+                m_particles[i] = particle.transform;
             }
         }
 
         private void Update()
         {
-            if (_glow == null) return;
+            if (m_glow == null) return;
 
-            _time += Time.deltaTime;
+            m_time += Time.deltaTime;
 
             // Pulsing scale
-            float pulse = 0.85f + Mathf.Sin(_time * 4f) * 0.2f;
-            _glow.localScale = Vector3.one * _radius * 2f * pulse;
+            float pulse = 0.85f + Mathf.Sin(m_time * 4f) * 0.2f;
+            m_glow.localScale = Vector3.one * m_radius * 2f * pulse;
 
             // Outer glow pulse
-            if (_outerGlow != null)
+            if (m_outerGlow != null)
             {
-                float outerPulse = 1f + Mathf.Sin(_time * 3f) * 0.15f;
-                _outerGlow.localScale = Vector3.one * _radius * 2.5f * outerPulse;
+                float outerPulse = 1f + Mathf.Sin(m_time * 3f) * 0.15f;
+                m_outerGlow.localScale = Vector3.one * m_radius * 2.5f * outerPulse;
             }
 
             // Cross glow pulse
-            if (_crossVertical != null)
+            if (m_crossVertical != null)
             {
-                float crossAlpha = 0.7f + Mathf.Sin(_time * 5f) * 0.25f;
-                var sr = _crossVertical.GetComponent<SpriteRenderer>();
+                float crossAlpha = 0.7f + Mathf.Sin(m_time * 5f) * 0.25f;
+                var sr = m_crossVertical.GetComponent<SpriteRenderer>();
                 if (sr != null)
                 {
-                    sr.color = new Color(_crossColor.r, _crossColor.g, _crossColor.b, crossAlpha);
+                    sr.color = new Color(m_crossColor.r, m_crossColor.g, m_crossColor.b, crossAlpha);
                 }
             }
-            if (_crossHorizontal != null)
+            if (m_crossHorizontal != null)
             {
-                float crossAlpha = 0.7f + Mathf.Sin(_time * 5f) * 0.25f;
-                var sr = _crossHorizontal.GetComponent<SpriteRenderer>();
+                float crossAlpha = 0.7f + Mathf.Sin(m_time * 5f) * 0.25f;
+                var sr = m_crossHorizontal.GetComponent<SpriteRenderer>();
                 if (sr != null)
                 {
-                    sr.color = new Color(_crossColor.r, _crossColor.g, _crossColor.b, crossAlpha);
+                    sr.color = new Color(m_crossColor.r, m_crossColor.g, m_crossColor.b, crossAlpha);
                 }
             }
 
             // Wireframe rotation
-            if (_wireframe != null)
+            if (m_wireframe != null)
             {
-                _wireframe.Rotate(0, 0, Time.deltaTime * 30f);
+                m_wireframe.Rotate(0, 0, Time.deltaTime * 30f);
             }
 
             // Orbiting particles
-            if (_particles != null)
+            if (m_particles != null)
             {
-                for (int i = 0; i < _particles.Length; i++)
+                for (int i = 0; i < m_particles.Length; i++)
                 {
-                    if (_particles[i] == null) continue;
+                    if (m_particles[i] == null) continue;
 
-                    float angle = _time * 2f + (i / (float)_particles.Length) * Mathf.PI * 2f;
-                    float dist = _radius * 1.25f;
-                    _particles[i].localPosition = new Vector3(
+                    float angle = m_time * 2f + (i / (float)m_particles.Length) * Mathf.PI * 2f;
+                    float dist = m_radius * 1.25f;
+                    m_particles[i].localPosition = new Vector3(
                         Mathf.Cos(angle) * dist,
                         Mathf.Sin(angle) * dist,
                         0
                     );
 
                     // Particle pulse
-                    float pAlpha = 0.5f + Mathf.Sin(_time * 6f + i) * 0.3f;
-                    var sr = _particles[i].GetComponent<SpriteRenderer>();
+                    float pAlpha = 0.5f + Mathf.Sin(m_time * 6f + i) * 0.3f;
+                    var sr = m_particles[i].GetComponent<SpriteRenderer>();
                     if (sr != null)
                     {
-                        sr.color = new Color(_baseColor.r, _baseColor.g, _baseColor.b, pAlpha);
+                        sr.color = new Color(m_baseColor.r, m_baseColor.g, m_baseColor.b, pAlpha);
                     }
                 }
             }

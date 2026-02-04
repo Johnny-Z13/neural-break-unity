@@ -19,76 +19,76 @@ namespace NeuralBreak.Entities
         public override EnemyType EnemyType => EnemyType.VoidSphere;
 
         [Header("VoidSphere Settings")]
-        [SerializeField] private float _pulsateSpeed = 1f;
-        [SerializeField] private float _pulsateAmount = 0.1f;
-        [SerializeField] private float _gravityPullRadius = 6f;
-        [SerializeField] private float _gravityPullStrength = 2f;
+        [SerializeField] private float m_pulsateSpeed = 1f;
+        [SerializeField] private float m_pulsateAmount = 0.1f;
+        [SerializeField] private float m_gravityPullRadius = 6f;
+        [SerializeField] private float m_gravityPullStrength = 2f;
 
         [Header("Burst Attack")]
-        [SerializeField] private float _spreadAngle = 30f;
+        [SerializeField] private float m_spreadAngle = 30f;
 
         [Header("Death Explosion")]
-        [SerializeField] private float _deathDamageRadius = 8f;
-        [SerializeField] private int _deathDamageAmount = 50;
+        [SerializeField] private float m_deathDamageRadius = 8f;
+        [SerializeField] private int m_deathDamageAmount = 50;
 
         // Config-driven shooting values
-        private float _burstCooldown => EnemyConfig?.fireRate ?? 3f;
-        private int _burstCount => EnemyConfig?.burstCount ?? 4;
-        private float _burstDelay => EnemyConfig?.burstDelay ?? 0.25f;
-        private float _projectileSpeed => EnemyConfig?.projectileSpeed ?? 5f;
-        private int _projectileDamage => EnemyConfig?.projectileDamage ?? 20;
+        private float m_burstCooldown => EnemyConfig?.fireRate ?? 3f;
+        private int m_burstCount => EnemyConfig?.burstCount ?? 4;
+        private float m_burstDelay => EnemyConfig?.burstDelay ?? 0.25f;
+        private float m_projectileSpeed => EnemyConfig?.projectileSpeed ?? 5f;
+        private int m_projectileDamage => EnemyConfig?.projectileDamage ?? 20;
 
         [Header("Visual")]
-        [SerializeField] private SpriteRenderer _spriteRenderer;
-        [SerializeField] private SpriteRenderer _innerGlow;
-        [SerializeField] private VoidSphereVisuals _visuals;
-        [SerializeField] private Color _voidColor = new Color(0.2f, 0f, 0.4f); // Deep purple
-        [SerializeField] private Color _glowColor = new Color(0.6f, 0f, 1f); // Purple glow
+        [SerializeField] private SpriteRenderer m_spriteRenderer;
+        [SerializeField] private SpriteRenderer m_innerGlow;
+        [SerializeField] private VoidSphereVisuals m_visuals;
+        [SerializeField] private Color m_voidColor = new Color(0.2f, 0f, 0.4f); // Deep purple
+        [SerializeField] private Color m_glowColor = new Color(0.6f, 0f, 1f); // Purple glow
 
         // Note: MMFeedbacks removed
 
         // State
-        private float _burstTimer;
-        private bool _isFiringBurst;
-        private float _pulsatePhase;
-        private float _chargeTimer;
-        private bool _isCharging;
-        private bool _visualsGenerated;
-        private float _baseScale; // Store the config-based scale
+        private float m_burstTimer;
+        private bool m_isFiringBurst;
+        private float m_pulsatePhase;
+        private float m_chargeTimer;
+        private bool m_isCharging;
+        private bool m_visualsGenerated;
+        private float m_baseScale; // Store the config-based scale
 
         protected override void OnInitialize()
         {
             base.OnInitialize();
 
-            _burstTimer = _burstCooldown * 0.5f;
-            _isFiringBurst = false;
-            _pulsatePhase = Random.Range(0f, Mathf.PI * 2f);
-            _isCharging = false;
+            m_burstTimer = m_burstCooldown * 0.5f;
+            m_isFiringBurst = false;
+            m_pulsatePhase = Random.Range(0f, Mathf.PI * 2f);
+            m_isCharging = false;
 
             // Cache the base scale set by EnemyBase (collisionRadius * 2)
-            _baseScale = _collisionRadius * 2f;
+            m_baseScale = m_collisionRadius * 2f;
 
             // Generate procedural visuals if not yet done
-            if (!_visualsGenerated)
+            if (!m_visualsGenerated)
             {
                 EnsureVisuals();
-                _visualsGenerated = true;
+                m_visualsGenerated = true;
             }
         }
 
         private void EnsureVisuals()
         {
-            if (_visuals == null)
+            if (m_visuals == null)
             {
-                _visuals = GetComponentInChildren<VoidSphereVisuals>();
+                m_visuals = GetComponentInChildren<VoidSphereVisuals>();
             }
 
-            if (_visuals == null)
+            if (m_visuals == null)
             {
                 var visualsGO = new GameObject("Visuals");
                 visualsGO.transform.SetParent(transform, false);
                 visualsGO.transform.localPosition = Vector3.zero;
-                _visuals = visualsGO.AddComponent<VoidSphereVisuals>();
+                m_visuals = visualsGO.AddComponent<VoidSphereVisuals>();
             }
         }
 
@@ -104,62 +104,62 @@ namespace NeuralBreak.Entities
         {
             // Slow, relentless advance toward player
             Vector2 direction = GetDirectionToPlayer();
-            transform.position = (Vector2)transform.position + direction * _speed * Time.deltaTime;
+            transform.position = (Vector2)transform.position + direction * m_speed * Time.deltaTime;
         }
 
         private void UpdatePulsate()
         {
-            _pulsatePhase += Time.deltaTime * _pulsateSpeed;
-            float pulseFactor = 1f + Mathf.Sin(_pulsatePhase) * _pulsateAmount;
-            transform.localScale = Vector3.one * _baseScale * pulseFactor;
+            m_pulsatePhase += Time.deltaTime * m_pulsateSpeed;
+            float pulseFactor = 1f + Mathf.Sin(m_pulsatePhase) * m_pulsateAmount;
+            transform.localScale = Vector3.one * m_baseScale * pulseFactor;
 
             // Inner glow intensity
-            if (_innerGlow != null)
+            if (m_innerGlow != null)
             {
-                float glowIntensity = 0.5f + Mathf.Sin(_pulsatePhase * 2f) * 0.3f;
-                Color glow = _glowColor;
+                float glowIntensity = 0.5f + Mathf.Sin(m_pulsatePhase * 2f) * 0.3f;
+                Color glow = m_glowColor;
                 glow.a = glowIntensity;
-                _innerGlow.color = glow;
+                m_innerGlow.color = glow;
             }
         }
 
         private void UpdateAttack()
         {
-            if (_isFiringBurst) return;
+            if (m_isFiringBurst) return;
 
-            _burstTimer += Time.deltaTime;
+            m_burstTimer += Time.deltaTime;
 
             // Start charging before burst
-            if (!_isCharging && _burstTimer >= _burstCooldown - 0.5f)
+            if (!m_isCharging && m_burstTimer >= m_burstCooldown - 0.5f)
             {
-                _isCharging = true;
+                m_isCharging = true;
                 // Feedback (Feel removed)
             }
 
-            if (_burstTimer >= _burstCooldown)
+            if (m_burstTimer >= m_burstCooldown)
             {
                 StartCoroutine(FireBurst());
-                _burstTimer = 0f;
-                _isCharging = false;
+                m_burstTimer = 0f;
+                m_isCharging = false;
             }
         }
 
         private System.Collections.IEnumerator FireBurst()
         {
-            _isFiringBurst = true;
+            m_isFiringBurst = true;
             // Feedback (Feel removed)
 
-            for (int i = 0; i < _burstCount; i++)
+            for (int i = 0; i < m_burstCount; i++)
             {
                 FireProjectiles();
 
-                if (i < _burstCount - 1)
+                if (i < m_burstCount - 1)
                 {
-                    yield return new WaitForSeconds(_burstDelay);
+                    yield return new WaitForSeconds(m_burstDelay);
                 }
             }
 
-            _isFiringBurst = false;
+            m_isFiringBurst = false;
         }
 
         private void FireProjectiles()
@@ -172,31 +172,31 @@ namespace NeuralBreak.Entities
             EnemyProjectilePool.Instance.FireSpread(
                 transform.position,
                 direction,
-                _projectileSpeed,
-                _projectileDamage,
+                m_projectileSpeed,
+                m_projectileDamage,
                 3, // 3 projectiles per shot
-                _spreadAngle,
-                _glowColor
+                m_spreadAngle,
+                m_glowColor
             );
         }
 
         private void ApplyGravityPull()
         {
-            if (_playerTarget == null) return;
+            if (m_playerTarget == null) return;
 
             // Pull player slightly toward the void sphere when in range
             float distanceToPlayer = GetDistanceToPlayer();
-            if (distanceToPlayer <= _gravityPullRadius && distanceToPlayer > 0.5f)
+            if (distanceToPlayer <= m_gravityPullRadius && distanceToPlayer > 0.5f)
             {
                 // Calculate pull strength (stronger when closer)
-                float pullFactor = 1f - (distanceToPlayer / _gravityPullRadius);
-                Vector2 pullDirection = ((Vector2)transform.position - (Vector2)_playerTarget.position).normalized;
+                float pullFactor = 1f - (distanceToPlayer / m_gravityPullRadius);
+                Vector2 pullDirection = ((Vector2)transform.position - (Vector2)m_playerTarget.position).normalized;
 
                 // Apply subtle pull (reduced by factor to not be too oppressive)
-                var playerRb = _playerTarget.GetComponent<Rigidbody2D>();
+                var playerRb = m_playerTarget.GetComponent<Rigidbody2D>();
                 if (playerRb != null)
                 {
-                    playerRb.AddForce(pullDirection * _gravityPullStrength * pullFactor, ForceMode2D.Force);
+                    playerRb.AddForce(pullDirection * m_gravityPullStrength * pullFactor, ForceMode2D.Force);
                 }
             }
         }
@@ -212,10 +212,10 @@ namespace NeuralBreak.Entities
             {
                 EnemyProjectilePool.Instance.FireRing(
                     transform.position,
-                    _projectileSpeed * 1.5f,
-                    _projectileDamage,
+                    m_projectileSpeed * 1.5f,
+                    m_projectileDamage,
                     16, // Big ring of bullets
-                    _glowColor
+                    m_glowColor
                 );
             }
 
@@ -224,7 +224,7 @@ namespace NeuralBreak.Entities
 
         private void DealDeathDamage()
         {
-            Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, _deathDamageRadius);
+            Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, m_deathDamageRadius);
 
             foreach (var hit in hits)
             {
@@ -234,7 +234,7 @@ namespace NeuralBreak.Entities
                 EnemyBase enemy = hit.GetComponent<EnemyBase>();
                 if (enemy != null && enemy.IsAlive)
                 {
-                    enemy.TakeDamage(_deathDamageAmount, transform.position);
+                    enemy.TakeDamage(m_deathDamageAmount, transform.position);
                 }
 
                 // Could also push player back here
@@ -245,18 +245,18 @@ namespace NeuralBreak.Entities
         {
             base.OnStateChanged(newState);
 
-            if (_spriteRenderer == null) return;
+            if (m_spriteRenderer == null) return;
 
             switch (newState)
             {
                 case EnemyState.Spawning:
-                    _spriteRenderer.color = new Color(_voidColor.r, _voidColor.g, _voidColor.b, 0.5f);
+                    m_spriteRenderer.color = new Color(m_voidColor.r, m_voidColor.g, m_voidColor.b, 0.5f);
                     break;
                 case EnemyState.Alive:
-                    _spriteRenderer.color = _voidColor;
+                    m_spriteRenderer.color = m_voidColor;
                     break;
                 case EnemyState.Dying:
-                    _spriteRenderer.color = _glowColor;
+                    m_spriteRenderer.color = m_glowColor;
                     break;
             }
         }
@@ -267,11 +267,11 @@ namespace NeuralBreak.Entities
 
             // Gravity pull radius
             Gizmos.color = new Color(0.6f, 0f, 1f, 0.2f);
-            Gizmos.DrawSphere(transform.position, _gravityPullRadius);
+            Gizmos.DrawSphere(transform.position, m_gravityPullRadius);
 
             // Death damage radius
             Gizmos.color = new Color(1f, 0f, 0.5f, 0.2f);
-            Gizmos.DrawSphere(transform.position, _deathDamageRadius);
+            Gizmos.DrawSphere(transform.position, m_deathDamageRadius);
         }
     }
 }

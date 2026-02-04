@@ -19,11 +19,11 @@ namespace NeuralBreak.Combat
     public class WeaponSystem : MonoBehaviour
     {
         [Header("References")]
-        [SerializeField] private PlayerController _player;
-        [SerializeField] private Projectile _projectilePrefab;
-        [SerializeField] private EnhancedProjectile _enhancedProjectilePrefab;
-        [SerializeField] private BeamWeapon _beamWeapon;
-        [SerializeField] private Transform _projectileContainer;
+        [SerializeField] private PlayerController m_player;
+        [SerializeField] private Projectile m_projectilePrefab;
+        [SerializeField] private EnhancedProjectile m_enhancedProjectilePrefab;
+        [SerializeField] private BeamWeapon m_beamWeapon;
+        [SerializeField] private Transform m_projectileContainer;
 
         // Note: MMFeedbacks removed - using native Unity feedback system
 
@@ -31,39 +31,39 @@ namespace NeuralBreak.Combat
         private WeaponSystemConfig Config => ConfigProvider.WeaponSystem;
 
         // Runtime state
-        private int _powerLevel = 0;
-        private float _fireTimer;
-        private float _rearFireTimer;
-        private float _currentHeat;
-        private bool _isOverheated;
-        private float _overheatTimer;
+        private int m_powerLevel = 0;
+        private float m_fireTimer;
+        private float m_rearFireTimer;
+        private float m_currentHeat;
+        private bool m_isOverheated;
+        private float m_overheatTimer;
 
         // Active modifiers (from pickups)
-        private bool _rapidFireActive;
-        private float _rapidFireTimer;
-        private bool _damageBoostActive;
-        private float _damageBoostTimer;
-        private bool _rearWeaponActive;
+        private bool m_rapidFireActive;
+        private float m_rapidFireTimer;
+        private bool m_damageBoostActive;
+        private float m_damageBoostTimer;
+        private bool m_rearWeaponActive;
 
         // Object pools
-        private ObjectPool<Projectile> _projectilePool;
-        private ObjectPool<EnhancedProjectile> _enhancedProjectilePool;
-        private InputManager _input;
-        private WeaponUpgradeManager _upgradeManager;
-        private PermanentUpgradeManager _permanentUpgrades;
+        private ObjectPool<Projectile> m_projectilePool;
+        private ObjectPool<EnhancedProjectile> m_enhancedProjectilePool;
+        private InputManager m_input;
+        private WeaponUpgradeManager m_upgradeManager;
+        private PermanentUpgradeManager m_permanentUpgrades;
 
         #region Public Accessors
 
-        public float Heat => _currentHeat;
+        public float Heat => m_currentHeat;
         public float HeatMax => GetHeatMax();
-        public float HeatPercent => _currentHeat / GetHeatMax();
-        public bool IsOverheated => _isOverheated;
-        public int PowerLevel => _powerLevel;
+        public float HeatPercent => m_currentHeat / GetHeatMax();
+        public bool IsOverheated => m_isOverheated;
+        public int PowerLevel => m_powerLevel;
         public int MaxPowerLevel => Config?.powerLevels?.maxLevel ?? 10;
         public ForwardFirePattern CurrentPattern => GetCurrentPattern();
-        public bool HasRearWeapon => _rearWeaponActive ||
+        public bool HasRearWeapon => m_rearWeaponActive ||
                                       (Config?.rearWeapon?.enabled ?? false) ||
-                                      (_permanentUpgrades?.GetCombinedModifiers().enableRearFire ?? false);
+                                      (m_permanentUpgrades?.GetCombinedModifiers().enableRearFire ?? false);
 
         #endregion
 
@@ -77,30 +77,30 @@ namespace NeuralBreak.Combat
         private void InitializeProjectilePool()
         {
             // Create projectile container if not assigned
-            if (_projectileContainer == null)
+            if (m_projectileContainer == null)
             {
                 var container = new GameObject("PlayerProjectiles");
-                _projectileContainer = container.transform;
+                m_projectileContainer = container.transform;
             }
 
             // Create runtime projectile prefab if not assigned
-            if (_projectilePrefab == null)
+            if (m_projectilePrefab == null)
             {
-                _projectilePrefab = CreateRuntimeProjectilePrefab();
+                m_projectilePrefab = CreateRuntimeProjectilePrefab();
             }
 
             // Create runtime enhanced projectile prefab if not assigned
-            if (_enhancedProjectilePrefab == null)
+            if (m_enhancedProjectilePrefab == null)
             {
-                _enhancedProjectilePrefab = CreateRuntimeEnhancedProjectilePrefab();
+                m_enhancedProjectilePrefab = CreateRuntimeEnhancedProjectilePrefab();
             }
 
             // Initialize basic projectile pool
             try
             {
-                _projectilePool = new ObjectPool<Projectile>(
-                    _projectilePrefab,
-                    _projectileContainer,
+                m_projectilePool = new ObjectPool<Projectile>(
+                    m_projectilePrefab,
+                    m_projectileContainer,
                     initialSize: 100, // Increased for multi-shot patterns
                     onReturn: proj => proj.OnReturnToPool()
                 );
@@ -113,9 +113,9 @@ namespace NeuralBreak.Combat
             // Initialize enhanced projectile pool
             try
             {
-                _enhancedProjectilePool = new ObjectPool<EnhancedProjectile>(
-                    _enhancedProjectilePrefab,
-                    _projectileContainer,
+                m_enhancedProjectilePool = new ObjectPool<EnhancedProjectile>(
+                    m_enhancedProjectilePrefab,
+                    m_projectileContainer,
                     initialSize: 50, // Smaller pool - only used for special behaviors
                     onReturn: proj => proj.OnReturnToPool()
                 );
@@ -198,23 +198,23 @@ namespace NeuralBreak.Combat
 
         private void Start()
         {
-            _input = InputManager.Instance;
+            m_input = InputManager.Instance;
 
-            if (_player == null)
+            if (m_player == null)
             {
-                _player = GetComponent<PlayerController>();
+                m_player = GetComponent<PlayerController>();
             }
 
             // Cache WeaponUpgradeManager reference (performance fix - avoid FindObjectOfType per frame)
-            _upgradeManager = FindFirstObjectByType<WeaponUpgradeManager>();
-            if (_upgradeManager == null)
+            m_upgradeManager = FindFirstObjectByType<WeaponUpgradeManager>();
+            if (m_upgradeManager == null)
             {
                 LogHelper.LogWarning("[WeaponSystem] WeaponUpgradeManager not found - pickup upgrades will not work");
             }
 
             // Cache PermanentUpgradeManager reference
-            _permanentUpgrades = PermanentUpgradeManager.Instance;
-            if (_permanentUpgrades == null)
+            m_permanentUpgrades = PermanentUpgradeManager.Instance;
+            if (m_permanentUpgrades == null)
             {
                 LogHelper.LogWarning("[WeaponSystem] PermanentUpgradeManager not found - permanent upgrades will not work");
             }
@@ -244,23 +244,23 @@ namespace NeuralBreak.Combat
         private void UpdateModifierTimers()
         {
             // Rapid fire timer
-            if (_rapidFireActive)
+            if (m_rapidFireActive)
             {
-                _rapidFireTimer -= Time.deltaTime;
-                if (_rapidFireTimer <= 0f)
+                m_rapidFireTimer -= Time.deltaTime;
+                if (m_rapidFireTimer <= 0f)
                 {
-                    _rapidFireActive = false;
+                    m_rapidFireActive = false;
                     LogHelper.Log("[WeaponSystem] Rapid fire expired");
                 }
             }
 
             // Damage boost timer
-            if (_damageBoostActive)
+            if (m_damageBoostActive)
             {
-                _damageBoostTimer -= Time.deltaTime;
-                if (_damageBoostTimer <= 0f)
+                m_damageBoostTimer -= Time.deltaTime;
+                if (m_damageBoostTimer <= 0f)
                 {
-                    _damageBoostActive = false;
+                    m_damageBoostActive = false;
                     LogHelper.Log("[WeaponSystem] Damage boost expired");
                 }
             }
@@ -272,16 +272,16 @@ namespace NeuralBreak.Combat
 
         private void UpdateFiring()
         {
-            _fireTimer -= Time.deltaTime;
-            _rearFireTimer -= Time.deltaTime;
+            m_fireTimer -= Time.deltaTime;
+            m_rearFireTimer -= Time.deltaTime;
 
-            if (_input == null || !_input.FireHeld || _isOverheated) return;
+            if (m_input == null || !m_input.FireHeld || m_isOverheated) return;
 
             // Forward weapons
-            if (_fireTimer <= 0f)
+            if (m_fireTimer <= 0f)
             {
                 FireForward();
-                _fireTimer = GetFireRate();
+                m_fireTimer = GetFireRate();
             }
 
             // Rear weapon (if enabled and synced or independent timer ready)
@@ -294,10 +294,10 @@ namespace NeuralBreak.Combat
                     {
                         // Already fired with forward
                     }
-                    else if (_rearFireTimer <= 0f)
+                    else if (m_rearFireTimer <= 0f)
                     {
                         FireRear();
-                        _rearFireTimer = rearConfig.independentFireRate;
+                        m_rearFireTimer = rearConfig.independentFireRate;
                     }
                 }
             }
@@ -305,19 +305,19 @@ namespace NeuralBreak.Combat
 
         private void FireForward()
         {
-            if (_player == null || _projectilePool == null) return;
+            if (m_player == null || m_projectilePool == null) return;
 
-            Vector2 direction = _player.FacingDirection;
+            Vector2 direction = m_player.FacingDirection;
             if (direction == Vector2.zero) direction = Vector2.up;
 
             int damage = CalculateDamage();
 
             float forwardOffset = Config?.forwardWeapon?.forwardOffset ?? 0.6f;
-            Vector2 basePos = _player.Position + direction * forwardOffset;
+            Vector2 basePos = m_player.Position + direction * forwardOffset;
 
             // Check if beam weapon is active
             var modifiers = GetCombinedModifiers();
-            if (modifiers.enableBeamWeapon && _beamWeapon != null)
+            if (modifiers.enableBeamWeapon && m_beamWeapon != null)
             {
                 FireBeam(basePos, direction, damage, modifiers);
                 return;
@@ -374,7 +374,7 @@ namespace NeuralBreak.Combat
             {
                 position = basePos,
                 direction = direction,
-                powerLevel = _powerLevel
+                powerLevel = m_powerLevel
             });
         }
 
@@ -397,13 +397,13 @@ namespace NeuralBreak.Combat
 
         private void FireBeam(Vector2 position, Vector2 direction, int damage, WeaponModifiers modifiers)
         {
-            if (_beamWeapon == null || _beamWeapon.IsActive) return;
+            if (m_beamWeapon == null || m_beamWeapon.IsActive) return;
 
             float damageMultiplier = modifiers.damageMultiplier;
-            _beamWeapon.Fire(position, direction, damageMultiplier);
+            m_beamWeapon.Fire(position, direction, damageMultiplier);
 
             // Apply heat for beam
-            _currentHeat += GetHeatPerShot() * 0.5f; // Beam uses less heat
+            m_currentHeat += GetHeatPerShot() * 0.5f; // Beam uses less heat
 
             // Feedback
             // Fire feedback (Feel removed)
@@ -415,9 +415,9 @@ namespace NeuralBreak.Combat
         private System.Collections.IEnumerator StopBeamAfterDuration(float duration)
         {
             yield return new WaitForSeconds(duration);
-            if (_beamWeapon != null)
+            if (m_beamWeapon != null)
             {
-                _beamWeapon.Stop();
+                m_beamWeapon.Stop();
             }
         }
 
@@ -480,18 +480,18 @@ namespace NeuralBreak.Combat
 
         private void FireRear()
         {
-            if (_player == null || _projectilePool == null) return;
+            if (m_player == null || m_projectilePool == null) return;
 
             var rearConfig = Config?.rearWeapon;
             if (rearConfig == null) return;
 
-            Vector2 direction = _player.FacingDirection;
+            Vector2 direction = m_player.FacingDirection;
             if (direction == Vector2.zero) direction = Vector2.up;
 
             // Rear direction is opposite of forward
             Vector2 rearDirection = -direction;
             float rearOffset = rearConfig.rearOffset;
-            Vector2 rearPos = _player.Position + rearDirection * rearOffset;
+            Vector2 rearPos = m_player.Position + rearDirection * rearOffset;
 
             // Calculate rear damage
             int baseDamage = CalculateDamage();
@@ -501,7 +501,7 @@ namespace NeuralBreak.Combat
 
             // Apply rear heat
             float rearHeatMult = Config?.heatSystem?.rearWeaponHeatMultiplier ?? 0.5f;
-            _currentHeat += GetHeatPerShot() * rearHeatMult;
+            m_currentHeat += GetHeatPerShot() * rearHeatMult;
 
             // Rear fire feedback (Feel removed)
         }
@@ -518,23 +518,23 @@ namespace NeuralBreak.Combat
             var modifiers = WeaponModifiers.Identity;
 
             // Add permanent upgrades
-            if (_permanentUpgrades != null)
+            if (m_permanentUpgrades != null)
             {
-                modifiers = WeaponModifiers.Combine(modifiers, _permanentUpgrades.GetCombinedModifiers());
+                modifiers = WeaponModifiers.Combine(modifiers, m_permanentUpgrades.GetCombinedModifiers());
             }
 
             // Add temporary pickup modifiers (convert to WeaponModifiers)
-            if (_upgradeManager != null)
+            if (m_upgradeManager != null)
             {
                 var tempMods = WeaponModifiers.Identity;
 
-                if (_upgradeManager.HasHoming)
+                if (m_upgradeManager.HasHoming)
                 {
                     tempMods.enableHoming = true;
-                    tempMods.homingStrength = _upgradeManager.HomingStrength;
+                    tempMods.homingStrength = m_upgradeManager.HomingStrength;
                 }
 
-                if (_upgradeManager.HasPiercing)
+                if (m_upgradeManager.HasPiercing)
                 {
                     tempMods.piercingCount = 5; // Default piercing count for pickup
                 }
@@ -607,14 +607,14 @@ namespace NeuralBreak.Combat
             // Use EnhancedProjectile if special behaviors are active
             if (HasSpecialBehaviors(modifiers))
             {
-                EnhancedProjectile proj = _enhancedProjectilePool.Get(position, Quaternion.identity);
-                proj.Initialize(position, direction, damage, _powerLevel, ReturnEnhancedProjectile, modifiers);
+                EnhancedProjectile proj = m_enhancedProjectilePool.Get(position, Quaternion.identity);
+                proj.Initialize(position, direction, damage, m_powerLevel, ReturnEnhancedProjectile, modifiers);
             }
             else
             {
                 // Use basic Projectile for performance (no special behaviors)
-                Projectile proj = _projectilePool.Get(position, Quaternion.identity);
-                proj.Initialize(position, direction, damage, _powerLevel, ReturnProjectile, false, false);
+                Projectile proj = m_projectilePool.Get(position, Quaternion.identity);
+                proj.Initialize(position, direction, damage, m_powerLevel, ReturnProjectile, false, false);
             }
         }
 
@@ -627,12 +627,12 @@ namespace NeuralBreak.Combat
 
         private void ReturnProjectile(Projectile proj)
         {
-            _projectilePool.Return(proj);
+            m_projectilePool.Return(proj);
         }
 
         private void ReturnEnhancedProjectile(EnhancedProjectile proj)
         {
-            _enhancedProjectilePool.Return(proj);
+            m_enhancedProjectilePool.Return(proj);
         }
 
         #endregion
@@ -644,11 +644,11 @@ namespace NeuralBreak.Combat
         private ForwardFirePattern GetCurrentPattern()
         {
             var powerConfig = Config?.powerLevels;
-            
+
             // If auto-upgrade is enabled, use power level to determine pattern
             if (powerConfig != null && powerConfig.autoUpgradePattern)
             {
-                return powerConfig.GetPatternForLevel(_powerLevel);
+                return powerConfig.GetPatternForLevel(m_powerLevel);
             }
 
             // Otherwise use manual pattern from ForwardWeaponConfig
@@ -660,18 +660,18 @@ namespace NeuralBreak.Combat
             int baseDamage = Config?.baseDamage ?? 12;
             float damagePerLevel = Config?.powerLevels?.damagePerLevel ?? 0.1f;
 
-            float multiplier = 1f + (_powerLevel * damagePerLevel);
+            float multiplier = 1f + (m_powerLevel * damagePerLevel);
 
             // Apply damage boost modifier
-            if (_damageBoostActive)
+            if (m_damageBoostActive)
             {
                 multiplier *= Config?.modifiers?.damageBoostMultiplier ?? 2f;
             }
 
             // Apply PERMANENT damage multiplier
-            if (_permanentUpgrades != null)
+            if (m_permanentUpgrades != null)
             {
-                var modifiers = _permanentUpgrades.GetCombinedModifiers();
+                var modifiers = m_permanentUpgrades.GetCombinedModifiers();
                 multiplier *= modifiers.damageMultiplier;
 
                 // Apply critical hit chance
@@ -694,24 +694,24 @@ namespace NeuralBreak.Combat
             float baseRate = Config?.baseFireRate ?? 0.12f;
             float ratePerLevel = Config?.powerLevels?.fireRatePerLevel ?? 0.005f;
 
-            float rate = Mathf.Max(0.05f, baseRate - (_powerLevel * ratePerLevel));
+            float rate = Mathf.Max(0.05f, baseRate - (m_powerLevel * ratePerLevel));
 
             // Apply rapid fire modifier from internal state
-            if (_rapidFireActive)
+            if (m_rapidFireActive)
             {
                 rate /= Config?.modifiers?.rapidFireMultiplier ?? 1.5f;
             }
 
             // Check WeaponUpgradeManager for rapid fire pickup (cached reference)
-            if (_upgradeManager != null && _upgradeManager.HasRapidFire)
+            if (m_upgradeManager != null && m_upgradeManager.HasRapidFire)
             {
-                rate /= _upgradeManager.RapidFireMultiplier;
+                rate /= m_upgradeManager.RapidFireMultiplier;
             }
 
             // Apply PERMANENT fire rate modifier (NEW)
-            if (_permanentUpgrades != null)
+            if (m_permanentUpgrades != null)
             {
-                float permMultiplier = _permanentUpgrades.GetCombinedModifiers().fireRateMultiplier;
+                float permMultiplier = m_permanentUpgrades.GetCombinedModifiers().fireRateMultiplier;
                 if (permMultiplier > 1f)
                 {
                     rate /= permMultiplier;
@@ -740,9 +740,9 @@ namespace NeuralBreak.Combat
             float multiShotMult = Config?.heatSystem?.multiShotHeatMultiplier ?? 0.3f;
             float totalHeat = baseHeat + (baseHeat * multiShotMult * (projectileCount - 1));
 
-            _currentHeat += totalHeat;
+            m_currentHeat += totalHeat;
 
-            if (_currentHeat >= GetHeatMax())
+            if (m_currentHeat >= GetHeatMax())
             {
                 TriggerOverheat();
             }
@@ -770,44 +770,44 @@ namespace NeuralBreak.Combat
             var heatConfig = Config?.heatSystem;
             if (heatConfig == null || !heatConfig.enabled)
             {
-                _currentHeat = 0f;
+                m_currentHeat = 0f;
                 return;
             }
 
-            if (_isOverheated)
+            if (m_isOverheated)
             {
-                _overheatTimer -= Time.deltaTime;
-                if (_overheatTimer <= 0f)
+                m_overheatTimer -= Time.deltaTime;
+                if (m_overheatTimer <= 0f)
                 {
                     ClearOverheat();
                 }
 
                 float overheatCoolMult = heatConfig.overheatCooldownMultiplier;
-                _currentHeat = Mathf.Max(0f, _currentHeat - heatConfig.cooldownRate * overheatCoolMult * Time.deltaTime);
+                m_currentHeat = Mathf.Max(0f, m_currentHeat - heatConfig.cooldownRate * overheatCoolMult * Time.deltaTime);
             }
-            else if (_input == null || !_input.FireHeld)
+            else if (m_input == null || !m_input.FireHeld)
             {
-                _currentHeat = Mathf.Max(0f, _currentHeat - heatConfig.cooldownRate * Time.deltaTime);
+                m_currentHeat = Mathf.Max(0f, m_currentHeat - heatConfig.cooldownRate * Time.deltaTime);
             }
 
             EventBus.Publish(new WeaponHeatChangedEvent
             {
-                heat = _currentHeat,
+                heat = m_currentHeat,
                 maxHeat = GetHeatMax(),
-                isOverheated = _isOverheated
+                isOverheated = m_isOverheated
             });
         }
 
         private void TriggerOverheat()
         {
-            _isOverheated = true;
-            _overheatTimer = Config?.heatSystem?.overheatDuration ?? 0.8f;
+            m_isOverheated = true;
+            m_overheatTimer = Config?.heatSystem?.overheatDuration ?? 0.8f;
 
             // Overheat feedback (Feel removed)
 
             EventBus.Publish(new WeaponOverheatedEvent
             {
-                cooldownDuration = _overheatTimer
+                cooldownDuration = m_overheatTimer
             });
 
             LogHelper.Log("[WeaponSystem] OVERHEATED!");
@@ -815,7 +815,7 @@ namespace NeuralBreak.Combat
 
         private void ClearOverheat()
         {
-            _isOverheated = false;
+            m_isOverheated = false;
             // Overheat cleared feedback (Feel removed)
             LogHelper.Log("[WeaponSystem] Overheat cleared");
         }
@@ -828,45 +828,45 @@ namespace NeuralBreak.Combat
         {
             if (amount <= 0) return;
 
-            int previousLevel = _powerLevel;
-            _powerLevel = Mathf.Min(_powerLevel + amount, MaxPowerLevel);
+            int previousLevel = m_powerLevel;
+            m_powerLevel = Mathf.Min(m_powerLevel + amount, MaxPowerLevel);
 
-            if (_powerLevel != previousLevel)
+            if (m_powerLevel != previousLevel)
             {
-                EventBus.Publish(new PowerUpChangedEvent { newLevel = _powerLevel });
-                LogHelper.Log($"[WeaponSystem] Power level: {_powerLevel} -> Pattern: {GetCurrentPattern()}");
+                EventBus.Publish(new PowerUpChangedEvent { newLevel = m_powerLevel });
+                LogHelper.Log($"[WeaponSystem] Power level: {m_powerLevel} -> Pattern: {GetCurrentPattern()}");
             }
         }
 
         public void SetPowerLevel(int level)
         {
-            _powerLevel = Mathf.Clamp(level, 0, MaxPowerLevel);
-            EventBus.Publish(new PowerUpChangedEvent { newLevel = _powerLevel });
+            m_powerLevel = Mathf.Clamp(level, 0, MaxPowerLevel);
+            EventBus.Publish(new PowerUpChangedEvent { newLevel = m_powerLevel });
         }
 
         public void ActivateRapidFire(float duration = -1f)
         {
-            _rapidFireActive = true;
-            _rapidFireTimer = duration > 0 ? duration : (Config?.modifiers?.rapidFireDuration ?? 10f);
-            LogHelper.Log($"[WeaponSystem] Rapid fire activated for {_rapidFireTimer}s");
+            m_rapidFireActive = true;
+            m_rapidFireTimer = duration > 0 ? duration : (Config?.modifiers?.rapidFireDuration ?? 10f);
+            LogHelper.Log($"[WeaponSystem] Rapid fire activated for {m_rapidFireTimer}s");
         }
 
         public void ActivateDamageBoost(float duration = -1f)
         {
-            _damageBoostActive = true;
-            _damageBoostTimer = duration > 0 ? duration : (Config?.modifiers?.damageBoostDuration ?? 8f);
-            LogHelper.Log($"[WeaponSystem] Damage boost activated for {_damageBoostTimer}s");
+            m_damageBoostActive = true;
+            m_damageBoostTimer = duration > 0 ? duration : (Config?.modifiers?.damageBoostDuration ?? 8f);
+            LogHelper.Log($"[WeaponSystem] Damage boost activated for {m_damageBoostTimer}s");
         }
 
         public void ActivateRearWeapon()
         {
-            _rearWeaponActive = true;
+            m_rearWeaponActive = true;
             LogHelper.Log("[WeaponSystem] Rear weapon activated!");
         }
 
         public void DeactivateRearWeapon()
         {
-            _rearWeaponActive = false;
+            m_rearWeaponActive = false;
             LogHelper.Log("[WeaponSystem] Rear weapon deactivated");
         }
 
@@ -884,14 +884,14 @@ namespace NeuralBreak.Combat
 
         public void Reset()
         {
-            _powerLevel = 0;
-            _currentHeat = 0f;
-            _isOverheated = false;
-            _fireTimer = 0f;
-            _rearFireTimer = 0f;
-            _rapidFireActive = false;
-            _damageBoostActive = false;
-            _rearWeaponActive = false;
+            m_powerLevel = 0;
+            m_currentHeat = 0f;
+            m_isOverheated = false;
+            m_fireTimer = 0f;
+            m_rearFireTimer = 0f;
+            m_rapidFireActive = false;
+            m_damageBoostActive = false;
+            m_rearWeaponActive = false;
         }
 
         #endregion
@@ -913,14 +913,14 @@ namespace NeuralBreak.Combat
         [ContextMenu("Debug: Toggle Rear Weapon")]
         private void DebugRearWeapon()
         {
-            if (_rearWeaponActive) DeactivateRearWeapon();
+            if (m_rearWeaponActive) DeactivateRearWeapon();
             else ActivateRearWeapon();
         }
 
         [ContextMenu("Debug: Trigger Overheat")]
         private void DebugOverheat()
         {
-            _currentHeat = GetHeatMax();
+            m_currentHeat = GetHeatMax();
             TriggerOverheat();
         }
 

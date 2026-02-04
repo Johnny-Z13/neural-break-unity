@@ -13,36 +13,36 @@ namespace NeuralBreak.Core
     {
 
         [Header("Volume Reference")]
-        [SerializeField] private Volume _globalVolume;
-        [SerializeField] private VolumeProfile _defaultProfile;
+        [SerializeField] private Volume m_globalVolume;
+        [SerializeField] private VolumeProfile m_defaultProfile;
 
         [Header("Default Bloom Settings")]
-        [SerializeField] private float _defaultBloomIntensity = 1f;
-        [SerializeField] private float _defaultBloomThreshold = 0.9f;
-        [SerializeField] private float _defaultBloomScatter = 0.7f;
+        [SerializeField] private float m_defaultBloomIntensity = 1f;
+        [SerializeField] private float m_defaultBloomThreshold = 0.9f;
+        [SerializeField] private float m_defaultBloomScatter = 0.7f;
 
         [Header("Default Vignette Settings")]
-        [SerializeField] private float _defaultVignetteIntensity = 0.3f;
-        [SerializeField] private Color _defaultVignetteColor = Color.black;
+        [SerializeField] private float m_defaultVignetteIntensity = 0.3f;
+        [SerializeField] private Color m_defaultVignetteColor = Color.black;
 
         [Header("Default Chromatic Aberration Settings")]
-        [SerializeField] private float _defaultChromaticIntensity = 0f;
+        [SerializeField] private float m_defaultChromaticIntensity = 0f;
 
         [Header("Effect Presets")]
-        [SerializeField] private bool _enableDamageFlash = true;
-        [SerializeField] private bool _enableKillFeedback = true;
+        [SerializeField] private bool m_enableDamageFlash = true;
+        [SerializeField] private bool m_enableKillFeedback = true;
 
         // Volume components
-        private Bloom _bloom;
-        private Vignette _vignette;
-        private ChromaticAberration _chromaticAberration;
-        private ColorAdjustments _colorAdjustments;
-        private LensDistortion _lensDistortion;
+        private Bloom m_bloom;
+        private Vignette m_vignette;
+        private ChromaticAberration m_chromaticAberration;
+        private ColorAdjustments m_colorAdjustments;
+        private LensDistortion m_lensDistortion;
 
         // Temporary effect states
-        private float _damageFlashTimer;
-        private float _killFlashTimer;
-        private float _screenShakeIntensity;
+        private float m_damageFlashTimer;
+        private float m_killFlashTimer;
+        private float m_screenShakeIntensity;
 
         private void Awake()
         {
@@ -61,36 +61,36 @@ namespace NeuralBreak.Core
         private void SetupVolume()
         {
             // Find volume via GameObject if not assigned
-            if (_globalVolume == null)
+            if (m_globalVolume == null)
             {
                 var volumeGO = GameObject.Find("GlobalVolume");
                 if (volumeGO != null)
                 {
-                    _globalVolume = volumeGO.GetComponent<Volume>();
+                    m_globalVolume = volumeGO.GetComponent<Volume>();
                 }
             }
 
-            if (_globalVolume == null)
+            if (m_globalVolume == null)
             {
                 // Create global volume
                 var volumeGO = new GameObject("GlobalVolume");
                 volumeGO.transform.SetParent(transform);
-                _globalVolume = volumeGO.AddComponent<Volume>();
-                _globalVolume.isGlobal = true;
-                _globalVolume.priority = 100;
+                m_globalVolume = volumeGO.AddComponent<Volume>();
+                m_globalVolume.isGlobal = true;
+                m_globalVolume.priority = 100;
             }
 
             // Create or use profile
-            if (_globalVolume.profile == null)
+            if (m_globalVolume.profile == null)
             {
-                if (_defaultProfile != null)
+                if (m_defaultProfile != null)
                 {
                     // Clone the default profile so we don't modify the asset
-                    _globalVolume.profile = Instantiate(_defaultProfile);
+                    m_globalVolume.profile = Instantiate(m_defaultProfile);
                 }
                 else
                 {
-                    _globalVolume.profile = ScriptableObject.CreateInstance<VolumeProfile>();
+                    m_globalVolume.profile = ScriptableObject.CreateInstance<VolumeProfile>();
                 }
             }
 
@@ -101,72 +101,72 @@ namespace NeuralBreak.Core
 
         private void EnsureVolumeComponents()
         {
-            var profile = _globalVolume.profile;
+            var profile = m_globalVolume.profile;
 
             // Bloom
-            if (!profile.TryGet(out _bloom))
+            if (!profile.TryGet(out m_bloom))
             {
-                _bloom = profile.Add<Bloom>();
+                m_bloom = profile.Add<Bloom>();
             }
 
             // Vignette
-            if (!profile.TryGet(out _vignette))
+            if (!profile.TryGet(out m_vignette))
             {
-                _vignette = profile.Add<Vignette>();
+                m_vignette = profile.Add<Vignette>();
             }
 
             // Chromatic Aberration
-            if (!profile.TryGet(out _chromaticAberration))
+            if (!profile.TryGet(out m_chromaticAberration))
             {
-                _chromaticAberration = profile.Add<ChromaticAberration>();
+                m_chromaticAberration = profile.Add<ChromaticAberration>();
             }
 
             // Color Adjustments
-            if (!profile.TryGet(out _colorAdjustments))
+            if (!profile.TryGet(out m_colorAdjustments))
             {
-                _colorAdjustments = profile.Add<ColorAdjustments>();
+                m_colorAdjustments = profile.Add<ColorAdjustments>();
             }
 
             // Lens Distortion
-            if (!profile.TryGet(out _lensDistortion))
+            if (!profile.TryGet(out m_lensDistortion))
             {
-                _lensDistortion = profile.Add<LensDistortion>();
+                m_lensDistortion = profile.Add<LensDistortion>();
             }
         }
 
         private void ApplyDefaultSettings()
         {
             // Bloom
-            _bloom.active = true;
-            _bloom.intensity.overrideState = true;
-            _bloom.intensity.value = _defaultBloomIntensity;
-            _bloom.threshold.overrideState = true;
-            _bloom.threshold.value = _defaultBloomThreshold;
-            _bloom.scatter.overrideState = true;
-            _bloom.scatter.value = _defaultBloomScatter;
+            m_bloom.active = true;
+            m_bloom.intensity.overrideState = true;
+            m_bloom.intensity.value = m_defaultBloomIntensity;
+            m_bloom.threshold.overrideState = true;
+            m_bloom.threshold.value = m_defaultBloomThreshold;
+            m_bloom.scatter.overrideState = true;
+            m_bloom.scatter.value = m_defaultBloomScatter;
 
             // Vignette
-            _vignette.active = true;
-            _vignette.intensity.overrideState = true;
-            _vignette.intensity.value = _defaultVignetteIntensity;
-            _vignette.color.overrideState = true;
-            _vignette.color.value = _defaultVignetteColor;
+            m_vignette.active = true;
+            m_vignette.intensity.overrideState = true;
+            m_vignette.intensity.value = m_defaultVignetteIntensity;
+            m_vignette.color.overrideState = true;
+            m_vignette.color.value = m_defaultVignetteColor;
 
             // Chromatic Aberration
-            _chromaticAberration.active = true;
-            _chromaticAberration.intensity.overrideState = true;
-            _chromaticAberration.intensity.value = _defaultChromaticIntensity;
+            m_chromaticAberration.active = true;
+            m_chromaticAberration.intensity.overrideState = true;
+            m_chromaticAberration.intensity.value = m_defaultChromaticIntensity;
 
             // Color Adjustments
-            _colorAdjustments.active = true;
-            _colorAdjustments.postExposure.overrideState = true;
-            _colorAdjustments.saturation.overrideState = true;
-            _colorAdjustments.contrast.overrideState = true;
+            m_colorAdjustments.active = true;
+            m_colorAdjustments.postExposure.overrideState = true;
+            m_colorAdjustments.saturation.overrideState = true;
+            m_colorAdjustments.contrast.overrideState = true;
 
             // Lens Distortion
-            _lensDistortion.active = true;
-            _lensDistortion.intensity.overrideState = true;
-            _lensDistortion.intensity.value = 0f;
+            m_lensDistortion.active = true;
+            m_lensDistortion.intensity.overrideState = true;
+            m_lensDistortion.intensity.value = 0f;
         }
 
         private void SubscribeToEvents()
@@ -193,37 +193,37 @@ namespace NeuralBreak.Core
         private void UpdateTemporaryEffects()
         {
             // Damage flash decay
-            if (_damageFlashTimer > 0)
+            if (m_damageFlashTimer > 0)
             {
-                _damageFlashTimer -= Time.deltaTime * 5f;
-                float t = Mathf.Max(0, _damageFlashTimer);
+                m_damageFlashTimer -= Time.deltaTime * 5f;
+                float t = Mathf.Max(0, m_damageFlashTimer);
 
                 // Red vignette during damage
-                _vignette.color.value = Color.Lerp(_defaultVignetteColor, Color.red, t * 0.5f);
-                _vignette.intensity.value = _defaultVignetteIntensity + t * 0.3f;
+                m_vignette.color.value = Color.Lerp(m_defaultVignetteColor, Color.red, t * 0.5f);
+                m_vignette.intensity.value = m_defaultVignetteIntensity + t * 0.3f;
 
                 // Chromatic aberration spike
-                _chromaticAberration.intensity.value = t * 0.5f;
+                m_chromaticAberration.intensity.value = t * 0.5f;
             }
             else
             {
-                _vignette.color.value = _defaultVignetteColor;
-                _vignette.intensity.value = _defaultVignetteIntensity;
-                _chromaticAberration.intensity.value = _defaultChromaticIntensity;
+                m_vignette.color.value = m_defaultVignetteColor;
+                m_vignette.intensity.value = m_defaultVignetteIntensity;
+                m_chromaticAberration.intensity.value = m_defaultChromaticIntensity;
             }
 
             // Kill flash decay
-            if (_killFlashTimer > 0)
+            if (m_killFlashTimer > 0)
             {
-                _killFlashTimer -= Time.deltaTime * 8f;
-                float t = Mathf.Max(0, _killFlashTimer);
+                m_killFlashTimer -= Time.deltaTime * 8f;
+                float t = Mathf.Max(0, m_killFlashTimer);
 
                 // Brief bloom intensity spike
-                _bloom.intensity.value = _defaultBloomIntensity + t * 0.5f;
+                m_bloom.intensity.value = m_defaultBloomIntensity + t * 0.5f;
             }
             else
             {
-                _bloom.intensity.value = _defaultBloomIntensity;
+                m_bloom.intensity.value = m_defaultBloomIntensity;
             }
         }
 
@@ -234,8 +234,8 @@ namespace NeuralBreak.Core
         /// </summary>
         public void SetBloomIntensity(float intensity)
         {
-            _defaultBloomIntensity = Mathf.Clamp(intensity, 0f, 10f);
-            _bloom.intensity.value = _defaultBloomIntensity;
+            m_defaultBloomIntensity = Mathf.Clamp(intensity, 0f, 10f);
+            m_bloom.intensity.value = m_defaultBloomIntensity;
         }
 
         /// <summary>
@@ -243,8 +243,8 @@ namespace NeuralBreak.Core
         /// </summary>
         public void SetBloomThreshold(float threshold)
         {
-            _defaultBloomThreshold = Mathf.Clamp(threshold, 0f, 2f);
-            _bloom.threshold.value = _defaultBloomThreshold;
+            m_defaultBloomThreshold = Mathf.Clamp(threshold, 0f, 2f);
+            m_bloom.threshold.value = m_defaultBloomThreshold;
         }
 
         /// <summary>
@@ -252,8 +252,8 @@ namespace NeuralBreak.Core
         /// </summary>
         public void SetBloomScatter(float scatter)
         {
-            _defaultBloomScatter = Mathf.Clamp01(scatter);
-            _bloom.scatter.value = _defaultBloomScatter;
+            m_defaultBloomScatter = Mathf.Clamp01(scatter);
+            m_bloom.scatter.value = m_defaultBloomScatter;
         }
 
         /// <summary>
@@ -261,8 +261,8 @@ namespace NeuralBreak.Core
         /// </summary>
         public void SetVignetteIntensity(float intensity)
         {
-            _defaultVignetteIntensity = Mathf.Clamp01(intensity);
-            _vignette.intensity.value = _defaultVignetteIntensity;
+            m_defaultVignetteIntensity = Mathf.Clamp01(intensity);
+            m_vignette.intensity.value = m_defaultVignetteIntensity;
         }
 
         /// <summary>
@@ -270,8 +270,8 @@ namespace NeuralBreak.Core
         /// </summary>
         public void SetChromaticAberration(float intensity)
         {
-            _defaultChromaticIntensity = Mathf.Clamp01(intensity);
-            _chromaticAberration.intensity.value = _defaultChromaticIntensity;
+            m_defaultChromaticIntensity = Mathf.Clamp01(intensity);
+            m_chromaticAberration.intensity.value = m_defaultChromaticIntensity;
         }
 
         /// <summary>
@@ -279,8 +279,8 @@ namespace NeuralBreak.Core
         /// </summary>
         public void TriggerDamageFlash(float intensity = 1f)
         {
-            if (!_enableDamageFlash) return;
-            _damageFlashTimer = Mathf.Max(_damageFlashTimer, intensity);
+            if (!m_enableDamageFlash) return;
+            m_damageFlashTimer = Mathf.Max(m_damageFlashTimer, intensity);
         }
 
         /// <summary>
@@ -288,8 +288,8 @@ namespace NeuralBreak.Core
         /// </summary>
         public void TriggerKillFlash(float intensity = 0.5f)
         {
-            if (!_enableKillFeedback) return;
-            _killFlashTimer = Mathf.Max(_killFlashTimer, intensity);
+            if (!m_enableKillFeedback) return;
+            m_killFlashTimer = Mathf.Max(m_killFlashTimer, intensity);
         }
 
         /// <summary>
@@ -297,7 +297,7 @@ namespace NeuralBreak.Core
         /// </summary>
         public void SetExposure(float exposure)
         {
-            _colorAdjustments.postExposure.value = Mathf.Clamp(exposure, -5f, 5f);
+            m_colorAdjustments.postExposure.value = Mathf.Clamp(exposure, -5f, 5f);
         }
 
         /// <summary>
@@ -305,7 +305,7 @@ namespace NeuralBreak.Core
         /// </summary>
         public void SetSaturation(float saturation)
         {
-            _colorAdjustments.saturation.value = Mathf.Clamp(saturation, -100f, 100f);
+            m_colorAdjustments.saturation.value = Mathf.Clamp(saturation, -100f, 100f);
         }
 
         /// <summary>
@@ -313,7 +313,7 @@ namespace NeuralBreak.Core
         /// </summary>
         public void SetContrast(float contrast)
         {
-            _colorAdjustments.contrast.value = Mathf.Clamp(contrast, -100f, 100f);
+            m_colorAdjustments.contrast.value = Mathf.Clamp(contrast, -100f, 100f);
         }
 
         /// <summary>
@@ -321,7 +321,7 @@ namespace NeuralBreak.Core
         /// </summary>
         public void SetLensDistortion(float intensity)
         {
-            _lensDistortion.intensity.value = Mathf.Clamp(intensity, -1f, 1f);
+            m_lensDistortion.intensity.value = Mathf.Clamp(intensity, -1f, 1f);
         }
 
         /// <summary>
@@ -373,7 +373,7 @@ namespace NeuralBreak.Core
         {
             // Increase bloom slightly with combo
             float comboBoost = Mathf.Min(evt.comboCount * 0.02f, 0.3f);
-            _bloom.intensity.value = _defaultBloomIntensity + comboBoost;
+            m_bloom.intensity.value = m_defaultBloomIntensity + comboBoost;
         }
 
         private void OnGameOver(GameOverEvent evt)

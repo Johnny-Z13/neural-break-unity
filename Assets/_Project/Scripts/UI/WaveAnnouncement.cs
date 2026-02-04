@@ -14,36 +14,36 @@ namespace NeuralBreak.UI
     {
 
         [Header("Timing")]
-        [SerializeField] private float _slideInDuration = 0.3f;
-        [SerializeField] private float _holdDuration = 2f;
-        [SerializeField] private float _slideOutDuration = 0.4f;
+        [SerializeField] private float m_slideInDuration = 0.3f;
+        [SerializeField] private float m_holdDuration = 2f;
+        [SerializeField] private float m_slideOutDuration = 0.4f;
 
         [Header("Layout")]
-        [SerializeField] private float _slideDistance = 300f;
+        [SerializeField] private float m_slideDistance = 300f;
 
         [Header("Colors (Uses UITheme)")]
-        [SerializeField] private bool _useThemeColors = true;
+        [SerializeField] private bool m_useThemeColors = true;
 
         // Derived from UITheme
-        private Color _levelTextColor => _useThemeColors ? UITheme.Warning : _customLevelColor;
-        private Color _nameTextColor => _useThemeColors ? UITheme.TextPrimary : Color.white;
-        private Color _objectiveColor => _useThemeColors ? UITheme.TextSecondary : new Color(0.7f, 0.7f, 0.7f);
-        private Color _warningColor => _useThemeColors ? UITheme.Danger : new Color(1f, 0.3f, 0.3f);
-        private Color _bossColor => _useThemeColors ? UITheme.Accent : new Color(1f, 0.2f, 0.4f);
+        private Color m_levelTextColor => m_useThemeColors ? UITheme.Warning : m_customLevelColor;
+        private Color m_nameTextColor => m_useThemeColors ? UITheme.TextPrimary : Color.white;
+        private Color m_objectiveColor => m_useThemeColors ? UITheme.TextSecondary : new Color(0.7f, 0.7f, 0.7f);
+        private Color m_warningColor => m_useThemeColors ? UITheme.Danger : new Color(1f, 0.3f, 0.3f);
+        private Color m_bossColor => m_useThemeColors ? UITheme.Accent : new Color(1f, 0.2f, 0.4f);
 
-        [SerializeField] private Color _customLevelColor = new Color(1f, 0.9f, 0.3f);
+        [SerializeField] private Color m_customLevelColor = new Color(1f, 0.9f, 0.3f);
 
         // UI Components
-        private Canvas _canvas;
-        private CanvasGroup _canvasGroup;
-        private RectTransform _container;
-        private TextMeshProUGUI _levelText;
-        private TextMeshProUGUI _nameText;
-        private TextMeshProUGUI _objectiveText;
-        private Image _backgroundBar;
-        private Image _accentLine;
+        private Canvas m_canvas;
+        private CanvasGroup m_canvasGroup;
+        private RectTransform m_container;
+        private TextMeshProUGUI m_levelText;
+        private TextMeshProUGUI m_nameText;
+        private TextMeshProUGUI m_objectiveText;
+        private Image m_backgroundBar;
+        private Image m_accentLine;
 
-        private Coroutine _announcementCoroutine;
+        private Coroutine m_announcementCoroutine;
 
         private void Awake()
         {
@@ -71,9 +71,9 @@ namespace NeuralBreak.UI
             // Create canvas
             var canvasGO = new GameObject("WaveAnnouncementCanvas");
             canvasGO.transform.SetParent(transform);
-            _canvas = canvasGO.AddComponent<Canvas>();
-            _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            _canvas.sortingOrder = UITheme.SortOrder.Announcements;
+            m_canvas = canvasGO.AddComponent<Canvas>();
+            m_canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            m_canvas.sortingOrder = UITheme.SortOrder.Announcements;
 
             var scaler = canvasGO.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -81,36 +81,36 @@ namespace NeuralBreak.UI
 
             canvasGO.AddComponent<GraphicRaycaster>();
 
-            _canvasGroup = canvasGO.AddComponent<CanvasGroup>();
-            _canvasGroup.alpha = 0;
-            _canvasGroup.blocksRaycasts = false;
-            _canvasGroup.interactable = false;
+            m_canvasGroup = canvasGO.AddComponent<CanvasGroup>();
+            m_canvasGroup.alpha = 0;
+            m_canvasGroup.blocksRaycasts = false;
+            m_canvasGroup.interactable = false;
 
             // Container (positioned at bottom of top third - doesn't occlude player)
             var containerGO = new GameObject("Container");
             containerGO.transform.SetParent(canvasGO.transform);
-            _container = containerGO.AddComponent<RectTransform>();
-            _container.anchorMin = new Vector2(0.5f, 0.5f);
-            _container.anchorMax = new Vector2(0.5f, 0.5f);
-            _container.pivot = new Vector2(0.5f, 0.5f);
-            _container.anchoredPosition = new Vector2(0, 220); // Top third (was 0)
-            _container.sizeDelta = new Vector2(600, 150);
+            m_container = containerGO.AddComponent<RectTransform>();
+            m_container.anchorMin = new Vector2(0.5f, 0.5f);
+            m_container.anchorMax = new Vector2(0.5f, 0.5f);
+            m_container.pivot = new Vector2(0.5f, 0.5f);
+            m_container.anchoredPosition = new Vector2(0, 220); // Top third (was 0)
+            m_container.sizeDelta = new Vector2(600, 150);
 
             // Background bar
             var bgGO = new GameObject("Background");
-            bgGO.transform.SetParent(_container);
+            bgGO.transform.SetParent(m_container);
             var bgRect = bgGO.AddComponent<RectTransform>();
             bgRect.anchorMin = Vector2.zero;
             bgRect.anchorMax = Vector2.one;
             bgRect.offsetMin = Vector2.zero;
             bgRect.offsetMax = Vector2.zero;
 
-            _backgroundBar = bgGO.AddComponent<Image>();
-            _backgroundBar.color = new Color(0, 0, 0, 0.7f);
+            m_backgroundBar = bgGO.AddComponent<Image>();
+            m_backgroundBar.color = new Color(0, 0, 0, 0.7f);
 
             // Accent line (top)
             var accentGO = new GameObject("AccentLine");
-            accentGO.transform.SetParent(_container);
+            accentGO.transform.SetParent(m_container);
             var accentRect = accentGO.AddComponent<RectTransform>();
             accentRect.anchorMin = new Vector2(0, 1);
             accentRect.anchorMax = new Vector2(1, 1);
@@ -118,12 +118,12 @@ namespace NeuralBreak.UI
             accentRect.anchoredPosition = Vector2.zero;
             accentRect.sizeDelta = new Vector2(0, 4);
 
-            _accentLine = accentGO.AddComponent<Image>();
-            _accentLine.color = _levelTextColor;
+            m_accentLine = accentGO.AddComponent<Image>();
+            m_accentLine.color = m_levelTextColor;
 
             // Level text (e.g., "LEVEL 5")
             var levelGO = new GameObject("LevelText");
-            levelGO.transform.SetParent(_container);
+            levelGO.transform.SetParent(m_container);
             var levelRect = levelGO.AddComponent<RectTransform>();
             levelRect.anchorMin = new Vector2(0.5f, 0.5f);
             levelRect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -131,16 +131,16 @@ namespace NeuralBreak.UI
             levelRect.anchoredPosition = new Vector2(0, 30);
             levelRect.sizeDelta = new Vector2(500, 50);
 
-            _levelText = levelGO.AddComponent<TextMeshProUGUI>();
-            _levelText.text = "LEVEL 1";
-            _levelText.fontSize = 42;
-            _levelText.fontStyle = FontStyles.Bold;
-            _levelText.color = _levelTextColor;
-            _levelText.alignment = TextAlignmentOptions.Center;
+            m_levelText = levelGO.AddComponent<TextMeshProUGUI>();
+            m_levelText.text = "LEVEL 1";
+            m_levelText.fontSize = 42;
+            m_levelText.fontStyle = FontStyles.Bold;
+            m_levelText.color = m_levelTextColor;
+            m_levelText.alignment = TextAlignmentOptions.Center;
 
             // Name text (e.g., "DATA SWARM")
             var nameGO = new GameObject("NameText");
-            nameGO.transform.SetParent(_container);
+            nameGO.transform.SetParent(m_container);
             var nameRect = nameGO.AddComponent<RectTransform>();
             nameRect.anchorMin = new Vector2(0.5f, 0.5f);
             nameRect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -148,16 +148,16 @@ namespace NeuralBreak.UI
             nameRect.anchoredPosition = new Vector2(0, -10);
             nameRect.sizeDelta = new Vector2(500, 40);
 
-            _nameText = nameGO.AddComponent<TextMeshProUGUI>();
-            _nameText.text = "NEURAL INITIALIZATION";
-            _nameText.fontSize = 28;
-            _nameText.fontStyle = FontStyles.Normal;
-            _nameText.color = _nameTextColor;
-            _nameText.alignment = TextAlignmentOptions.Center;
+            m_nameText = nameGO.AddComponent<TextMeshProUGUI>();
+            m_nameText.text = "NEURAL INITIALIZATION";
+            m_nameText.fontSize = 28;
+            m_nameText.fontStyle = FontStyles.Normal;
+            m_nameText.color = m_nameTextColor;
+            m_nameText.alignment = TextAlignmentOptions.Center;
 
             // Objective text
             var objGO = new GameObject("ObjectiveText");
-            objGO.transform.SetParent(_container);
+            objGO.transform.SetParent(m_container);
             var objRect = objGO.AddComponent<RectTransform>();
             objRect.anchorMin = new Vector2(0.5f, 0.5f);
             objRect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -165,12 +165,12 @@ namespace NeuralBreak.UI
             objRect.anchoredPosition = new Vector2(0, -45);
             objRect.sizeDelta = new Vector2(500, 30);
 
-            _objectiveText = objGO.AddComponent<TextMeshProUGUI>();
-            _objectiveText.text = "Eliminate all enemies";
-            _objectiveText.fontSize = 18;
-            _objectiveText.fontStyle = FontStyles.Italic;
-            _objectiveText.color = _objectiveColor;
-            _objectiveText.alignment = TextAlignmentOptions.Center;
+            m_objectiveText = objGO.AddComponent<TextMeshProUGUI>();
+            m_objectiveText.text = "Eliminate all enemies";
+            m_objectiveText.fontSize = 18;
+            m_objectiveText.fontStyle = FontStyles.Italic;
+            m_objectiveText.color = m_objectiveColor;
+            m_objectiveText.alignment = TextAlignmentOptions.Center;
         }
 
         private void OnGameStarted(GameStartedEvent evt)
@@ -183,7 +183,7 @@ namespace NeuralBreak.UI
                 _ => "GAME START"
             };
 
-            ShowAnnouncement("GET READY", modeName, "Survive and conquer!", _levelTextColor);
+            ShowAnnouncement("GET READY", modeName, "Survive and conquer!", m_levelTextColor);
         }
 
         private void OnLevelStarted(LevelStartedEvent evt)
@@ -193,14 +193,14 @@ namespace NeuralBreak.UI
             string objective = GetObjectiveText(evt.levelNumber);
 
             // Special color for milestone levels
-            Color accentColor = _levelTextColor;
+            Color accentColor = m_levelTextColor;
             if (evt.levelNumber % 10 == 0)
             {
                 accentColor = new Color(1f, 0.5f, 0.8f); // Pink for milestone
             }
             if (evt.levelNumber >= 99)
             {
-                accentColor = _bossColor;
+                accentColor = m_bossColor;
                 objective = "Final challenge!";
             }
 
@@ -217,7 +217,7 @@ namespace NeuralBreak.UI
         {
             if (evt.isBossActive)
             {
-                ShowAnnouncement("WARNING", "BOSS APPROACHING", "Destroy the boss to proceed!", _bossColor, true);
+                ShowAnnouncement("WARNING", "BOSS APPROACHING", "Destroy the boss to proceed!", m_bossColor, true);
             }
         }
 
@@ -259,60 +259,60 @@ namespace NeuralBreak.UI
 
         public void ShowAnnouncement(string levelText, string nameText, string objectiveText, Color accentColor, bool isWarning = false)
         {
-            if (_announcementCoroutine != null)
+            if (m_announcementCoroutine != null)
             {
-                StopCoroutine(_announcementCoroutine);
+                StopCoroutine(m_announcementCoroutine);
             }
-            _announcementCoroutine = StartCoroutine(AnnouncementCoroutine(levelText, nameText, objectiveText, accentColor, isWarning));
+            m_announcementCoroutine = StartCoroutine(AnnouncementCoroutine(levelText, nameText, objectiveText, accentColor, isWarning));
         }
 
         private IEnumerator AnnouncementCoroutine(string levelText, string nameText, string objectiveText, Color accentColor, bool isWarning)
         {
             // Set text
-            _levelText.text = levelText;
-            _nameText.text = nameText;
-            _objectiveText.text = objectiveText;
-            _levelText.color = accentColor;
-            _accentLine.color = accentColor;
+            m_levelText.text = levelText;
+            m_nameText.text = nameText;
+            m_objectiveText.text = objectiveText;
+            m_levelText.color = accentColor;
+            m_accentLine.color = accentColor;
 
             if (isWarning)
             {
-                _backgroundBar.color = new Color(0.2f, 0f, 0f, 0.8f);
+                m_backgroundBar.color = new Color(0.2f, 0f, 0f, 0.8f);
             }
             else
             {
-                _backgroundBar.color = new Color(0, 0, 0, 0.7f);
+                m_backgroundBar.color = new Color(0, 0, 0, 0.7f);
             }
 
             // Start off-screen (left) - Y position matches container anchor offset
             float yPos = 220f; // Match container position in top third
-            Vector2 startPos = new Vector2(-_slideDistance, yPos);
+            Vector2 startPos = new Vector2(-m_slideDistance, yPos);
             Vector2 centerPos = new Vector2(0, yPos);
-            Vector2 endPos = new Vector2(_slideDistance, yPos);
+            Vector2 endPos = new Vector2(m_slideDistance, yPos);
 
-            _container.anchoredPosition = startPos;
-            _canvasGroup.alpha = 0;
+            m_container.anchoredPosition = startPos;
+            m_canvasGroup.alpha = 0;
 
             // Slide in from left
             float elapsed = 0f;
-            while (elapsed < _slideInDuration)
+            while (elapsed < m_slideInDuration)
             {
                 elapsed += Time.unscaledDeltaTime;
-                float t = elapsed / _slideInDuration;
+                float t = elapsed / m_slideInDuration;
                 float easeT = 1f - Mathf.Pow(1f - t, 3f); // Ease out cubic
 
-                _container.anchoredPosition = Vector2.Lerp(startPos, centerPos, easeT);
-                _canvasGroup.alpha = easeT;
+                m_container.anchoredPosition = Vector2.Lerp(startPos, centerPos, easeT);
+                m_canvasGroup.alpha = easeT;
 
                 yield return null;
             }
 
-            _container.anchoredPosition = centerPos;
-            _canvasGroup.alpha = 1f;
+            m_container.anchoredPosition = centerPos;
+            m_canvasGroup.alpha = 1f;
 
             // Hold with optional pulsing for warnings
             elapsed = 0f;
-            while (elapsed < _holdDuration)
+            while (elapsed < m_holdDuration)
             {
                 elapsed += Time.unscaledDeltaTime;
 
@@ -320,7 +320,7 @@ namespace NeuralBreak.UI
                 {
                     // Pulse effect
                     float pulse = Mathf.Sin(elapsed * 6f) * 0.5f + 0.5f;
-                    _levelText.color = Color.Lerp(accentColor, Color.white, pulse * 0.3f);
+                    m_levelText.color = Color.Lerp(accentColor, Color.white, pulse * 0.3f);
                 }
 
                 yield return null;
@@ -328,32 +328,32 @@ namespace NeuralBreak.UI
 
             // Slide out to right
             elapsed = 0f;
-            while (elapsed < _slideOutDuration)
+            while (elapsed < m_slideOutDuration)
             {
                 elapsed += Time.unscaledDeltaTime;
-                float t = elapsed / _slideOutDuration;
+                float t = elapsed / m_slideOutDuration;
                 float easeT = t * t * t; // Ease in cubic
 
-                _container.anchoredPosition = Vector2.Lerp(centerPos, endPos, easeT);
-                _canvasGroup.alpha = 1f - easeT;
+                m_container.anchoredPosition = Vector2.Lerp(centerPos, endPos, easeT);
+                m_canvasGroup.alpha = 1f - easeT;
 
                 yield return null;
             }
 
-            _canvasGroup.alpha = 0;
-            _announcementCoroutine = null;
+            m_canvasGroup.alpha = 0;
+            m_announcementCoroutine = null;
         }
 
         #region Debug
 
         [ContextMenu("Debug: Show Level 1")]
-        private void DebugLevel1() => ShowAnnouncement("LEVEL 1", "NEURAL INITIALIZATION", "Clear the area", _levelTextColor);
+        private void DebugLevel1() => ShowAnnouncement("LEVEL 1", "NEURAL INITIALIZATION", "Clear the area", m_levelTextColor);
 
         [ContextMenu("Debug: Show Level 10")]
         private void DebugLevel10() => ShowAnnouncement("LEVEL 10", "SCANNING PERIMETER", "Milestone reached!", new Color(1f, 0.5f, 0.8f));
 
         [ContextMenu("Debug: Show Boss Warning")]
-        private void DebugBoss() => ShowAnnouncement("WARNING", "BOSS APPROACHING", "Destroy the boss!", _bossColor, true);
+        private void DebugBoss() => ShowAnnouncement("WARNING", "BOSS APPROACHING", "Destroy the boss!", m_bossColor, true);
 
         [ContextMenu("Debug: Show Level Complete")]
         private void DebugComplete() => ShowAnnouncement("LEVEL COMPLETE!", "GOOD JOB", "Time: 1:23", new Color(0.3f, 1f, 0.4f));

@@ -58,18 +58,18 @@ namespace NeuralBreak.Entities
     /// </summary>
     public static class ShipCustomizationData
     {
-        private static List<ShipSkin> _skins;
+        private static List<ShipSkin> s_skins;
 
         /// <summary>
         /// Get all available skins
         /// </summary>
         public static IReadOnlyList<ShipSkin> GetAllSkins()
         {
-            if (_skins == null)
+            if (s_skins == null)
             {
                 InitializeSkins();
             }
-            return _skins;
+            return s_skins;
         }
 
         /// <summary>
@@ -77,19 +77,19 @@ namespace NeuralBreak.Entities
         /// </summary>
         public static ShipSkin GetSkin(string skinId)
         {
-            if (_skins == null)
+            if (s_skins == null)
             {
                 InitializeSkins();
             }
-            return _skins.Find(s => s.id == skinId);
+            return s_skins.Find(s => s.id == skinId);
         }
 
         private static void InitializeSkins()
         {
-            _skins = new List<ShipSkin>();
+            s_skins = new List<ShipSkin>();
 
             // Default skin
-            _skins.Add(new ShipSkin
+            s_skins.Add(new ShipSkin
             {
                 id = "default",
                 name = "Cyber Wing",
@@ -105,7 +105,7 @@ namespace NeuralBreak.Entities
             });
 
             // Score unlocks
-            _skins.Add(new ShipSkin
+            s_skins.Add(new ShipSkin
             {
                 id = "golden",
                 name = "Golden Ace",
@@ -121,7 +121,7 @@ namespace NeuralBreak.Entities
                 unlockValue = 100000
             });
 
-            _skins.Add(new ShipSkin
+            s_skins.Add(new ShipSkin
             {
                 id = "platinum",
                 name = "Platinum Elite",
@@ -138,7 +138,7 @@ namespace NeuralBreak.Entities
             });
 
             // Level unlocks
-            _skins.Add(new ShipSkin
+            s_skins.Add(new ShipSkin
             {
                 id = "void",
                 name = "Void Walker",
@@ -154,7 +154,7 @@ namespace NeuralBreak.Entities
                 unlockValue = 25
             });
 
-            _skins.Add(new ShipSkin
+            s_skins.Add(new ShipSkin
             {
                 id = "matrix",
                 name = "Code Runner",
@@ -171,7 +171,7 @@ namespace NeuralBreak.Entities
             });
 
             // Kill unlocks
-            _skins.Add(new ShipSkin
+            s_skins.Add(new ShipSkin
             {
                 id = "hunter",
                 name = "Hunter",
@@ -187,7 +187,7 @@ namespace NeuralBreak.Entities
                 unlockValue = 1000
             });
 
-            _skins.Add(new ShipSkin
+            s_skins.Add(new ShipSkin
             {
                 id = "slayer",
                 name = "Slayer",
@@ -204,7 +204,7 @@ namespace NeuralBreak.Entities
             });
 
             // Boss unlocks
-            _skins.Add(new ShipSkin
+            s_skins.Add(new ShipSkin
             {
                 id = "boss_hunter",
                 name = "Boss Hunter",
@@ -221,7 +221,7 @@ namespace NeuralBreak.Entities
             });
 
             // Combo unlocks
-            _skins.Add(new ShipSkin
+            s_skins.Add(new ShipSkin
             {
                 id = "combo_king",
                 name = "Combo King",
@@ -238,7 +238,7 @@ namespace NeuralBreak.Entities
             });
 
             // Survival unlocks
-            _skins.Add(new ShipSkin
+            s_skins.Add(new ShipSkin
             {
                 id = "survivor",
                 name = "Survivor",
@@ -255,7 +255,7 @@ namespace NeuralBreak.Entities
             });
 
             // Special skins
-            _skins.Add(new ShipSkin
+            s_skins.Add(new ShipSkin
             {
                 id = "neon",
                 name = "Neon Dream",
@@ -271,7 +271,7 @@ namespace NeuralBreak.Entities
                 unlockValue = 0 // Special case - all achievements
             });
 
-            Debug.Log($"[ShipCustomizationData] Initialized {_skins.Count} skins");
+            Debug.Log($"[ShipCustomizationData] Initialized {s_skins.Count} skins");
         }
     }
 }

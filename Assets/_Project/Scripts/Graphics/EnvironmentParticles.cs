@@ -26,22 +26,22 @@ namespace NeuralBreak.Graphics
     {
 
         [Header("Settings")]
-        [SerializeField] private EnvironmentParticleType _currentType = EnvironmentParticleType.DataBits;
-        [SerializeField] private int _particleCount = 100;
-        [SerializeField] private float _spawnRadius = 15f;
-        [SerializeField] private float _particleSpeed = 1f;
-        [SerializeField] private float _particleSize = 0.1f;
-        [SerializeField] private bool _reactToIntensity = true;
+        [SerializeField] private EnvironmentParticleType m_currentType = EnvironmentParticleType.DataBits;
+        [SerializeField] private int m_particleCount = 100;
+        [SerializeField] private float m_spawnRadius = 15f;
+        [SerializeField] private float m_particleSpeed = 1f;
+        [SerializeField] private float m_particleSize = 0.1f;
+        [SerializeField] private bool m_reactToIntensity = true;
 
         [Header("Colors")]
-        [SerializeField] private Color _baseColor = new Color(0.3f, 0.8f, 1f, 0.5f);
-        [SerializeField] private Color _highlightColor = new Color(1f, 1f, 1f, 0.8f);
+        [SerializeField] private Color m_baseColor = new Color(0.3f, 0.8f, 1f, 0.5f);
+        [SerializeField] private Color m_highlightColor = new Color(1f, 1f, 1f, 0.8f);
 
         // Particle system
-        private List<Particle> _particles = new List<Particle>();
-        private SpriteRenderer[] _particleRenderers;
-        private Transform _cameraTransform;
-        private float _currentIntensity = 0.5f;
+        private List<Particle> m_particles = new List<Particle>();
+        private SpriteRenderer[] m_particleRenderers;
+        private Transform m_cameraTransform;
+        private float m_currentIntensity = 0.5f;
 
         private class Particle
         {
@@ -61,7 +61,7 @@ namespace NeuralBreak.Graphics
         {
             if (Camera.main != null)
             {
-                _cameraTransform = Camera.main.transform;
+                m_cameraTransform = Camera.main.transform;
             }
 
             CreateParticles();
@@ -87,24 +87,24 @@ namespace NeuralBreak.Graphics
         private void CreateParticles()
         {
             // Clean up existing
-            foreach (var p in _particles)
+            foreach (var p in m_particles)
             {
                 if (p.transform != null)
                 {
                     Destroy(p.transform.gameObject);
                 }
             }
-            _particles.Clear();
+            m_particles.Clear();
 
             // Create container
             var container = new GameObject("Particles");
             container.transform.SetParent(transform);
 
             // Create sprite for particles
-            Sprite particleSprite = CreateParticleSprite(_currentType);
+            Sprite particleSprite = CreateParticleSprite(m_currentType);
 
             // Create particles
-            for (int i = 0; i < _particleCount; i++)
+            for (int i = 0; i < m_particleCount; i++)
             {
                 var particle = new Particle();
 
@@ -119,34 +119,34 @@ namespace NeuralBreak.Graphics
                 // Random initial state
                 ResetParticle(particle);
 
-                _particles.Add(particle);
+                m_particles.Add(particle);
             }
 
-            Debug.Log($"[EnvironmentParticles] Created {_particleCount} {_currentType} particles");
+            Debug.Log($"[EnvironmentParticles] Created {m_particleCount} {m_currentType} particles");
         }
 
         private void ResetParticle(Particle p)
         {
-            Vector3 center = _cameraTransform != null ? _cameraTransform.position : Vector3.zero;
+            Vector3 center = m_cameraTransform != null ? m_cameraTransform.position : Vector3.zero;
             center.z = 0;
 
             // Random position within radius
-            Vector2 offset = Random.insideUnitCircle * _spawnRadius;
+            Vector2 offset = Random.insideUnitCircle * m_spawnRadius;
             p.transform.position = center + new Vector3(offset.x, offset.y, Random.Range(1f, 5f));
 
             // Random velocity based on type
-            p.velocity = GetVelocityForType(_currentType);
+            p.velocity = GetVelocityForType(m_currentType);
 
             // Random visual properties
             p.phase = Random.value * Mathf.PI * 2f;
             p.baseAlpha = Random.Range(0.3f, 0.8f);
-            p.size = _particleSize * Random.Range(0.5f, 1.5f);
+            p.size = m_particleSize * Random.Range(0.5f, 1.5f);
 
             // Apply size
             p.transform.localScale = Vector3.one * p.size;
 
             // Apply color with variation
-            Color c = Color.Lerp(_baseColor, _highlightColor, Random.value * 0.3f);
+            Color c = Color.Lerp(m_baseColor, m_highlightColor, Random.value * 0.3f);
             c.a = p.baseAlpha;
             p.renderer.color = c;
         }
@@ -160,21 +160,21 @@ namespace NeuralBreak.Graphics
                         Random.Range(-0.2f, 0.2f),
                         Random.Range(-0.1f, 0.1f),
                         0
-                    ) * _particleSpeed;
+                    ) * m_particleSpeed;
 
                 case EnvironmentParticleType.Sparks:
                     return new Vector3(
                         Random.Range(-0.5f, 0.5f),
                         Random.Range(0.5f, 1f),
                         0
-                    ) * _particleSpeed;
+                    ) * m_particleSpeed;
 
                 case EnvironmentParticleType.DataBits:
                     return new Vector3(
                         Random.Range(-0.3f, 0.3f),
                         Random.Range(-0.5f, -0.1f),
                         0
-                    ) * _particleSpeed;
+                    ) * m_particleSpeed;
 
                 case EnvironmentParticleType.Energy:
                     float angle = Random.value * Mathf.PI * 2f;
@@ -182,28 +182,28 @@ namespace NeuralBreak.Graphics
                         Mathf.Cos(angle) * 0.3f,
                         Mathf.Sin(angle) * 0.3f,
                         0
-                    ) * _particleSpeed;
+                    ) * m_particleSpeed;
 
                 case EnvironmentParticleType.Snow:
                     return new Vector3(
                         Random.Range(-0.1f, 0.1f),
                         Random.Range(-0.3f, -0.5f),
                         0
-                    ) * _particleSpeed;
+                    ) * m_particleSpeed;
 
                 case EnvironmentParticleType.Embers:
                     return new Vector3(
                         Random.Range(-0.2f, 0.2f),
                         Random.Range(0.3f, 0.8f),
                         0
-                    ) * _particleSpeed;
+                    ) * m_particleSpeed;
 
                 case EnvironmentParticleType.Glitch:
                     return new Vector3(
                         Random.Range(-1f, 1f),
                         Random.Range(-1f, 1f),
                         0
-                    ) * _particleSpeed * 2f;
+                    ) * m_particleSpeed * 2f;
 
                 default:
                     return Vector3.zero;
@@ -212,13 +212,13 @@ namespace NeuralBreak.Graphics
 
         private void UpdateParticles()
         {
-            Vector3 center = _cameraTransform != null ? _cameraTransform.position : Vector3.zero;
+            Vector3 center = m_cameraTransform != null ? m_cameraTransform.position : Vector3.zero;
             center.z = 0;
 
             float time = Time.time;
-            float speedMult = _reactToIntensity ? (0.5f + _currentIntensity * 1f) : 1f;
+            float speedMult = m_reactToIntensity ? (0.5f + m_currentIntensity * 1f) : 1f;
 
-            foreach (var p in _particles)
+            foreach (var p in m_particles)
             {
                 if (p.transform == null) continue;
 
@@ -226,7 +226,7 @@ namespace NeuralBreak.Graphics
                 p.transform.position += p.velocity * Time.deltaTime * speedMult;
 
                 // Add type-specific behavior
-                switch (_currentType)
+                switch (m_currentType)
                 {
                     case EnvironmentParticleType.DataBits:
                         // Slight horizontal wave
@@ -241,7 +241,7 @@ namespace NeuralBreak.Graphics
                             Mathf.Cos(orbitAngle) * 0.3f,
                             Mathf.Sin(orbitAngle) * 0.3f,
                             0
-                        ) * _particleSpeed;
+                        ) * m_particleSpeed;
                         break;
 
                     case EnvironmentParticleType.Snow:
@@ -252,7 +252,7 @@ namespace NeuralBreak.Graphics
 
                     case EnvironmentParticleType.Glitch:
                         // Random teleport occasionally
-                        if (Random.value < 0.01f * _currentIntensity)
+                        if (Random.value < 0.01f * m_currentIntensity)
                         {
                             Vector2 offset = Random.insideUnitCircle * 2f;
                             p.transform.position += new Vector3(offset.x, offset.y, 0);
@@ -263,12 +263,12 @@ namespace NeuralBreak.Graphics
                 // Alpha pulse
                 float pulse = Mathf.Sin(time * 3f + p.phase) * 0.2f + 0.8f;
                 Color c = p.renderer.color;
-                c.a = p.baseAlpha * pulse * (_reactToIntensity ? (0.5f + _currentIntensity * 0.5f) : 1f);
+                c.a = p.baseAlpha * pulse * (m_reactToIntensity ? (0.5f + m_currentIntensity * 0.5f) : 1f);
                 p.renderer.color = c;
 
                 // Check if out of range
                 float dist = Vector3.Distance(p.transform.position, center);
-                if (dist > _spawnRadius * 1.5f)
+                if (dist > m_spawnRadius * 1.5f)
                 {
                     ResetParticle(p);
                 }
@@ -420,20 +420,20 @@ namespace NeuralBreak.Graphics
             }
 
             // Increase intensity with level
-            _currentIntensity = Mathf.Clamp01(evt.levelNumber / 50f);
+            m_currentIntensity = Mathf.Clamp01(evt.levelNumber / 50f);
         }
 
         private void OnGameOver(GameOverEvent evt)
         {
-            _currentIntensity = 0.2f;
+            m_currentIntensity = 0.2f;
         }
 
         private void OnBossSpawned(BossSpawnedEvent evt)
         {
-            _currentIntensity = 1f;
+            m_currentIntensity = 1f;
 
             // Switch to intense particle type
-            if (_currentType != EnvironmentParticleType.Glitch)
+            if (m_currentType != EnvironmentParticleType.Glitch)
             {
                 SetType(EnvironmentParticleType.Glitch);
             }
@@ -448,8 +448,8 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void SetType(EnvironmentParticleType type)
         {
-            if (_currentType == type) return;
-            _currentType = type;
+            if (m_currentType == type) return;
+            m_currentType = type;
             CreateParticles();
         }
 
@@ -458,14 +458,14 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void SetColors(Color baseColor, Color highlightColor)
         {
-            _baseColor = baseColor;
-            _highlightColor = highlightColor;
+            m_baseColor = baseColor;
+            m_highlightColor = highlightColor;
 
-            foreach (var p in _particles)
+            foreach (var p in m_particles)
             {
                 if (p.renderer != null)
                 {
-                    Color c = Color.Lerp(_baseColor, _highlightColor, Random.value * 0.3f);
+                    Color c = Color.Lerp(m_baseColor, m_highlightColor, Random.value * 0.3f);
                     c.a = p.baseAlpha;
                     p.renderer.color = c;
                 }
@@ -477,7 +477,7 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void SetCount(int count)
         {
-            _particleCount = Mathf.Clamp(count, 10, 500);
+            m_particleCount = Mathf.Clamp(count, 10, 500);
             CreateParticles();
         }
 
@@ -486,7 +486,7 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void SetIntensity(float intensity)
         {
-            _currentIntensity = Mathf.Clamp01(intensity);
+            m_currentIntensity = Mathf.Clamp01(intensity);
         }
 
         #endregion

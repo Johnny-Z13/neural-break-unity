@@ -8,19 +8,19 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
     /// </summary>
     public class PiercingBehavior : ProjectileBehaviorBase
     {
-        private int _maxPierceCount;
-        private int _currentPierceCount;
+        private int m_maxPierceCount;
+        private int m_currentPierceCount;
 
         public PiercingBehavior(int maxPierceCount = 3)
         {
-            _maxPierceCount = maxPierceCount;
-            _currentPierceCount = 0;
+            m_maxPierceCount = maxPierceCount;
+            m_currentPierceCount = 0;
         }
 
         public override void Initialize(MonoBehaviour proj)
         {
             base.Initialize(proj);
-            _currentPierceCount = 0;
+            m_currentPierceCount = 0;
         }
 
         public override void Update(float deltaTime)
@@ -30,10 +30,10 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
 
         public override bool OnHitEnemy(EnemyBase enemy)
         {
-            _currentPierceCount++;
+            m_currentPierceCount++;
 
             // Destroy if we've pierced max enemies
-            return _currentPierceCount >= _maxPierceCount;
+            return m_currentPierceCount >= m_maxPierceCount;
         }
     }
 }

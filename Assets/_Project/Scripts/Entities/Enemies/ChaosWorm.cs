@@ -20,109 +20,109 @@ namespace NeuralBreak.Entities
         public override EnemyType EnemyType => EnemyType.ChaosWorm;
 
         [Header("Worm Settings")]
-        [SerializeField] private int _segmentCount = 12;
-        [SerializeField] private float _segmentSpacing = 0.6f;
-        [SerializeField] private float _undulationAmplitude = 2f;
-        [SerializeField] private float _undulationFrequency = 2f;
-        [SerializeField] private float _turnSpeed = 90f; // degrees per second
+        [SerializeField] private int m_segmentCount = 12;
+        [SerializeField] private float m_segmentSpacing = 0.6f;
+        [SerializeField] private float m_undulationAmplitude = 2f;
+        [SerializeField] private float m_undulationFrequency = 2f;
+        [SerializeField] private float m_turnSpeed = 90f; // degrees per second
 
         [Header("Death Spray")]
-        [SerializeField] private int _bulletsPerSegment = 6;
-        [SerializeField] private int _finalNovaBullets = 16;
-        [SerializeField] private float _deathBulletSpeed = 8f;
-        [SerializeField] private int _deathBulletDamage = 15;
-        [SerializeField] private float _deathSprayDuration = 2f;
+        [SerializeField] private int m_bulletsPerSegment = 6;
+        [SerializeField] private int m_finalNovaBullets = 16;
+        [SerializeField] private float m_deathBulletSpeed = 8f;
+        [SerializeField] private int m_deathBulletDamage = 15;
+        [SerializeField] private float m_deathSprayDuration = 2f;
 
         [Header("Visual")]
-        [SerializeField] private SpriteRenderer _headRenderer;
-        [SerializeField] private GameObject _segmentPrefab;
-        [SerializeField] private ChaosWormVisuals _visuals;
-        [SerializeField] private Color _wormColor = new Color(0.8f, 0.2f, 0.5f); // Purple-pink
+        [SerializeField] private SpriteRenderer m_headRenderer;
+        [SerializeField] private GameObject m_segmentPrefab;
+        [SerializeField] private ChaosWormVisuals m_visuals;
+        [SerializeField] private Color m_wormColor = new Color(0.8f, 0.2f, 0.5f); // Purple-pink
 
         // Note: MMFeedbacks removed
 
         // Segments
-        private List<Transform> _segments = new List<Transform>();
-        private List<Vector2> _positionHistory = new List<Vector2>();
-        private int _historyLength;
+        private List<Transform> m_segments = new List<Transform>();
+        private List<Vector2> m_positionHistory = new List<Vector2>();
+        private int m_historyLength;
 
         // Movement
-        private float _currentAngle;
-        private float _undulationPhase;
-        private float _targetAngle;
+        private float m_currentAngle;
+        private float m_undulationPhase;
+        private float m_targetAngle;
 
         // Death animation
-        private bool _isDeathAnimating;
-        private float _deathTimer;
-        private int _currentDeathSegment;
-        private bool _visualsGenerated;
+        private bool m_isDeathAnimating;
+        private float m_deathTimer;
+        private int m_currentDeathSegment;
+        private bool m_visualsGenerated;
 
         protected override void OnInitialize()
         {
             base.OnInitialize();
 
-            _currentAngle = Random.Range(0f, 360f);
-            _undulationPhase = 0f;
-            _isDeathAnimating = false;
+            m_currentAngle = Random.Range(0f, 360f);
+            m_undulationPhase = 0f;
+            m_isDeathAnimating = false;
 
             // Calculate history length needed
-            _historyLength = _segmentCount * Mathf.CeilToInt(_segmentSpacing / (_speed * Time.fixedDeltaTime));
-            _historyLength = Mathf.Max(_historyLength, _segmentCount * 10);
+            m_historyLength = m_segmentCount * Mathf.CeilToInt(m_segmentSpacing / (m_speed * Time.fixedDeltaTime));
+            m_historyLength = Mathf.Max(m_historyLength, m_segmentCount * 10);
 
             // Initialize position history with current position
-            _positionHistory.Clear();
-            for (int i = 0; i < _historyLength; i++)
+            m_positionHistory.Clear();
+            for (int i = 0; i < m_historyLength; i++)
             {
-                _positionHistory.Add(transform.position);
+                m_positionHistory.Add(transform.position);
             }
 
             // Create segments
             CreateSegments();
 
             // Generate procedural visuals for head if not yet done
-            if (!_visualsGenerated)
+            if (!m_visualsGenerated)
             {
                 EnsureVisuals();
-                _visualsGenerated = true;
+                m_visualsGenerated = true;
             }
         }
 
         private void EnsureVisuals()
         {
-            if (_visuals == null)
+            if (m_visuals == null)
             {
-                _visuals = GetComponentInChildren<ChaosWormVisuals>();
+                m_visuals = GetComponentInChildren<ChaosWormVisuals>();
             }
 
-            if (_visuals == null)
+            if (m_visuals == null)
             {
                 var visualsGO = new GameObject("HeadVisuals");
                 visualsGO.transform.SetParent(transform, false);
                 visualsGO.transform.localPosition = Vector3.zero;
-                _visuals = visualsGO.AddComponent<ChaosWormVisuals>();
+                m_visuals = visualsGO.AddComponent<ChaosWormVisuals>();
             }
         }
 
         private void CreateSegments()
         {
             // Clear existing segments
-            foreach (var seg in _segments)
+            foreach (var seg in m_segments)
             {
                 if (seg != null)
                 {
                     Destroy(seg.gameObject);
                 }
             }
-            _segments.Clear();
+            m_segments.Clear();
 
             // Create new segments (runtime creation if no prefab)
-            for (int i = 0; i < _segmentCount; i++)
+            for (int i = 0; i < m_segmentCount; i++)
             {
                 GameObject seg;
 
-                if (_segmentPrefab != null)
+                if (m_segmentPrefab != null)
                 {
-                    seg = Instantiate(_segmentPrefab, transform.position, Quaternion.identity, transform.parent);
+                    seg = Instantiate(m_segmentPrefab, transform.position, Quaternion.identity, transform.parent);
                 }
                 else
                 {
@@ -148,13 +148,13 @@ namespace NeuralBreak.Entities
                 SpriteRenderer sr = seg.GetComponent<SpriteRenderer>();
                 if (sr != null)
                 {
-                    float t = (float)i / _segmentCount;
+                    float t = (float)i / m_segmentCount;
                     // Rainbow gradient from magenta through to red
                     Color segColor = Color.HSVToRGB(0.85f - t * 0.15f, 0.8f, 1f);
                     sr.color = segColor;
                 }
 
-                _segments.Add(seg.transform);
+                m_segments.Add(seg.transform);
             }
         }
 
@@ -168,7 +168,7 @@ namespace NeuralBreak.Entities
 
             // Add sprite renderer with circle sprite
             var sr = seg.AddComponent<SpriteRenderer>();
-            sr.sprite = Graphics.SpriteGenerator.CreateCircle(32, _wormColor, "WormSegmentSprite");
+            sr.sprite = Graphics.SpriteGenerator.CreateCircle(32, m_wormColor, "WormSegmentSprite");
             sr.sortingOrder = 5;
 
             // Add collider for projectile detection
@@ -190,7 +190,7 @@ namespace NeuralBreak.Entities
         /// </summary>
         protected override void UpdateDying()
         {
-            if (_isDeathAnimating)
+            if (m_isDeathAnimating)
             {
                 UpdateDeathAnimation();
             }
@@ -205,53 +205,53 @@ namespace NeuralBreak.Entities
         {
             // Calculate target angle toward player
             Vector2 toPlayer = GetDirectionToPlayer();
-            _targetAngle = Mathf.Atan2(toPlayer.y, toPlayer.x) * Mathf.Rad2Deg;
+            m_targetAngle = Mathf.Atan2(toPlayer.y, toPlayer.x) * Mathf.Rad2Deg;
 
             // Smoothly turn toward target
-            float angleDiff = Mathf.DeltaAngle(_currentAngle, _targetAngle);
-            float turnAmount = Mathf.Sign(angleDiff) * Mathf.Min(Mathf.Abs(angleDiff), _turnSpeed * Time.deltaTime);
-            _currentAngle += turnAmount;
+            float angleDiff = Mathf.DeltaAngle(m_currentAngle, m_targetAngle);
+            float turnAmount = Mathf.Sign(angleDiff) * Mathf.Min(Mathf.Abs(angleDiff), m_turnSpeed * Time.deltaTime);
+            m_currentAngle += turnAmount;
 
             // Add undulation
-            _undulationPhase += Time.deltaTime * _undulationFrequency;
-            float undulation = Mathf.Sin(_undulationPhase) * _undulationAmplitude;
-            float finalAngle = _currentAngle + undulation;
+            m_undulationPhase += Time.deltaTime * m_undulationFrequency;
+            float undulation = Mathf.Sin(m_undulationPhase) * m_undulationAmplitude;
+            float finalAngle = m_currentAngle + undulation;
 
             // Move in current direction
             float rad = finalAngle * Mathf.Deg2Rad;
             Vector2 direction = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
-            Vector2 newPos = (Vector2)transform.position + direction * _speed * Time.deltaTime;
+            Vector2 newPos = (Vector2)transform.position + direction * m_speed * Time.deltaTime;
             transform.position = newPos;
 
             // Rotate head to face direction
             transform.rotation = Quaternion.Euler(0, 0, finalAngle - 90f);
 
             // Record position in history
-            _positionHistory.Insert(0, newPos);
-            if (_positionHistory.Count > _historyLength)
+            m_positionHistory.Insert(0, newPos);
+            if (m_positionHistory.Count > m_historyLength)
             {
-                _positionHistory.RemoveAt(_positionHistory.Count - 1);
+                m_positionHistory.RemoveAt(m_positionHistory.Count - 1);
             }
         }
 
         private void UpdateSegments()
         {
-            for (int i = 0; i < _segments.Count; i++)
+            for (int i = 0; i < m_segments.Count; i++)
             {
-                if (_segments[i] == null) continue;
+                if (m_segments[i] == null) continue;
 
                 // Get position from history
-                int historyIndex = Mathf.Min((i + 1) * 10, _positionHistory.Count - 1);
-                _segments[i].position = _positionHistory[historyIndex];
+                int historyIndex = Mathf.Min((i + 1) * 10, m_positionHistory.Count - 1);
+                m_segments[i].position = m_positionHistory[historyIndex];
 
                 // Rotate segment to face next position
                 if (historyIndex > 0)
                 {
-                    Vector2 dir = _positionHistory[historyIndex - 1] - _positionHistory[historyIndex];
+                    Vector2 dir = m_positionHistory[historyIndex - 1] - m_positionHistory[historyIndex];
                     if (dir.sqrMagnitude > 0.001f)
                     {
                         float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-                        _segments[i].rotation = Quaternion.Euler(0, 0, angle - 90f);
+                        m_segments[i].rotation = Quaternion.Euler(0, 0, angle - 90f);
                     }
                 }
             }
@@ -260,12 +260,12 @@ namespace NeuralBreak.Entities
         public override void Kill()
         {
             // Prevent multiple kill calls
-            if (_isDeathAnimating || _state == EnemyState.Dying || _state == EnemyState.Dead) return;
+            if (m_isDeathAnimating || m_state == EnemyState.Dying || m_state == EnemyState.Dead) return;
 
             // Start death animation instead of immediate death
-            _isDeathAnimating = true;
-            _deathTimer = 0f;
-            _currentDeathSegment = _segments.Count - 1; // Start from tail
+            m_isDeathAnimating = true;
+            m_deathTimer = 0f;
+            m_currentDeathSegment = m_segments.Count - 1; // Start from tail
 
             // Transition to Dying state so we stop taking damage
             // but we'll handle the animation ourselves
@@ -276,85 +276,85 @@ namespace NeuralBreak.Entities
             {
                 enemyType = EnemyType,
                 position = transform.position,
-                scoreValue = _scoreValue,
-                xpValue = _xpValue
+                scoreValue = m_scoreValue,
+                xpValue = m_xpValue
             });
         }
 
         private void UpdateDeathAnimation()
         {
-            _deathTimer += Time.deltaTime;
-            float timePerSegment = _deathSprayDuration / (_segments.Count + 1);
+            m_deathTimer += Time.deltaTime;
+            float timePerSegment = m_deathSprayDuration / (m_segments.Count + 1);
 
             // Check if should destroy next segment
-            int targetSegment = _segments.Count - 1 - Mathf.FloorToInt(_deathTimer / timePerSegment);
+            int targetSegment = m_segments.Count - 1 - Mathf.FloorToInt(m_deathTimer / timePerSegment);
 
-            while (_currentDeathSegment >= targetSegment && _currentDeathSegment >= 0)
+            while (m_currentDeathSegment >= targetSegment && m_currentDeathSegment >= 0)
             {
-                DestroySegment(_currentDeathSegment);
-                _currentDeathSegment--;
+                DestroySegment(m_currentDeathSegment);
+                m_currentDeathSegment--;
             }
 
             // Final head destruction
-            if (_deathTimer >= _deathSprayDuration)
+            if (m_deathTimer >= m_deathSprayDuration)
             {
                 // Fire nova from head
                 if (EnemyProjectilePool.Instance != null)
                 {
                     EnemyProjectilePool.Instance.FireRing(
                         transform.position,
-                        _deathBulletSpeed,
-                        _deathBulletDamage,
-                        _finalNovaBullets,
+                        m_deathBulletSpeed,
+                        m_deathBulletDamage,
+                        m_finalNovaBullets,
                         Color.red
                     );
                 }
 
-                _isDeathAnimating = false;
+                m_isDeathAnimating = false;
 
                 // Finish dying - return to pool
                 SetState(EnemyState.Dead);
-                _returnToPool?.Invoke(this);
+                m_returnToPool?.Invoke(this);
             }
         }
 
         private void DestroySegment(int index)
         {
-            if (index < 0 || index >= _segments.Count) return;
-            if (_segments[index] == null) return;
+            if (index < 0 || index >= m_segments.Count) return;
+            if (m_segments[index] == null) return;
 
-            Vector2 segmentPos = _segments[index].position;
+            Vector2 segmentPos = m_segments[index].position;
 
             // Fire bullets from segment
             if (EnemyProjectilePool.Instance != null)
             {
                 EnemyProjectilePool.Instance.FireRing(
                     segmentPos,
-                    _deathBulletSpeed,
-                    _deathBulletDamage,
-                    _bulletsPerSegment,
-                    _wormColor
+                    m_deathBulletSpeed,
+                    m_deathBulletDamage,
+                    m_bulletsPerSegment,
+                    m_wormColor
                 );
             }
 
             // Feedback (Feel removed)
 
             // Destroy segment
-            Destroy(_segments[index].gameObject);
-            _segments[index] = null;
+            Destroy(m_segments[index].gameObject);
+            m_segments[index] = null;
         }
 
         public override void KillInstant()
         {
             // Clean up segments without animation
-            foreach (var seg in _segments)
+            foreach (var seg in m_segments)
             {
                 if (seg != null)
                 {
                     Destroy(seg.gameObject);
                 }
             }
-            _segments.Clear();
+            m_segments.Clear();
 
             base.KillInstant();
         }
@@ -362,15 +362,15 @@ namespace NeuralBreak.Entities
         public override void OnReturnToPool()
         {
             // Clean up segments
-            foreach (var seg in _segments)
+            foreach (var seg in m_segments)
             {
                 if (seg != null)
                 {
                     Destroy(seg.gameObject);
                 }
             }
-            _segments.Clear();
-            _positionHistory.Clear();
+            m_segments.Clear();
+            m_positionHistory.Clear();
 
             base.OnReturnToPool();
         }
@@ -379,18 +379,18 @@ namespace NeuralBreak.Entities
         {
             base.OnStateChanged(newState);
 
-            if (_headRenderer == null) return;
+            if (m_headRenderer == null) return;
 
             switch (newState)
             {
                 case EnemyState.Spawning:
-                    _headRenderer.color = new Color(_wormColor.r, _wormColor.g, _wormColor.b, 0.5f);
+                    m_headRenderer.color = new Color(m_wormColor.r, m_wormColor.g, m_wormColor.b, 0.5f);
                     break;
                 case EnemyState.Alive:
-                    _headRenderer.color = _wormColor;
+                    m_headRenderer.color = m_wormColor;
                     break;
                 case EnemyState.Dying:
-                    _headRenderer.color = Color.white;
+                    m_headRenderer.color = Color.white;
                     break;
             }
         }
@@ -400,12 +400,12 @@ namespace NeuralBreak.Entities
             base.OnDrawGizmosSelected();
 
             // Draw segment positions
-            Gizmos.color = _wormColor;
-            for (int i = 0; i < _segments.Count; i++)
+            Gizmos.color = m_wormColor;
+            for (int i = 0; i < m_segments.Count; i++)
             {
-                if (_segments[i] != null)
+                if (m_segments[i] != null)
                 {
-                    Gizmos.DrawWireSphere(_segments[i].position, 0.3f);
+                    Gizmos.DrawWireSphere(m_segments[i].position, 0.3f);
                 }
             }
         }

@@ -54,11 +54,11 @@ namespace NeuralBreak.UI.Builders
             var quitBtn = CreateButton("QuitButton", container, "MAIN MENU", new Vector2(0, -100), new Vector2(180, 50));
 
             // Wire PauseScreen fields
-            SetPrivateField(pauseScreen, "_screenRoot", screen.gameObject);
-            SetPrivateField(pauseScreen, "_resumeButton", resumeBtn);
-            SetPrivateField(pauseScreen, "_restartButton", restartBtn);
-            SetPrivateField(pauseScreen, "_quitButton", quitBtn);
-            SetPrivateField(pauseScreen, "_firstSelected", resumeBtn);
+            SetPrivateField(pauseScreen, "m_screenRoot", screen.gameObject);
+            SetPrivateField(pauseScreen, "m_resumeButton", resumeBtn);
+            SetPrivateField(pauseScreen, "m_restartButton", restartBtn);
+            SetPrivateField(pauseScreen, "m_quitButton", quitBtn);
+            SetPrivateField(pauseScreen, "m_firstSelected", resumeBtn);
 
             screen.gameObject.SetActive(false);
             return screen.gameObject;

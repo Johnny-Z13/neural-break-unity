@@ -17,82 +17,82 @@ namespace NeuralBreak.Combat
     {
         [Header("Settings")]
         // Base radius now read from ConfigProvider.WeaponSystem.projectileSize
-        private float _baseRadius;
+        private float m_baseRadius;
 
         [Header("Visuals")]
-        [SerializeField] private SpriteRenderer _spriteRenderer;
-        [SerializeField] private TrailRenderer _trailRenderer;
+        [SerializeField] private SpriteRenderer m_spriteRenderer;
+        [SerializeField] private TrailRenderer m_trailRenderer;
 
         // Physics
-        private Rigidbody2D _rb;
-        private CircleCollider2D _collider;
+        private Rigidbody2D m_rb;
+        private CircleCollider2D m_collider;
 
         // Runtime state
-        private Vector2 _direction;
-        private float _speed;
-        private int _damage;
-        private int _powerLevel;
-        private float _lifeTimer;
-        private bool _isActive;
+        private Vector2 m_direction;
+        private float m_speed;
+        private int m_damage;
+        private int m_powerLevel;
+        private float m_lifeTimer;
+        private bool m_isActive;
 
         // Behaviors (modular composition)
-        private List<IProjectileBehavior> _behaviors = new List<IProjectileBehavior>();
+        private List<IProjectileBehavior> m_behaviors = new List<IProjectileBehavior>();
 
         // Pool callback
-        private System.Action<EnhancedProjectile> _returnToPool;
+        private System.Action<EnhancedProjectile> m_returnToPool;
 
         // Public accessors
-        public bool IsActive => _isActive;
-        public float Radius => _baseRadius * (1f + _powerLevel * 0.06f);
-        public Vector2 Direction => _direction;
+        public bool IsActive => m_isActive;
+        public float Radius => m_baseRadius * (1f + m_powerLevel * 0.06f);
+        public Vector2 Direction => m_direction;
 
         private void Awake()
         {
             // Setup physics
-            _rb = GetComponent<Rigidbody2D>();
-            if (_rb == null) _rb = gameObject.AddComponent<Rigidbody2D>();
-            _rb.gravityScale = 0f;
-            _rb.bodyType = RigidbodyType2D.Kinematic;
-            _rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+            m_rb = GetComponent<Rigidbody2D>();
+            if (m_rb == null) m_rb = gameObject.AddComponent<Rigidbody2D>();
+            m_rb.gravityScale = 0f;
+            m_rb.bodyType = RigidbodyType2D.Kinematic;
+            m_rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
             // Setup collider
-            _collider = GetComponent<CircleCollider2D>();
-            if (_collider == null) _collider = gameObject.AddComponent<CircleCollider2D>();
-            _collider.isTrigger = true;
+            m_collider = GetComponent<CircleCollider2D>();
+            if (m_collider == null) m_collider = gameObject.AddComponent<CircleCollider2D>();
+            m_collider.isTrigger = true;
             // Collider radius will be set in Initialize() from config
 
             // Setup sprite
-            if (_spriteRenderer == null) _spriteRenderer = GetComponent<SpriteRenderer>();
-            if (_spriteRenderer != null)
+            if (m_spriteRenderer == null) m_spriteRenderer = GetComponent<SpriteRenderer>();
+            if (m_spriteRenderer != null)
             {
-                if (_spriteRenderer.sprite == null)
+                if (m_spriteRenderer.sprite == null)
                 {
-                    _spriteRenderer.sprite = Graphics.SpriteGenerator.CreateCircle(32, new Color(0.2f, 0.9f, 1f), "ProjectileSprite");
+                    m_spriteRenderer.sprite = Graphics.SpriteGenerator.CreateCircle(32, new Color(0.2f, 0.9f, 1f), "ProjectileSprite");
                 }
-                _spriteRenderer.sortingOrder = 100;
-                _spriteRenderer.enabled = true;
+                m_spriteRenderer.sortingOrder = 100;
+                m_spriteRenderer.enabled = true;
             }
 
             // Setup trail
-            if (_trailRenderer == null) _trailRenderer = GetComponent<TrailRenderer>();
+            if (m_trailRenderer == null) m_trailRenderer = GetComponent<TrailRenderer>();
         }
 
         private void Update()
         {
-            if (!_isActive) return;
+            if (!m_isActive) return;
 
             // Update behaviors
-            foreach (var behavior in _behaviors)
+            foreach (var behavior in m_behaviors)
             {
                 behavior.Update(Time.deltaTime);
             }
 
             // Move projectile
-            transform.position += (Vector3)(_direction * _speed * Time.deltaTime);
+            transform.position += (Vector3)(m_direction * m_speed * Time.deltaTime);
 
             // Lifetime check
-            _lifeTimer -= Time.deltaTime;
-            if (_lifeTimer <= 0f)
+            m_lifeTimer -= Time.deltaTime;
+            if (m_lifeTimer <= 0f)
             {
                 Deactivate();
             }
@@ -111,53 +111,53 @@ namespace NeuralBreak.Combat
         {
             transform.SetParent(null);
             transform.position = position;
-            _direction = direction.normalized;
-            _damage = damage;
-            _powerLevel = powerLevel;
-            _returnToPool = returnToPool;
-            _isActive = true;
+            m_direction = direction.normalized;
+            m_damage = damage;
+            m_powerLevel = powerLevel;
+            m_returnToPool = returnToPool;
+            m_isActive = true;
 
             // Apply speed modifier
-            _speed = ConfigProvider.WeaponSystem.baseProjectileSpeed * modifiers.projectileSpeedMultiplier;
+            m_speed = ConfigProvider.WeaponSystem.baseProjectileSpeed * modifiers.projectileSpeedMultiplier;
 
             // Apply lifetime
-            _lifeTimer = ConfigProvider.WeaponSystem.projectileLifetime;
+            m_lifeTimer = ConfigProvider.WeaponSystem.projectileLifetime;
 
             // Clear previous behaviors
-            foreach (var behavior in _behaviors)
+            foreach (var behavior in m_behaviors)
             {
                 behavior.OnDeactivate();
             }
-            _behaviors.Clear();
+            m_behaviors.Clear();
 
             // Add behaviors based on modifiers
             if (modifiers.enableHoming)
             {
-                _behaviors.Add(new HomingBehavior(modifiers.homingStrength));
+                m_behaviors.Add(new HomingBehavior(modifiers.homingStrength));
             }
 
             if (modifiers.piercingCount > 0)
             {
-                _behaviors.Add(new PiercingBehavior(modifiers.piercingCount));
+                m_behaviors.Add(new PiercingBehavior(modifiers.piercingCount));
             }
 
             if (modifiers.enableExplosion)
             {
-                _behaviors.Add(new ExplosionBehavior(modifiers.explosionRadius));
+                m_behaviors.Add(new ExplosionBehavior(modifiers.explosionRadius));
             }
 
             if (modifiers.enableChainLightning)
             {
-                _behaviors.Add(new ChainLightningBehavior(modifiers.chainLightningTargets));
+                m_behaviors.Add(new ChainLightningBehavior(modifiers.chainLightningTargets));
             }
 
             if (modifiers.enableRicochet)
             {
-                _behaviors.Add(new RicochetBehavior(modifiers.ricochetCount));
+                m_behaviors.Add(new RicochetBehavior(modifiers.ricochetCount));
             }
 
             // Initialize all behaviors
-            foreach (var behavior in _behaviors)
+            foreach (var behavior in m_behaviors)
             {
                 behavior.Initialize(this);
             }
@@ -167,16 +167,16 @@ namespace NeuralBreak.Combat
             transform.rotation = Quaternion.Euler(0, 0, angle - 90f);
 
             // Get projectile size from config
-            _baseRadius = ConfigProvider.WeaponSystem?.projectileSize ?? 0.15f;
+            m_baseRadius = ConfigProvider.WeaponSystem?.projectileSize ?? 0.15f;
 
             // Apply projectile size per level scaling from config
             float sizePerLevel = ConfigProvider.WeaponSystem?.powerLevels?.projectileSizePerLevel ?? 0.01f;
-            float scaledRadius = _baseRadius * (1f + powerLevel * sizePerLevel) * modifiers.projectileSizeMultiplier;
+            float scaledRadius = m_baseRadius * (1f + powerLevel * sizePerLevel) * modifiers.projectileSizeMultiplier;
 
             // Update collider radius
-            if (_collider != null)
+            if (m_collider != null)
             {
-                _collider.radius = scaledRadius;
+                m_collider.radius = scaledRadius;
             }
 
             // Visual scale - use config-based radius with visual multiplier
@@ -187,69 +187,69 @@ namespace NeuralBreak.Combat
             UpdateVisualForBehaviors();
 
             // Reset trail
-            if (_trailRenderer != null)
+            if (m_trailRenderer != null)
             {
-                _trailRenderer.Clear();
+                m_trailRenderer.Clear();
                 UpdateTrailColor();
             }
         }
 
         private void UpdateVisualForBehaviors()
         {
-            if (_spriteRenderer == null) return;
+            if (m_spriteRenderer == null) return;
 
             // Choose color based on behaviors
-            if (_behaviors.Count == 0)
+            if (m_behaviors.Count == 0)
             {
-                _spriteRenderer.color = Color.white;
+                m_spriteRenderer.color = Color.white;
             }
             else
             {
                 // Multi-behavior: gold
-                if (_behaviors.Count > 2)
+                if (m_behaviors.Count > 2)
                 {
-                    _spriteRenderer.color = new Color(1f, 0.8f, 0.2f);
+                    m_spriteRenderer.color = new Color(1f, 0.8f, 0.2f);
                 }
                 // Explosion: orange
                 else if (HasBehavior<ExplosionBehavior>())
                 {
-                    _spriteRenderer.color = new Color(1f, 0.5f, 0f);
+                    m_spriteRenderer.color = new Color(1f, 0.5f, 0f);
                 }
                 // Chain lightning: cyan
                 else if (HasBehavior<ChainLightningBehavior>())
                 {
-                    _spriteRenderer.color = new Color(0.2f, 0.8f, 1f);
+                    m_spriteRenderer.color = new Color(0.2f, 0.8f, 1f);
                 }
                 // Homing: green
                 else if (HasBehavior<HomingBehavior>())
                 {
-                    _spriteRenderer.color = new Color(0.5f, 1f, 0.5f);
+                    m_spriteRenderer.color = new Color(0.5f, 1f, 0.5f);
                 }
                 // Piercing: purple
                 else if (HasBehavior<PiercingBehavior>())
                 {
-                    _spriteRenderer.color = new Color(0.8f, 0.4f, 1f);
+                    m_spriteRenderer.color = new Color(0.8f, 0.4f, 1f);
                 }
                 // Ricochet: yellow
                 else if (HasBehavior<RicochetBehavior>())
                 {
-                    _spriteRenderer.color = new Color(1f, 1f, 0.3f);
+                    m_spriteRenderer.color = new Color(1f, 1f, 0.3f);
                 }
             }
         }
 
         private void UpdateTrailColor()
         {
-            if (_trailRenderer == null) return;
+            if (m_trailRenderer == null) return;
 
-            Color trailColor = _spriteRenderer != null ? _spriteRenderer.color : Color.white;
-            _trailRenderer.startColor = trailColor;
-            _trailRenderer.endColor = new Color(trailColor.r, trailColor.g, trailColor.b, 0f);
+            Color trailColor = m_spriteRenderer != null ? m_spriteRenderer.color : Color.white;
+            m_trailRenderer.startColor = trailColor;
+            m_trailRenderer.endColor = new Color(trailColor.r, trailColor.g, trailColor.b, 0f);
         }
 
         private bool HasBehavior<T>() where T : IProjectileBehavior
         {
-            foreach (var behavior in _behaviors)
+            foreach (var behavior in m_behaviors)
             {
                 if (behavior is T) return true;
             }
@@ -258,51 +258,51 @@ namespace NeuralBreak.Combat
 
         public int GetDamage()
         {
-            return _damage;
+            return m_damage;
         }
 
         public void SetDamage(int damage)
         {
-            _damage = damage;
+            m_damage = damage;
         }
 
         public void SetDirection(Vector2 direction)
         {
-            _direction = direction.normalized;
+            m_direction = direction.normalized;
         }
 
         public Vector2 GetDirection()
         {
-            return _direction;
+            return m_direction;
         }
 
         public void Deactivate()
         {
-            if (!_isActive) return;
+            if (!m_isActive) return;
 
-            _isActive = false;
+            m_isActive = false;
 
             // Notify behaviors
-            foreach (var behavior in _behaviors)
+            foreach (var behavior in m_behaviors)
             {
                 behavior.OnDeactivate();
             }
 
-            _returnToPool?.Invoke(this);
+            m_returnToPool?.Invoke(this);
         }
 
         public void OnReturnToPool()
         {
-            _isActive = false;
-            if (_trailRenderer != null)
+            m_isActive = false;
+            if (m_trailRenderer != null)
             {
-                _trailRenderer.Clear();
+                m_trailRenderer.Clear();
             }
         }
 
         private void OnTriggerEnter2D(Collider2D other)
         {
-            if (!_isActive) return;
+            if (!m_isActive) return;
 
             if (other.CompareTag("Enemy"))
             {
@@ -318,7 +318,7 @@ namespace NeuralBreak.Combat
                     if (wormSegment != null)
                     {
                         // Forward damage to worm segment (which forwards to parent)
-                        wormSegment.TakeDamage(_damage, transform.position);
+                        wormSegment.TakeDamage(m_damage, transform.position);
 
                         // For behaviors, we need to get the actual enemy
                         // WormSegment doesn't expose parent, so just handle destruction
@@ -334,11 +334,11 @@ namespace NeuralBreak.Combat
                 if (enemy != null && enemy.IsAlive)
                 {
                     // Apply base damage
-                    enemy.TakeDamage(_damage, transform.position);
+                    enemy.TakeDamage(m_damage, transform.position);
 
                     // Let behaviors handle hit
                     bool shouldDestroy = true;
-                    foreach (var behavior in _behaviors)
+                    foreach (var behavior in m_behaviors)
                     {
                         bool behaviorSaysDestroy = behavior.OnHitEnemy(enemy);
                         // If ANY behavior says don't destroy, keep projectile alive
@@ -349,7 +349,7 @@ namespace NeuralBreak.Combat
                     }
 
                     // Destroy if no behaviors or all behaviors agree
-                    if (shouldDestroy && _behaviors.Count == 0)
+                    if (shouldDestroy && m_behaviors.Count == 0)
                     {
                         Deactivate();
                     }

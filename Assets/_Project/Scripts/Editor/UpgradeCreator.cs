@@ -261,7 +261,7 @@ namespace NeuralBreak.Editor
             glassCannon.fireRateMultiplier = 2.5f;
             glassCannon.damageMultiplier = 0.8f;
             CreateUpgrade(
-                "glass_cannon",
+                "glas_cannon",
                 "Glass Cannon",
                 "+150% fire rate, -20% damage",
                 "Upgrades/Special/GlassCannon",

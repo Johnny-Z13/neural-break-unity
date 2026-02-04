@@ -11,66 +11,66 @@ namespace NeuralBreak.UI
     public class HealthDisplay : MonoBehaviour
     {
         [Header("Health Bar")]
-        [SerializeField] private Image _healthFill;
-        [SerializeField] private Image _healthBackground;
-        [SerializeField] private TextMeshProUGUI _healthText;
-        [SerializeField] private Gradient _healthGradient;
+        [SerializeField] private Image m_healthFill;
+        [SerializeField] private Image m_healthBackground;
+        [SerializeField] private TextMeshProUGUI m_healthText;
+        [SerializeField] private Gradient m_healthGradient;
 
         [Header("Shield Icons (Uses UITheme)")]
-        [SerializeField] private Transform _shieldContainer;
-        [SerializeField] private Image[] _shieldIcons;
-        [SerializeField] private bool _useThemeColors = true;
+        [SerializeField] private Transform m_shieldContainer;
+        [SerializeField] private Image[] m_shieldIcons;
+        [SerializeField] private bool m_useThemeColors = true;
 
-        private Color ShieldActiveColor => _useThemeColors ? UITheme.ShieldActive : _customShieldActiveColor;
-        private Color ShieldInactiveColor => _useThemeColors ? UITheme.ShieldInactive : _customShieldInactiveColor;
+        private Color ShieldActiveColor => m_useThemeColors ? UITheme.ShieldActive : m_customShieldActiveColor;
+        private Color ShieldInactiveColor => m_useThemeColors ? UITheme.ShieldInactive : m_customShieldInactiveColor;
 
-        [SerializeField] private Color _customShieldActiveColor = new Color(0.2f, 0.8f, 1f, 1f);
-        [SerializeField] private Color _customShieldInactiveColor = new Color(0.2f, 0.2f, 0.2f, 0.5f);
+        [SerializeField] private Color m_customShieldActiveColor = new Color(0.2f, 0.8f, 1f, 1f);
+        [SerializeField] private Color m_customShieldInactiveColor = new Color(0.2f, 0.2f, 0.2f, 0.5f);
 
         [Header("Animation")]
-        [SerializeField] private float _smoothSpeed = 10f;
-        [SerializeField] private bool _animateChanges = true;
+        [SerializeField] private float m_smoothSpeed = 10f;
+        [SerializeField] private bool m_animateChanges = true;
 
         // State
-        private float _targetFillAmount;
-        private float _currentFillAmount;
-        private int _currentHealth;
-        private int _maxHealth;
+        private float m_targetFillAmount;
+        private float m_currentFillAmount;
+        private int m_currentHealth;
+        private int m_maxHealth;
 
         private void Awake()
         {
             // Initialize gradient from UITheme if not set
-            if (_healthGradient == null || _useThemeColors)
+            if (m_healthGradient == null || m_useThemeColors)
             {
-                _healthGradient = UITheme.HealthGradient;
+                m_healthGradient = UITheme.HealthGradient;
             }
 
-            _currentFillAmount = 1f;
-            _targetFillAmount = 1f;
+            m_currentFillAmount = 1f;
+            m_targetFillAmount = 1f;
         }
 
         private void Start()
         {
             // Verify health fill is properly configured
-            if (_healthFill != null)
+            if (m_healthFill != null)
             {
                 // Ensure correct Image settings for fill
-                _healthFill.type = Image.Type.Filled;
-                _healthFill.fillMethod = Image.FillMethod.Horizontal;
-                _healthFill.fillOrigin = 0;
-                _healthFill.fillAmount = 1f;
+                m_healthFill.type = Image.Type.Filled;
+                m_healthFill.fillMethod = Image.FillMethod.Horizontal;
+                m_healthFill.fillOrigin = 0;
+                m_healthFill.fillAmount = 1f;
             }
         }
 
         private void Update()
         {
-            if (!_animateChanges) return;
+            if (!m_animateChanges) return;
 
             // Smooth health bar animation
-            if (Mathf.Abs(_currentFillAmount - _targetFillAmount) > 0.001f)
+            if (Mathf.Abs(m_currentFillAmount - m_targetFillAmount) > 0.001f)
             {
-                _currentFillAmount = Mathf.Lerp(_currentFillAmount, _targetFillAmount, Time.unscaledDeltaTime * _smoothSpeed);
-                ApplyFillAmount(_currentFillAmount);
+                m_currentFillAmount = Mathf.Lerp(m_currentFillAmount, m_targetFillAmount, Time.unscaledDeltaTime * m_smoothSpeed);
+                ApplyFillAmount(m_currentFillAmount);
             }
         }
 
@@ -79,19 +79,19 @@ namespace NeuralBreak.UI
         /// </summary>
         public void UpdateHealth(int currentHealth, int maxHealth)
         {
-            _currentHealth = currentHealth;
-            _maxHealth = maxHealth;
+            m_currentHealth = currentHealth;
+            m_maxHealth = maxHealth;
 
             float percent = maxHealth > 0 ? (float)currentHealth / maxHealth : 0f;
-            _targetFillAmount = percent;
-            _currentFillAmount = percent;  // Sync immediately for responsive feedback
+            m_targetFillAmount = percent;
+            m_currentFillAmount = percent;  // Sync immediately for responsive feedback
 
             ApplyFillAmount(percent);
 
             // Update text
-            if (_healthText != null)
+            if (m_healthText != null)
             {
-                _healthText.text = $"{currentHealth}/{maxHealth}";
+                m_healthText.text = $"{currentHealth}/{maxHealth}";
             }
         }
 
@@ -100,15 +100,15 @@ namespace NeuralBreak.UI
         /// </summary>
         public void UpdateShields(int currentShields, int maxShields)
         {
-            if (_shieldIcons == null) return;
+            if (m_shieldIcons == null) return;
 
-            for (int i = 0; i < _shieldIcons.Length; i++)
+            for (int i = 0; i < m_shieldIcons.Length; i++)
             {
-                if (_shieldIcons[i] == null) continue;
+                if (m_shieldIcons[i] == null) continue;
 
                 bool isActive = i < currentShields;
-                _shieldIcons[i].color = isActive ? ShieldActiveColor : ShieldInactiveColor;
-                _shieldIcons[i].gameObject.SetActive(i < maxShields);
+                m_shieldIcons[i].color = isActive ? ShieldActiveColor : ShieldInactiveColor;
+                m_shieldIcons[i].gameObject.SetActive(i < maxShields);
             }
         }
 
@@ -117,19 +117,19 @@ namespace NeuralBreak.UI
         /// </summary>
         public void ResetDisplay()
         {
-            _currentFillAmount = 1f;
-            _targetFillAmount = 1f;
+            m_currentFillAmount = 1f;
+            m_targetFillAmount = 1f;
             ApplyFillAmount(1f);
 
-            if (_healthText != null)
+            if (m_healthText != null)
             {
-                _healthText.text = "";
+                m_healthText.text = "";
             }
 
             // Reset shields
-            if (_shieldIcons != null)
+            if (m_shieldIcons != null)
             {
-                foreach (var icon in _shieldIcons)
+                foreach (var icon in m_shieldIcons)
                 {
                     if (icon != null)
                     {
@@ -141,14 +141,14 @@ namespace NeuralBreak.UI
 
         private void ApplyFillAmount(float amount)
         {
-            if (_healthFill == null) return;
+            if (m_healthFill == null) return;
 
-            _healthFill.fillAmount = amount;
+            m_healthFill.fillAmount = amount;
 
             // Apply color from gradient (green -> yellow -> red)
-            if (_healthGradient != null)
+            if (m_healthGradient != null)
             {
-                _healthFill.color = _healthGradient.Evaluate(amount);
+                m_healthFill.color = m_healthGradient.Evaluate(amount);
             }
         }
 

@@ -16,44 +16,44 @@ namespace NeuralBreak.UI
     {
 
         [Header("Settings")]
-        [SerializeField] private float _floatDistance = 50f;
-        [SerializeField] private float _floatDuration = 0.8f;
-        [SerializeField] private float _fadeDelay = 0.4f;
-        [SerializeField] private float _randomOffset = 20f;
-        [SerializeField] private bool _showDamageNumbers = true;
-        [SerializeField] private bool _showKillText = true;
+        [SerializeField] private float m_floatDistance = 50f;
+        [SerializeField] private float m_floatDuration = 0.8f;
+        [SerializeField] private float m_fadeDelay = 0.4f;
+        [SerializeField] private float m_randomOffset = 20f;
+        [SerializeField] private bool m_showDamageNumbers = true;
+        [SerializeField] private bool m_showKillText = true;
 
         [Header("Normal Hit (Uses UITheme.DamageStyle)")]
-        [SerializeField] private float _normalFontSize = 16f;
-        [SerializeField] private Color _normalColor = default;
+        [SerializeField] private float m_normalFontSize = 16f;
+        [SerializeField] private Color m_normalColor = default;
 
         [Header("Big Hit (High Damage)")]
-        [SerializeField] private float _bigHitFontSize = 24f;
-        [SerializeField] private Color _bigHitColor = default;
-        [SerializeField] private int _bigHitThreshold = 20;
+        [SerializeField] private float m_bigHitFontSize = 24f;
+        [SerializeField] private Color m_bigHitColor = default;
+        [SerializeField] private int m_bigHitThreshold = 20;
 
         [Header("Kill Shot")]
-        [SerializeField] private float _killFontSize = 28f;
-        [SerializeField] private Color _killColor = default;
+        [SerializeField] private float m_killFontSize = 28f;
+        [SerializeField] private Color m_killColor = default;
 
         [Header("Heal")]
-        [SerializeField] private float _healFontSize = 20f;
-        [SerializeField] private Color _healColor = default;
+        [SerializeField] private float m_healFontSize = 20f;
+        [SerializeField] private Color m_healColor = default;
 
         [Header("XP Gain")]
-        [SerializeField] private float _xpFontSize = 14f;
-        [SerializeField] private Color _xpColor = default;
+        [SerializeField] private float m_xpFontSize = 14f;
+        [SerializeField] private Color m_xpColor = default;
 
         [Header("Pool Settings")]
-        [SerializeField] private int _poolSize = 30;
+        [SerializeField] private int m_poolSize = 30;
 
         // UI Components
-        private Canvas _canvas;
-        private Queue<DamageText> _pool = new Queue<DamageText>();
-        private List<DamageText> _activeTexts = new List<DamageText>();
+        private Canvas m_canvas;
+        private Queue<DamageText> m_pool = new Queue<DamageText>();
+        private List<DamageText> m_activeTexts = new List<DamageText>();
 
         // Cached references
-        private Transform _playerTransform;
+        private Transform m_playerTransform;
 
         private class DamageText
         {
@@ -76,11 +76,11 @@ namespace NeuralBreak.UI
         private void ApplyThemeColors()
         {
             // Use UITheme.DamageStyle colors as defaults
-            if (_normalColor == default) _normalColor = UITheme.DamageStyle.NormalColor;
-            if (_bigHitColor == default) _bigHitColor = UITheme.DamageStyle.BigHitColor;
-            if (_killColor == default) _killColor = UITheme.DamageStyle.CriticalColor;
-            if (_healColor == default) _healColor = UITheme.DamageStyle.HealColor;
-            if (_xpColor == default) _xpColor = UITheme.DamageStyle.XPColor;
+            if (m_normalColor == default) m_normalColor = UITheme.DamageStyle.NormalColor;
+            if (m_bigHitColor == default) m_bigHitColor = UITheme.DamageStyle.BigHitColor;
+            if (m_killColor == default) m_killColor = UITheme.DamageStyle.CriticalColor;
+            if (m_healColor == default) m_healColor = UITheme.DamageStyle.HealColor;
+            if (m_xpColor == default) m_xpColor = UITheme.DamageStyle.XPColor;
         }
 
         private void Start()
@@ -95,7 +95,7 @@ namespace NeuralBreak.UI
         private void OnGameStarted(GameStartedEvent evt)
         {
             // Clear cached player reference on new game
-            _playerTransform = null;
+            m_playerTransform = null;
         }
 
         private void OnDestroy()
@@ -111,9 +111,9 @@ namespace NeuralBreak.UI
         {
             var canvasGO = new GameObject("DamageNumberCanvas");
             canvasGO.transform.SetParent(transform);
-            _canvas = canvasGO.AddComponent<Canvas>();
-            _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            _canvas.sortingOrder = 150;
+            m_canvas = canvasGO.AddComponent<Canvas>();
+            m_canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            m_canvas.sortingOrder = 150;
 
             var scaler = canvasGO.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -124,11 +124,11 @@ namespace NeuralBreak.UI
 
         private void CreatePool()
         {
-            for (int i = 0; i < _poolSize; i++)
+            for (int i = 0; i < m_poolSize; i++)
             {
                 var dmgText = CreateDamageText();
                 dmgText.gameObject.SetActive(false);
-                _pool.Enqueue(dmgText);
+                m_pool.Enqueue(dmgText);
             }
         }
 
@@ -137,7 +137,7 @@ namespace NeuralBreak.UI
             var dmgText = new DamageText();
 
             dmgText.gameObject = new GameObject("DamageNumber");
-            dmgText.gameObject.transform.SetParent(_canvas.transform);
+            dmgText.gameObject.transform.SetParent(m_canvas.transform);
 
             dmgText.rectTransform = dmgText.gameObject.AddComponent<RectTransform>();
             dmgText.rectTransform.sizeDelta = new Vector2(100, 50);
@@ -159,28 +159,28 @@ namespace NeuralBreak.UI
 
         private void OnEnemyDamaged(EnemyDamagedEvent evt)
         {
-            if (!_showDamageNumbers) return;
+            if (!m_showDamageNumbers) return;
 
-            bool isBigHit = evt.damage >= _bigHitThreshold;
+            bool isBigHit = evt.damage >= m_bigHitThreshold;
             ShowNumber(
                 evt.position,
                 evt.damage.ToString(),
-                isBigHit ? _bigHitFontSize : _normalFontSize,
-                isBigHit ? _bigHitColor : _normalColor,
+                isBigHit ? m_bigHitFontSize : m_normalFontSize,
+                isBigHit ? m_bigHitColor : m_normalColor,
                 isBigHit ? 1.2f : 1f
             );
         }
 
         private void OnEnemyKilled(EnemyKilledEvent evt)
         {
-            if (!_showKillText) return;
+            if (!m_showKillText) return;
 
             // Show XP gain
             ShowNumber(
                 evt.position + Vector3.up * 0.3f,
                 $"+{evt.xpValue} XP",
-                _xpFontSize,
-                _xpColor,
+                m_xpFontSize,
+                m_xpColor,
                 0.8f
             );
         }
@@ -188,22 +188,22 @@ namespace NeuralBreak.UI
         private void OnPlayerHealed(PlayerHealedEvent evt)
         {
             // Cache player transform on first use
-            if (_playerTransform == null)
+            if (m_playerTransform == null)
             {
                 var playerGO = GameObject.FindGameObjectWithTag("Player");
                 if (playerGO != null)
                 {
-                    _playerTransform = playerGO.transform;
+                    m_playerTransform = playerGO.transform;
                 }
             }
 
-            if (_playerTransform == null) return;
+            if (m_playerTransform == null) return;
 
             ShowNumber(
-                _playerTransform.position,
+                m_playerTransform.position,
                 $"+{evt.amount}",
-                _healFontSize,
-                _healColor,
+                m_healFontSize,
+                m_healColor,
                 1f
             );
         }
@@ -215,17 +215,17 @@ namespace NeuralBreak.UI
         {
             DamageText dmgText;
 
-            if (_pool.Count > 0)
+            if (m_pool.Count > 0)
             {
-                dmgText = _pool.Dequeue();
+                dmgText = m_pool.Dequeue();
             }
             else
             {
                 // Pool exhausted, reuse oldest active
-                if (_activeTexts.Count > 0)
+                if (m_activeTexts.Count > 0)
                 {
-                    dmgText = _activeTexts[0];
-                    _activeTexts.RemoveAt(0);
+                    dmgText = m_activeTexts[0];
+                    m_activeTexts.RemoveAt(0);
                     StopCoroutine("AnimateText");
                 }
                 else
@@ -234,7 +234,7 @@ namespace NeuralBreak.UI
                 }
             }
 
-            _activeTexts.Add(dmgText);
+            m_activeTexts.Add(dmgText);
 
             // Setup text
             dmgText.text.text = text;
@@ -244,8 +244,8 @@ namespace NeuralBreak.UI
 
             // Convert world position to screen position with random offset
             Vector3 screenPos = Camera.main.WorldToScreenPoint(worldPosition);
-            screenPos.x += Random.Range(-_randomOffset, _randomOffset);
-            screenPos.y += Random.Range(-_randomOffset * 0.5f, _randomOffset * 0.5f);
+            screenPos.x += Random.Range(-m_randomOffset, m_randomOffset);
+            screenPos.y += Random.Range(-m_randomOffset * 0.5f, m_randomOffset * 0.5f);
 
             dmgText.rectTransform.position = screenPos;
             dmgText.rectTransform.localScale = Vector3.one * scale;
@@ -257,7 +257,7 @@ namespace NeuralBreak.UI
         private IEnumerator AnimateText(DamageText dmgText)
         {
             Vector3 startPos = dmgText.rectTransform.position;
-            Vector3 endPos = startPos + Vector3.up * _floatDistance;
+            Vector3 endPos = startPos + Vector3.up * m_floatDistance;
             Vector3 startScale = dmgText.rectTransform.localScale;
             Vector3 punchScale = startScale * 1.3f;
 
@@ -285,12 +285,12 @@ namespace NeuralBreak.UI
 
             // Float and fade
             elapsed = 0f;
-            float fadeStartTime = _floatDuration - _fadeDelay;
+            float fadeStartTime = m_floatDuration - m_fadeDelay;
 
-            while (elapsed < _floatDuration)
+            while (elapsed < m_floatDuration)
             {
                 elapsed += Time.unscaledDeltaTime;
-                float t = elapsed / _floatDuration;
+                float t = elapsed / m_floatDuration;
 
                 // Float up with ease out
                 float easeT = 1f - Mathf.Pow(1f - t, 2f);
@@ -299,7 +299,7 @@ namespace NeuralBreak.UI
                 // Fade out at the end
                 if (elapsed > fadeStartTime)
                 {
-                    float fadeT = (elapsed - fadeStartTime) / _fadeDelay;
+                    float fadeT = (elapsed - fadeStartTime) / m_fadeDelay;
                     dmgText.canvasGroup.alpha = 1f - fadeT;
                 }
 
@@ -308,8 +308,8 @@ namespace NeuralBreak.UI
 
             // Return to pool
             dmgText.gameObject.SetActive(false);
-            _activeTexts.Remove(dmgText);
-            _pool.Enqueue(dmgText);
+            m_activeTexts.Remove(dmgText);
+            m_pool.Enqueue(dmgText);
         }
 
         #region Debug
@@ -317,19 +317,19 @@ namespace NeuralBreak.UI
         [ContextMenu("Debug: Show 25 Damage")]
         private void DebugShowDamage()
         {
-            ShowNumber(Vector3.zero, "25", _normalFontSize, _normalColor);
+            ShowNumber(Vector3.zero, "25", m_normalFontSize, m_normalColor);
         }
 
         [ContextMenu("Debug: Show Big Hit")]
         private void DebugShowBigHit()
         {
-            ShowNumber(Vector3.zero, "100", _bigHitFontSize, _bigHitColor, 1.2f);
+            ShowNumber(Vector3.zero, "100", m_bigHitFontSize, m_bigHitColor, 1.2f);
         }
 
         [ContextMenu("Debug: Show Kill")]
         private void DebugShowKill()
         {
-            ShowNumber(Vector3.zero, "KILL!", _killFontSize, _killColor, 1.5f);
+            ShowNumber(Vector3.zero, "KILL!", m_killFontSize, m_killColor, 1.5f);
         }
 
         #endregion

@@ -12,11 +12,11 @@ namespace NeuralBreak.Combat
         public static EnemyProjectilePool Instance { get; private set; }
 
         [Header("Pool Settings")]
-        [SerializeField] private EnemyProjectile _projectilePrefab;
-        [SerializeField] private int _poolSize = 200;
-        [SerializeField] private Transform _container;
+        [SerializeField] private EnemyProjectile m_projectilePrefab;
+        [SerializeField] private int m_poolSize = 200;
+        [SerializeField] private Transform m_container;
 
-        private ObjectPool<EnemyProjectile> _pool;
+        private ObjectPool<EnemyProjectile> m_pool;
 
         private void Awake()
         {
@@ -40,18 +40,18 @@ namespace NeuralBreak.Combat
 
         private void InitializePool()
         {
-            if (_container == null)
+            if (m_container == null)
             {
-                _container = new GameObject("EnemyProjectiles").transform;
-                _container.SetParent(transform);
+                m_container = new GameObject("EnemyProjectiles").transform;
+                m_container.SetParent(transform);
             }
 
-            if (_projectilePrefab != null)
+            if (m_projectilePrefab != null)
             {
-                _pool = new ObjectPool<EnemyProjectile>(
-                    _projectilePrefab,
-                    _container,
-                    _poolSize,
+                m_pool = new ObjectPool<EnemyProjectile>(
+                    m_projectilePrefab,
+                    m_container,
+                    m_poolSize,
                     onReturn: proj => proj.OnReturnToPool()
                 );
             }
@@ -66,13 +66,13 @@ namespace NeuralBreak.Combat
         /// </summary>
         public EnemyProjectile Fire(Vector2 position, Vector2 direction, float speed, int damage, Color? color = null)
         {
-            if (_pool == null)
+            if (m_pool == null)
             {
                 Debug.LogError("[EnemyProjectilePool] Pool not initialized!");
                 return null;
             }
 
-            EnemyProjectile proj = _pool.Get(position, Quaternion.identity);
+            EnemyProjectile proj = m_pool.Get(position, Quaternion.identity);
             proj.Initialize(position, direction, speed, damage, Return, color);
             return proj;
         }
@@ -135,7 +135,7 @@ namespace NeuralBreak.Combat
 
         private void Return(EnemyProjectile proj)
         {
-            _pool?.Return(proj);
+            m_pool?.Return(proj);
         }
 
         /// <summary>
@@ -144,9 +144,9 @@ namespace NeuralBreak.Combat
         public void ClearAll()
         {
             // Deactivate all active projectiles
-            if (_container != null)
+            if (m_container != null)
             {
-                foreach (Transform child in _container)
+                foreach (Transform child in m_container)
                 {
                     child.gameObject.SetActive(false);
                 }

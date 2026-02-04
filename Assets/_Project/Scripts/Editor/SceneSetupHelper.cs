@@ -38,18 +38,18 @@ namespace NeuralBreak.Editor
                 var so = new SerializedObject(spawner);
 
                 // Set player target
-                var playerProp = so.FindProperty("_playerTarget");
+                var playerProp = so.FindProperty("m_playerTarget");
                 if (playerProp != null)
                 {
                     playerProp.objectReferenceValue = player.transform;
                 }
 
                 // Load and set prefabs
-                SetPrefabReference(so, "_powerUpPrefab", "Assets/_Project/Prefabs/Pickups/PowerUpPickup.prefab");
-                SetPrefabReference(so, "_speedUpPrefab", "Assets/_Project/Prefabs/Pickups/SpeedUpPickup.prefab");
-                SetPrefabReference(so, "_medPackPrefab", "Assets/_Project/Prefabs/Pickups/MedPackPickup.prefab");
-                SetPrefabReference(so, "_shieldPrefab", "Assets/_Project/Prefabs/Pickups/ShieldPickup.prefab");
-                SetPrefabReference(so, "_invulnerablePrefab", "Assets/_Project/Prefabs/Pickups/InvulnerablePickup.prefab");
+                SetPrefabReference(so, "m_powerUpPrefab", "Assets/_Project/Prefabs/Pickups/PowerUpPickup.prefab");
+                SetPrefabReference(so, "m_speedUpPrefab", "Assets/_Project/Prefabs/Pickups/SpeedUpPickup.prefab");
+                SetPrefabReference(so, "m_medPackPrefab", "Assets/_Project/Prefabs/Pickups/MedPackPickup.prefab");
+                SetPrefabReference(so, "m_shieldPrefab", "Assets/_Project/Prefabs/Pickups/ShieldPickup.prefab");
+                SetPrefabReference(so, "m_invulnerablePrefab", "Assets/_Project/Prefabs/Pickups/InvulnerablePickup.prefab");
 
                 so.ApplyModifiedProperties();
                 EditorUtility.SetDirty(spawner);
@@ -78,21 +78,21 @@ namespace NeuralBreak.Editor
                 var so = new SerializedObject(spawner);
 
                 // Set player target
-                var playerProp = so.FindProperty("_playerTarget");
+                var playerProp = so.FindProperty("m_playerTarget");
                 if (playerProp != null)
                 {
                     playerProp.objectReferenceValue = player.transform;
                 }
 
                 // Load and set enemy prefabs
-                SetPrefabReference(so, "_dataMitePrefab", "Assets/_Project/Prefabs/Enemies/DataMite.prefab");
-                SetPrefabReference(so, "_scanDronePrefab", "Assets/_Project/Prefabs/Enemies/ScanDrone.prefab");
-                SetPrefabReference(so, "_fizzerPrefab", "Assets/_Project/Prefabs/Enemies/Fizzer.prefab");
-                SetPrefabReference(so, "_ufoPrefab", "Assets/_Project/Prefabs/Enemies/UFO.prefab");
-                SetPrefabReference(so, "_chaosWormPrefab", "Assets/_Project/Prefabs/Enemies/ChaosWorm.prefab");
-                SetPrefabReference(so, "_voidSpherePrefab", "Assets/_Project/Prefabs/Enemies/VoidSphere.prefab");
-                SetPrefabReference(so, "_crystalShardPrefab", "Assets/_Project/Prefabs/Enemies/CrystalShard.prefab");
-                SetPrefabReference(so, "_bossPrefab", "Assets/_Project/Prefabs/Enemies/Boss.prefab");
+                SetPrefabReference(so, "m_dataMitePrefab", "Assets/_Project/Prefabs/Enemies/DataMite.prefab");
+                SetPrefabReference(so, "m_scanDronePrefab", "Assets/_Project/Prefabs/Enemies/ScanDrone.prefab");
+                SetPrefabReference(so, "m_fizzerPrefab", "Assets/_Project/Prefabs/Enemies/Fizzer.prefab");
+                SetPrefabReference(so, "m_ufoPrefab", "Assets/_Project/Prefabs/Enemies/UFO.prefab");
+                SetPrefabReference(so, "m_chaosWormPrefab", "Assets/_Project/Prefabs/Enemies/ChaosWorm.prefab");
+                SetPrefabReference(so, "m_voidSpherePrefab", "Assets/_Project/Prefabs/Enemies/VoidSphere.prefab");
+                SetPrefabReference(so, "m_crystalShardPrefab", "Assets/_Project/Prefabs/Enemies/CrystalShard.prefab");
+                SetPrefabReference(so, "m_bossPrefab", "Assets/_Project/Prefabs/Enemies/Boss.prefab");
 
                 so.ApplyModifiedProperties();
                 EditorUtility.SetDirty(spawner);
@@ -115,7 +115,7 @@ namespace NeuralBreak.Editor
             if (cameraController != null)
             {
                 var so = new SerializedObject(feedbackManager);
-                var cameraProp = so.FindProperty("_cameraController");
+                var cameraProp = so.FindProperty("m_cameraController");
                 if (cameraProp != null)
                 {
                     cameraProp.objectReferenceValue = cameraController;

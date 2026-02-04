@@ -14,24 +14,24 @@ namespace NeuralBreak.Input
         public static InputManager Instance { get; private set; }
 
         [Header("Input Settings")]
-        [SerializeField] private float _gamepadDeadzone = 0.15f;
-        [SerializeField] private bool _autoFireWhenAiming = false; // Disabled - require explicit fire input
+        [SerializeField] private float m_gamepadDeadzone = 0.15f;
+        [SerializeField] private bool m_autoFireWhenAiming = false; // Disabled - require explicit fire input
 
         [Header("Mouse Settings")]
-        [SerializeField] private bool _useMouseForAim = true;
+        [SerializeField] private bool m_useMouseForAim = true;
 
         [Header("Input Actions Asset")]
-        [SerializeField] private InputActionAsset _inputActionsAsset;
+        [SerializeField] private InputActionAsset m_inputActionsAsset;
 
         // Input action references
-        private InputAction _moveAction;
-        private InputAction _lookAction;
-        private InputAction _attackAction;
-        private InputAction _thrustAction;
-        private InputAction _dashAction;
-        private InputAction _smartBombAction;
-        private InputAction _submitAction;
-        private InputAction _cancelAction;
+        private InputAction m_moveAction;
+        private InputAction m_lookAction;
+        private InputAction m_attackAction;
+        private InputAction m_thrustAction;
+        private InputAction m_dashAction;
+        private InputAction m_smartBombAction;
+        private InputAction m_submitAction;
+        private InputAction m_cancelAction;
 
         // Current input values
         public Vector2 MoveInput { get; private set; }
@@ -58,7 +58,7 @@ namespace NeuralBreak.Input
         public event Action OnCancelPressed;
 
         // Reference to player transform for mouse aim calculation
-        private Transform _playerTransform;
+        private Transform m_playerTransform;
 
         private void Awake()
         {
@@ -79,21 +79,21 @@ namespace NeuralBreak.Input
 
         private void SetupInputActions()
         {
-            if (_inputActionsAsset == null)
+            if (m_inputActionsAsset == null)
             {
                 Debug.LogWarning("[InputManager] No InputActionAsset assigned, using keyboard fallback only");
                 return;
             }
 
             // Get actions from the asset
-            _moveAction = _inputActionsAsset.FindAction("Player/Move");
-            _lookAction = _inputActionsAsset.FindAction("Player/Look");
-            _attackAction = _inputActionsAsset.FindAction("Player/Attack");
-            _thrustAction = _inputActionsAsset.FindAction("Player/Thrust");
-            _dashAction = _inputActionsAsset.FindAction("Player/Dash");
-            _smartBombAction = _inputActionsAsset.FindAction("Player/SmartBomb");
-            _submitAction = _inputActionsAsset.FindAction("UI/Submit");
-            _cancelAction = _inputActionsAsset.FindAction("UI/Cancel");
+            m_moveAction = m_inputActionsAsset.FindAction("Player/Move");
+            m_lookAction = m_inputActionsAsset.FindAction("Player/Look");
+            m_attackAction = m_inputActionsAsset.FindAction("Player/Attack");
+            m_thrustAction = m_inputActionsAsset.FindAction("Player/Thrust");
+            m_dashAction = m_inputActionsAsset.FindAction("Player/Dash");
+            m_smartBombAction = m_inputActionsAsset.FindAction("Player/SmartBomb");
+            m_submitAction = m_inputActionsAsset.FindAction("UI/Submit");
+            m_cancelAction = m_inputActionsAsset.FindAction("UI/Cancel");
         }
 
         private void OnEnable()
@@ -105,44 +105,44 @@ namespace NeuralBreak.Input
             AimInput = Vector2.zero;
             HasAimInput = false;
 
-            if (_inputActionsAsset != null)
+            if (m_inputActionsAsset != null)
             {
-                _inputActionsAsset.Enable();
+                m_inputActionsAsset.Enable();
             }
 
             // Subscribe to actions
-            if (_moveAction != null)
+            if (m_moveAction != null)
             {
-                _moveAction.performed += OnMove;
-                _moveAction.canceled += OnMove;
+                m_moveAction.performed += OnMove;
+                m_moveAction.canceled += OnMove;
             }
 
-            if (_lookAction != null)
+            if (m_lookAction != null)
             {
-                _lookAction.performed += OnLook;
-                _lookAction.canceled += OnLook;
+                m_lookAction.performed += OnLook;
+                m_lookAction.canceled += OnLook;
             }
 
-            if (_attackAction != null)
+            if (m_attackAction != null)
             {
-                _attackAction.performed += OnAttack;
-                _attackAction.canceled += OnAttackCanceled;
+                m_attackAction.performed += OnAttack;
+                m_attackAction.canceled += OnAttackCanceled;
             }
 
-            if (_thrustAction != null)
+            if (m_thrustAction != null)
             {
-                _thrustAction.performed += OnThrustPerformed;
-                _thrustAction.canceled += OnThrustCanceled;
+                m_thrustAction.performed += OnThrustPerformed;
+                m_thrustAction.canceled += OnThrustCanceled;
             }
 
-            if (_dashAction != null)
+            if (m_dashAction != null)
             {
-                _dashAction.performed += OnDashPerformed;
+                m_dashAction.performed += OnDashPerformed;
             }
 
-            if (_smartBombAction != null)
+            if (m_smartBombAction != null)
             {
-                _smartBombAction.performed += OnSmartBombPerformed;
+                m_smartBombAction.performed += OnSmartBombPerformed;
                 Debug.Log("[InputManager] SmartBomb action subscribed successfully!");
             }
             else
@@ -150,79 +150,79 @@ namespace NeuralBreak.Input
                 Debug.LogError("[InputManager] SmartBomb action is NULL! Check InputActionAsset has 'Player/SmartBomb' action.");
             }
 
-            if (_submitAction != null)
+            if (m_submitAction != null)
             {
-                _submitAction.performed += OnSubmit;
+                m_submitAction.performed += OnSubmit;
             }
 
-            if (_cancelAction != null)
+            if (m_cancelAction != null)
             {
-                _cancelAction.performed += OnCancel;
+                m_cancelAction.performed += OnCancel;
             }
         }
 
         private void OnDisable()
         {
             // Unsubscribe from actions
-            if (_moveAction != null)
+            if (m_moveAction != null)
             {
-                _moveAction.performed -= OnMove;
-                _moveAction.canceled -= OnMove;
+                m_moveAction.performed -= OnMove;
+                m_moveAction.canceled -= OnMove;
             }
 
-            if (_lookAction != null)
+            if (m_lookAction != null)
             {
-                _lookAction.performed -= OnLook;
-                _lookAction.canceled -= OnLook;
+                m_lookAction.performed -= OnLook;
+                m_lookAction.canceled -= OnLook;
             }
 
-            if (_attackAction != null)
+            if (m_attackAction != null)
             {
-                _attackAction.performed -= OnAttack;
-                _attackAction.canceled -= OnAttackCanceled;
+                m_attackAction.performed -= OnAttack;
+                m_attackAction.canceled -= OnAttackCanceled;
             }
 
-            if (_thrustAction != null)
+            if (m_thrustAction != null)
             {
-                _thrustAction.performed -= OnThrustPerformed;
-                _thrustAction.canceled -= OnThrustCanceled;
+                m_thrustAction.performed -= OnThrustPerformed;
+                m_thrustAction.canceled -= OnThrustCanceled;
             }
 
-            if (_dashAction != null)
+            if (m_dashAction != null)
             {
-                _dashAction.performed -= OnDashPerformed;
+                m_dashAction.performed -= OnDashPerformed;
             }
 
-            if (_smartBombAction != null)
+            if (m_smartBombAction != null)
             {
-                _smartBombAction.performed -= OnSmartBombPerformed;
+                m_smartBombAction.performed -= OnSmartBombPerformed;
             }
 
-            if (_submitAction != null)
+            if (m_submitAction != null)
             {
-                _submitAction.performed -= OnSubmit;
+                m_submitAction.performed -= OnSubmit;
             }
 
-            if (_cancelAction != null)
+            if (m_cancelAction != null)
             {
-                _cancelAction.performed -= OnCancel;
+                m_cancelAction.performed -= OnCancel;
             }
 
-            if (_inputActionsAsset != null)
+            if (m_inputActionsAsset != null)
             {
-                _inputActionsAsset.Disable();
+                m_inputActionsAsset.Disable();
             }
         }
 
         private void Update()
         {
             // Auto-find player transform if not set
-            if (_playerTransform == null)
+            if (m_playerTransform == null)
             {
                 var player = UnityEngine.Object.FindFirstObjectByType<NeuralBreak.Entities.PlayerController>();
                 if (player != null)
                 {
-                    _playerTransform = player.transform;
+                    m_playerTransform = player.transform;
                     Debug.Log("[InputManager] Auto-found player transform");
                 }
             }
@@ -254,7 +254,7 @@ namespace NeuralBreak.Input
             }
 
             // WASD movement fallback (if no input action asset)
-            if (_moveAction == null)
+            if (m_moveAction == null)
             {
                 Vector2 move = Vector2.zero;
                 if (keyboard.wKey.isPressed) move.y += 1;
@@ -270,7 +270,7 @@ namespace NeuralBreak.Input
             }
 
             // Thrust (Shift key - hold)
-            if (_thrustAction == null)
+            if (m_thrustAction == null)
             {
                 bool shiftHeld = keyboard.leftShiftKey.isPressed;
                 if (shiftHeld && !ThrustHeld)
@@ -286,7 +286,7 @@ namespace NeuralBreak.Input
             }
 
             // Fire (Mouse left button - hold to fire)
-            if (_attackAction == null)
+            if (m_attackAction == null)
             {
                 var mouse = Mouse.current;
                 if (mouse != null)
@@ -297,7 +297,7 @@ namespace NeuralBreak.Input
             }
 
             // Dash (Space key)
-            if (_dashAction == null && keyboard.spaceKey.wasPressedThisFrame)
+            if (m_dashAction == null && keyboard.spaceKey.wasPressedThisFrame)
             {
                 DashPressed = true;
                 OnDashPressed?.Invoke();
@@ -316,7 +316,7 @@ namespace NeuralBreak.Input
             {
                 float leftStickMag = gamepad.leftStick.ReadValue().magnitude;
                 float rightStickMag = gamepad.rightStick.ReadValue().magnitude;
-                if (leftStickMag > _gamepadDeadzone || rightStickMag > _gamepadDeadzone)
+                if (leftStickMag > m_gamepadDeadzone || rightStickMag > m_gamepadDeadzone)
                 {
                     IsUsingGamepad = true;
                 }
@@ -337,7 +337,7 @@ namespace NeuralBreak.Input
             if (gamepad == null) return;
 
             Vector2 leftStick = gamepad.leftStick.ReadValue();
-            if (leftStick.magnitude > _gamepadDeadzone)
+            if (leftStick.magnitude > m_gamepadDeadzone)
             {
                 // Gamepad has priority when actively used
                 MoveInput = leftStick;
@@ -359,7 +359,7 @@ namespace NeuralBreak.Input
             if (gamepad != null)
             {
                 Vector2 rightStick = gamepad.rightStick.ReadValue();
-                if (rightStick.magnitude > _gamepadDeadzone)
+                if (rightStick.magnitude > m_gamepadDeadzone)
                 {
                     aimDir = rightStick.normalized;
                     HasAimInput = true;
@@ -367,7 +367,7 @@ namespace NeuralBreak.Input
                     hasNewInput = true;
 
                     // Auto-fire when aiming with right stick
-                    if (_autoFireWhenAiming && !FireHeld)
+                    if (m_autoFireWhenAiming && !FireHeld)
                     {
                         FireHeld = true;
                         OnFirePressed?.Invoke();
@@ -376,7 +376,7 @@ namespace NeuralBreak.Input
                 else if (IsUsingGamepad)
                 {
                     // Stop firing when right stick released (gamepad only)
-                    if (_autoFireWhenAiming && FireHeld && !gamepad.rightTrigger.isPressed)
+                    if (m_autoFireWhenAiming && FireHeld && !gamepad.rightTrigger.isPressed)
                     {
                         FireHeld = false;
                         OnFireReleased?.Invoke();
@@ -387,10 +387,10 @@ namespace NeuralBreak.Input
             }
 
             // Mouse aim (when not using gamepad or mouse is primary)
-            if (_useMouseForAim && !IsUsingGamepad)
+            if (m_useMouseForAim && !IsUsingGamepad)
             {
                 var mouse = Mouse.current;
-                if (mouse != null && _playerTransform != null)
+                if (mouse != null && m_playerTransform != null)
                 {
                     // Get mouse world position
                     Vector2 mouseScreenPos = mouse.position.ReadValue();
@@ -398,7 +398,7 @@ namespace NeuralBreak.Input
                     if (cam != null)
                     {
                         Vector3 mouseWorldPos = cam.ScreenToWorldPoint(new Vector3(mouseScreenPos.x, mouseScreenPos.y, 10f));
-                        Vector2 playerPos = _playerTransform.position;
+                        Vector2 playerPos = m_playerTransform.position;
                         Vector2 toMouse = (Vector2)mouseWorldPos - playerPos;
 
                         if (toMouse.magnitude > 0.1f)
@@ -441,7 +441,7 @@ namespace NeuralBreak.Input
             Vector2 input = context.ReadValue<Vector2>();
 
             // Apply deadzone for gamepad
-            if (input.magnitude < _gamepadDeadzone)
+            if (input.magnitude < m_gamepadDeadzone)
             {
                 input = Vector2.zero;
             }
@@ -509,7 +509,7 @@ namespace NeuralBreak.Input
         /// </summary>
         public void SetPlayerTransform(Transform playerTransform)
         {
-            _playerTransform = playerTransform;
+            m_playerTransform = playerTransform;
         }
 
         /// <summary>
@@ -541,7 +541,7 @@ namespace NeuralBreak.Input
         /// </summary>
         public bool HasMoveInput()
         {
-            return MoveInput.sqrMagnitude > _gamepadDeadzone * _gamepadDeadzone;
+            return MoveInput.sqrMagnitude > m_gamepadDeadzone * m_gamepadDeadzone;
         }
 
         /// <summary>
