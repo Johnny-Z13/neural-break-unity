@@ -1402,7 +1402,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Input.InputManager
   m_gamepadDeadzone: 0.15
-  m_autoFireWhenAiming: 0
+  m_autoFireWhenAiming: 1
   m_useMouseForAim: 1
   m_inputActionsAsset: {fileID: -944628639613478452, guid: b572e886d455eee40ab77bffbafde057, type: 3}
 --- !u!4 &1221492669

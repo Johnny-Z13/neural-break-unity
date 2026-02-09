@@ -275,10 +275,15 @@ namespace NeuralBreak.Core
                 yield break;
             }
 
+            // Randomized firework death sequence over 1.5 seconds!
             if (m_enemySpawner != null)
             {
-                m_enemySpawner.ClearAllEnemies();
+                // Each enemy gets a random death time between 0 and 1.5 seconds
+                yield return StartCoroutine(m_enemySpawner.KillAllEnemiesFireworks(1.5f));
             }
+
+            // Extra second delay before showing upgrade menu (let fireworks finish)
+            yield return new WaitForSeconds(1.0f);
 
             bool showUpgradeSelection = ShouldShowUpgradeSelection();
 

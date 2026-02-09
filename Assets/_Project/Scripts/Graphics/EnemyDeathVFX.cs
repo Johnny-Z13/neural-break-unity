@@ -98,7 +98,7 @@ namespace NeuralBreak.Graphics
                 m_particleMaterial.SetColor("_BaseColor", Color.white);
                 m_particleMaterial.SetColor("_Color", Color.white);
                 m_particleMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-                m_particleMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.One);
+                m_particleMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
                 m_particleMaterial.SetInt("_ZWrite", 0);
                 m_particleMaterial.renderQueue = 3000;
                 m_particleMaterial.EnableKeyword("_EMISSION");

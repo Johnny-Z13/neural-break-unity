@@ -321,11 +321,11 @@ namespace NeuralBreak.Core
                 {
                     level = 1,
                     name = "NEURAL INITIALIZATION - LVL 1",
-                    objectives = new LevelObjectives { dataMites = 8 },
+                    objectives = new LevelObjectives { dataMites = 6, scanDrones = 2 },  // Added ScanDrones!
                     spawnRates = new SpawnRates
                     {
-                        dataMiteRate = 1.5f,
-                        scanDroneRate = float.PositiveInfinity,
+                        dataMiteRate = 0.5f,  // 3X FASTER for immediate action!
+                        scanDroneRate = 4.0f,  // ScanDrones spawn from Level 1! (shoots at player)
                         chaosWormRate = float.PositiveInfinity,
                         voidSphereRate = float.PositiveInfinity,
                         crystalShardRate = float.PositiveInfinity,
@@ -352,7 +352,7 @@ namespace NeuralBreak.Core
             bool hasCrystals = level >= 3;
             bool hasUFOs = level >= 4;
             bool hasBosses = level >= 5;
-            bool hasFizzers = level >= 6;
+            bool hasFizzers = level >= 2;  // Fizzers now spawn from Level 2!
 
             // Calculate objectives - ensure minimum of 1 when enemy type is enabled
             var objectives = new LevelObjectives
@@ -362,23 +362,23 @@ namespace NeuralBreak.Core
                 chaosWorms = hasWorms ? Mathf.Max(1, Mathf.FloorToInt((1 + level * 0.2f) * difficultyScale)) : 0,
                 voidSpheres = hasVoidSpheres ? Mathf.Max(1, Mathf.FloorToInt((1 + level * 0.1f) * difficultyScale)) : 0,
                 crystalShards = hasCrystals ? Mathf.Max(1, Mathf.FloorToInt((1 + level * 0.12f) * difficultyScale)) : 0,
-                fizzers = hasFizzers ? Mathf.Max(1, Mathf.FloorToInt((2 + level * 0.15f) * difficultyScale)) : 0,
+                fizzers = hasFizzers ? Mathf.Max(2, Mathf.FloorToInt((4 + level * 0.3f) * difficultyScale)) : 0,  // 2X more Fizzers! (was 2 + level * 0.15)
                 ufos = hasUFOs ? Mathf.Max(1, Mathf.FloorToInt((1 + level * 0.12f) * difficultyScale)) : 0,
                 bosses = hasBosses ? Mathf.Max(1, Mathf.FloorToInt(level * 0.06f)) : 0
             };
 
-            // Calculate spawn rates - slower at start, faster as level increases
+            // Calculate spawn rates - MUCH faster for intense action!
             // Higher number = slower spawn (time in seconds between spawns)
             var spawnRates = new SpawnRates
             {
-                dataMiteRate = Mathf.Max(1.5f, 3.0f - level * 0.015f) * spawnScale,      // Starts at 3s, min 1.5s
-                scanDroneRate = Mathf.Max(6.0f, 12f - level * 0.06f) * spawnScale,       // Starts at 12s, min 6s
-                chaosWormRate = hasWorms ? Mathf.Max(15f, 40f - level * 0.25f) * spawnScale : float.PositiveInfinity,
-                voidSphereRate = hasVoidSpheres ? Mathf.Max(18f, 60f - level * 0.42f) * spawnScale : float.PositiveInfinity,
-                crystalShardRate = hasCrystals ? Mathf.Max(16f, 50f - level * 0.34f) * spawnScale : float.PositiveInfinity,
-                fizzerRate = hasFizzers ? Mathf.Max(10f, 30f - level * 0.2f) * spawnScale : float.PositiveInfinity,
-                ufoRate = hasUFOs ? Mathf.Max(20f, 50f - level * 0.3f) * spawnScale : float.PositiveInfinity,
-                bossRate = hasBosses ? Mathf.Max(45f, 120f - level * 0.75f) : float.PositiveInfinity
+                dataMiteRate = Mathf.Max(0.3f, 1.0f - level * 0.01f) * spawnScale,       // Starts at 1s, min 0.3s - 5X FASTER!
+                scanDroneRate = Mathf.Max(1.5f, 3.0f - level * 0.015f) * spawnScale,     // Starts at 3s, min 1.5s - 4X FASTER!
+                chaosWormRate = hasWorms ? Mathf.Max(4f, 10f - level * 0.06f) * spawnScale : float.PositiveInfinity,  // 4X FASTER!
+                voidSphereRate = hasVoidSpheres ? Mathf.Max(5f, 15f - level * 0.1f) * spawnScale : float.PositiveInfinity,  // 4X FASTER!
+                crystalShardRate = hasCrystals ? Mathf.Max(4f, 12f - level * 0.08f) * spawnScale : float.PositiveInfinity,  // 4X FASTER!
+                fizzerRate = hasFizzers ? Mathf.Max(2.5f, 7.5f - level * 0.05f) * spawnScale : float.PositiveInfinity,  // 4X FASTER!
+                ufoRate = hasUFOs ? Mathf.Max(5f, 12.5f - level * 0.075f) * spawnScale : float.PositiveInfinity,  // 4X FASTER!
+                bossRate = hasBosses ? Mathf.Max(11f, 30f - level * 0.19f) : float.PositiveInfinity  // 4X FASTER!
             };
 
             return new LevelConfig

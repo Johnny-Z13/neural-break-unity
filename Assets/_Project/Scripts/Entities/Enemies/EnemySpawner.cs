@@ -331,6 +331,79 @@ namespace NeuralBreak.Entities
             LogHelper.Log("[EnemySpawner] All enemies killed");
         }
 
+        /// <summary>
+        /// Kill all enemies with staggered timing for firework effect.
+        /// Returns a coroutine that can be yielded to wait for completion.
+        /// </summary>
+        public System.Collections.IEnumerator KillAllEnemiesFireworks(float totalDuration = 1.5f)
+        {
+            LogHelper.Log($"[EnemySpawner] Starting firework sequence with {m_activeEnemies.Count} enemies over {totalDuration}s");
+
+            // Collect all alive enemies
+            var enemiesToKill = new System.Collections.Generic.List<EnemyBase>();
+            for (int i = 0; i < m_activeEnemies.Count; i++)
+            {
+                if (m_activeEnemies[i] != null && m_activeEnemies[i].IsAlive)
+                {
+                    enemiesToKill.Add(m_activeEnemies[i]);
+                }
+            }
+
+            if (enemiesToKill.Count == 0)
+            {
+                LogHelper.Log("[EnemySpawner] No enemies to kill in firework sequence");
+                yield break;
+            }
+
+            // Assign each enemy a RANDOM death time within the duration
+            var enemyDeathTimes = new System.Collections.Generic.Dictionary<EnemyBase, float>();
+            foreach (var enemy in enemiesToKill)
+            {
+                float randomTime = Random.Range(0f, totalDuration);
+                enemyDeathTimes[enemy] = randomTime;
+            }
+
+            // Track elapsed time and kill enemies at their scheduled times
+            float elapsed = 0f;
+            var killedEnemies = new System.Collections.Generic.HashSet<EnemyBase>();
+
+            while (elapsed < totalDuration)
+            {
+                // Check if any enemies should die this frame
+                foreach (var kvp in enemyDeathTimes)
+                {
+                    var enemy = kvp.Key;
+                    float deathTime = kvp.Value;
+
+                    // If this enemy's death time has arrived and hasn't been killed yet
+                    if (elapsed >= deathTime && !killedEnemies.Contains(enemy))
+                    {
+                        if (enemy != null && enemy.IsAlive)
+                        {
+                            enemy.Kill();
+                            LogHelper.Log($"[EnemySpawner] Firework! Killed enemy at t={elapsed:F2}s");
+                        }
+                        killedEnemies.Add(enemy);
+                    }
+                }
+
+                yield return null;
+                elapsed += Time.deltaTime;
+            }
+
+            // Kill any remaining enemies that might have been missed
+            foreach (var enemy in enemiesToKill)
+            {
+                if (enemy != null && enemy.IsAlive && !killedEnemies.Contains(enemy))
+                {
+                    enemy.Kill();
+                    LogHelper.Log("[EnemySpawner] Cleanup kill for missed enemy");
+                }
+            }
+
+            LogHelper.Log("[EnemySpawner] Firework sequence complete");
+        }
+
         public void ResetTimers()
         {
             m_rateManager.ResetTimers();

@@ -58,6 +58,9 @@ namespace NeuralBreak.Entities
         private int m_currentDeathSegment;
         private bool m_visualsGenerated;
 
+        // Spawn animation
+        private GameObject m_spawnVFX;
+
         protected override void OnInitialize()
         {
             base.OnInitialize();
@@ -184,6 +187,37 @@ namespace NeuralBreak.Entities
         {
             UpdateMovement();
             UpdateSegments();
+        }
+
+        /// <summary>
+        /// Override spawning state to add scale-up animation
+        /// </summary>
+        protected override void UpdateSpawning()
+        {
+            base.UpdateSpawning();
+
+            // Scale up animation during spawn
+            float spawnProgress = 1f - (m_stateTimer / m_spawnDuration);
+            float scale = Mathf.SmoothStep(0f, 1f, spawnProgress);
+
+            // Scale head
+            transform.localScale = Vector3.one * scale;
+
+            // Scale segments with delay
+            for (int i = 0; i < m_segments.Count; i++)
+            {
+                if (m_segments[i] == null) continue;
+
+                float segmentDelay = (float)i / m_segments.Count * 0.5f;
+                float segmentProgress = Mathf.Clamp01((spawnProgress - segmentDelay) / (1f - segmentDelay));
+                float segmentScale = Mathf.SmoothStep(0f, 1f, segmentProgress);
+
+                // Preserve original scale factor (smaller toward tail)
+                float originalScale = 1f - (i * 0.05f);
+                originalScale = Mathf.Max(originalScale, 0.4f);
+
+                m_segments[i].localScale = Vector3.one * (originalScale * segmentScale);
+            }
         }
 
         /// <summary>
@@ -386,14 +420,142 @@ namespace NeuralBreak.Entities
             {
                 case EnemyState.Spawning:
                     m_headRenderer.color = new Color(m_wormColor.r, m_wormColor.g, m_wormColor.b, 0.5f);
+                    CreateSpawnVFX();
+                    PlaySpawnSound();
                     break;
                 case EnemyState.Alive:
                     m_headRenderer.color = m_wormColor;
+                    CleanupSpawnVFX();
                     break;
                 case EnemyState.Dying:
                     m_headRenderer.color = Color.white;
                     break;
             }
+        }
+
+        private void CreateSpawnVFX()
+        {
+            m_spawnVFX = new GameObject("ChaosWormSpawnVFX");
+            m_spawnVFX.transform.position = transform.position;
+
+            var ps = m_spawnVFX.AddComponent<ParticleSystem>();
+            var main = ps.main;
+            main.duration = m_spawnDuration;
+            main.loop = false;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.3f, 0.6f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(2f, 5f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.15f, 0.3f);
+            main.startColor = new Color(0.8f, 0.2f, 0.8f, 0.8f);
+            main.gravityModifier = 0f;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+
+            var emission = ps.emission;
+            emission.rateOverTime = 80;
+
+            var shape = ps.shape;
+            shape.shapeType = ParticleSystemShapeType.Sphere;
+            shape.radius = 1.5f;
+
+            // Swirl effect
+            var velocity = ps.velocityOverLifetime;
+            velocity.enabled = true;
+            velocity.orbitalZ = new ParticleSystem.MinMaxCurve(3f);
+
+            var colorOverLifetime = ps.colorOverLifetime;
+            colorOverLifetime.enabled = true;
+            var gradient = new Gradient();
+            gradient.SetKeys(
+                new GradientColorKey[] {
+                    new GradientColorKey(new Color(0.8f, 0.2f, 0.8f), 0f),
+                    new GradientColorKey(new Color(1f, 0f, 0.5f), 1f)
+                },
+                new GradientAlphaKey[] {
+                    new GradientAlphaKey(0.8f, 0f),
+                    new GradientAlphaKey(0f, 1f)
+                }
+            );
+            colorOverLifetime.color = new ParticleSystem.MinMaxGradient(gradient);
+
+            // Create material with proper texture and blending
+            var renderer = ps.GetComponent<ParticleSystemRenderer>();
+            var mat = Graphics.VFX.VFXHelpers.CreateParticleMaterial(
+                new Color(0.8f, 0.2f, 0.8f, 1f),
+                emissionIntensity: 1f,
+                additive: false // Alpha blend for spawn particles
+            );
+
+            if (mat != null)
+            {
+                renderer.material = mat;
+                renderer.renderMode = ParticleSystemRenderMode.Billboard;
+            }
+
+            ps.Play();
+            Destroy(m_spawnVFX, m_spawnDuration + 1f);
+        }
+
+        private void CleanupSpawnVFX()
+        {
+            if (m_spawnVFX != null)
+            {
+                Destroy(m_spawnVFX);
+                m_spawnVFX = null;
+            }
+        }
+
+        private void PlaySpawnSound()
+        {
+            // Generate electronic squelch sound procedurally
+            var audioSource = gameObject.AddComponent<AudioSource>();
+            audioSource.clip = GenerateSquelchSound();
+            audioSource.volume = 0.4f;
+            audioSource.pitch = Random.Range(0.9f, 1.1f);
+            audioSource.spatialBlend = 0.7f; // Mostly 3D
+            audioSource.minDistance = 5f;
+            audioSource.maxDistance = 30f;
+            audioSource.Play();
+            Destroy(audioSource, audioSource.clip.length + 0.1f);
+        }
+
+        private AudioClip GenerateSquelchSound()
+        {
+            int sampleRate = 44100;
+            float duration = 0.4f;
+            int sampleCount = Mathf.FloorToInt(sampleRate * duration);
+
+            AudioClip clip = AudioClip.Create("ChaosWormSquelch", sampleCount, 1, sampleRate, false);
+            float[] samples = new float[sampleCount];
+
+            // Electronic squelch: FM synthesis with noise
+            float baseFreq = 220f; // A3
+            float freqSweep = 800f; // Sweep up rapidly
+
+            for (int i = 0; i < sampleCount; i++)
+            {
+                float t = (float)i / sampleRate;
+                float progress = t / duration;
+
+                // Frequency sweep (up then down for squelch)
+                float freq = baseFreq + freqSweep * Mathf.Sin(progress * Mathf.PI);
+
+                // FM modulation for electronic sound
+                float modulator = Mathf.Sin(2f * Mathf.PI * freq * 3f * t) * 0.5f;
+                float carrier = Mathf.Sin(2f * Mathf.PI * freq * t * (1f + modulator));
+
+                // Add noise for grit
+                float noise = (Random.value * 2f - 1f) * 0.15f;
+
+                // Combine
+                float sample = carrier * 0.7f + noise;
+
+                // Envelope (quick attack, medium decay)
+                float envelope = Mathf.Exp(-progress * 5f) * Mathf.Min(progress * 20f, 1f);
+
+                samples[i] = sample * envelope;
+            }
+
+            clip.SetData(samples, 0);
+            return clip;
         }
 
         protected override void OnDrawGizmosSelected()

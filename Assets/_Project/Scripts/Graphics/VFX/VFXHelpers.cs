@@ -142,6 +142,64 @@ namespace NeuralBreak.Graphics.VFX
             mat.SetColor("_Color", emissiveColor);
             mat.SetColor("_EmissionColor", emissiveColor);
 
+            // Proper alpha blending for transparency
+            mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            mat.SetInt("_ZWrite", 0);
+            mat.renderQueue = 3000;
+
+            if (mat.HasProperty("_Surface"))
+            {
+                mat.SetFloat("_Surface", 1);
+                mat.SetFloat("_Blend", 1);
+            }
+
+            return mat;
+        }
+
+        /// <summary>
+        /// Creates a proper particle material from scratch with soft texture and alpha blending.
+        /// Use this when you don't have a base material to copy from.
+        /// </summary>
+        public static Material CreateParticleMaterial(Color color, float emissionIntensity = 1f, bool additive = false)
+        {
+            Shader shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
+            if (shader == null) shader = Shader.Find("Particles/Standard Unlit");
+            if (shader == null) shader = Shader.Find("Sprites/Default");
+
+            if (shader == null)
+            {
+                Debug.LogError("[VFXHelpers] No suitable particle shader found!");
+                return null;
+            }
+
+            var mat = new Material(shader);
+
+            // Assign soft particle texture
+            var softTexture = GetSoftParticleTexture();
+            if (mat.HasProperty("_BaseMap"))
+                mat.SetTexture("_BaseMap", softTexture);
+            if (mat.HasProperty("_MainTex"))
+                mat.SetTexture("_MainTex", softTexture);
+
+            Color emissiveColor = color * emissionIntensity;
+            mat.SetColor("_BaseColor", emissiveColor);
+            mat.SetColor("_Color", emissiveColor);
+            mat.SetColor("_EmissionColor", emissiveColor);
+
+            // Blending mode
+            mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            if (additive)
+            {
+                mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.One); // Additive
+            }
+            else
+            {
+                mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha); // Alpha blend
+            }
+            mat.SetInt("_ZWrite", 0);
+            mat.renderQueue = 3000;
+
             if (mat.HasProperty("_Surface"))
             {
                 mat.SetFloat("_Surface", 1);

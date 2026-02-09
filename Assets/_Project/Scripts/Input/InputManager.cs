@@ -18,7 +18,7 @@ namespace NeuralBreak.Input
 
         [Header("Input Settings")]
         [SerializeField] private float m_gamepadDeadzone = 0.15f;
-        [SerializeField] private bool m_autoFireWhenAiming = false; // Disabled - require explicit fire input
+        [SerializeField] private bool m_autoFireWhenAiming = true; // Twin-stick: right stick auto-fires
 
         [Header("Mouse Settings")]
         [SerializeField] private bool m_useMouseForAim = true;
@@ -394,7 +394,7 @@ namespace NeuralBreak.Input
                 else if (IsUsingGamepad)
                 {
                     // Stop firing when right stick released (gamepad only)
-                    if (m_autoFireWhenAiming && FireHeld && !gamepad.rightTrigger.isPressed)
+                    if (m_autoFireWhenAiming && FireHeld)
                     {
                         FireHeld = false;
                         OnFireReleased?.Invoke();

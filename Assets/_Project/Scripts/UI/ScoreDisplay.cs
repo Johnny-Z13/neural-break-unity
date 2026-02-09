@@ -134,7 +134,7 @@ namespace NeuralBreak.UI
             {
                 m_comboContainer.SetActive(showCombo);
 
-                if (showCombo && comboCount > previousCombo)
+                if (showCombo && comboCount > previousCombo && gameObject.activeInHierarchy)
                 {
                     // Punch scale on combo increase
                     StartCoroutine(PunchScale(m_comboContainer.transform, m_comboOriginalScale));
@@ -176,7 +176,7 @@ namespace NeuralBreak.UI
 
         private void PunchMultiplier()
         {
-            if (m_multiplierText == null) return;
+            if (m_multiplierText == null || !gameObject.activeInHierarchy) return;
 
             if (m_multiplierPunchCoroutine != null)
             {
@@ -203,7 +203,7 @@ namespace NeuralBreak.UI
 
         private void ShowMilestone(string message, Color color)
         {
-            if (m_milestoneText == null) return;
+            if (m_milestoneText == null || !gameObject.activeInHierarchy) return;
 
             if (m_milestoneCoroutine != null)
             {
@@ -297,6 +297,8 @@ namespace NeuralBreak.UI
 
         private void ShowDelta(int delta)
         {
+            if (!gameObject.activeInHierarchy) return; // Can't start coroutines on inactive objects
+
             if (m_deltaCoroutine != null)
             {
                 StopCoroutine(m_deltaCoroutine);

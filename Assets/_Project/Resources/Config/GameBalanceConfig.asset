@@ -113,8 +113,8 @@ MonoBehaviour:
     collisionRadius: 0.46
     scoreValue: 100
     xpValue: 1
-    baseSpawnRate: 1.5
-    poolSize: 100
+    baseSpawnRate: 0.4
+    poolSize: 300
     canShoot: 0
     fireRate: 2
     projectileSpeed: 7
@@ -140,8 +140,8 @@ MonoBehaviour:
     collisionRadius: 0.9
     scoreValue: 600
     xpValue: 6
-    baseSpawnRate: 8
-    poolSize: 30
+    baseSpawnRate: 2
+    poolSize: 100
     canShoot: 1
     fireRate: 2
     projectileSpeed: 7
@@ -167,8 +167,8 @@ MonoBehaviour:
     collisionRadius: 0.75
     scoreValue: 3500
     xpValue: 35
-    baseSpawnRate: 30
-    poolSize: 5
+    baseSpawnRate: 8
+    poolSize: 15
     canShoot: 0
     fireRate: 0
     projectileSpeed: 8
@@ -194,8 +194,8 @@ MonoBehaviour:
     collisionRadius: 0.9
     scoreValue: 5000
     xpValue: 50
-    baseSpawnRate: 45
-    poolSize: 3
+    baseSpawnRate: 12
+    poolSize: 10
     canShoot: 1
     fireRate: 3
     projectileSpeed: 5
@@ -221,8 +221,8 @@ MonoBehaviour:
     collisionRadius: 1.4
     scoreValue: 4500
     xpValue: 45
-    baseSpawnRate: 40
-    poolSize: 5
+    baseSpawnRate: 10
+    poolSize: 15
     canShoot: 1
     fireRate: 3.5
     projectileSpeed: 8
@@ -248,8 +248,8 @@ MonoBehaviour:
     collisionRadius: 0.35
     scoreValue: 1500
     xpValue: 15
-    baseSpawnRate: 12
-    poolSize: 20
+    baseSpawnRate: 3
+    poolSize: 60
     canShoot: 1
     fireRate: 3
     projectileSpeed: 9
@@ -275,8 +275,8 @@ MonoBehaviour:
     collisionRadius: 1.2
     scoreValue: 2500
     xpValue: 25
-    baseSpawnRate: 15
-    poolSize: 15
+    baseSpawnRate: 4
+    poolSize: 50
     canShoot: 1
     fireRate: 2
     projectileSpeed: 8
@@ -420,7 +420,7 @@ MonoBehaviour:
     minSpawnDistance: 5
     maxSpawnDistance: 28
     pickupSpawnBoundary: 25
-    maxActiveEnemies: 200
+    maxActiveEnemies: 600
     difficultyPerLevel: 0.03
     spawnRateScalePerLevel: 0.992
     minSpawnRateMultiplier: 0.3

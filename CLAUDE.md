@@ -241,6 +241,24 @@ Show diffs, reasoning, risks, rollback path.
 
 ---
 
+## Boot Scene Status
+
+**Current State:** Boot scene architecture is **partially implemented** but incomplete:
+- ✅ Code prepared: `BootManager.cs`, `IBootable` interface, true singleton pattern
+- ❌ Boot scene does NOT exist in project (only `main-neural-break.unity`)
+- ⚠️ Singletons use fallback initialization in Awake for development
+
+**To Complete Boot Scene Setup:**
+Run `Neural Break > Create Boot Scene` (if available) or manually create Boot scene with BootManager and all true singletons.
+
+---
+
+## File Size Guidelines
+
+**300 LOC Target:** Aspirational guideline, not strictly enforced. Many core systems exceed this (WeaponSystem: 929 LOC, PlayerController: 849 LOC, etc.). Prioritize readability and logical cohesion over strict line limits.
+
+---
+
 ## Architecture
 
 ### Event-Driven Communication
