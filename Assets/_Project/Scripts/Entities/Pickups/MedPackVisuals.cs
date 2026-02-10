@@ -24,6 +24,9 @@ namespace NeuralBreak.Entities
         private Transform m_crossHorizontal;
         private Transform m_wireframe;
         private Transform[] m_particles;
+        private SpriteRenderer m_crossVerticalRenderer;
+        private SpriteRenderer m_crossHorizontalRenderer;
+        private SpriteRenderer[] m_particleRenderers;
 
         private float m_time;
 
@@ -45,9 +48,11 @@ namespace NeuralBreak.Entities
 
             // Cross shape - vertical bar
             m_crossVertical = CreateRect("CrossVertical", 0.15f, 0.56f, m_crossColor, 10);
+            m_crossVerticalRenderer = m_crossVertical.GetComponent<SpriteRenderer>();
 
             // Cross shape - horizontal bar
             m_crossHorizontal = CreateRect("CrossHorizontal", 0.56f, 0.15f, m_crossColor, 10);
+            m_crossHorizontalRenderer = m_crossHorizontal.GetComponent<SpriteRenderer>();
 
             // Wireframe outline
             m_wireframe = CreateRing("Wireframe", m_radius * 0.9f, m_radius,
@@ -60,6 +65,7 @@ namespace NeuralBreak.Entities
         private void CreateParticles()
         {
             m_particles = new Transform[10];
+            m_particleRenderers = new SpriteRenderer[10];
 
             for (int i = 0; i < 10; i++)
             {
@@ -73,6 +79,7 @@ namespace NeuralBreak.Entities
 
                 particle.transform.localScale = Vector3.one * 0.06f;
                 m_particles[i] = particle.transform;
+                m_particleRenderers[i] = sr;
             }
         }
 
@@ -94,23 +101,15 @@ namespace NeuralBreak.Entities
             }
 
             // Cross glow pulse
-            if (m_crossVertical != null)
+            if (m_crossVerticalRenderer != null)
             {
                 float crossAlpha = 0.7f + Mathf.Sin(m_time * 5f) * 0.25f;
-                var sr = m_crossVertical.GetComponent<SpriteRenderer>();
-                if (sr != null)
-                {
-                    sr.color = new Color(m_crossColor.r, m_crossColor.g, m_crossColor.b, crossAlpha);
-                }
+                m_crossVerticalRenderer.color = new Color(m_crossColor.r, m_crossColor.g, m_crossColor.b, crossAlpha);
             }
-            if (m_crossHorizontal != null)
+            if (m_crossHorizontalRenderer != null)
             {
                 float crossAlpha = 0.7f + Mathf.Sin(m_time * 5f) * 0.25f;
-                var sr = m_crossHorizontal.GetComponent<SpriteRenderer>();
-                if (sr != null)
-                {
-                    sr.color = new Color(m_crossColor.r, m_crossColor.g, m_crossColor.b, crossAlpha);
-                }
+                m_crossHorizontalRenderer.color = new Color(m_crossColor.r, m_crossColor.g, m_crossColor.b, crossAlpha);
             }
 
             // Wireframe rotation
@@ -136,7 +135,7 @@ namespace NeuralBreak.Entities
 
                     // Particle pulse
                     float pAlpha = 0.5f + Mathf.Sin(m_time * 6f + i) * 0.3f;
-                    var sr = m_particles[i].GetComponent<SpriteRenderer>();
+                    var sr = m_particleRenderers[i];
                     if (sr != null)
                     {
                         sr.color = new Color(m_baseColor.r, m_baseColor.g, m_baseColor.b, pAlpha);

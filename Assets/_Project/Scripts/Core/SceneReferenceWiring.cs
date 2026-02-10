@@ -49,6 +49,12 @@ namespace NeuralBreak.Core
         [SerializeField] private UI.UIFeedbacks m_uiFeedbacks;
         [SerializeField] private AchievementSystem m_achievementSystem;
 
+        [Header("Pickup Prefab References")]
+        [SerializeField] private MedPackPickup m_medPackPrefab;
+        [SerializeField] private ShieldPickup m_shieldPrefab;
+        [SerializeField] private SmartBombPickup m_smartBombPrefab;
+        [SerializeField] private InvulnerablePickup m_invulnerablePrefab;
+
         [Header("Prefab References - Drag from Project")]
         [SerializeField] private Projectile m_projectilePrefab;
         [SerializeField] private EnemyProjectile m_enemyProjectilePrefab;
@@ -86,6 +92,9 @@ namespace NeuralBreak.Core
 
             // Setup WeaponSystem
             SetupWeaponSystem();
+
+            // Setup PickupSpawner
+            SetupPickupSpawner();
 
             // Setup EnemyProjectilePool
             SetupEnemyProjectilePool();
@@ -148,6 +157,35 @@ namespace NeuralBreak.Core
                 spawnerType.GetField("m_bossPrefab", bindingFlags)?.SetValue(m_enemySpawner, m_bossPrefab);
 
             Debug.Log("[SceneReferenceWiring] EnemySpawner configured");
+        }
+
+        private void SetupPickupSpawner()
+        {
+            var pickupSpawner = UnityEngine.Object.FindFirstObjectByType<PickupSpawner>();
+            if (pickupSpawner == null)
+            {
+                Debug.LogWarning("[SceneReferenceWiring] PickupSpawner not found in scene!");
+                return;
+            }
+
+            var spawnerType = typeof(PickupSpawner);
+            var bindingFlags = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+
+            // Set player target
+            if (m_player != null)
+                spawnerType.GetField("m_playerTarget", bindingFlags)?.SetValue(pickupSpawner, m_player.transform);
+
+            // Set pickup prefabs
+            if (m_medPackPrefab != null)
+                spawnerType.GetField("m_medPackPrefab", bindingFlags)?.SetValue(pickupSpawner, m_medPackPrefab);
+            if (m_shieldPrefab != null)
+                spawnerType.GetField("m_shieldPrefab", bindingFlags)?.SetValue(pickupSpawner, m_shieldPrefab);
+            if (m_smartBombPrefab != null)
+                spawnerType.GetField("m_smartBombPrefab", bindingFlags)?.SetValue(pickupSpawner, m_smartBombPrefab);
+            if (m_invulnerablePrefab != null)
+                spawnerType.GetField("m_invulnerablePrefab", bindingFlags)?.SetValue(pickupSpawner, m_invulnerablePrefab);
+
+            Debug.Log("[SceneReferenceWiring] PickupSpawner configured");
         }
 
         private void SetupWeaponSystem()

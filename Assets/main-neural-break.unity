@@ -645,6 +645,8 @@ MonoBehaviour:
   m_damageClipOverride: {fileID: 0}
   m_pickupClipOverride: {fileID: 0}
   m_menuClickClipOverride: {fileID: 0}
+  m_maxSimultaneousSounds: 8
+  m_throttleWindowTime: 0.1
 --- !u!4 &452206677
 Transform:
   m_ObjectHideFlags: 0
@@ -1415,6 +1417,10 @@ MonoBehaviour:
   m_enemyDeathVFX: {fileID: 0}
   m_uiFeedbacks: {fileID: 0}
   m_achievementSystem: {fileID: 0}
+  m_medPackPrefab: {fileID: 0}
+  m_shieldPrefab: {fileID: 0}
+  m_smartBombPrefab: {fileID: 0}
+  m_invulnerablePrefab: {fileID: 0}
   m_projectilePrefab: {fileID: 0}
   m_enemyProjectilePrefab: {fileID: 0}
   m_dataMitePrefab: {fileID: 0}
@@ -6401,27 +6407,16 @@ MonoBehaviour:
   m_arenaRadius: 28
   m_minDistanceFromPlayer: 5
   m_maxSpawnAttempts: 10
-  m_powerUpPrefab: {fileID: 0}
-  m_speedUpPrefab: {fileID: 0}
   m_medPackPrefab: {fileID: 0}
   m_shieldPrefab: {fileID: 0}
-  m_invulnerablePrefab: {fileID: 0}
   m_smartBombPrefab: {fileID: 0}
-  m_spreadShotPrefab: {fileID: 0}
-  m_piercingPrefab: {fileID: 0}
-  m_rapidFirePrefab: {fileID: 0}
-  m_homingPrefab: {fileID: 0}
-  m_powerUpPoolSize: 10
-  m_speedUpPoolSize: 10
+  m_invulnerablePrefab: {fileID: 0}
   m_medPackPoolSize: 15
   m_shieldPoolSize: 10
-  m_invulnerablePoolSize: 5
   m_smartBombPoolSize: 5
-  m_weaponUpgradePoolSize: 5
+  m_invulnerablePoolSize: 5
   m_smartBombSpawnsPerLevel: 1
   m_smartBombInterval: {x: 45, y: 75}
-  m_weaponUpgradeSpawnsPerLevel: 1
-  m_weaponUpgradeInterval: {x: 25, y: 40}
   m_spawningEnabled: 1
   m_maxActivePickups: 30
 --- !u!4 &1224075988

@@ -45,6 +45,7 @@ namespace NeuralBreak.UI
         private Image m_accentLine;
 
         private Coroutine m_announcementCoroutine;
+        private bool m_bossAnnouncementShown;
 
         private void Awake()
         {
@@ -176,6 +177,9 @@ namespace NeuralBreak.UI
 
         private void OnGameStarted(GameStartedEvent evt)
         {
+            // Reset boss announcement flag for new game
+            m_bossAnnouncementShown = false;
+
             string modeName = evt.mode switch
             {
                 GameMode.Arcade => "ARCADE MODE",
@@ -216,8 +220,9 @@ namespace NeuralBreak.UI
 
         private void OnBossEncounter(BossEncounterEvent evt)
         {
-            if (evt.isBossActive)
+            if (evt.isBossActive && !m_bossAnnouncementShown)
             {
+                m_bossAnnouncementShown = true;
                 ShowAnnouncement("WARNING", "BOSS APPROACHING", "Destroy the boss to proceed!", m_bossColor, true);
             }
         }

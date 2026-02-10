@@ -73,6 +73,9 @@ namespace NeuralBreak.Entities
         private int m_originalDamage;
         private GameObject m_shieldVisual;
         private GameObject m_eliteGlow;
+        // Cached SpriteRenderers (avoids GetComponent per frame in Update)
+        private SpriteRenderer m_eliteGlowSR;
+        private SpriteRenderer m_shieldVisualSR;
 
         public bool IsElite => m_isElite;
         public EliteType Type => m_eliteType;
@@ -185,10 +188,10 @@ namespace NeuralBreak.Entities
             m_eliteGlow.transform.localPosition = Vector3.zero;
             m_eliteGlow.transform.localScale = Vector3.one * 1.5f;
 
-            var glowSR = m_eliteGlow.AddComponent<SpriteRenderer>();
-            glowSR.sprite = Graphics.SpriteGenerator.CreateGlow(64, m_eliteGlowColor, "EliteGlow");
-            glowSR.color = new Color(m_eliteGlowColor.r, m_eliteGlowColor.g, m_eliteGlowColor.b, 0.3f);
-            glowSR.sortingOrder = m_spriteRenderer != null ? m_spriteRenderer.sortingOrder - 1 : 0;
+            m_eliteGlowSR = m_eliteGlow.AddComponent<SpriteRenderer>();
+            m_eliteGlowSR.sprite = Graphics.SpriteGenerator.CreateGlow(64, m_eliteGlowColor, "EliteGlow");
+            m_eliteGlowSR.color = new Color(m_eliteGlowColor.r, m_eliteGlowColor.g, m_eliteGlowColor.b, 0.3f);
+            m_eliteGlowSR.sortingOrder = m_spriteRenderer != null ? m_spriteRenderer.sortingOrder - 1 : 0;
 
             // Shield visual for shielded elites
             if (m_eliteType == EliteType.Shielded)
@@ -198,10 +201,10 @@ namespace NeuralBreak.Entities
                 m_shieldVisual.transform.localPosition = Vector3.zero;
                 m_shieldVisual.transform.localScale = Vector3.one * 1.3f;
 
-                var shieldSR = m_shieldVisual.AddComponent<SpriteRenderer>();
-                shieldSR.sprite = Graphics.SpriteGenerator.CreateCircle(64, m_shieldColor, "Shield");
-                shieldSR.color = m_shieldColor;
-                shieldSR.sortingOrder = m_spriteRenderer != null ? m_spriteRenderer.sortingOrder + 1 : 1;
+                m_shieldVisualSR = m_shieldVisual.AddComponent<SpriteRenderer>();
+                m_shieldVisualSR.sprite = Graphics.SpriteGenerator.CreateCircle(64, m_shieldColor, "Shield");
+                m_shieldVisualSR.color = m_shieldColor;
+                m_shieldVisualSR.sortingOrder = m_spriteRenderer != null ? m_spriteRenderer.sortingOrder + 1 : 1;
             }
         }
 
@@ -229,16 +232,12 @@ namespace NeuralBreak.Entities
 
         private void UpdateEliteGlow()
         {
-            if (m_eliteGlow == null) return;
+            if (m_eliteGlowSR == null) return;
 
-            var glowSR = m_eliteGlow.GetComponent<SpriteRenderer>();
-            if (glowSR != null)
-            {
-                float pulse = 0.2f + Mathf.Sin(Time.time * m_glowPulseSpeed) * 0.1f;
-                Color c = m_eliteGlowColor;
-                c.a = pulse;
-                glowSR.color = c;
-            }
+            float pulse = 0.2f + Mathf.Sin(Time.time * m_glowPulseSpeed) * 0.1f;
+            Color c = m_eliteGlowColor;
+            c.a = pulse;
+            m_eliteGlowSR.color = c;
         }
 
         private void UpdateShieldRegen()
@@ -256,15 +255,11 @@ namespace NeuralBreak.Entities
 
         private void UpdateShieldVisual()
         {
-            if (m_shieldVisual == null) return;
+            if (m_shieldVisualSR == null) return;
 
-            var sr = m_shieldVisual.GetComponent<SpriteRenderer>();
-            if (sr != null)
-            {
-                Color c = m_shieldColor;
-                c.a = m_currentShield > 0 ? 0.5f : 0f;
-                sr.color = c;
-            }
+            Color c = m_shieldColor;
+            c.a = m_currentShield > 0 ? 0.5f : 0f;
+            m_shieldVisualSR.color = c;
         }
 
         private void UpdateBerserker()
@@ -302,10 +297,9 @@ namespace NeuralBreak.Entities
             {
                 m_spriteRenderer.color = m_berserkerColor;
             }
-            if (m_eliteGlow != null)
+            if (m_eliteGlowSR != null)
             {
-                var glowSR = m_eliteGlow.GetComponent<SpriteRenderer>();
-                if (glowSR != null) glowSR.color = m_berserkerColor;
+                m_eliteGlowSR.color = m_berserkerColor;
             }
 
             Debug.Log($"[EliteModifier] {m_enemy.EnemyType} entered BERSERK mode!");
@@ -401,11 +395,13 @@ namespace NeuralBreak.Entities
             {
                 Destroy(m_eliteGlow);
                 m_eliteGlow = null;
+                m_eliteGlowSR = null;
             }
             if (m_shieldVisual != null)
             {
                 Destroy(m_shieldVisual);
                 m_shieldVisual = null;
+                m_shieldVisualSR = null;
             }
         }
     }

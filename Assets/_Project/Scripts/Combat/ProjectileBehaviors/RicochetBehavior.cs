@@ -12,6 +12,9 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
         private int m_currentBounces;
         private float m_damageRetention;
 
+        // Cached camera reference (Camera.main allocates ~64 bytes per call via FindGameObjectWithTag)
+        private Camera m_camera;
+
         public RicochetBehavior(int maxBounces = 3, float damageRetention = 0.8f)
         {
             m_maxBounces = maxBounces;
@@ -19,10 +22,20 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
             m_currentBounces = 0;
         }
 
+        /// <summary>
+        /// Reset parameters for reuse (zero allocation).
+        /// </summary>
+        public void Reset(int maxBounces, float damageRetention = 0.8f)
+        {
+            m_maxBounces = maxBounces;
+            m_damageRetention = damageRetention;
+        }
+
         public override void Initialize(MonoBehaviour proj)
         {
             base.Initialize(proj);
             m_currentBounces = 0;
+            m_camera = Camera.main;
         }
 
         public override void Update(float deltaTime)
@@ -75,12 +88,11 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
 
         private void CheckWallBounce()
         {
-            // Get screen bounds
-            Camera cam = Camera.main;
-            if (cam == null) return;
+            // Get screen bounds (use cached camera - Camera.main allocates per call)
+            if (m_camera == null) return;
 
             Vector3 pos = transform.position;
-            Vector3 viewportPos = cam.WorldToViewportPoint(pos);
+            Vector3 viewportPos = m_camera.WorldToViewportPoint(pos);
 
             // Get current direction (try both projectile types)
             var enhancedProj = GetAsEnhancedProjectile();

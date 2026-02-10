@@ -22,11 +22,15 @@ namespace NeuralBreak.Combat
         [SerializeField] private int m_spreadShotCount = 3;
         [SerializeField] private float m_spreadAngle = 15f;
         [SerializeField] private float m_rapidFireMultiplier = 2f;
-        [SerializeField] private float m_homingStrength = 5f;
-        [SerializeField] private float m_homingRange = 10f;
+        [SerializeField] private float m_homingStrength = 8f;
+        [SerializeField] private float m_homingRange = 15f;
 
         // Active upgrades with remaining time
         private Dictionary<PickupType, float> m_activeUpgrades = new Dictionary<PickupType, float>();
+
+        // Cached lists to avoid per-frame allocation
+        private readonly List<PickupType> m_expiredBuffer = new List<PickupType>();
+        private readonly List<PickupType> m_keysBuffer = new List<PickupType>();
 
         // Public accessors
         public bool HasSpreadShot => m_activeUpgrades.ContainsKey(PickupType.SpreadShot);
@@ -66,22 +70,32 @@ namespace NeuralBreak.Combat
         {
             if (m_activeUpgrades.Count == 0) return;
 
-            List<PickupType> expiredUpgrades = new List<PickupType>();
+            m_expiredBuffer.Clear();
+            m_keysBuffer.Clear();
 
-            // Update all timers
-            List<PickupType> keys = new List<PickupType>(m_activeUpgrades.Keys);
-            foreach (var key in keys)
+            // Copy keys using Dictionary enumerator directly into list (avoid .Keys allocation)
+            var enumerator = m_activeUpgrades.GetEnumerator();
+            while (enumerator.MoveNext())
             {
+                m_keysBuffer.Add(enumerator.Current.Key);
+            }
+            enumerator.Dispose();
+
+            // Update all timers (indexed for loop - zero allocation)
+            for (int i = 0; i < m_keysBuffer.Count; i++)
+            {
+                var key = m_keysBuffer[i];
                 m_activeUpgrades[key] -= Time.deltaTime;
                 if (m_activeUpgrades[key] <= 0f)
                 {
-                    expiredUpgrades.Add(key);
+                    m_expiredBuffer.Add(key);
                 }
             }
 
-            // Remove expired upgrades
-            foreach (var upgrade in expiredUpgrades)
+            // Remove expired upgrades (indexed for loop - zero allocation)
+            for (int i = 0; i < m_expiredBuffer.Count; i++)
             {
+                var upgrade = m_expiredBuffer[i];
                 m_activeUpgrades.Remove(upgrade);
 
                 EventBus.Publish(new WeaponUpgradeExpiredEvent
@@ -89,7 +103,7 @@ namespace NeuralBreak.Combat
                     upgradeType = upgrade
                 });
 
-                Debug.Log($"[WeaponUpgradeManager] {upgrade} expired");
+                LogHelper.Log($"[WeaponUpgradeManager] {upgrade} expired");
             }
         }
 
@@ -164,11 +178,20 @@ namespace NeuralBreak.Combat
         /// </summary>
         public void ClearAllUpgrades()
         {
-            foreach (var upgrade in m_activeUpgrades.Keys)
+            // Use keysBuffer to avoid .Keys allocation (64 bytes)
+            m_keysBuffer.Clear();
+            var enumerator = m_activeUpgrades.GetEnumerator();
+            while (enumerator.MoveNext())
+            {
+                m_keysBuffer.Add(enumerator.Current.Key);
+            }
+            enumerator.Dispose();
+
+            for (int i = 0; i < m_keysBuffer.Count; i++)
             {
                 EventBus.Publish(new WeaponUpgradeExpiredEvent
                 {
-                    upgradeType = upgrade
+                    upgradeType = m_keysBuffer[i]
                 });
             }
             m_activeUpgrades.Clear();

@@ -1,6 +1,7 @@
 using UnityEngine;
 using NeuralBreak.Core;
 using NeuralBreak.Entities;
+using NeuralBreak.Graphics;
 
 namespace NeuralBreak.Combat
 {
@@ -21,9 +22,16 @@ namespace NeuralBreak.Combat
         [SerializeField] private SpriteRenderer m_spriteRenderer;
         [SerializeField] private TrailRenderer m_trailRenderer;
         [SerializeField] private Color m_projectileColor = new Color(1f, 0.3f, 0.1f); // Orange-red
+        [SerializeField] private Vector3 m_visualScale = new Vector3(0.5f, 0.5f, 1f); // Make bullets more visible
+        [SerializeField] private bool m_enableGlow = true;
+        [SerializeField] private float m_glowIntensity = 2f;
 
         // Components
         private Rigidbody2D m_rb;
+
+        // Cached boundary layer (avoids LayerMask.NameToLayer + .name string alloc per collision)
+        private static int s_boundaryLayer = -1;
+        private static bool s_boundaryLayerCached;
 
         // State
         private Vector2 m_direction;
@@ -50,6 +58,13 @@ namespace NeuralBreak.Combat
             if (m_trailRenderer == null)
             {
                 m_trailRenderer = GetComponentInChildren<TrailRenderer>();
+            }
+
+            // Cache boundary layer once (avoids LayerMask.NameToLayer string alloc per collision)
+            if (!s_boundaryLayerCached)
+            {
+                s_boundaryLayer = LayerMask.NameToLayer("Boundary");
+                s_boundaryLayerCached = true;
             }
         }
 
@@ -79,7 +94,10 @@ namespace NeuralBreak.Combat
             Color useColor = color ?? m_projectileColor;
             if (m_spriteRenderer != null)
             {
-                m_spriteRenderer.color = useColor;
+                // Apply glow intensity to make bullets more visible
+                Color displayColor = m_enableGlow ? useColor * m_glowIntensity : useColor;
+                displayColor.a = 1f; // Keep alpha at 1
+                m_spriteRenderer.color = displayColor;
             }
             if (m_trailRenderer != null)
             {
@@ -87,6 +105,9 @@ namespace NeuralBreak.Combat
                 m_trailRenderer.startColor = useColor;
                 m_trailRenderer.endColor = new Color(useColor.r, useColor.g, useColor.b, 0f);
             }
+
+            // Set scale for visibility
+            transform.localScale = m_visualScale;
 
             gameObject.SetActive(true);
         }
@@ -118,7 +139,8 @@ namespace NeuralBreak.Combat
             // Check player hit
             if (other.CompareTag("Player"))
             {
-                var playerHealth = other.GetComponent<PlayerHealth>();
+                // TryGetComponent is zero-alloc (unlike GetComponent which may allocate on null)
+                other.TryGetComponent<PlayerHealth>(out var playerHealth);
                 if (playerHealth != null && !playerHealth.IsDead)
                 {
                     // Only damage player if alive
@@ -127,11 +149,10 @@ namespace NeuralBreak.Combat
 
                 ReturnToPool();
             }
-            // Check wall/boundary collision - use layer or name check instead of tag
-            // to avoid "Tag not defined" errors
-            else if (other.gameObject.layer == LayerMask.NameToLayer("Boundary") ||
-                     other.gameObject.name.Contains("Boundary") ||
-                     other.gameObject.name.Contains("Arena"))
+            // Check wall/boundary collision - use cached layer + component check (zero-alloc)
+            // Replaces .name.Contains() which allocates a new string per call (~40-80 bytes)
+            else if ((s_boundaryLayer >= 0 && other.gameObject.layer == s_boundaryLayer) ||
+                     other.TryGetComponent<ArenaBoundary>(out _))
             {
                 ReturnToPool();
             }

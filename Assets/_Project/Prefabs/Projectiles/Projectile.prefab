@@ -142,8 +142,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8908ea8bc371bc445af549be3cf20100, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Combat.Projectile
-  _spriteRenderer: {fileID: 0}
-  _trailRenderer: {fileID: 0}
+  m_spriteRenderer: {fileID: 0}
+  m_trailRenderer: {fileID: 0}
 --- !u!50 &4573624567079687654
 Rigidbody2D:
   serializedVersion: 5

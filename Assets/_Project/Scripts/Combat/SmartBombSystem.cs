@@ -161,6 +161,12 @@ namespace NeuralBreak.Combat
         /// </summary>
         public void TryActivateBomb()
         {
+            // Don't allow smart bomb activation unless actively playing
+            if (GameManager.Instance == null || !GameManager.Instance.IsPlaying)
+            {
+                return;
+            }
+
             Debug.Log($"[SmartBombSystem] TryActivateBomb called! Bombs: {m_currentBombs}, IsActivating: {m_isActivating}, CanUseBomb: {CanUseBomb}");
 
             if (!CanUseBomb)

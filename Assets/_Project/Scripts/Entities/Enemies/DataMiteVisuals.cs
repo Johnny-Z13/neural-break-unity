@@ -26,6 +26,7 @@ namespace NeuralBreak.Entities
         private Transform m_core;
         private Transform m_spikesContainer;
         private SpriteRenderer[] m_allRenderers;
+        private SpriteRenderer m_glowRenderer;
 
         private float m_time;
 
@@ -46,6 +47,7 @@ namespace NeuralBreak.Entities
 
             // Outer glow
             m_glow = CreateCircle("Glow", m_radius * 1.25f, m_glowColor, 5);
+            m_glowRenderer = m_glow.GetComponent<SpriteRenderer>();
 
             // Pulsing aura ring
             m_aura = CreateRing("Aura", m_radius, m_radius * 1.25f, new Color(m_bodyColor.r, m_bodyColor.g, m_bodyColor.b, 0.3f), 6);
@@ -109,14 +111,10 @@ namespace NeuralBreak.Entities
             }
 
             // Pulse glow opacity
-            if (m_glow != null)
+            if (m_glowRenderer != null)
             {
-                var sr = m_glow.GetComponent<SpriteRenderer>();
-                if (sr != null)
-                {
-                    float alpha = 0.3f + Mathf.Sin(m_time * 3f) * 0.15f;
-                    sr.color = new Color(m_glowColor.r, m_glowColor.g, m_glowColor.b, alpha);
-                }
+                float alpha = 0.3f + Mathf.Sin(m_time * 3f) * 0.15f;
+                m_glowRenderer.color = new Color(m_glowColor.r, m_glowColor.g, m_glowColor.b, alpha);
             }
 
             // Pulse aura

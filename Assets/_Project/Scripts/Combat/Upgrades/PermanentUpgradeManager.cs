@@ -20,6 +20,9 @@ namespace NeuralBreak.Combat
         // Cached combined modifiers (recalculated when upgrades change)
         private WeaponModifiers m_combinedModifiers = WeaponModifiers.Identity;
 
+        // Public accessors (zero allocation)
+        public int ActiveUpgradeCount => m_activeUpgrades.Count;
+
         // Events
         public event System.Action<UpgradeDefinition> OnUpgradeAdded;
         public event System.Action<WeaponModifiers> OnModifiersChanged;
@@ -151,11 +154,12 @@ namespace NeuralBreak.Combat
         }
 
         /// <summary>
-        /// Get all active upgrades (for UI display).
+        /// Get all active upgrades (zero-allocation read-only view).
+        /// WARNING: Do NOT modify the returned list. It is a direct reference to internal state.
         /// </summary>
-        public List<UpgradeDefinition> GetActiveUpgrades()
+        public IReadOnlyList<UpgradeDefinition> GetActiveUpgrades()
         {
-            return new List<UpgradeDefinition>(m_activeUpgrades);
+            return m_activeUpgrades;
         }
 
         /// <summary>

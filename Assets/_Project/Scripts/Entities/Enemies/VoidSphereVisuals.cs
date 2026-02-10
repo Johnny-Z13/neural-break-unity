@@ -23,6 +23,7 @@ namespace NeuralBreak.Entities
         private Transform m_inner;
         private Transform m_distortion;
         private Transform[] m_rings;
+        private SpriteRenderer[] m_ringRenderers;
         private Transform[] m_tendrils;
         private Transform[] m_particles;
 
@@ -60,6 +61,7 @@ namespace NeuralBreak.Entities
         private void CreateRings()
         {
             m_rings = new Transform[7];
+            m_ringRenderers = new SpriteRenderer[7];
             for (int i = 0; i < 7; i++)
             {
                 float ringRadius = m_coreRadius * (1.3f + i * 0.3f);
@@ -69,6 +71,7 @@ namespace NeuralBreak.Entities
 
                 var ring = CreateRing($"Ring{i}", ringRadius * 0.9f, ringRadius, ringCol, 5 + i);
                 m_rings[i] = ring;
+                m_ringRenderers[i] = ring.GetComponent<SpriteRenderer>();
             }
         }
 
@@ -166,7 +169,7 @@ namespace NeuralBreak.Entities
                     m_rings[i].Rotate(0, 0, Time.deltaTime * speed * direction);
 
                     // Ring opacity pulse
-                    var sr = m_rings[i].GetComponent<SpriteRenderer>();
+                    var sr = m_ringRenderers[i];
                     if (sr != null)
                     {
                         float alpha = 0.3f + Mathf.Sin(m_time * 2f + i * 0.5f) * 0.2f;

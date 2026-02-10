@@ -17,6 +17,14 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
             m_currentPierceCount = 0;
         }
 
+        /// <summary>
+        /// Reset parameters for reuse (zero allocation).
+        /// </summary>
+        public void Reset(int maxPierceCount)
+        {
+            m_maxPierceCount = maxPierceCount;
+        }
+
         public override void Initialize(MonoBehaviour proj)
         {
             base.Initialize(proj);

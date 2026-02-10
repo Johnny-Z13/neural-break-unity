@@ -57,6 +57,9 @@ namespace NeuralBreak.Audio
         private float m_lastThrottleCleanupTime;
         private const float THROTTLE_CLEANUP_INTERVAL = 5f;
 
+        // Static buffer for throttle cleanup (zero allocation)
+        private static readonly System.Collections.Generic.List<string> s_keysToRemoveBuffer = new System.Collections.Generic.List<string>(32);
+
         // Combo pitch tracking
         private int m_currentCombo;
         private float m_comboPitchBonus;
@@ -226,22 +229,25 @@ namespace NeuralBreak.Audio
         private void CleanupThrottleTracking()
         {
             float currentTime = Time.unscaledTime;
-            var keysToRemove = new System.Collections.Generic.List<string>();
+            s_keysToRemoveBuffer.Clear();
 
-            // Find expired entries
-            foreach (var kvp in m_lastPlayedTimes)
+            // Find expired entries using enumerator pattern (avoids foreach boxing)
+            var enumerator = m_lastPlayedTimes.GetEnumerator();
+            while (enumerator.MoveNext())
             {
+                var kvp = enumerator.Current;
                 if (currentTime - kvp.Value > m_throttleWindowTime * 2f)
                 {
-                    keysToRemove.Add(kvp.Key);
+                    s_keysToRemoveBuffer.Add(kvp.Key);
                 }
             }
+            enumerator.Dispose();
 
-            // Remove expired entries
-            foreach (var key in keysToRemove)
+            // Remove expired entries (indexed for loop - zero allocation)
+            for (int i = 0; i < s_keysToRemoveBuffer.Count; i++)
             {
-                m_lastPlayedTimes.Remove(key);
-                m_soundCountsInWindow.Remove(key);
+                m_lastPlayedTimes.Remove(s_keysToRemoveBuffer[i]);
+                m_soundCountsInWindow.Remove(s_keysToRemoveBuffer[i]);
             }
         }
 

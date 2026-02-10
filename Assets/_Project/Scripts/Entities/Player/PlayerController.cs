@@ -241,16 +241,35 @@ namespace NeuralBreak.Entities
 
         private void OnGameStarted(GameStartedEvent evt)
         {
+            // Re-enable movement (in case it was disabled on death)
+            enabled = true;
+
+            // Reset state
+            m_currentVelocity = Vector2.zero;
+            m_rb.linearVelocity = Vector2.zero;
+            m_isDashing = false;
+            m_isThrusting = false;
+            m_dashCooldownTimer = 0f;
+
             // Show aim indicator when game starts/restarts
             ShowAimIndicator();
         }
 
         private void OnPlayerDied(PlayerDiedEvent evt)
         {
+            // DISABLE MOVEMENT - Stop all input processing
+            enabled = false;
+
             // Hide aim indicator when player dies
             HideAimIndicator();
 
-            // Also hide trails
+            // Clear movement
+            m_currentVelocity = Vector2.zero;
+            m_rb.linearVelocity = Vector2.zero;
+            m_isDashing = false;
+            m_isThrusting = false;
+
+            // Hide trails
             if (m_dashTrail != null)
             {
                 m_dashTrail.emitting = false;

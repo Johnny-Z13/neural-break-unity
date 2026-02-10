@@ -16,18 +16,34 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
         private float m_damageMultiplier;
         private HashSet<EnemyBase> m_hitEnemies;
 
+        private static readonly Collider2D[] s_colliderBuffer = new Collider2D[64];
+        private static readonly List<EnemyBase> s_chainTargetsBuffer = new List<EnemyBase>(16);
+
         public ChainLightningBehavior(int maxTargets = 4, float chainRange = 5f, float damageMultiplier = 0.6f)
         {
             m_maxTargets = maxTargets;
             m_chainRange = chainRange;
             m_damageMultiplier = damageMultiplier;
-            m_hitEnemies = new HashSet<EnemyBase>();
+            // HashSet created lazily in Initialize to avoid allocation if behavior is cached but unused
+        }
+
+        /// <summary>
+        /// Reset parameters for reuse (zero allocation).
+        /// </summary>
+        public void Reset(int maxTargets, float chainRange = 5f, float damageMultiplier = 0.6f)
+        {
+            m_maxTargets = maxTargets;
+            m_chainRange = chainRange;
+            m_damageMultiplier = damageMultiplier;
         }
 
         public override void Initialize(MonoBehaviour proj)
         {
             base.Initialize(proj);
-            m_hitEnemies.Clear();
+            if (m_hitEnemies == null)
+                m_hitEnemies = new HashSet<EnemyBase>();
+            else
+                m_hitEnemies.Clear();
         }
 
         public override void Update(float deltaTime)
@@ -54,22 +70,24 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
 
         private void ChainToNearbyEnemies(Vector2 fromPosition)
         {
-            List<EnemyBase> chainTargets = new List<EnemyBase>();
+            // Use static buffer to avoid allocation
+            s_chainTargetsBuffer.Clear();
 
-            // Find all enemies in chain range
-            Collider2D[] colliders = Physics2D.OverlapCircleAll(fromPosition, m_chainRange);
-            foreach (var col in colliders)
+            // Find all enemies in chain range (NonAlloc - zero GC)
+            int count = Physics2D.OverlapCircleNonAlloc(fromPosition, m_chainRange, s_colliderBuffer);
+            for (int i = 0; i < count; i++)
             {
+                var col = s_colliderBuffer[i];
                 if (!col.CompareTag("Enemy")) continue;
 
                 var enemy = col.GetComponent<EnemyBase>();
                 if (enemy == null || !enemy.IsAlive) continue;
                 if (m_hitEnemies.Contains(enemy)) continue; // Already hit
 
-                chainTargets.Add(enemy);
+                s_chainTargetsBuffer.Add(enemy);
 
                 // Stop if we have enough targets
-                if (m_hitEnemies.Count + chainTargets.Count >= m_maxTargets)
+                if (m_hitEnemies.Count + s_chainTargetsBuffer.Count >= m_maxTargets)
                 {
                     break;
                 }
@@ -81,8 +99,9 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
             int currentDamage = enhancedProj != null ? enhancedProj.GetDamage() :
                                (basicProj != null ? basicProj.GetDamage() : 0);
             int chainDamage = Mathf.RoundToInt(currentDamage * m_damageMultiplier);
-            foreach (var target in chainTargets)
+            for (int i = 0; i < s_chainTargetsBuffer.Count; i++)
             {
+                var target = s_chainTargetsBuffer[i];
                 target.TakeDamage(chainDamage, target.transform.position);
                 m_hitEnemies.Add(target);
 
@@ -91,11 +110,11 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
             }
 
             // Publish event
-            if (chainTargets.Count > 0)
+            if (s_chainTargetsBuffer.Count > 0)
             {
                 EventBus.Publish(new ChainLightningEvent
                 {
-                    targets = chainTargets
+                    targets = new List<EnemyBase>(s_chainTargetsBuffer)  // Create copy for event
                 });
             }
         }

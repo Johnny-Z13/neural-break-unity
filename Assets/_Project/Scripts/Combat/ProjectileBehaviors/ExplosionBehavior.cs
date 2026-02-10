@@ -15,7 +15,19 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
         private float m_radius;
         private float m_damageMultiplier;
 
+        private static readonly Collider2D[] s_colliderBuffer = new Collider2D[64];
+        private static readonly HashSet<EnemyBase> s_hitEnemiesBuffer = new HashSet<EnemyBase>();
+
         public ExplosionBehavior(float radius = 2f, float damageMultiplier = 0.7f)
+        {
+            m_radius = radius;
+            m_damageMultiplier = damageMultiplier;
+        }
+
+        /// <summary>
+        /// Reset parameters for reuse (zero allocation).
+        /// </summary>
+        public void Reset(float radius, float damageMultiplier = 0.7f)
         {
             m_radius = radius;
             m_damageMultiplier = damageMultiplier;
@@ -56,21 +68,22 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
             // Calculate explosion damage
             int explosionDamage = Mathf.RoundToInt(projectileDamage * m_damageMultiplier);
 
-            // Find all enemies in radius
-            Collider2D[] colliders = Physics2D.OverlapCircleAll(center, m_radius);
-            HashSet<EnemyBase> hitEnemies = new HashSet<EnemyBase>();
+            // Find all enemies in radius (NonAlloc - zero GC)
+            int count = Physics2D.OverlapCircleNonAlloc(center, m_radius, s_colliderBuffer);
+            s_hitEnemiesBuffer.Clear();  // Reuse static buffer
 
-            foreach (var col in colliders)
+            for (int i = 0; i < count; i++)
             {
+                var col = s_colliderBuffer[i];
                 if (!col.CompareTag("Enemy")) continue;
 
                 var enemy = col.GetComponent<EnemyBase>();
                 if (enemy == null || !enemy.IsAlive) continue;
-                if (hitEnemies.Contains(enemy)) continue; // Avoid double-hit
+                if (s_hitEnemiesBuffer.Contains(enemy)) continue; // Avoid double-hit
 
                 // Apply damage
                 enemy.TakeDamage(explosionDamage, center);
-                hitEnemies.Add(enemy);
+                s_hitEnemiesBuffer.Add(enemy);
             }
 
             // Visual effect

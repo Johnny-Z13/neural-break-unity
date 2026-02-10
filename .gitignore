@@ -184,3 +184,10 @@ DisabledAssets/
 
 # Debug screenshots (optional)
 # Assets/Screenshots/
+
+# ===============================
+# Coplay / MCP (optional - ignore so collaborators don't need it)
+# ===============================
+[Aa]ssets/[Ee]ditor/[Cc]oplay/
+[Pp]ackages/[Cc]oplay/
+.mcp.json

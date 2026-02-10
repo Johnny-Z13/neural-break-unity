@@ -9,6 +9,8 @@ namespace NeuralBreak.Graphics
     /// Centralized feedback manager for game juice.
     /// Creates and triggers Feel feedbacks for various game events.
     /// Provides that satisfying arcade feel!
+    ///
+    /// ZERO-ALLOCATION: All time-scale effects use timer-based Update instead of coroutines.
     /// </summary>
     public class FeedbackManager : MonoBehaviour
     {
@@ -34,6 +36,9 @@ namespace NeuralBreak.Graphics
 
         [Header("Screen Flash")]
         [SerializeField] private bool m_enableScreenFlash = true;
+
+        // Cached reference (avoid FindFirstObjectByType in hot paths)
+        private ScreenFlash m_screenFlash;
         [SerializeField] private Color m_damageFlashColor = new Color(1f, 0f, 0f, 0.3f);
         [SerializeField] private Color m_healFlashColor = new Color(0f, 1f, 0f, 0.2f);
         [SerializeField] private Color m_powerUpFlashColor = new Color(1f, 0.8f, 0f, 0.2f);
@@ -51,9 +56,12 @@ namespace NeuralBreak.Graphics
         [Header("References")]
         [SerializeField] private CameraController m_cameraController;
 
-        // Cached references
+        // Timer-based time-scale state (replaces coroutines - zero allocation)
+        private enum TimeScaleState { None, Hitstop, SlowMotion }
+        private TimeScaleState m_timeScaleState = TimeScaleState.None;
         private float m_originalTimeScale = 1f;
-        private bool m_isTimeScaled;
+        private float m_hitstopEndTime;
+        private float m_slowMotionElapsed;
 
         private void Awake()
         {
@@ -61,6 +69,9 @@ namespace NeuralBreak.Graphics
 
         private void Start()
         {
+            // Cache ScreenFlash reference (avoid FindFirstObjectByType in hot paths)
+            m_screenFlash = FindFirstObjectByType<ScreenFlash>();
+
             // Cache camera controller via GameObject.Find
             if (m_cameraController == null)
             {
@@ -84,9 +95,38 @@ namespace NeuralBreak.Graphics
             UnsubscribeFromEvents();
 
             // Restore time scale
-            if (m_isTimeScaled)
+            if (m_timeScaleState != TimeScaleState.None)
             {
                 Time.timeScale = m_originalTimeScale;
+            }
+        }
+
+        private void Update()
+        {
+            switch (m_timeScaleState)
+            {
+                case TimeScaleState.Hitstop:
+                    // Use unscaled time since timeScale is 0
+                    if (Time.unscaledTime >= m_hitstopEndTime)
+                    {
+                        Time.timeScale = m_originalTimeScale;
+                        m_timeScaleState = TimeScaleState.None;
+                    }
+                    break;
+
+                case TimeScaleState.SlowMotion:
+                    m_slowMotionElapsed += Time.unscaledDeltaTime;
+                    if (m_slowMotionElapsed >= m_slowMotionDuration)
+                    {
+                        Time.timeScale = m_originalTimeScale;
+                        m_timeScaleState = TimeScaleState.None;
+                    }
+                    else
+                    {
+                        float t = m_slowMotionElapsed / m_slowMotionDuration;
+                        Time.timeScale = Mathf.Lerp(m_slowMotionScale, m_originalTimeScale, t);
+                    }
+                    break;
             }
         }
 
@@ -238,23 +278,33 @@ namespace NeuralBreak.Graphics
         }
 
         /// <summary>
-        /// Trigger hitstop (freeze frame) effect
+        /// Trigger hitstop (freeze frame) effect.
+        /// Timer-based (zero allocation - no coroutines).
         /// </summary>
         public void TriggerHitstop(float duration)
         {
             if (!m_enableHitstop || duration <= 0) return;
+            if (m_timeScaleState != TimeScaleState.None) return;
 
-            StartCoroutine(HitstopCoroutine(duration));
+            m_timeScaleState = TimeScaleState.Hitstop;
+            m_originalTimeScale = Time.timeScale;
+            Time.timeScale = 0f;
+            m_hitstopEndTime = Time.unscaledTime + duration;
         }
 
         /// <summary>
-        /// Trigger slow motion effect
+        /// Trigger slow motion effect.
+        /// Timer-based (zero allocation - no coroutines).
         /// </summary>
         public void TriggerSlowMotion()
         {
             if (!m_enableSlowMotion) return;
+            if (m_timeScaleState != TimeScaleState.None) return;
 
-            StartCoroutine(SlowMotionCoroutine());
+            m_timeScaleState = TimeScaleState.SlowMotion;
+            m_originalTimeScale = Time.timeScale;
+            Time.timeScale = m_slowMotionScale;
+            m_slowMotionElapsed = 0f;
         }
 
         /// <summary>
@@ -264,54 +314,10 @@ namespace NeuralBreak.Graphics
         {
             if (!m_enableScreenFlash) return;
 
-            // Use ScreenFlash component
-            if (FindFirstObjectByType<ScreenFlash>() != null)
+            if (m_screenFlash != null)
             {
-                FindFirstObjectByType<ScreenFlash>().Flash(color, m_flashDuration);
+                m_screenFlash.Flash(color, m_flashDuration);
             }
-        }
-
-        #endregion
-
-        #region Coroutines
-
-        private System.Collections.IEnumerator HitstopCoroutine(float duration)
-        {
-            if (m_isTimeScaled) yield break;
-
-            m_isTimeScaled = true;
-            m_originalTimeScale = Time.timeScale;
-
-            Time.timeScale = 0f;
-
-            // Use unscaled time to wait
-            yield return new WaitForSecondsRealtime(duration);
-
-            Time.timeScale = m_originalTimeScale;
-            m_isTimeScaled = false;
-        }
-
-        private System.Collections.IEnumerator SlowMotionCoroutine()
-        {
-            if (m_isTimeScaled) yield break;
-
-            m_isTimeScaled = true;
-            m_originalTimeScale = Time.timeScale;
-
-            Time.timeScale = m_slowMotionScale;
-
-            // Lerp back to normal
-            float elapsed = 0f;
-            while (elapsed < m_slowMotionDuration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                float t = elapsed / m_slowMotionDuration;
-                Time.timeScale = Mathf.Lerp(m_slowMotionScale, m_originalTimeScale, t);
-                yield return null;
-            }
-
-            Time.timeScale = m_originalTimeScale;
-            m_isTimeScaled = false;
         }
 
         #endregion

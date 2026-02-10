@@ -18,10 +18,10 @@ namespace NeuralBreak.Combat
         [SerializeField] private bool m_allowDuplicates = false;
 
         [Header("Rarity Weights")]
-        [SerializeField] private float m_commonWeight = 60f;
-        [SerializeField] private float m_rareWeight = 25f;
-        [SerializeField] private float m_epicWeight = 12f;
-        [SerializeField] private float m_legendaryWeight = 3f;
+        [SerializeField] private float m_commonWeight = 30f;
+        [SerializeField] private float m_rareWeight = 30f;
+        [SerializeField] private float m_epicWeight = 25f;
+        [SerializeField] private float m_legendaryWeight = 15f;
 
         [Header("Debug")]
         [SerializeField] private bool m_logSelections = true;

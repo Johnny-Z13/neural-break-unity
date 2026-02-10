@@ -51,6 +51,14 @@ namespace NeuralBreak.Entities
         private EnemySpawnPositionCalculator m_positionCalculator;
         private EnemySpawnRateManager m_rateManager;
 
+        // Pre-allocated buffer for spawn requests (avoids per-frame allocation)
+        private readonly EnemySpawnRequest[] m_spawnBuffer = new EnemySpawnRequest[8];
+
+        // Pre-allocated buffers for KillAllEnemiesFireworks (avoids per-level-completion allocations)
+        private static readonly List<EnemyBase> s_fireworkEnemiesBuffer = new List<EnemyBase>(50);
+        private static readonly List<float> s_fireworkDeathTimes = new List<float>(50);
+        private static readonly HashSet<int> s_fireworkKilledIndices = new HashSet<int>();
+
         // Config-driven properties
         private SpawnConfig SpawnConfig => ConfigProvider.Spawning;
         private int MaxActiveEnemies => SpawnConfig.maxActiveEnemies;
@@ -112,12 +120,13 @@ namespace NeuralBreak.Entities
             // Check max enemies
             if (m_activeEnemies.Count >= MaxActiveEnemies) return;
 
-            // Get ready spawns from rate manager
-            EnemySpawnRequest[] readySpawns = m_rateManager.UpdateAndGetReadySpawns(Time.deltaTime);
+            // Get ready spawns from rate manager (zero-alloc via pre-allocated buffer)
+            int spawnCount = m_rateManager.UpdateAndGetReadySpawns(Time.deltaTime, m_spawnBuffer);
 
             // Process each spawn request
-            foreach (var request in readySpawns)
+            for (int i = 0; i < spawnCount; i++)
             {
+                var request = m_spawnBuffer[i];
                 if (!m_poolManager.HasPool(request.EnemyType))
                 {
                     LogHelper.LogWarning($"[EnemySpawner] {request.EnemyType} pool is NULL!");
@@ -339,51 +348,49 @@ namespace NeuralBreak.Entities
         {
             LogHelper.Log($"[EnemySpawner] Starting firework sequence with {m_activeEnemies.Count} enemies over {totalDuration}s");
 
-            // Collect all alive enemies
-            var enemiesToKill = new System.Collections.Generic.List<EnemyBase>();
+            // Collect all alive enemies (zero-alloc: reuse static buffers)
+            s_fireworkEnemiesBuffer.Clear();
+            s_fireworkDeathTimes.Clear();
+            s_fireworkKilledIndices.Clear();
+
             for (int i = 0; i < m_activeEnemies.Count; i++)
             {
                 if (m_activeEnemies[i] != null && m_activeEnemies[i].IsAlive)
                 {
-                    enemiesToKill.Add(m_activeEnemies[i]);
+                    s_fireworkEnemiesBuffer.Add(m_activeEnemies[i]);
                 }
             }
 
-            if (enemiesToKill.Count == 0)
+            if (s_fireworkEnemiesBuffer.Count == 0)
             {
                 LogHelper.Log("[EnemySpawner] No enemies to kill in firework sequence");
                 yield break;
             }
 
-            // Assign each enemy a RANDOM death time within the duration
-            var enemyDeathTimes = new System.Collections.Generic.Dictionary<EnemyBase, float>();
-            foreach (var enemy in enemiesToKill)
+            // Assign each enemy a RANDOM death time within the duration (parallel list, same index)
+            for (int i = 0; i < s_fireworkEnemiesBuffer.Count; i++)
             {
-                float randomTime = Random.Range(0f, totalDuration);
-                enemyDeathTimes[enemy] = randomTime;
+                s_fireworkDeathTimes.Add(Random.Range(0f, totalDuration));
             }
 
             // Track elapsed time and kill enemies at their scheduled times
             float elapsed = 0f;
-            var killedEnemies = new System.Collections.Generic.HashSet<EnemyBase>();
 
             while (elapsed < totalDuration)
             {
-                // Check if any enemies should die this frame
-                foreach (var kvp in enemyDeathTimes)
+                // Check if any enemies should die this frame (indexed loop, no enumerator)
+                for (int i = 0; i < s_fireworkEnemiesBuffer.Count; i++)
                 {
-                    var enemy = kvp.Key;
-                    float deathTime = kvp.Value;
+                    if (s_fireworkKilledIndices.Contains(i)) continue;
 
-                    // If this enemy's death time has arrived and hasn't been killed yet
-                    if (elapsed >= deathTime && !killedEnemies.Contains(enemy))
+                    if (elapsed >= s_fireworkDeathTimes[i])
                     {
+                        var enemy = s_fireworkEnemiesBuffer[i];
                         if (enemy != null && enemy.IsAlive)
                         {
                             enemy.Kill();
-                            LogHelper.Log($"[EnemySpawner] Firework! Killed enemy at t={elapsed:F2}s");
                         }
-                        killedEnemies.Add(enemy);
+                        s_fireworkKilledIndices.Add(i);
                     }
                 }
 
@@ -392,12 +399,14 @@ namespace NeuralBreak.Entities
             }
 
             // Kill any remaining enemies that might have been missed
-            foreach (var enemy in enemiesToKill)
+            for (int i = 0; i < s_fireworkEnemiesBuffer.Count; i++)
             {
-                if (enemy != null && enemy.IsAlive && !killedEnemies.Contains(enemy))
+                if (s_fireworkKilledIndices.Contains(i)) continue;
+
+                var enemy = s_fireworkEnemiesBuffer[i];
+                if (enemy != null && enemy.IsAlive)
                 {
                     enemy.Kill();
-                    LogHelper.Log("[EnemySpawner] Cleanup kill for missed enemy");
                 }
             }
 
@@ -441,7 +450,8 @@ namespace NeuralBreak.Entities
 
         private void OnLevelCompleted(LevelCompletedEvent evt)
         {
-            KillAllEnemies();
+            // Stop spawning new enemies - GameManager handles staggered kills via KillAllEnemiesFireworks()
+            m_spawningEnabled = false;
         }
 
         #endregion

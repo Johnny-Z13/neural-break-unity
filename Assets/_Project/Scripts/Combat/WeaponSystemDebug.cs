@@ -118,9 +118,9 @@ namespace NeuralBreak.Combat
             if (m_permanentUpgrades != null)
             {
                 var modifiers = m_permanentUpgrades.GetCombinedModifiers();
-                var activeUpgrades = m_permanentUpgrades.GetActiveUpgrades();
+                int activeCount = m_permanentUpgrades.ActiveUpgradeCount;
 
-                GUILayout.Label($"Active Upgrades: {activeUpgrades.Count}", headerStyle);
+                GUILayout.Label($"Active Upgrades: {activeCount}", headerStyle);
 
                 GUILayout.Label($"Fire Rate: {modifiers.fireRateMultiplier:F2}x", labelStyle);
                 GUILayout.Label($"Damage: {modifiers.damageMultiplier:F2}x", labelStyle);

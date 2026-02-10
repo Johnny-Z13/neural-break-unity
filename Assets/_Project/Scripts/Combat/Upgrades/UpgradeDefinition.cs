@@ -25,6 +25,12 @@ namespace NeuralBreak.Combat
         [Header("Effects")]
         public WeaponModifiers modifiers;
 
+        [Header("Visuals & Audio")]
+        [Tooltip("Visual profile for projectiles (color, size, particles)")]
+        public ProjectileVisualProfile visualProfile;
+        [Tooltip("Fire sound effect (overrides default weapon sound)")]
+        public AudioClip fireSound;
+
         [Header("Requirements & Restrictions")]
         public string[] prerequisiteIds;
         public string[] incompatibleIds;
@@ -39,7 +45,7 @@ namespace NeuralBreak.Combat
         /// <summary>
         /// Check if this upgrade can be selected given current game state.
         /// </summary>
-        public bool IsEligible(int playerLevel, System.Collections.Generic.List<UpgradeDefinition> activeUpgrades)
+        public bool IsEligible(int playerLevel, System.Collections.Generic.IReadOnlyList<UpgradeDefinition> activeUpgrades)
         {
             // Level gate
             if (playerLevel < minPlayerLevel) return false;
@@ -121,18 +127,24 @@ namespace NeuralBreak.Combat
     [System.Serializable]
     public struct WeaponModifiers
     {
+        [Header("Additive Stats (0-100 scale)")]
+        [Tooltip("Fire rate stat boost (0-100, higher = faster)")]
+        public int fireRateStat;
+        [Tooltip("Damage stat boost (0-100, higher = more damage)")]
+        public int damageStat;
+
         [Header("Multiplicative Modifiers (1.0 = no change)")]
-        [Tooltip("Fire rate multiplier (1.5 = 50% faster)")]
+        [Tooltip("Fire rate multiplier")]
         public float fireRateMultiplier;
-        [Tooltip("Damage multiplier (2.0 = double damage)")]
+        [Tooltip("Damage multiplier")]
         public float damageMultiplier;
         [Tooltip("Projectile speed multiplier")]
         public float projectileSpeedMultiplier;
-        [Tooltip("Projectile size multiplier")]
+        [Tooltip("Projectile size multiplier (2.0 = giant bullets)")]
         public float projectileSizeMultiplier;
 
         [Header("Additive Modifiers")]
-        [Tooltip("Additional projectiles per shot")]
+        [Tooltip("Additional projectiles per shot (multishot upgrade)")]
         public int additionalProjectiles;
         [Tooltip("Additional spread angle in degrees")]
         public float spreadAngleAdd;
@@ -150,6 +162,8 @@ namespace NeuralBreak.Combat
         public bool enableRicochet;
         public bool enableChainLightning;
         public bool enableBeamWeapon;
+        public bool enableArmorPiercing;
+        public bool enableGiantBullets;
 
         [Header("Special Behavior Parameters")]
         public float homingStrength;
@@ -171,6 +185,8 @@ namespace NeuralBreak.Combat
         /// </summary>
         public static WeaponModifiers Identity => new WeaponModifiers
         {
+            fireRateStat = 0,
+            damageStat = 0,
             fireRateMultiplier = 1f,
             damageMultiplier = 1f,
             projectileSpeedMultiplier = 1f,
@@ -186,6 +202,8 @@ namespace NeuralBreak.Combat
             enableRicochet = false,
             enableChainLightning = false,
             enableBeamWeapon = false,
+            enableArmorPiercing = false,
+            enableGiantBullets = false,
             homingStrength = 0f,
             explosionRadius = 0f,
             ricochetCount = 0,
@@ -203,6 +221,10 @@ namespace NeuralBreak.Combat
         {
             return new WeaponModifiers
             {
+                // Additive stats (clamped 0-100)
+                fireRateStat = Mathf.Clamp(a.fireRateStat + b.fireRateStat, 0, 100),
+                damageStat = Mathf.Clamp(a.damageStat + b.damageStat, 0, 100),
+
                 // Multiplicative: multiply together
                 fireRateMultiplier = a.fireRateMultiplier * b.fireRateMultiplier,
                 damageMultiplier = a.damageMultiplier * b.damageMultiplier,
@@ -223,6 +245,8 @@ namespace NeuralBreak.Combat
                 enableRicochet = a.enableRicochet || b.enableRicochet,
                 enableChainLightning = a.enableChainLightning || b.enableChainLightning,
                 enableBeamWeapon = a.enableBeamWeapon || b.enableBeamWeapon,
+                enableArmorPiercing = a.enableArmorPiercing || b.enableArmorPiercing,
+                enableGiantBullets = a.enableGiantBullets || b.enableGiantBullets,
 
                 // Parameters: take max
                 homingStrength = Mathf.Max(a.homingStrength, b.homingStrength),

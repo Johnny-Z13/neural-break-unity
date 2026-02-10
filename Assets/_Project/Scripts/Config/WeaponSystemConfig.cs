@@ -292,10 +292,10 @@ namespace NeuralBreak.Config
         public bool homingEnabled = false;
 
         [Tooltip("Homing detection range")]
-        public float homingRange = 8f;
+        public float homingRange = 15f;
 
         [Tooltip("Homing turn strength (higher = tighter turns)")]
-        public float homingStrength = 5f;
+        public float homingStrength = 8f;
 
         [Header("Explosive")]
         [Tooltip("Projectiles explode on impact")]

@@ -39,7 +39,7 @@ namespace NeuralBreak.Entities
         private int m_projectileDamage => EnemyConfig?.projectileDamage ?? 20;
 
         [Header("Visual")]
-        [SerializeField] private SpriteRenderer m_spriteRenderer;
+        // m_spriteRenderer inherited from EnemyBase (protected field)
         [SerializeField] private SpriteRenderer m_innerGlow;
         [SerializeField] private VoidSphereVisuals m_visuals;
         [SerializeField] private Color m_voidColor = new Color(0.2f, 0f, 0.4f); // Deep purple
@@ -56,6 +56,9 @@ namespace NeuralBreak.Entities
         private AudioClip m_fireSound;
 
         // Note: MMFeedbacks removed
+
+        // Cached component references
+        private Rigidbody2D m_playerRb;
 
         // State
         private float m_burstTimer;
@@ -76,7 +79,8 @@ namespace NeuralBreak.Entities
             m_isCharging = false;
 
             // Cache the base scale set by EnemyBase (collisionRadius * 2)
-            m_baseScale = m_collisionRadius * 2f;
+            // Reduced by 10% per user request (2026-02-10)
+            m_baseScale = m_collisionRadius * 2f * 0.9f;
 
             // Generate procedural visuals if not yet done
             if (!m_visualsGenerated)
@@ -246,6 +250,13 @@ namespace NeuralBreak.Entities
         {
             if (m_playerTarget == null) return;
 
+            // Cache the player's Rigidbody2D (lazy init, only once)
+            if (m_playerRb == null)
+            {
+                m_playerRb = m_playerTarget.GetComponent<Rigidbody2D>();
+                if (m_playerRb == null) return;
+            }
+
             // Pull player slightly toward the void sphere when in range
             float distanceToPlayer = GetDistanceToPlayer();
             if (distanceToPlayer <= m_gravityPullRadius && distanceToPlayer > 0.5f)
@@ -255,11 +266,7 @@ namespace NeuralBreak.Entities
                 Vector2 pullDirection = ((Vector2)transform.position - (Vector2)m_playerTarget.position).normalized;
 
                 // Apply subtle pull (reduced by factor to not be too oppressive)
-                var playerRb = m_playerTarget.GetComponent<Rigidbody2D>();
-                if (playerRb != null)
-                {
-                    playerRb.AddForce(pullDirection * m_gravityPullStrength * pullFactor, ForceMode2D.Force);
-                }
+                m_playerRb.AddForce(pullDirection * m_gravityPullStrength * pullFactor, ForceMode2D.Force);
             }
         }
 
@@ -290,16 +297,19 @@ namespace NeuralBreak.Entities
             base.Kill();
         }
 
+        // Cached array for overlap checks (zero allocation)
+        private static Collider2D[] s_hitBuffer = new Collider2D[32];
+
         private void DealDeathDamage()
         {
-            Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, m_deathDamageRadius);
+            int hitCount = Physics2D.OverlapCircleNonAlloc(transform.position, m_deathDamageRadius, s_hitBuffer);
 
-            foreach (var hit in hits)
+            for (int i = 0; i < hitCount; i++)
             {
-                if (hit.gameObject == gameObject) continue;
+                if (s_hitBuffer[i].gameObject == gameObject) continue;
 
                 // Damage enemies
-                EnemyBase enemy = hit.GetComponent<EnemyBase>();
+                EnemyBase enemy = s_hitBuffer[i].GetComponent<EnemyBase>();
                 if (enemy != null && enemy.IsAlive)
                 {
                     enemy.TakeDamage(m_deathDamageAmount, transform.position);

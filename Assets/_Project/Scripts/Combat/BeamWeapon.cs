@@ -25,10 +25,15 @@ namespace NeuralBreak.Combat
         private bool m_isActive;
         private Vector2 m_beamDirection;
         private float m_damageMultiplier = 1f;
-        private HashSet<EnemyBase> m_enemiesInBeam = new HashSet<EnemyBase>();
+        private List<EnemyBase> m_enemiesInBeam = new List<EnemyBase>(16);
 
         // Damage accumulator (to deal discrete damage chunks)
         private Dictionary<EnemyBase, float> m_damageAccumulator = new Dictionary<EnemyBase, float>();
+        private List<EnemyBase> m_toRemoveBuffer = new List<EnemyBase>(16);  // Reusable buffer
+        private List<EnemyBase> m_damageKeysBuffer = new List<EnemyBase>(16);  // Buffer for dict iteration
+
+        // Static buffer for BoxCast (zero allocation)
+        private static RaycastHit2D[] s_boxCastBuffer = new RaycastHit2D[32];
 
         private void Awake()
         {
@@ -123,22 +128,23 @@ namespace NeuralBreak.Combat
         {
             m_enemiesInBeam.Clear();
 
-            // Box cast to find all enemies in beam
+            // Box cast to find all enemies in beam (NonAlloc - zero GC)
             Vector2 direction = (end - start).normalized;
             float distance = Vector2.Distance(start, end);
 
-            RaycastHit2D[] hits = Physics2D.BoxCastAll(
+            int hitCount = Physics2D.BoxCastNonAlloc(
                 origin: start,
                 size: new Vector2(m_beamWidth, distance),
                 angle: Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg,
                 direction: direction,
                 distance: distance,
+                results: s_boxCastBuffer,
                 layerMask: m_enemyLayer
             );
 
-            foreach (var hit in hits)
+            for (int i = 0; i < hitCount; i++)
             {
-                var enemy = hit.collider.GetComponent<EnemyBase>();
+                var enemy = s_boxCastBuffer[i].collider.GetComponent<EnemyBase>();
                 if (enemy != null && enemy.IsAlive)
                 {
                     m_enemiesInBeam.Add(enemy);
@@ -148,8 +154,10 @@ namespace NeuralBreak.Combat
 
         private void DealBeamDamage(float deltaTime)
         {
-            foreach (var enemy in m_enemiesInBeam)
+            // Indexed for loop on List (zero allocation - List has struct enumerator)
+            for (int i = 0; i < m_enemiesInBeam.Count; i++)
             {
+                var enemy = m_enemiesInBeam[i];
                 if (enemy == null || !enemy.IsAlive) continue;
 
                 // Accumulate damage
@@ -171,19 +179,23 @@ namespace NeuralBreak.Combat
                 }
             }
 
-            // Clean up dead enemies from accumulator
-            var toRemove = new List<EnemyBase>();
-            foreach (var kvp in m_damageAccumulator)
+            // Clean up dead enemies from accumulator (zero allocation)
+            // Copy dict keys to buffer first, then iterate buffer
+            m_toRemoveBuffer.Clear();
+            m_damageKeysBuffer.Clear();
+            var enumerator = m_damageAccumulator.GetEnumerator();
+            while (enumerator.MoveNext())
             {
-                if (kvp.Key == null || !kvp.Key.IsAlive)
+                if (enumerator.Current.Key == null || !enumerator.Current.Key.IsAlive)
                 {
-                    toRemove.Add(kvp.Key);
+                    m_toRemoveBuffer.Add(enumerator.Current.Key);
                 }
             }
+            enumerator.Dispose();
 
-            foreach (var enemy in toRemove)
+            for (int i = 0; i < m_toRemoveBuffer.Count; i++)
             {
-                m_damageAccumulator.Remove(enemy);
+                m_damageAccumulator.Remove(m_toRemoveBuffer[i]);
             }
         }
 

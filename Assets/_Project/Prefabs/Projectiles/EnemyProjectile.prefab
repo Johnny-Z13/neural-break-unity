@@ -169,10 +169,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fcab2455030bea3479e54a18821128d2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Combat.EnemyProjectile
-  _speed: 7
-  _lifetime: 5
-  _damage: 10
-  _collisionRadius: 0.3
-  _spriteRenderer: {fileID: 0}
-  _trailRenderer: {fileID: 0}
-  _projectileColor: {r: 1, g: 0.3, b: 0.1, a: 1}
+  m_speed: 7
+  m_lifetime: 5
+  m_damage: 10
+  m_collisionRadius: 0.3
+  m_spriteRenderer: {fileID: 0}
+  m_trailRenderer: {fileID: 0}
+  m_projectileColor: {r: 1, g: 0.3, b: 0.1, a: 1}
+  m_visualScale: {x: 0.5, y: 0.5, z: 1}
+  m_enableGlow: 1
+  m_glowIntensity: 2

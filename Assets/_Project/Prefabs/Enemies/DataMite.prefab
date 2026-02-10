@@ -141,15 +141,67 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 950a99ab296cf42438fbcd1c187a57ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Entities.DataMite
-  _maxHealth: 1
-  _speed: 1.5
-  _damage: 5
-  _xpValue: 1
-  _scoreValue: 100
-  _collisionRadius: 0.5
-  _spawnDuration: 0.25
-  _invulnerableDuringSpawn: 1
-  _deathDuration: 0.5
-  _swayAmplitude: 0.5
-  _swayFrequency: 3
-  _visuals: {fileID: 0}
+  m_maxHealth: 1
+  m_speed: 1.5
+  m_damage: 5
+  m_xpValue: 1
+  m_scoreValue: 100
+  m_collisionRadius: 0.5
+  m_spawnDuration: 0.25
+  m_invulnerableDuringSpawn: 1
+  m_spawnScaleCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  m_enableSpawnParticles: 1
+  m_enableSpawnSound: 1
+  m_deathDuration: 0.5
+  m_deathScaleCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: -1
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: -1
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  m_enableDeathParticles: 1
+  m_enableDeathSound: 1
+  m_swayAmplitude: 0.5
+  m_swayFrequency: 3
+  m_visuals: {fileID: 0}

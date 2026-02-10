@@ -23,7 +23,7 @@ namespace NeuralBreak.Entities
         [SerializeField] private int m_shardCount = 6;
         [SerializeField] private float m_orbitRadius = 1.5f;
         [SerializeField] private float m_orbitSpeed = 1.5f; // rotations per second
-        [SerializeField] private float m_shardScale = 0.4f;
+        [SerializeField] private float m_shardScale = 0.348f;  // 0.4 * 0.87 = 13% reduction (2026-02-10)
 
         [Header("Attack")]
         [SerializeField] private int m_shardsPerBurst = 2;
@@ -301,15 +301,18 @@ namespace NeuralBreak.Entities
             base.Kill();
         }
 
+        // Cached array for overlap checks (zero allocation)
+        private static Collider2D[] s_hitBuffer = new Collider2D[32];
+
         private void DealDeathDamage()
         {
-            Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, m_deathDamageRadius);
+            int hitCount = Physics2D.OverlapCircleNonAlloc(transform.position, m_deathDamageRadius, s_hitBuffer);
 
-            foreach (var hit in hits)
+            for (int i = 0; i < hitCount; i++)
             {
-                if (hit.gameObject == gameObject) continue;
+                if (s_hitBuffer[i].gameObject == gameObject) continue;
 
-                EnemyBase enemy = hit.GetComponent<EnemyBase>();
+                EnemyBase enemy = s_hitBuffer[i].GetComponent<EnemyBase>();
                 if (enemy != null && enemy.IsAlive)
                 {
                     enemy.TakeDamage(m_deathDamageAmount, transform.position);

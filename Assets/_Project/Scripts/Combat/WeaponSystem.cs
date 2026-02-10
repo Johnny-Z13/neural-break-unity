@@ -3,6 +3,7 @@ using NeuralBreak.Core;
 using NeuralBreak.Entities;
 using NeuralBreak.Input;
 using NeuralBreak.Config;
+using NeuralBreak.Audio;
 using Z13.Core;
 
 namespace NeuralBreak.Combat
@@ -35,6 +36,7 @@ namespace NeuralBreak.Combat
         private float m_fireTimer;
         private float m_rearFireTimer;
         private float m_currentHeat;
+        private float m_lastPublishedHeat = -1f;
         private bool m_isOverheated;
         private float m_overheatTimer;
 
@@ -51,6 +53,15 @@ namespace NeuralBreak.Combat
         private InputManager m_input;
         private WeaponUpgradeManager m_upgradeManager;
         private PermanentUpgradeManager m_permanentUpgrades;
+
+        // Cached upgrade queries (to avoid allocations in hot paths)
+        private ProjectileVisualProfile m_cachedVisualProfile;
+        private AudioClip m_cachedFireSound;
+        private bool m_upgradesCacheDirty = true;
+
+        // Timer-based beam stop (replaces coroutine - zero allocation)
+        private bool m_beamStopPending;
+        private float m_beamStopTime;
 
         #region Public Accessors
 
@@ -219,13 +230,36 @@ namespace NeuralBreak.Combat
                 LogHelper.LogWarning("[WeaponSystem] PermanentUpgradeManager not found - permanent upgrades will not work");
             }
 
-            // Subscribe to pickup events
+            // Subscribe to events
             EventBus.Subscribe<PickupCollectedEvent>(OnPickupCollected);
+            EventBus.Subscribe<GameStartedEvent>(OnGameStarted);
+            EventBus.Subscribe<PermanentUpgradeAddedEvent>(OnUpgradesChanged);
+            EventBus.Subscribe<WeaponModifiersChangedEvent>(OnUpgradesChanged);
         }
 
         private void OnDestroy()
         {
             EventBus.Unsubscribe<PickupCollectedEvent>(OnPickupCollected);
+            EventBus.Unsubscribe<GameStartedEvent>(OnGameStarted);
+            EventBus.Unsubscribe<PermanentUpgradeAddedEvent>(OnUpgradesChanged);
+            EventBus.Unsubscribe<WeaponModifiersChangedEvent>(OnUpgradesChanged);
+        }
+
+        private void OnUpgradesChanged(PermanentUpgradeAddedEvent evt)
+        {
+            m_upgradesCacheDirty = true;
+        }
+
+        private void OnUpgradesChanged(WeaponModifiersChangedEvent evt)
+        {
+            m_upgradesCacheDirty = true;
+        }
+
+        private void OnGameStarted(GameStartedEvent evt)
+        {
+            // Full reset on game start/restart
+            Reset();
+            LogHelper.Log("[WeaponSystem] Reset for new game");
         }
 
         #endregion
@@ -235,6 +269,16 @@ namespace NeuralBreak.Combat
         private void Update()
         {
             if (GameManager.Instance == null || !GameManager.Instance.IsPlaying) return;
+
+            // Timer-based beam stop (replaces coroutine - zero allocation)
+            if (m_beamStopPending && Time.time >= m_beamStopTime)
+            {
+                m_beamStopPending = false;
+                if (m_beamWeapon != null)
+                {
+                    m_beamWeapon.Stop();
+                }
+            }
 
             UpdateModifierTimers();
             UpdateHeat();
@@ -366,8 +410,8 @@ namespace NeuralBreak.Combat
             // Apply heat
             ApplyHeat(pattern);
 
-            // Feedback
-            // Fire feedback (Feel removed)
+            // Play fire sound
+            PlayFireSound();
 
             // Event
             EventBus.Publish(new ProjectileFiredEvent
@@ -376,6 +420,24 @@ namespace NeuralBreak.Combat
                 direction = direction,
                 powerLevel = m_powerLevel
             });
+        }
+
+        /// <summary>
+        /// Play the appropriate fire sound based on active upgrades.
+        /// If an upgrade has a custom fire sound, use that. Otherwise use default shoot sound.
+        /// </summary>
+        private void PlayFireSound()
+        {
+            if (AudioManager.Instance == null) return;
+
+            AudioClip customSound = GetCurrentFireSound();
+
+            if (customSound != null)
+            {
+                // Play custom upgrade sound (e.g., deeper BOOM for giant bullets, whoosh for homing)
+                AudioManager.Instance.PlaySFX(customSound, volumeMultiplier: 0.7f);
+            }
+            // If no custom sound, AudioManager's event handler will play default shoot sound
         }
 
         /// <summary>
@@ -408,17 +470,9 @@ namespace NeuralBreak.Combat
             // Feedback
             // Fire feedback (Feel removed)
 
-            // Schedule beam stop after duration
-            StartCoroutine(StopBeamAfterDuration(modifiers.beamDuration > 0f ? modifiers.beamDuration : 0.5f));
-        }
-
-        private System.Collections.IEnumerator StopBeamAfterDuration(float duration)
-        {
-            yield return new WaitForSeconds(duration);
-            if (m_beamWeapon != null)
-            {
-                m_beamWeapon.Stop();
-            }
+            // Schedule beam stop after duration (timer-based, zero allocation)
+            m_beamStopPending = true;
+            m_beamStopTime = Time.time + (modifiers.beamDuration > 0f ? modifiers.beamDuration : 0.5f);
         }
 
         #region Fire Patterns
@@ -600,21 +654,86 @@ namespace NeuralBreak.Combat
                    modifiers.enableHoming;
         }
 
+        /// <summary>
+        /// Get the visual profile for current projectiles based on active upgrades.
+        /// Returns the profile from the highest priority active upgrade.
+        /// Priority: Homing > Multi-Fire > Armor Piercing > Giant Bullets > Rear Fire > Default
+        /// </summary>
+        private ProjectileVisualProfile GetCurrentVisualProfile()
+        {
+            if (m_permanentUpgrades == null) return null;
+
+            // Use cached value if upgrades haven't changed (avoids allocation)
+            if (!m_upgradesCacheDirty && m_cachedVisualProfile != null)
+            {
+                return m_cachedVisualProfile;
+            }
+
+            // Check all active upgrades and return the first one with a visual profile
+            // (Upgrades should be ordered by priority in the UpgradeDefinition assets)
+            var upgrades = m_permanentUpgrades.GetActiveUpgrades();
+            m_cachedVisualProfile = null;
+            foreach (var upgrade in upgrades)
+            {
+                if (upgrade.visualProfile != null)
+                {
+                    m_cachedVisualProfile = upgrade.visualProfile;
+                    break;
+                }
+            }
+
+            m_upgradesCacheDirty = false;
+            return m_cachedVisualProfile; // Use default if null
+        }
+
+        /// <summary>
+        /// Get the fire sound for current weapon based on active upgrades.
+        /// Returns the sound from the highest priority active upgrade with a custom fire sound.
+        /// If no upgrade has a custom sound, returns null (will use default shoot sound).
+        /// </summary>
+        private AudioClip GetCurrentFireSound()
+        {
+            if (m_permanentUpgrades == null) return null;
+
+            // Use cached value if upgrades haven't changed (avoids allocation)
+            if (!m_upgradesCacheDirty && m_cachedFireSound != null)
+            {
+                return m_cachedFireSound;
+            }
+
+            // Check all active upgrades and return the first one with a fire sound
+            var upgrades = m_permanentUpgrades.GetActiveUpgrades();
+            m_cachedFireSound = null;
+            foreach (var upgrade in upgrades)
+            {
+                if (upgrade.fireSound != null)
+                {
+                    m_cachedFireSound = upgrade.fireSound;
+                    break;
+                }
+            }
+
+            // Note: Don't mark cache clean here since GetCurrentVisualProfile also needs to run
+            return m_cachedFireSound; // Use default if null
+        }
+
         private void FireProjectile(Vector2 position, Vector2 direction, int damage)
         {
             var modifiers = GetCombinedModifiers();
+            var visualProfile = GetCurrentVisualProfile();
 
             // Use EnhancedProjectile if special behaviors are active
             if (HasSpecialBehaviors(modifiers))
             {
                 EnhancedProjectile proj = m_enhancedProjectilePool.Get(position, Quaternion.identity);
-                proj.Initialize(position, direction, damage, m_powerLevel, ReturnEnhancedProjectile, modifiers);
+                proj.Initialize(position, direction, damage, m_powerLevel, ReturnEnhancedProjectile, modifiers, visualProfile);
             }
             else
             {
                 // Use basic Projectile for performance (no special behaviors)
                 Projectile proj = m_projectilePool.Get(position, Quaternion.identity);
-                proj.Initialize(position, direction, damage, m_powerLevel, ReturnProjectile, false, false);
+                proj.Initialize(position, direction, damage, m_powerLevel, ReturnProjectile, false, false, visualProfile,
+                    modifiers.projectileSpeedMultiplier, modifiers.projectileSizeMultiplier);
             }
         }
 
@@ -657,68 +776,99 @@ namespace NeuralBreak.Combat
 
         private int CalculateDamage()
         {
-            int baseDamage = Config?.baseDamage ?? 12;
-            float damagePerLevel = Config?.powerLevels?.damagePerLevel ?? 0.1f;
+            // NEW STAT-BASED SYSTEM (0-100 scale)
+            float baseStat = 10f; // Starting damage stat (10 out of 100)
 
-            float multiplier = 1f + (m_powerLevel * damagePerLevel);
+            // Add power level contribution
+            float powerLevelStat = m_powerLevel * 1f;
 
-            // Apply damage boost modifier
-            if (m_damageBoostActive)
-            {
-                multiplier *= Config?.modifiers?.damageBoostMultiplier ?? 2f;
-            }
-
-            // Apply PERMANENT damage multiplier
+            // Add permanent upgrade damage stat
+            float upgradeStat = 0f;
+            float critChance = 0f;
+            float critMult = 1f;
+            float damageMultiplier = 1f;
             if (m_permanentUpgrades != null)
             {
                 var modifiers = m_permanentUpgrades.GetCombinedModifiers();
-                multiplier *= modifiers.damageMultiplier;
-
-                // Apply critical hit chance
-                if (modifiers.criticalChance > 0f)
-                {
-                    if (Random.value < modifiers.criticalChance)
-                    {
-                        float critMultiplier = modifiers.criticalMultiplier > 0f ? modifiers.criticalMultiplier : 2f;
-                        multiplier *= critMultiplier;
-                        // Could publish a CriticalHitEvent here for VFX
-                    }
-                }
+                upgradeStat = modifiers.damageStat;
+                critChance = modifiers.criticalChance;
+                critMult = modifiers.criticalMultiplier > 0f ? modifiers.criticalMultiplier : 2f;
+                damageMultiplier = modifiers.damageMultiplier;
             }
 
-            return Mathf.RoundToInt(baseDamage * multiplier);
+            // Add temporary damage boost
+            float tempBoost = 0f;
+            if (m_damageBoostActive)
+            {
+                tempBoost = 40f;
+            }
+
+            // Combine stats
+            float totalStat = Mathf.Clamp(baseStat + powerLevelStat + upgradeStat + tempBoost, 0f, 100f);
+
+            // Convert to damage
+            float damage = Mathf.Lerp(10f, 50f, totalStat / 100f);
+
+            // Apply multiplier from upgrades (Heavy Rounds, Armor Piercing, High Explosive, etc.)
+            damage *= damageMultiplier;
+
+            // Apply critical hit
+            if (critChance > 0f && Random.value < critChance)
+            {
+                damage *= critMult;
+            }
+
+            return Mathf.RoundToInt(damage);
         }
 
         private float GetFireRate()
         {
-            float baseRate = Config?.baseFireRate ?? 0.12f;
-            float ratePerLevel = Config?.powerLevels?.fireRatePerLevel ?? 0.005f;
+            // NEW STAT-BASED SYSTEM (0-100 scale)
+            // Base fire rate starts slower (0.25s = 4 shots/second)
+            // With max fire rate stat (100), can reach ~10 shots/second (0.1s)
 
-            float rate = Mathf.Max(0.05f, baseRate - (m_powerLevel * ratePerLevel));
+            float baseStat = 10f; // Starting fire rate stat (10 out of 100)
 
-            // Apply rapid fire modifier from internal state
-            if (m_rapidFireActive)
-            {
-                rate /= Config?.modifiers?.rapidFireMultiplier ?? 1.5f;
-            }
+            // Add power level contribution (each level adds small amount)
+            float powerLevelStat = m_powerLevel * 0.5f;
 
-            // Check WeaponUpgradeManager for rapid fire pickup (cached reference)
-            if (m_upgradeManager != null && m_upgradeManager.HasRapidFire)
-            {
-                rate /= m_upgradeManager.RapidFireMultiplier;
-            }
-
-            // Apply PERMANENT fire rate modifier (NEW)
+            // Add permanent upgrade fire rate stat
+            float upgradeStat = 0f;
             if (m_permanentUpgrades != null)
             {
-                float permMultiplier = m_permanentUpgrades.GetCombinedModifiers().fireRateMultiplier;
-                if (permMultiplier > 1f)
+                upgradeStat = m_permanentUpgrades.GetCombinedModifiers().fireRateStat;
+            }
+
+            // Add temporary rapid fire pickups (old system compatibility)
+            float tempBoost = 0f;
+            if (m_rapidFireActive)
+            {
+                tempBoost = 30f; // +30 stat boost
+            }
+            if (m_upgradeManager != null && m_upgradeManager.HasRapidFire)
+            {
+                tempBoost += 20f; // +20 stat boost
+            }
+
+            // Combine all stats (clamped 0-100)
+            float totalStat = Mathf.Clamp(baseStat + powerLevelStat + upgradeStat + tempBoost, 0f, 100f);
+
+            // Convert stat to fire rate (0.25s at stat=0, 0.08s at stat=100)
+            // Formula: lerp from slow (0.25) to fast (0.08) based on stat
+            float fireInterval = Mathf.Lerp(0.25f, 0.08f, totalStat / 100f);
+
+            // Apply multiplier from upgrades (Rapid Fire I/II/III, Glass Cannon, Sniper Mode)
+            // Higher multiplier = faster fire = shorter interval
+            if (m_permanentUpgrades != null)
+            {
+                float fireRateMultiplier = m_permanentUpgrades.GetCombinedModifiers().fireRateMultiplier;
+                if (fireRateMultiplier > 0f)
                 {
-                    rate /= permMultiplier;
+                    fireInterval /= fireRateMultiplier;
                 }
             }
 
-            return Mathf.Max(0.03f, rate);
+            return fireInterval;
         }
 
         private float GetHeatPerShot()
@@ -790,12 +940,17 @@ namespace NeuralBreak.Combat
                 m_currentHeat = Mathf.Max(0f, m_currentHeat - heatConfig.cooldownRate * Time.deltaTime);
             }
 
-            EventBus.Publish(new WeaponHeatChangedEvent
+            // Only publish heat event when value actually changes (avoid per-frame event spam)
+            if (Mathf.Abs(m_currentHeat - m_lastPublishedHeat) > 0.001f)
             {
-                heat = m_currentHeat,
-                maxHeat = GetHeatMax(),
-                isOverheated = m_isOverheated
-            });
+                m_lastPublishedHeat = m_currentHeat;
+                EventBus.Publish(new WeaponHeatChangedEvent
+                {
+                    heat = m_currentHeat,
+                    maxHeat = GetHeatMax(),
+                    isOverheated = m_isOverheated
+                });
+            }
         }
 
         private void TriggerOverheat()

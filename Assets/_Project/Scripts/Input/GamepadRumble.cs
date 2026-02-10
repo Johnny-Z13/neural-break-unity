@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using System.Collections;
 using NeuralBreak.Core;
 using Z13.Core;
 
@@ -9,6 +8,8 @@ namespace NeuralBreak.Input
     /// <summary>
     /// Manages gamepad rumble/haptic feedback.
     /// Provides satisfying controller vibration for game events.
+    ///
+    /// ZERO-ALLOCATION: All rumble effects use timer-based Update instead of coroutines.
     /// </summary>
     public class GamepadRumble : MonoBehaviour
     {
@@ -44,9 +45,18 @@ namespace NeuralBreak.Input
         [SerializeField] private float m_dashHigh = 0.1f;
         [SerializeField] private float m_dashDuration = 0.08f;
 
-        // State
-        private Coroutine m_rumbleCoroutine;
+        // State - timer-based rumble (replaces coroutines - zero allocation)
         private Gamepad m_currentGamepad;
+        private bool m_isRumbling;
+        private float m_rumbleEndTime;
+
+        // Pulse rumble state (replaces PulseRumble coroutine)
+        private bool m_isPulsing;
+        private float m_pulseLow;
+        private float m_pulseHigh;
+        private float m_pulseDuration;
+        private int m_pulseRemaining;
+        private float m_nextPulseTime;
 
         private void Start()
         {
@@ -64,6 +74,28 @@ namespace NeuralBreak.Input
         {
             // Track current gamepad
             m_currentGamepad = Gamepad.current;
+
+            // Timer-based rumble stop (replaces RumbleCoroutine - zero allocation)
+            if (m_isRumbling && Time.unscaledTime >= m_rumbleEndTime)
+            {
+                StopRumble();
+                m_isRumbling = false;
+            }
+
+            // Timer-based pulse rumble (replaces PulseRumble coroutine - zero allocation)
+            if (m_isPulsing && Time.unscaledTime >= m_nextPulseTime)
+            {
+                if (m_pulseRemaining > 0)
+                {
+                    Rumble(m_pulseLow, m_pulseHigh, m_pulseDuration);
+                    m_pulseRemaining--;
+                    m_nextPulseTime = Time.unscaledTime + m_pulseDuration * 1.5f;
+                }
+                else
+                {
+                    m_isPulsing = false;
+                }
+            }
         }
 
         private void SubscribeToEvents()
@@ -138,8 +170,8 @@ namespace NeuralBreak.Input
 
         private void OnPlayerLevelUp(PlayerLevelUpEvent evt)
         {
-            // Pulsing rumble for level up
-            StartCoroutine(PulseRumble(m_levelUpLow, m_levelUpHigh, m_levelUpDuration, 3));
+            // Pulsing rumble for level up (timer-based - zero allocation)
+            PulseRumble(m_levelUpLow, m_levelUpHigh, m_levelUpDuration, 3);
         }
 
         private void OnPickupCollected(PickupCollectedEvent evt)
@@ -150,7 +182,7 @@ namespace NeuralBreak.Input
 
         private void OnLevelCompleted(LevelCompletedEvent evt)
         {
-            StartCoroutine(PulseRumble(m_mediumHitLow, m_mediumHitHigh, 0.15f, 4));
+            PulseRumble(m_mediumHitLow, m_mediumHitHigh, 0.15f, 4);
         }
 
         private void OnGameOver(GameOverEvent evt)
@@ -160,7 +192,8 @@ namespace NeuralBreak.Input
         }
 
         /// <summary>
-        /// Trigger rumble with specified intensity and duration
+        /// Trigger rumble with specified intensity and duration.
+        /// Timer-based (zero allocation - no coroutines).
         /// </summary>
         public void Rumble(float lowFrequency, float highFrequency, float duration)
         {
@@ -174,32 +207,28 @@ namespace NeuralBreak.Input
             lowFrequency = Mathf.Clamp01(lowFrequency);
             highFrequency = Mathf.Clamp01(highFrequency);
 
-            if (m_rumbleCoroutine != null)
-            {
-                StopCoroutine(m_rumbleCoroutine);
-            }
-            m_rumbleCoroutine = StartCoroutine(RumbleCoroutine(lowFrequency, highFrequency, duration));
+            m_currentGamepad.SetMotorSpeeds(lowFrequency, highFrequency);
+            m_isRumbling = true;
+            m_rumbleEndTime = Time.unscaledTime + duration;
         }
 
-        private IEnumerator RumbleCoroutine(float lowFreq, float highFreq, float duration)
+        /// <summary>
+        /// Trigger pulsing rumble effect.
+        /// Timer-based (zero allocation - no coroutines).
+        /// </summary>
+        private void PulseRumble(float lowFreq, float highFreq, float pulseDuration, int pulseCount)
         {
-            if (m_currentGamepad == null) yield break;
+            m_isPulsing = true;
+            m_pulseLow = lowFreq;
+            m_pulseHigh = highFreq;
+            m_pulseDuration = pulseDuration;
+            m_pulseRemaining = pulseCount;
+            m_nextPulseTime = 0f; // Trigger first pulse immediately on next Update
 
-            m_currentGamepad.SetMotorSpeeds(lowFreq, highFreq);
-
-            yield return new WaitForSecondsRealtime(duration);
-
-            StopRumble();
-            m_rumbleCoroutine = null;
-        }
-
-        private IEnumerator PulseRumble(float lowFreq, float highFreq, float pulseDuration, int pulseCount)
-        {
-            for (int i = 0; i < pulseCount; i++)
-            {
-                Rumble(lowFreq, highFreq, pulseDuration);
-                yield return new WaitForSecondsRealtime(pulseDuration * 1.5f);
-            }
+            // Start first pulse immediately
+            Rumble(lowFreq, highFreq, pulseDuration);
+            m_pulseRemaining--;
+            m_nextPulseTime = Time.unscaledTime + pulseDuration * 1.5f;
         }
 
         /// <summary>

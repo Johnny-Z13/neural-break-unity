@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System.Collections;
 using System.Collections.Generic;
 using NeuralBreak.Core;
 using Z13.Core;
@@ -12,6 +11,8 @@ namespace NeuralBreak.UI
     /// Displays floating damage numbers when enemies are hit.
     /// Numbers float upward and fade out.
     /// Critical hits and kill shots are shown with different styles.
+    ///
+    /// ZERO-ALLOCATION: All text animations use Update-driven state machines instead of coroutines.
     /// </summary>
     public class DamageNumberPopup : MonoBehaviour
     {
@@ -48,6 +49,9 @@ namespace NeuralBreak.UI
         [Header("Pool Settings")]
         [SerializeField] private int m_poolSize = 30;
 
+        // Animation constants
+        private const float PUNCH_DURATION = 0.1f;
+
         // UI Components
         private Canvas m_canvas;
         private Queue<DamageText> m_pool = new Queue<DamageText>();
@@ -56,16 +60,34 @@ namespace NeuralBreak.UI
         // Cached references
         private Transform m_playerTransform;
 
+        // Cached camera reference (Camera.main allocates ~64 bytes per call via FindGameObjectWithTag)
+        private Camera m_mainCamera;
+
+        // Animation phases for each text (replaces coroutine state machine)
+        private enum AnimPhase { PunchUp, PunchDown, FloatAndFade, Done }
+
         private class DamageText
         {
             public GameObject gameObject;
             public RectTransform rectTransform;
             public TextMeshProUGUI text;
             public CanvasGroup canvasGroup;
+
+            // Animation state (replaces coroutine - zero allocation)
+            public AnimPhase phase;
+            public float elapsed;
+            public Vector3 startPos;
+            public Vector3 endPos;
+            public Vector3 startScale;
+            public Vector3 punchScale;
+            public float fadeStartTime;
+            public float floatDuration;
+            public float fadeDelay;
         }
 
         private void Awake()
         {
+            m_mainCamera = Camera.main;
 
             // Apply UITheme colors if not set
             ApplyThemeColors();
@@ -97,6 +119,8 @@ namespace NeuralBreak.UI
         {
             // Clear cached player reference on new game
             m_playerTransform = null;
+            // Re-cache camera (may have changed on scene reload)
+            m_mainCamera = Camera.main;
         }
 
         private void OnDestroy()
@@ -106,6 +130,73 @@ namespace NeuralBreak.UI
             EventBus.Unsubscribe<PlayerHealedEvent>(OnPlayerHealed);
             EventBus.Unsubscribe<GameStartedEvent>(OnGameStarted);
 
+        }
+
+        private void Update()
+        {
+            // Update all active text animations (replaces StartCoroutine(AnimateText) - zero allocation)
+            float dt = Time.unscaledDeltaTime;
+            for (int i = m_activeTexts.Count - 1; i >= 0; i--)
+            {
+                var dmgText = m_activeTexts[i];
+                dmgText.elapsed += dt;
+
+                switch (dmgText.phase)
+                {
+                    case AnimPhase.PunchUp:
+                        if (dmgText.elapsed >= PUNCH_DURATION)
+                        {
+                            dmgText.rectTransform.localScale = dmgText.punchScale;
+                            dmgText.elapsed = 0f;
+                            dmgText.phase = AnimPhase.PunchDown;
+                        }
+                        else
+                        {
+                            float t = dmgText.elapsed / PUNCH_DURATION;
+                            dmgText.rectTransform.localScale = Vector3.Lerp(dmgText.startScale, dmgText.punchScale, t);
+                        }
+                        break;
+
+                    case AnimPhase.PunchDown:
+                        if (dmgText.elapsed >= PUNCH_DURATION)
+                        {
+                            dmgText.rectTransform.localScale = dmgText.startScale;
+                            dmgText.elapsed = 0f;
+                            dmgText.phase = AnimPhase.FloatAndFade;
+                        }
+                        else
+                        {
+                            float t = dmgText.elapsed / PUNCH_DURATION;
+                            dmgText.rectTransform.localScale = Vector3.Lerp(dmgText.punchScale, dmgText.startScale, t);
+                        }
+                        break;
+
+                    case AnimPhase.FloatAndFade:
+                        if (dmgText.elapsed >= dmgText.floatDuration)
+                        {
+                            // Animation complete - return to pool
+                            dmgText.gameObject.SetActive(false);
+                            dmgText.phase = AnimPhase.Done;
+                            m_activeTexts.RemoveAt(i);
+                            m_pool.Enqueue(dmgText);
+                        }
+                        else
+                        {
+                            float t = dmgText.elapsed / dmgText.floatDuration;
+                            // Float up with ease out
+                            float easeT = 1f - Mathf.Pow(1f - t, 2f);
+                            dmgText.rectTransform.position = Vector3.Lerp(dmgText.startPos, dmgText.endPos, easeT);
+
+                            // Fade out at the end
+                            if (dmgText.elapsed > dmgText.fadeStartTime)
+                            {
+                                float fadeT = (dmgText.elapsed - dmgText.fadeStartTime) / dmgText.fadeDelay;
+                                dmgText.canvasGroup.alpha = 1f - fadeT;
+                            }
+                        }
+                        break;
+                }
+            }
         }
 
         private void CreateCanvas()
@@ -227,7 +318,6 @@ namespace NeuralBreak.UI
                 {
                     dmgText = m_activeTexts[0];
                     m_activeTexts.RemoveAt(0);
-                    StopCoroutine("AnimateText");
                 }
                 else
                 {
@@ -243,8 +333,9 @@ namespace NeuralBreak.UI
             dmgText.text.color = color;
             dmgText.canvasGroup.alpha = 1f;
 
-            // Convert world position to screen position with random offset
-            Vector3 screenPos = Camera.main.WorldToScreenPoint(worldPosition);
+            // Convert world position to screen position with random offset (use cached camera - Camera.main allocates per call)
+            if (m_mainCamera == null) return;
+            Vector3 screenPos = m_mainCamera.WorldToScreenPoint(worldPosition);
             screenPos.x += Random.Range(-m_randomOffset, m_randomOffset);
             screenPos.y += Random.Range(-m_randomOffset * 0.5f, m_randomOffset * 0.5f);
 
@@ -252,65 +343,16 @@ namespace NeuralBreak.UI
             dmgText.rectTransform.localScale = Vector3.one * scale;
             dmgText.gameObject.SetActive(true);
 
-            StartCoroutine(AnimateText(dmgText));
-        }
-
-        private IEnumerator AnimateText(DamageText dmgText)
-        {
-            Vector3 startPos = dmgText.rectTransform.position;
-            Vector3 endPos = startPos + Vector3.up * m_floatDistance;
-            Vector3 startScale = dmgText.rectTransform.localScale;
-            Vector3 punchScale = startScale * 1.3f;
-
-            float elapsed = 0f;
-
-            // Initial punch scale
-            float punchDuration = 0.1f;
-            while (elapsed < punchDuration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                float t = elapsed / punchDuration;
-                dmgText.rectTransform.localScale = Vector3.Lerp(startScale, punchScale, t);
-                yield return null;
-            }
-
-            // Scale back down
-            elapsed = 0f;
-            while (elapsed < punchDuration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                float t = elapsed / punchDuration;
-                dmgText.rectTransform.localScale = Vector3.Lerp(punchScale, startScale, t);
-                yield return null;
-            }
-
-            // Float and fade
-            elapsed = 0f;
-            float fadeStartTime = m_floatDuration - m_fadeDelay;
-
-            while (elapsed < m_floatDuration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                float t = elapsed / m_floatDuration;
-
-                // Float up with ease out
-                float easeT = 1f - Mathf.Pow(1f - t, 2f);
-                dmgText.rectTransform.position = Vector3.Lerp(startPos, endPos, easeT);
-
-                // Fade out at the end
-                if (elapsed > fadeStartTime)
-                {
-                    float fadeT = (elapsed - fadeStartTime) / m_fadeDelay;
-                    dmgText.canvasGroup.alpha = 1f - fadeT;
-                }
-
-                yield return null;
-            }
-
-            // Return to pool
-            dmgText.gameObject.SetActive(false);
-            m_activeTexts.Remove(dmgText);
-            m_pool.Enqueue(dmgText);
+            // Initialize animation state (replaces StartCoroutine(AnimateText) - zero allocation)
+            dmgText.phase = AnimPhase.PunchUp;
+            dmgText.elapsed = 0f;
+            dmgText.startPos = screenPos;
+            dmgText.endPos = screenPos + Vector3.up * m_floatDistance;
+            dmgText.startScale = Vector3.one * scale;
+            dmgText.punchScale = Vector3.one * scale * 1.3f;
+            dmgText.floatDuration = m_floatDuration;
+            dmgText.fadeDelay = m_fadeDelay;
+            dmgText.fadeStartTime = m_floatDuration - m_fadeDelay;
         }
 
         #region Debug

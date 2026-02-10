@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Z13.Core
@@ -7,6 +6,9 @@ namespace Z13.Core
     /// <summary>
     /// Simple event bus for decoupled communication between systems.
     /// Provides type-safe events without tight coupling.
+    ///
+    /// Uses the static generic class pattern: each T gets its own static field.
+    /// No Dictionary, no typeof(T) lookups, no boxing - zero allocation on Publish.
     ///
     /// Usage:
     /// - Define event structs in your game project
@@ -16,7 +18,14 @@ namespace Z13.Core
     /// </summary>
     public static class EventBus
     {
-        private static readonly Dictionary<Type, Delegate> s_events = new Dictionary<Type, Delegate>();
+        /// <summary>
+        /// Static generic class pattern: each T gets its own static field.
+        /// CLR guarantees separate storage per type argument - no dictionary needed.
+        /// </summary>
+        private static class EventHolder<T> where T : struct
+        {
+            public static Action<T> handlers;
+        }
 
         /// <summary>
         /// Subscribe to an event type
@@ -29,16 +38,7 @@ namespace Z13.Core
                 return;
             }
 
-            Type eventType = typeof(T);
-
-            if (s_events.TryGetValue(eventType, out Delegate existing))
-            {
-                s_events[eventType] = Delegate.Combine(existing, handler);
-            }
-            else
-            {
-                s_events[eventType] = handler;
-            }
+            EventHolder<T>.handlers += handler;
         }
 
         /// <summary>
@@ -52,34 +52,21 @@ namespace Z13.Core
                 return;
             }
 
-            Type eventType = typeof(T);
-
-            if (s_events.TryGetValue(eventType, out Delegate existing))
-            {
-                Delegate newDelegate = Delegate.Remove(existing, handler);
-                if (newDelegate == null)
-                {
-                    s_events.Remove(eventType);
-                }
-                else
-                {
-                    s_events[eventType] = newDelegate;
-                }
-            }
+            EventHolder<T>.handlers -= handler;
         }
 
         /// <summary>
-        /// Publish an event to all subscribers
+        /// Publish an event to all subscribers.
+        /// Zero allocation: no dictionary lookup, no typeof, no boxing.
         /// </summary>
         public static void Publish<T>(T eventData) where T : struct
         {
-            Type eventType = typeof(T);
-
-            if (s_events.TryGetValue(eventType, out Delegate handler))
+            var handler = EventHolder<T>.handlers;
+            if (handler != null)
             {
                 try
                 {
-                    (handler as Action<T>)?.Invoke(eventData);
+                    handler.Invoke(eventData);
                 }
                 catch (Exception ex)
                 {
@@ -89,11 +76,27 @@ namespace Z13.Core
         }
 
         /// <summary>
-        /// Clear all event subscriptions (call on scene unload)
+        /// Clear all event subscriptions for a specific type.
+        /// Call ClearAll&lt;T&gt;() for each event type, or let subscribers manage
+        /// their own lifecycle via OnEnable/OnDisable.
+        /// </summary>
+        public static void Clear<T>() where T : struct
+        {
+            EventHolder<T>.handlers = null;
+        }
+
+        /// <summary>
+        /// Clear all event subscriptions.
+        /// Note: With the static generic pattern, a full clear requires clearing each
+        /// type individually. This method is provided for API compatibility but callers
+        /// should prefer Clear&lt;T&gt;() or proper Subscribe/Unsubscribe lifecycle.
+        /// In practice, subscribers manage their own lifecycle via OnEnable/OnDisable.
         /// </summary>
         public static void Clear()
         {
-            s_events.Clear();
+            // With static generic pattern, we cannot enumerate all T types at runtime.
+            // Subscribers should manage their own lifecycle (OnEnable/OnDisable).
+            // This is a no-op for API compatibility. Use Clear<T>() for specific types.
         }
 
         /// <summary>
@@ -101,11 +104,8 @@ namespace Z13.Core
         /// </summary>
         public static int GetSubscriberCount<T>() where T : struct
         {
-            if (s_events.TryGetValue(typeof(T), out Delegate handler))
-            {
-                return handler?.GetInvocationList()?.Length ?? 0;
-            }
-            return 0;
+            var handler = EventHolder<T>.handlers;
+            return handler?.GetInvocationList()?.Length ?? 0;
         }
 
         /// <summary>
@@ -113,7 +113,7 @@ namespace Z13.Core
         /// </summary>
         public static bool HasSubscribers<T>() where T : struct
         {
-            return s_events.ContainsKey(typeof(T));
+            return EventHolder<T>.handlers != null;
         }
     }
 }

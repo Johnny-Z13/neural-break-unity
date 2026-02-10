@@ -1,6 +1,8 @@
 using UnityEngine;
 using NeuralBreak.Core;
 using NeuralBreak.Config;
+using NeuralBreak.Audio;
+using NeuralBreak.Graphics;
 using Z13.Core;
 
 namespace NeuralBreak.Entities
@@ -33,22 +35,51 @@ namespace NeuralBreak.Entities
         [Header("Spawn Settings")]
         [SerializeField] protected float m_spawnDuration = 0.25f;
         [SerializeField] protected bool m_invulnerableDuringSpawn = true;
+        [SerializeField] protected AnimationCurve m_spawnScaleCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+        [SerializeField] protected bool m_enableSpawnParticles = true;
+        [SerializeField] protected bool m_enableSpawnSound = true;
 
         [Header("Death Settings")]
         [SerializeField] protected float m_deathDuration = 0.5f;
-
-        // Note: MMFeedbacks removed
+        [SerializeField] protected AnimationCurve m_deathScaleCurve = AnimationCurve.Linear(0f, 1f, 1f, 0f);
+        [SerializeField] protected bool m_enableDeathParticles = true;
+        [SerializeField] protected bool m_enableDeathSound = true;
 
         // State
         protected EnemyState m_state = EnemyState.Dead;
         protected int m_currentHealth;
         protected float m_stateTimer;
+        protected Vector3 m_targetScale; // Target scale after spawn animation
 
         // Target reference
         protected Transform m_playerTarget;
 
         // Pool callback
         protected System.Action<EnemyBase> m_returnToPool;
+
+        // Cached component references (avoid GetComponent in hot paths)
+        private EliteModifier m_eliteModifier;
+        private Graphics.HitFlashEffect m_hitFlash;
+        private CircleCollider2D m_circleCollider;
+        protected SpriteRenderer m_spriteRenderer; // Protected so subclasses can access
+        private SpriteRenderer[] m_childRenderers;
+
+        // Static cached reference for VFXManager (avoids FindFirstObjectByType per spawn/death)
+        private static VFXManager s_cachedVFXManager;
+
+        protected virtual void Awake()
+        {
+            CacheComponents();
+        }
+
+        private void CacheComponents()
+        {
+            m_eliteModifier = GetComponent<EliteModifier>();
+            m_hitFlash = GetComponent<Graphics.HitFlashEffect>();
+            m_circleCollider = GetComponent<CircleCollider2D>();
+            m_spriteRenderer = GetComponent<SpriteRenderer>();
+            m_childRenderers = GetComponentsInChildren<SpriteRenderer>();
+        }
 
         // Public accessors
         public EnemyState State => m_state;
@@ -99,14 +130,18 @@ namespace NeuralBreak.Entities
             m_currentHealth = m_maxHealth;
             m_stateTimer = m_spawnDuration;
 
+            // Start spawn animation from scale 0
+            transform.localScale = Vector3.zero;
+
             SetState(EnemyState.Spawning);
-            // Feedback (Feel removed)
+
+            // Play spawn effects
+            PlaySpawnEffects();
 
             // Initialize elite modifier if present
-            var eliteModifier = GetComponent<EliteModifier>();
-            if (eliteModifier != null)
+            if (m_eliteModifier != null)
             {
-                eliteModifier.InitializeElite();
+                m_eliteModifier.InitializeElite();
             }
 
             OnInitialize();
@@ -139,16 +174,15 @@ namespace NeuralBreak.Entities
             m_deathDuration = config.deathDuration;
 
             // Apply collision radius to CircleCollider2D if present
-            var circleCollider = GetComponent<CircleCollider2D>();
-            if (circleCollider != null)
+            if (m_circleCollider != null)
             {
-                circleCollider.radius = m_collisionRadius;
-                circleCollider.isTrigger = true; // Must be trigger for OnTriggerEnter2D
+                m_circleCollider.radius = m_collisionRadius;
+                m_circleCollider.isTrigger = true;
             }
 
             // Scale visual to match collision radius (visual is typically 2x the collision)
             float visualScale = m_collisionRadius * 2f;
-            transform.localScale = Vector3.one * visualScale;
+            m_targetScale = Vector3.one * visualScale;
 
             // Apply generated sprite based on enemy type
             ApplyGeneratedSprite(config.color);
@@ -159,8 +193,8 @@ namespace NeuralBreak.Entities
         /// </summary>
         protected virtual void ApplyGeneratedSprite(Color color)
         {
-            var sr = GetComponent<SpriteRenderer>();
-            if (sr == null) return;
+            if (m_spriteRenderer == null) return;
+            var sr = m_spriteRenderer;
 
             // Generate different shapes for different enemy types
             Sprite sprite = EnemyType switch
@@ -205,8 +239,18 @@ namespace NeuralBreak.Entities
         {
             m_stateTimer -= Time.deltaTime;
 
+            // Animate scale up from 0 to target
+            float progress = 1f - (m_stateTimer / m_spawnDuration);
+            progress = Mathf.Clamp01(progress);
+
+            // Apply spawn scale curve
+            float curveValue = m_spawnScaleCurve.Evaluate(progress);
+            transform.localScale = m_targetScale * curveValue;
+
             if (m_stateTimer <= 0f)
             {
+                // Ensure final scale is exact
+                transform.localScale = m_targetScale;
                 SetState(EnemyState.Alive);
             }
         }
@@ -218,48 +262,20 @@ namespace NeuralBreak.Entities
             // Override in subclasses for AI behavior
             UpdateAI();
 
-            // Apply separation from other enemies to prevent overlap
-            ApplyEnemySeparation();
-        }
-
-        /// <summary>
-        /// Push away from nearby enemies to prevent overlapping
-        /// </summary>
-        protected virtual void ApplyEnemySeparation()
-        {
-            float separationRadius = m_collisionRadius * 2.5f;
-            float separationStrength = 3f;
-            Vector2 separationForce = Vector2.zero;
-
-            var colliders = Physics2D.OverlapCircleAll(transform.position, separationRadius);
-            foreach (var col in colliders)
-            {
-                if (col.gameObject == gameObject) continue;
-
-                var otherEnemy = col.GetComponent<EnemyBase>();
-                if (otherEnemy == null || !otherEnemy.IsActive) continue;
-
-                Vector2 toThis = (Vector2)transform.position - (Vector2)otherEnemy.transform.position;
-                float distance = toThis.magnitude;
-                float minDist = m_collisionRadius + otherEnemy.CollisionRadius;
-
-                if (distance < minDist && distance > 0.01f)
-                {
-                    // Push apart based on overlap amount
-                    float overlap = minDist - distance;
-                    separationForce += toThis.normalized * overlap * separationStrength;
-                }
-            }
-
-            if (separationForce.sqrMagnitude > 0.01f)
-            {
-                transform.position += (Vector3)(separationForce * Time.deltaTime);
-            }
+            // Enemy separation is handled by OnTriggerStay2D (zero-alloc, uses Unity broadphase)
         }
 
         protected virtual void UpdateDying()
         {
             m_stateTimer -= Time.deltaTime;
+
+            // Animate scale down from target to 0 (or custom death animation)
+            float progress = 1f - (m_stateTimer / m_deathDuration);
+            progress = Mathf.Clamp01(progress);
+
+            // Apply death scale curve
+            float curveValue = m_deathScaleCurve.Evaluate(progress);
+            transform.localScale = m_targetScale * curveValue;
 
             if (m_stateTimer <= 0f)
             {
@@ -302,23 +318,17 @@ namespace NeuralBreak.Entities
             }
 
             // Check elite modifier for damage blocking (shields, etc.)
-            var eliteModifier = GetComponent<EliteModifier>();
-            if (eliteModifier != null && eliteModifier.OnTakeDamage(damage, damageSource))
+            if (m_eliteModifier != null && m_eliteModifier.OnTakeDamage(damage, damageSource))
             {
-                // Damage was blocked by elite ability
-                // Feedback (Feel removed)
                 return;
             }
 
             m_currentHealth -= damage;
 
-            // Feedback (Feel removed)
-
             // Trigger hit flash effect
-            var hitFlash = GetComponent<Graphics.HitFlashEffect>();
-            if (hitFlash != null)
+            if (m_hitFlash != null)
             {
-                hitFlash.Flash();
+                m_hitFlash.Flash();
             }
 
             EventBus.Publish(new EnemyDamagedEvent
@@ -345,19 +355,16 @@ namespace NeuralBreak.Entities
             m_stateTimer = m_deathDuration;
             SetState(EnemyState.Dying);
 
-            // Feedback (Feel removed)
-
             // Notify elite modifier of death (for splitter, etc.)
-            var eliteModifier = GetComponent<EliteModifier>();
-            if (eliteModifier != null)
+            if (m_eliteModifier != null)
             {
-                eliteModifier.OnDeath();
+                m_eliteModifier.OnDeath();
             }
 
             // Publish kill event for scoring (elite enemies give bonus XP/score)
             int finalScore = m_scoreValue;
             int finalXP = m_xpValue;
-            if (eliteModifier != null && eliteModifier.IsElite)
+            if (m_eliteModifier != null && m_eliteModifier.IsElite)
             {
                 finalScore = Mathf.RoundToInt(finalScore * 2f);
                 finalXP = Mathf.RoundToInt(finalXP * 2f);
@@ -402,14 +409,27 @@ namespace NeuralBreak.Entities
 
         protected virtual void OnStateChanged(EnemyState newState)
         {
-            // Hide sprite immediately when dying (VFX handles the visual)
-            if (newState == EnemyState.Dying)
+            switch (newState)
             {
-                HideVisuals();
-            }
-            else if (newState == EnemyState.Spawning || newState == EnemyState.Alive)
-            {
-                ShowVisuals();
+                case EnemyState.Spawning:
+                    ShowVisuals();
+                    break;
+
+                case EnemyState.Alive:
+                    ShowVisuals();
+                    // Play signature "alive" sound effect
+                    PlayAliveSound();
+                    break;
+
+                case EnemyState.Dying:
+                    // Keep visuals visible during death animation (scale down effect)
+                    // Death particles will be spawned separately
+                    PlayDeathEffects();
+                    break;
+
+                case EnemyState.Dead:
+                    HideVisuals();
+                    break;
             }
         }
 
@@ -418,13 +438,14 @@ namespace NeuralBreak.Entities
         /// </summary>
         protected virtual void HideVisuals()
         {
-            var sr = GetComponent<SpriteRenderer>();
-            if (sr != null) sr.enabled = false;
+            if (m_spriteRenderer != null) m_spriteRenderer.enabled = false;
 
-            // Also hide any child renderers
-            foreach (var childSR in GetComponentsInChildren<SpriteRenderer>())
+            if (m_childRenderers != null)
             {
-                childSR.enabled = false;
+                for (int i = 0; i < m_childRenderers.Length; i++)
+                {
+                    if (m_childRenderers[i] != null) m_childRenderers[i].enabled = false;
+                }
             }
         }
 
@@ -433,14 +454,174 @@ namespace NeuralBreak.Entities
         /// </summary>
         protected virtual void ShowVisuals()
         {
-            var sr = GetComponent<SpriteRenderer>();
-            if (sr != null) sr.enabled = true;
+            if (m_spriteRenderer != null) m_spriteRenderer.enabled = true;
 
-            // Also show any child renderers
-            foreach (var childSR in GetComponentsInChildren<SpriteRenderer>())
+            if (m_childRenderers != null)
             {
-                childSR.enabled = true;
+                for (int i = 0; i < m_childRenderers.Length; i++)
+                {
+                    if (m_childRenderers[i] != null) m_childRenderers[i].enabled = true;
+                }
             }
+        }
+
+        #endregion
+
+        #region Visual & Audio Effects
+
+        /// <summary>
+        /// Play spawn effects (particles and sound).
+        /// Override in subclasses for custom spawn effects.
+        /// </summary>
+        protected virtual void PlaySpawnEffects()
+        {
+            // Spawn particles
+            if (m_enableSpawnParticles)
+            {
+                if (s_cachedVFXManager == null)
+                    s_cachedVFXManager = FindFirstObjectByType<VFXManager>();
+                if (s_cachedVFXManager != null)
+                {
+                    // Use small explosion effect for spawn (reuse existing system)
+                    s_cachedVFXManager.PlayExplosion(transform.position, Graphics.ExplosionSize.Small, GetEnemyColor());
+                }
+            }
+
+            // Spawn sound
+            if (m_enableSpawnSound)
+            {
+                PlaySpawnSound();
+            }
+        }
+
+        /// <summary>
+        /// Play spawn sound effect.
+        /// Override in subclasses for unique spawn sounds.
+        /// </summary>
+        protected virtual void PlaySpawnSound()
+        {
+            if (AudioManager.Instance == null) return;
+
+            // Generate procedural spawn sound based on enemy type
+            // Higher pitch for small enemies, lower for large
+            float pitch = EnemyType switch
+            {
+                EnemyType.DataMite => 1.3f,      // Small, high pitch
+                EnemyType.Fizzer => 1.4f,        // Tiny, very high pitch
+                EnemyType.ScanDrone => 1.1f,     // Medium pitch
+                EnemyType.UFO => 0.9f,           // Lower pitch
+                EnemyType.ChaosWorm => 0.7f,     // Deep pitch
+                EnemyType.VoidSphere => 0.8f,    // Deep pitch
+                EnemyType.CrystalShard => 1.2f,  // Crystal sound
+                EnemyType.Boss => 0.6f,          // Very deep
+                _ => 1.0f
+            };
+
+            // Play spawn whoosh sound (reuse pickup sound with pitch variation)
+            AudioManager.Instance.PlaySFX(null, volumeMultiplier: 0.4f, pitchMultiplier: pitch);
+        }
+
+        /// <summary>
+        /// Play signature "alive" sound effect when entering Alive state.
+        /// Override in subclasses for unique signature sounds.
+        /// </summary>
+        protected virtual void PlayAliveSound()
+        {
+            if (AudioManager.Instance == null) return;
+
+            // Each enemy type gets a unique signature sound
+            // Override in subclasses for custom sounds (e.g., ChaosWorm roar)
+            float pitch = EnemyType switch
+            {
+                EnemyType.DataMite => 1.2f,
+                EnemyType.Fizzer => 1.5f,        // High-pitched buzz
+                EnemyType.ScanDrone => 1.0f,     // Beep sound
+                EnemyType.UFO => 0.8f,           // Low hum
+                EnemyType.ChaosWorm => 0.6f,     // Deep roar
+                EnemyType.VoidSphere => 0.7f,    // Ominous hum
+                EnemyType.CrystalShard => 1.3f,  // Crystal chime
+                EnemyType.Boss => 0.5f,          // Very deep roar
+                _ => 1.0f
+            };
+
+            // Play a short beep/chirp sound (reuse hit sound with pitch variation)
+            AudioManager.Instance.PlaySFX(null, volumeMultiplier: 0.3f, pitchMultiplier: pitch);
+        }
+
+        /// <summary>
+        /// Play death effects (particles, sound, animation).
+        /// Override in subclasses for custom death effects (e.g., ChaosWorm elaborate death).
+        /// </summary>
+        protected virtual void PlayDeathEffects()
+        {
+            // Death particles
+            if (m_enableDeathParticles)
+            {
+                if (s_cachedVFXManager == null)
+                    s_cachedVFXManager = FindFirstObjectByType<VFXManager>();
+                if (s_cachedVFXManager != null)
+                {
+                    // Choose explosion size based on enemy type
+                    Graphics.ExplosionSize size = EnemyType switch
+                    {
+                        EnemyType.DataMite => Graphics.ExplosionSize.Small,
+                        EnemyType.Fizzer => Graphics.ExplosionSize.Small,
+                        EnemyType.ScanDrone => Graphics.ExplosionSize.Medium,
+                        EnemyType.UFO => Graphics.ExplosionSize.Medium,
+                        EnemyType.ChaosWorm => Graphics.ExplosionSize.Large,
+                        EnemyType.VoidSphere => Graphics.ExplosionSize.Large,
+                        EnemyType.CrystalShard => Graphics.ExplosionSize.Medium,
+                        EnemyType.Boss => Graphics.ExplosionSize.Boss,
+                        _ => Graphics.ExplosionSize.Small
+                    };
+
+                    s_cachedVFXManager.PlayExplosion(transform.position, size, GetEnemyColor());
+                }
+            }
+
+            // Death sound
+            if (m_enableDeathSound)
+            {
+                PlayDeathSound();
+            }
+        }
+
+        /// <summary>
+        /// Play death sound effect.
+        /// Override in subclasses for unique death sounds.
+        /// </summary>
+        protected virtual void PlayDeathSound()
+        {
+            if (AudioManager.Instance == null) return;
+
+            // Use enemy-type-specific death sound if available
+            // AudioManager.CreateEnemyDeath(enemyTypeIndex) generates varied death sounds
+            int enemyTypeIndex = (int)EnemyType;
+            // For now, use generic explosion sound with pitch variation
+            float pitch = EnemyType switch
+            {
+                EnemyType.DataMite => 1.2f,
+                EnemyType.Fizzer => 1.4f,
+                EnemyType.ScanDrone => 1.0f,
+                EnemyType.UFO => 0.9f,
+                EnemyType.ChaosWorm => 0.6f,
+                EnemyType.VoidSphere => 0.7f,
+                EnemyType.CrystalShard => 1.1f,
+                EnemyType.Boss => 0.5f,
+                _ => 1.0f
+            };
+
+            // Play explosion sound (reuse existing explosion sound with pitch variation)
+            AudioManager.Instance.PlaySFX(null, volumeMultiplier: 0.6f, pitchMultiplier: pitch);
+        }
+
+        /// <summary>
+        /// Get the enemy's primary color for particle effects.
+        /// </summary>
+        protected virtual Color GetEnemyColor()
+        {
+            var config = ConfigProvider.Balance?.GetEnemyConfig(EnemyType);
+            return config != null ? config.color : Color.white;
         }
 
         #endregion
@@ -460,7 +641,8 @@ namespace NeuralBreak.Entities
             // Check player collision
             if (other.CompareTag("Player"))
             {
-                var playerHealth = other.GetComponent<PlayerHealth>();
+                // TryGetComponent is zero-alloc (unlike GetComponent which may allocate on null)
+                other.TryGetComponent<PlayerHealth>(out var playerHealth);
                 if (playerHealth != null && !playerHealth.IsDead)
                 {
                     // Player takes damage from enemy contact (only if alive)
@@ -482,13 +664,10 @@ namespace NeuralBreak.Entities
             if (!IsActive) return;
 
             // Enemy-to-enemy soft collision (separation)
-            if (other.CompareTag("Enemy"))
+            // TryGetComponent is zero-alloc in Unity 6000.x (unlike GetComponent which may allocate on null)
+            if (other.CompareTag("Enemy") && other.TryGetComponent<EnemyBase>(out var otherEnemy) && otherEnemy.IsActive)
             {
-                var otherEnemy = other.GetComponent<EnemyBase>();
-                if (otherEnemy != null && otherEnemy.IsActive)
-                {
-                    ApplyEnemySeparation(otherEnemy);
-                }
+                ApplyEnemySeparation(otherEnemy);
             }
         }
 
@@ -548,10 +727,9 @@ namespace NeuralBreak.Entities
             ShowVisuals();
 
             // Reset elite modifier
-            var eliteModifier = GetComponent<EliteModifier>();
-            if (eliteModifier != null)
+            if (m_eliteModifier != null)
             {
-                eliteModifier.Reset();
+                m_eliteModifier.Reset();
             }
         }
 

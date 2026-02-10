@@ -26,6 +26,9 @@ namespace NeuralBreak.Entities
         private Transform[] m_shardTips;
         private Transform[] m_rings;
         private LineRenderer[] m_lightning;
+        // Cached SpriteRenderers (avoids GetComponent per frame per shard in Update)
+        private SpriteRenderer[] m_shardBodySRs;
+        private SpriteRenderer[] m_shardTipSRs;
 
         private float m_time;
         private float[] m_shardAngles;
@@ -58,6 +61,8 @@ namespace NeuralBreak.Entities
         {
             m_shards = new Transform[m_shardCount];
             m_shardTips = new Transform[m_shardCount];
+            m_shardBodySRs = new SpriteRenderer[m_shardCount];
+            m_shardTipSRs = new SpriteRenderer[m_shardCount];
             m_shardAngles = new float[m_shardCount];
             m_shardRadii = new float[m_shardCount];
 
@@ -83,6 +88,7 @@ namespace NeuralBreak.Entities
                 bodySr.color = shardCol;
                 bodySr.sortingOrder = 15;
                 body.transform.localScale = new Vector3(0.3f, 0.9f, 1f);
+                m_shardBodySRs[i] = bodySr;
 
                 // Shard wireframe
                 var wire = new GameObject("Wireframe");
@@ -103,6 +109,7 @@ namespace NeuralBreak.Entities
                 tip.transform.localPosition = new Vector3(0, 0.45f, 0);
                 tip.transform.localScale = Vector3.one * 0.15f;
                 m_shardTips[i] = tip.transform;
+                m_shardTipSRs[i] = tipSr;
 
                 m_shards[i] = shard.transform;
             }
@@ -188,14 +195,13 @@ namespace NeuralBreak.Entities
                     // Shard spin
                     m_shards[i].GetChild(0).Rotate(0, 0, Time.deltaTime * 120f);
 
-                    // Rainbow color shifting like original TypeScript
-                    var bodySr = m_shards[i].GetChild(0).GetComponent<SpriteRenderer>();
-                    if (bodySr != null)
+                    // Rainbow color shifting like original TypeScript (uses cached SpriteRenderer)
+                    if (m_shardBodySRs[i] != null)
                     {
                         float hue = (m_time * 0.25f + i * 0.12f) % 1f;
                         Color rainbow = Color.HSVToRGB(hue, 0.9f, 0.9f);
                         rainbow.a = 0.85f;
-                        bodySr.color = rainbow;
+                        m_shardBodySRs[i].color = rainbow;
                     }
 
                     // Tip pulse with color
@@ -204,13 +210,13 @@ namespace NeuralBreak.Entities
                         float tipPulse = 0.12f + Mathf.Sin(m_time * 8f + i) * 0.06f;
                         m_shardTips[i].localScale = Vector3.one * tipPulse;
 
-                        var tipSr = m_shardTips[i].GetComponent<SpriteRenderer>();
-                        if (tipSr != null)
+                        // Uses cached SpriteRenderer (zero allocation)
+                        if (m_shardTipSRs[i] != null)
                         {
                             float tipHue = (m_time * 0.4f + i * 0.15f) % 1f;
                             Color tipColor = Color.HSVToRGB(tipHue, 0.7f, 1f);
                             tipColor.a = 0.9f;
-                            tipSr.color = tipColor;
+                            m_shardTipSRs[i].color = tipColor;
                         }
                     }
                 }

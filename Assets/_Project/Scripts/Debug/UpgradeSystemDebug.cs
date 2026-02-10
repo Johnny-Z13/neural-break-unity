@@ -87,7 +87,7 @@ namespace NeuralBreak.Tools
             // Show active upgrades count
             if (m_upgradeManager != null)
             {
-                var activeCount = m_upgradeManager.GetActiveUpgrades().Count;
+                var activeCount = m_upgradeManager.ActiveUpgradeCount;
                 GUILayout.Label($"Active Upgrades: {activeCount}");
 
                 var modifiers = m_upgradeManager.GetCombinedModifiers();

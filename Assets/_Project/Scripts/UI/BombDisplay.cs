@@ -42,7 +42,16 @@ namespace NeuralBreak.UI
 
         private void OnBombActivated(SmartBombActivatedEvent evt)
         {
-            StartCoroutine(FlashEffect());
+            // Only start coroutine if this GameObject is active in hierarchy
+            if (gameObject.activeInHierarchy)
+            {
+                StartCoroutine(FlashEffect());
+            }
+            else
+            {
+                // Just update icons immediately if inactive
+                UpdateIcons();
+            }
         }
 
         private void UpdateIcons()

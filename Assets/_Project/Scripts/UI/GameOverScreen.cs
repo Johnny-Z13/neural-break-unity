@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
 using TMPro;
 using NeuralBreak.Core;
 using Z13.Core;
@@ -28,8 +29,15 @@ namespace NeuralBreak.UI
         [SerializeField] private Button m_restartButton;
         [SerializeField] private Button m_mainMenuButton;
 
+        [Header("Press Any Key Prompt")]
+        [SerializeField] private TextMeshProUGUI m_pressAnyKeyText;
+        [SerializeField] private string m_pressAnyKeyPrompt = "PRESS ANY KEY TO CONTINUE";
+        [SerializeField] private float m_blinkSpeed = 2f;
+
         // Cached state
         private bool m_isVictory;
+        private bool m_waitingForInput = false;
+        private float m_blinkTimer;
 
         protected override void Awake()
         {
@@ -59,16 +67,104 @@ namespace NeuralBreak.UI
 
         protected override void OnShow()
         {
-            // Ensure first button is selected
-            if (m_firstSelected == null && m_restartButton != null)
+            // Start in "press any key" mode
+            m_waitingForInput = true;
+            m_blinkTimer = 0f;
+
+            // Hide buttons initially
+            if (m_restartButton != null) m_restartButton.gameObject.SetActive(false);
+            if (m_mainMenuButton != null) m_mainMenuButton.gameObject.SetActive(false);
+
+            // Show press any key prompt
+            if (m_pressAnyKeyText != null)
             {
-                m_firstSelected = m_restartButton;
+                m_pressAnyKeyText.gameObject.SetActive(true);
+                m_pressAnyKeyText.text = m_pressAnyKeyPrompt;
             }
 
             // Update title based on victory state
             if (m_titleText != null)
             {
                 m_titleText.text = m_isVictory ? m_victoryTitle : m_gameOverTitle;
+            }
+        }
+
+        protected override void Update()
+        {
+            base.Update();
+
+            if (!m_isVisible || !m_waitingForInput) return;
+
+            // Blink "press any key" text
+            if (m_pressAnyKeyText != null)
+            {
+                m_blinkTimer += Time.deltaTime * m_blinkSpeed;
+                float alpha = Mathf.PingPong(m_blinkTimer, 1f);
+                var color = m_pressAnyKeyText.color;
+                color.a = Mathf.Lerp(0.3f, 1f, alpha);
+                m_pressAnyKeyText.color = color;
+            }
+
+            // Wait for ANY input
+            if (AnyKeyPressed())
+            {
+                OnAnyKeyPressed();
+            }
+        }
+
+        private bool AnyKeyPressed()
+        {
+            // Check keyboard
+            if (Keyboard.current != null && Keyboard.current.anyKey.wasPressedThisFrame)
+            {
+                return true;
+            }
+
+            // Check gamepad buttons
+            if (Gamepad.current != null)
+            {
+                if (Gamepad.current.buttonSouth.wasPressedThisFrame ||
+                    Gamepad.current.buttonEast.wasPressedThisFrame ||
+                    Gamepad.current.buttonWest.wasPressedThisFrame ||
+                    Gamepad.current.buttonNorth.wasPressedThisFrame ||
+                    Gamepad.current.startButton.wasPressedThisFrame)
+                {
+                    return true;
+                }
+            }
+
+            // Check mouse
+            if (Mouse.current != null)
+            {
+                if (Mouse.current.leftButton.wasPressedThisFrame ||
+                    Mouse.current.rightButton.wasPressedThisFrame)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void OnAnyKeyPressed()
+        {
+            m_waitingForInput = false;
+
+            // Hide press any key prompt
+            if (m_pressAnyKeyText != null)
+            {
+                m_pressAnyKeyText.gameObject.SetActive(false);
+            }
+
+            // Show buttons
+            if (m_restartButton != null) m_restartButton.gameObject.SetActive(true);
+            if (m_mainMenuButton != null) m_mainMenuButton.gameObject.SetActive(true);
+
+            // Select first button for keyboard/gamepad navigation
+            if (m_restartButton != null)
+            {
+                m_firstSelected = m_restartButton;
+                SelectFirstElement();
             }
         }
 

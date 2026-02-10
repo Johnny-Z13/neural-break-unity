@@ -1,12 +1,13 @@
 using UnityEngine;
 using TMPro;
-using System.Collections;
 
 namespace NeuralBreak.UI
 {
     /// <summary>
     /// Displays score, combo count, and multiplier.
     /// Includes animated score delta popup and combo milestone announcements.
+    ///
+    /// ZERO-ALLOCATION: All animations use timer-based Update instead of coroutines.
     /// </summary>
     public class ScoreDisplay : MonoBehaviour
     {
@@ -43,12 +44,42 @@ namespace NeuralBreak.UI
         private int m_displayedScore;
         private int m_currentCombo;
         private float m_currentMultiplier = 1f;
-        private Coroutine m_deltaCoroutine;
-        private Coroutine m_milestoneCoroutine;
-        private Coroutine m_multiplierPunchCoroutine;
         private Vector3 m_comboOriginalScale;
         private Vector3 m_multiplierOriginalScale;
         private int m_lastMilestoneShown = 0;
+
+        // Timer-based punch scale state (replaces PunchScale coroutine - zero allocation)
+        private const float PUNCH_ANIM_DURATION = 0.1f;
+
+        // Combo punch state
+        private bool m_comboPunchActive;
+        private float m_comboPunchElapsed;
+        private bool m_comboPunchPhaseUp; // true = scaling up, false = scaling down
+
+        // Multiplier punch state
+        private bool m_multiplierPunchActive;
+        private float m_multiplierPunchElapsed;
+        private bool m_multiplierPunchPhaseUp;
+
+        // Delta popup state (replaces DeltaPopupCoroutine - zero allocation)
+        private bool m_deltaActive;
+        private float m_deltaElapsed;
+        private enum DeltaPhase { Display, FadeOut }
+        private DeltaPhase m_deltaPhase;
+        private Vector2 m_deltaStartPos;
+        private Color m_deltaColor;
+
+        // Milestone state (replaces MilestoneCoroutine - zero allocation)
+        private bool m_milestoneActive;
+        private float m_milestoneElapsed;
+        private enum MilestonePhase { ScaleIn, Hold, FadeOut }
+        private MilestonePhase m_milestonePhase;
+        private Color m_milestoneColor;
+        private Vector3 m_milestoneTargetScale;
+
+        // Milestone timing constants
+        private const float MILESTONE_SCALE_IN_DURATION = 0.15f;
+        private const float MILESTONE_FADE_OUT_DURATION = 0.15f;
 
         private void Awake()
         {
@@ -76,10 +107,8 @@ namespace NeuralBreak.UI
 
         private void Update()
         {
-            if (!m_animateScore) return;
-
             // Smooth score counting
-            if (m_displayedScore != m_currentScore)
+            if (m_animateScore && m_displayedScore != m_currentScore)
             {
                 float diff = m_currentScore - m_displayedScore;
                 int step = Mathf.CeilToInt(Mathf.Abs(diff) * Time.unscaledDeltaTime * m_scoreAnimSpeed);
@@ -95,6 +124,172 @@ namespace NeuralBreak.UI
                 }
 
                 UpdateScoreText(m_displayedScore);
+            }
+
+            float dt = Time.unscaledDeltaTime;
+
+            // Timer-based combo punch (replaces PunchScale coroutine - zero allocation)
+            if (m_comboPunchActive)
+            {
+                m_comboPunchElapsed += dt;
+                UpdatePunchScale(
+                    m_comboContainer.transform,
+                    m_comboOriginalScale,
+                    ref m_comboPunchElapsed,
+                    ref m_comboPunchPhaseUp,
+                    ref m_comboPunchActive);
+            }
+
+            // Timer-based multiplier punch (replaces PunchScale coroutine - zero allocation)
+            if (m_multiplierPunchActive && m_multiplierText != null)
+            {
+                m_multiplierPunchElapsed += dt;
+                UpdatePunchScale(
+                    m_multiplierText.transform,
+                    m_multiplierOriginalScale,
+                    ref m_multiplierPunchElapsed,
+                    ref m_multiplierPunchPhaseUp,
+                    ref m_multiplierPunchActive);
+            }
+
+            // Timer-based delta popup (replaces DeltaPopupCoroutine - zero allocation)
+            if (m_deltaActive)
+            {
+                m_deltaElapsed += dt;
+                UpdateDelta();
+            }
+
+            // Timer-based milestone (replaces MilestoneCoroutine - zero allocation)
+            if (m_milestoneActive)
+            {
+                m_milestoneElapsed += dt;
+                UpdateMilestone();
+            }
+        }
+
+        private void UpdatePunchScale(
+            Transform target,
+            Vector3 originalScale,
+            ref float elapsed,
+            ref bool phaseUp,
+            ref bool active)
+        {
+            Vector3 punchedScale = originalScale * m_comboPunchScale;
+
+            if (phaseUp)
+            {
+                if (elapsed >= PUNCH_ANIM_DURATION)
+                {
+                    target.localScale = punchedScale;
+                    elapsed = 0f;
+                    phaseUp = false;
+                }
+                else
+                {
+                    target.localScale = Vector3.Lerp(originalScale, punchedScale, elapsed / PUNCH_ANIM_DURATION);
+                }
+            }
+            else
+            {
+                if (elapsed >= PUNCH_ANIM_DURATION)
+                {
+                    target.localScale = originalScale;
+                    active = false;
+                }
+                else
+                {
+                    target.localScale = Vector3.Lerp(punchedScale, originalScale, elapsed / PUNCH_ANIM_DURATION);
+                }
+            }
+        }
+
+        private void UpdateDelta()
+        {
+            RectTransform rect = m_deltaText.rectTransform;
+
+            switch (m_deltaPhase)
+            {
+                case DeltaPhase.Display:
+                    if (m_deltaElapsed >= m_deltaDisplayTime)
+                    {
+                        m_deltaElapsed = 0f;
+                        m_deltaPhase = DeltaPhase.FadeOut;
+                    }
+                    else
+                    {
+                        float t = m_deltaElapsed / m_deltaDisplayTime;
+                        rect.anchoredPosition = Vector2.Lerp(m_deltaStartPos, m_deltaStartPos + m_deltaOffset, t * 0.5f);
+                    }
+                    break;
+
+                case DeltaPhase.FadeOut:
+                    if (m_deltaElapsed >= m_deltaFadeTime)
+                    {
+                        m_deltaText.gameObject.SetActive(false);
+                        rect.anchoredPosition = m_deltaStartPos;
+                        m_deltaActive = false;
+                    }
+                    else
+                    {
+                        Color c = m_deltaColor;
+                        c.a = 1f - (m_deltaElapsed / m_deltaFadeTime);
+                        m_deltaText.color = c;
+                    }
+                    break;
+            }
+        }
+
+        private void UpdateMilestone()
+        {
+            RectTransform rect = m_milestoneText.rectTransform;
+
+            switch (m_milestonePhase)
+            {
+                case MilestonePhase.ScaleIn:
+                    if (m_milestoneElapsed >= MILESTONE_SCALE_IN_DURATION)
+                    {
+                        rect.localScale = m_milestoneTargetScale;
+                        Color c1 = m_milestoneColor;
+                        c1.a = 1f;
+                        m_milestoneText.color = c1;
+                        m_milestoneElapsed = 0f;
+                        m_milestonePhase = MilestonePhase.Hold;
+                    }
+                    else
+                    {
+                        float t = m_milestoneElapsed / MILESTONE_SCALE_IN_DURATION;
+                        rect.localScale = Vector3.Lerp(m_milestoneTargetScale * 1.5f, m_milestoneTargetScale, t);
+                        Color c2 = m_milestoneColor;
+                        c2.a = t;
+                        m_milestoneText.color = c2;
+                    }
+                    break;
+
+                case MilestonePhase.Hold:
+                    float holdDuration = m_milestoneDuration - MILESTONE_SCALE_IN_DURATION - MILESTONE_FADE_OUT_DURATION;
+                    if (m_milestoneElapsed >= holdDuration)
+                    {
+                        m_milestoneElapsed = 0f;
+                        m_milestonePhase = MilestonePhase.FadeOut;
+                    }
+                    break;
+
+                case MilestonePhase.FadeOut:
+                    if (m_milestoneElapsed >= MILESTONE_FADE_OUT_DURATION)
+                    {
+                        m_milestoneText.gameObject.SetActive(false);
+                        rect.localScale = Vector3.one;
+                        m_milestoneActive = false;
+                    }
+                    else
+                    {
+                        float t = m_milestoneElapsed / MILESTONE_FADE_OUT_DURATION;
+                        rect.localScale = Vector3.Lerp(m_milestoneTargetScale, Vector3.one * 0.8f, t);
+                        Color c3 = m_milestoneColor;
+                        c3.a = 1f - t;
+                        m_milestoneText.color = c3;
+                    }
+                    break;
             }
         }
 
@@ -136,8 +331,10 @@ namespace NeuralBreak.UI
 
                 if (showCombo && comboCount > previousCombo && gameObject.activeInHierarchy)
                 {
-                    // Punch scale on combo increase
-                    StartCoroutine(PunchScale(m_comboContainer.transform, m_comboOriginalScale));
+                    // Punch scale on combo increase (timer-based - zero allocation)
+                    m_comboPunchActive = true;
+                    m_comboPunchElapsed = 0f;
+                    m_comboPunchPhaseUp = true;
                 }
             }
 
@@ -152,7 +349,7 @@ namespace NeuralBreak.UI
                 {
                     m_multiplierText.text = $"x{multiplier:F1}";
 
-                    // Scale bump on multiplier increase
+                    // Scale bump on multiplier increase (timer-based - zero allocation)
                     if (multiplier > previousMultiplier)
                     {
                         PunchMultiplier();
@@ -178,12 +375,11 @@ namespace NeuralBreak.UI
         {
             if (m_multiplierText == null || !gameObject.activeInHierarchy) return;
 
-            if (m_multiplierPunchCoroutine != null)
-            {
-                StopCoroutine(m_multiplierPunchCoroutine);
-                m_multiplierText.transform.localScale = m_multiplierOriginalScale;
-            }
-            m_multiplierPunchCoroutine = StartCoroutine(PunchScale(m_multiplierText.transform, m_multiplierOriginalScale));
+            // Reset multiplier punch state (timer-based - zero allocation)
+            m_multiplierPunchActive = true;
+            m_multiplierPunchElapsed = 0f;
+            m_multiplierPunchPhaseUp = true;
+            m_multiplierText.transform.localScale = m_multiplierOriginalScale;
         }
 
         private void CheckComboMilestone(int comboCount)
@@ -205,57 +401,15 @@ namespace NeuralBreak.UI
         {
             if (m_milestoneText == null || !gameObject.activeInHierarchy) return;
 
-            if (m_milestoneCoroutine != null)
-            {
-                StopCoroutine(m_milestoneCoroutine);
-            }
-            m_milestoneCoroutine = StartCoroutine(MilestoneCoroutine(message, color));
-        }
-
-        private IEnumerator MilestoneCoroutine(string message, Color color)
-        {
+            // Start milestone animation (timer-based - zero allocation)
             m_milestoneText.gameObject.SetActive(true);
             m_milestoneText.text = message;
             m_milestoneText.color = color;
-
-            RectTransform rect = m_milestoneText.rectTransform;
-            Vector3 originalScale = Vector3.one;
-            Vector3 targetScale = Vector3.one * m_milestoneScale;
-
-            // Scale up and fade in
-            float elapsed = 0f;
-            float scaleInDuration = 0.15f;
-            while (elapsed < scaleInDuration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                float t = elapsed / scaleInDuration;
-                rect.localScale = Vector3.Lerp(targetScale * 1.5f, targetScale, t);
-                Color c = color;
-                c.a = t;
-                m_milestoneText.color = c;
-                yield return null;
-            }
-
-            // Hold
-            yield return new WaitForSecondsRealtime(m_milestoneDuration - 0.3f);
-
-            // Scale down and fade out
-            elapsed = 0f;
-            float fadeOutDuration = 0.15f;
-            while (elapsed < fadeOutDuration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                float t = elapsed / fadeOutDuration;
-                rect.localScale = Vector3.Lerp(targetScale, originalScale * 0.8f, t);
-                Color c = color;
-                c.a = 1f - t;
-                m_milestoneText.color = c;
-                yield return null;
-            }
-
-            m_milestoneText.gameObject.SetActive(false);
-            rect.localScale = originalScale;
-            m_milestoneCoroutine = null;
+            m_milestoneColor = color;
+            m_milestoneTargetScale = Vector3.one * m_milestoneScale;
+            m_milestoneActive = true;
+            m_milestoneElapsed = 0f;
+            m_milestonePhase = MilestonePhase.ScaleIn;
         }
 
         /// <summary>
@@ -268,6 +422,12 @@ namespace NeuralBreak.UI
             m_currentCombo = 0;
             m_currentMultiplier = 1f;
             m_lastMilestoneShown = 0;
+
+            // Reset animation states
+            m_comboPunchActive = false;
+            m_multiplierPunchActive = false;
+            m_deltaActive = false;
+            m_milestoneActive = false;
 
             UpdateScoreText(0);
 
@@ -287,89 +447,35 @@ namespace NeuralBreak.UI
             }
         }
 
+        private int m_lastDisplayedScore = -1;
+
         private void UpdateScoreText(int score)
         {
-            if (m_scoreText != null)
+            if (m_scoreText != null && score != m_lastDisplayedScore)
             {
-                m_scoreText.text = string.Format(m_scoreFormat, score);
+                m_lastDisplayedScore = score;
+                m_scoreText.text = score.ToString("N0");
             }
         }
 
         private void ShowDelta(int delta)
         {
-            if (!gameObject.activeInHierarchy) return; // Can't start coroutines on inactive objects
+            if (!gameObject.activeInHierarchy) return;
 
-            if (m_deltaCoroutine != null)
-            {
-                StopCoroutine(m_deltaCoroutine);
-            }
-            m_deltaCoroutine = StartCoroutine(DeltaPopupCoroutine(delta));
-        }
-
-        private IEnumerator DeltaPopupCoroutine(int delta)
-        {
+            // Start delta popup animation (timer-based - zero allocation)
             m_deltaText.gameObject.SetActive(true);
             m_deltaText.text = $"+{delta:N0}";
 
-            // Set initial position
             RectTransform rect = m_deltaText.rectTransform;
-            Vector2 startPos = rect.anchoredPosition;
-            Vector2 endPos = startPos + m_deltaOffset;
+            m_deltaStartPos = rect.anchoredPosition;
 
-            // Fade in
-            Color color = m_deltaText.color;
-            color.a = 1f;
-            m_deltaText.color = color;
+            m_deltaColor = m_deltaText.color;
+            m_deltaColor.a = 1f;
+            m_deltaText.color = m_deltaColor;
 
-            // Display time
-            float elapsed = 0f;
-            while (elapsed < m_deltaDisplayTime)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                float t = elapsed / m_deltaDisplayTime;
-                rect.anchoredPosition = Vector2.Lerp(startPos, endPos, t * 0.5f);
-                yield return null;
-            }
-
-            // Fade out
-            elapsed = 0f;
-            while (elapsed < m_deltaFadeTime)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                color.a = 1f - (elapsed / m_deltaFadeTime);
-                m_deltaText.color = color;
-                yield return null;
-            }
-
-            m_deltaText.gameObject.SetActive(false);
-            rect.anchoredPosition = startPos;
-            m_deltaCoroutine = null;
-        }
-
-        private IEnumerator PunchScale(Transform target, Vector3 originalScale)
-        {
-            Vector3 punchedScale = originalScale * m_comboPunchScale;
-
-            // Scale up
-            float elapsed = 0f;
-            float duration = 0.1f;
-            while (elapsed < duration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                target.localScale = Vector3.Lerp(originalScale, punchedScale, elapsed / duration);
-                yield return null;
-            }
-
-            // Scale down
-            elapsed = 0f;
-            while (elapsed < duration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                target.localScale = Vector3.Lerp(punchedScale, originalScale, elapsed / duration);
-                yield return null;
-            }
-
-            target.localScale = originalScale;
+            m_deltaActive = true;
+            m_deltaElapsed = 0f;
+            m_deltaPhase = DeltaPhase.Display;
         }
 
         #region Debug

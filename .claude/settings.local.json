@@ -70,7 +70,11 @@
       "mcp__UnityMCP__manage_asset",
       "WebFetch(domain:localhost)",
       "Bash(curl:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(git diff:*)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "UnityMCP"
+  ]
 }

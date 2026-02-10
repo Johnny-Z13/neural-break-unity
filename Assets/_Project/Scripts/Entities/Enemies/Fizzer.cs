@@ -9,9 +9,10 @@ namespace NeuralBreak.Entities
     /// Very fast movement with unpredictable zigzag patterns.
     /// Based on TypeScript Fizzer.ts.
     ///
-    /// Stats: HP=2, Speed=8.0 (VERY FAST), Damage=6, XP=15
+    /// Stats: HP=1 (GLASS CANNON), Speed=8.0 (VERY FAST), Damage=51, XP=15
     /// Burst Fire: 2 shots, 3.0s between bursts, 0.2s between shots
     /// Death Damage: 15 in 2.0 radius (electric explosion)
+    /// Design: Fast and dangerous but dies in one hit - high risk/reward
     /// </summary>
     public class Fizzer : EnemyBase
     {
@@ -34,7 +35,7 @@ namespace NeuralBreak.Entities
         private int m_projectileDamage => EnemyConfig?.projectileDamage ?? 6;
 
         [Header("Visual")]
-        [SerializeField] private SpriteRenderer m_spriteRenderer;
+        // m_spriteRenderer inherited from EnemyBase (protected field)
         [SerializeField] private TrailRenderer m_trailRenderer;
         [SerializeField] private FizzerVisuals m_visuals;
         [SerializeField] private Color m_electricColor = new Color(0.2f, 0.8f, 1f); // Electric cyan-blue
@@ -354,16 +355,19 @@ namespace NeuralBreak.Entities
             base.Kill();
         }
 
+        // Cached array for overlap checks (zero allocation)
+        private static Collider2D[] s_hitBuffer = new Collider2D[32];
+
         private void DealDeathDamage()
         {
-            // Find all enemies in radius and damage them
-            Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, m_deathDamageRadius);
+            // Find all enemies in radius and damage them (zero allocation via buffer)
+            int hitCount = Physics2D.OverlapCircleNonAlloc(transform.position, m_deathDamageRadius, s_hitBuffer);
 
-            foreach (var hit in hits)
+            for (int i = 0; i < hitCount; i++)
             {
-                if (hit.gameObject == gameObject) continue;
+                if (s_hitBuffer[i].gameObject == gameObject) continue;
 
-                EnemyBase enemy = hit.GetComponent<EnemyBase>();
+                EnemyBase enemy = s_hitBuffer[i].GetComponent<EnemyBase>();
                 if (enemy != null && enemy.IsAlive)
                 {
                     enemy.TakeDamage(m_deathDamageAmount, transform.position);

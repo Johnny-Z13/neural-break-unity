@@ -43,6 +43,9 @@ namespace NeuralBreak.Core
         private Coroutine m_levelTransitionCoroutine;
         private bool m_isPlayerDead;
 
+        // Static empty list to avoid allocation in UpgradeSelectionStartedEvent
+        private static readonly System.Collections.Generic.List<Combat.UpgradeDefinition> s_emptyUpgradeList = new System.Collections.Generic.List<Combat.UpgradeDefinition>(0);
+
         private void Awake()
         {
             Instance = this;
@@ -293,7 +296,7 @@ namespace NeuralBreak.Core
 
                 EventBus.Publish(new UpgradeSelectionStartedEvent
                 {
-                    options = new System.Collections.Generic.List<Combat.UpgradeDefinition>()
+                    options = s_emptyUpgradeList
                 });
 
                 m_upgradeSelected = false;
