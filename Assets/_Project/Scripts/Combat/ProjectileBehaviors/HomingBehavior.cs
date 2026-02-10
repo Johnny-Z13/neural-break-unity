@@ -20,6 +20,7 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
 
         // Shared static buffer for NonAlloc physics queries
         private static readonly Collider2D[] s_colliderBuffer = new Collider2D[64];
+        private static readonly ContactFilter2D s_noFilter = ContactFilter2D.noFilter;
 
         // Cone angle for prioritizing targets in aim direction (degrees)
         private const float AIM_CONE_ANGLE = 90f;
@@ -151,7 +152,7 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
             Transform bestTarget = null;
             float bestScore = float.MaxValue;
 
-            int count = Physics2D.OverlapCircleNonAlloc(transform.position, m_range, s_colliderBuffer);
+            int count = Physics2D.OverlapCircle(transform.position, m_range, s_noFilter, s_colliderBuffer);
 
             for (int i = 0; i < count; i++)
             {

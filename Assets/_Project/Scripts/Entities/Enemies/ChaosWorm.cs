@@ -503,7 +503,7 @@ namespace NeuralBreak.Entities
             }
         }
 
-        private void PlaySpawnSound()
+        protected override void PlaySpawnSound()
         {
             // Generate electronic squelch sound procedurally
             var audioSource = gameObject.AddComponent<AudioSource>();

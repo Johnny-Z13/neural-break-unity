@@ -44,6 +44,7 @@ namespace NeuralBreak.Combat
 
         // Shared static buffer for NonAlloc physics queries (homing target search)
         private static readonly Collider2D[] s_colliderBuffer = new Collider2D[64];
+        private static readonly ContactFilter2D s_noFilter = ContactFilter2D.noFilter;
 
         // Homing target lock
         private Transform m_lockedTarget;
@@ -206,7 +207,7 @@ namespace NeuralBreak.Combat
             EnemyBase bestEnemy = null;
             float bestScore = float.MaxValue;
 
-            int count = Physics2D.OverlapCircleNonAlloc(transform.position, range, s_colliderBuffer);
+            int count = Physics2D.OverlapCircle(transform.position, range, s_noFilter, s_colliderBuffer);
 
             for (int i = 0; i < count; i++)
             {

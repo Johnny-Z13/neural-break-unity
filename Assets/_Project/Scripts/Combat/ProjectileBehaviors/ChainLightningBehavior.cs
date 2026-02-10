@@ -17,6 +17,7 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
         private HashSet<EnemyBase> m_hitEnemies;
 
         private static readonly Collider2D[] s_colliderBuffer = new Collider2D[64];
+        private static readonly ContactFilter2D s_noFilter = ContactFilter2D.noFilter;
         private static readonly List<EnemyBase> s_chainTargetsBuffer = new List<EnemyBase>(16);
 
         public ChainLightningBehavior(int maxTargets = 4, float chainRange = 5f, float damageMultiplier = 0.6f)
@@ -74,7 +75,7 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
             s_chainTargetsBuffer.Clear();
 
             // Find all enemies in chain range (NonAlloc - zero GC)
-            int count = Physics2D.OverlapCircleNonAlloc(fromPosition, m_chainRange, s_colliderBuffer);
+            int count = Physics2D.OverlapCircle(fromPosition, m_chainRange, s_noFilter, s_colliderBuffer);
             for (int i = 0; i < count; i++)
             {
                 var col = s_colliderBuffer[i];

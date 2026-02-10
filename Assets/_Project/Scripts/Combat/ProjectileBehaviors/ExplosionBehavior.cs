@@ -16,6 +16,7 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
         private float m_damageMultiplier;
 
         private static readonly Collider2D[] s_colliderBuffer = new Collider2D[64];
+        private static readonly ContactFilter2D s_noFilter = ContactFilter2D.noFilter;
         private static readonly HashSet<EnemyBase> s_hitEnemiesBuffer = new HashSet<EnemyBase>();
 
         public ExplosionBehavior(float radius = 2f, float damageMultiplier = 0.7f)
@@ -69,7 +70,7 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
             int explosionDamage = Mathf.RoundToInt(projectileDamage * m_damageMultiplier);
 
             // Find all enemies in radius (NonAlloc - zero GC)
-            int count = Physics2D.OverlapCircleNonAlloc(center, m_radius, s_colliderBuffer);
+            int count = Physics2D.OverlapCircle(center, m_radius, s_noFilter, s_colliderBuffer);
             s_hitEnemiesBuffer.Clear();  // Reuse static buffer
 
             for (int i = 0; i < count; i++)

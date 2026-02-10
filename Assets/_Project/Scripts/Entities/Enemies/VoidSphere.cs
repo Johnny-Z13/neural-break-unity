@@ -299,10 +299,11 @@ namespace NeuralBreak.Entities
 
         // Cached array for overlap checks (zero allocation)
         private static Collider2D[] s_hitBuffer = new Collider2D[32];
+        private static readonly ContactFilter2D s_noFilter = ContactFilter2D.noFilter;
 
         private void DealDeathDamage()
         {
-            int hitCount = Physics2D.OverlapCircleNonAlloc(transform.position, m_deathDamageRadius, s_hitBuffer);
+            int hitCount = Physics2D.OverlapCircle(transform.position, m_deathDamageRadius, s_noFilter, s_hitBuffer);
 
             for (int i = 0; i < hitCount; i++)
             {
@@ -569,6 +570,30 @@ namespace NeuralBreak.Entities
             // Death damage radius
             Gizmos.color = new Color(1f, 0f, 0.5f, 0.2f);
             Gizmos.DrawSphere(transform.position, m_deathDamageRadius);
+        }
+
+        /// <summary>
+        /// Stop looping audio on instant kill (level clear) to prevent audio leak
+        /// </summary>
+        public override void KillInstant()
+        {
+            if (m_audioSource != null && m_audioSource.isPlaying)
+            {
+                m_audioSource.Stop();
+            }
+            base.KillInstant();
+        }
+
+        /// <summary>
+        /// Stop looping audio when returned to pool
+        /// </summary>
+        public override void OnReturnToPool()
+        {
+            if (m_audioSource != null && m_audioSource.isPlaying)
+            {
+                m_audioSource.Stop();
+            }
+            base.OnReturnToPool();
         }
     }
 }

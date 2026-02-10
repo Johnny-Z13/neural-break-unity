@@ -55,6 +55,14 @@ namespace NeuralBreak.Combat
             {
                 m_spriteRenderer = GetComponentInChildren<SpriteRenderer>();
             }
+
+            // Ensure sprite renderer has a sprite (prefab may have none assigned)
+            if (m_spriteRenderer != null && m_spriteRenderer.sprite == null)
+            {
+                m_spriteRenderer.sprite = Graphics.SpriteGenerator.CreateCircle(32, m_projectileColor, "EnemyProjectileSprite");
+                m_spriteRenderer.sortingOrder = 100;
+            }
+
             if (m_trailRenderer == null)
             {
                 m_trailRenderer = GetComponentInChildren<TrailRenderer>();

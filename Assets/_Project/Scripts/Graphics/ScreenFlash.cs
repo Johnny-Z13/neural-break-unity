@@ -138,9 +138,9 @@ namespace NeuralBreak.Graphics
         /// <summary>
         /// Quick damage flash (red)
         /// </summary>
-        public void DamageFlash(float intensity = 0.3f)
+        public void DamageFlash(float intensity = 0.5f)
         {
-            Flash(new Color(1f, 0f, 0f, intensity), 0.15f);
+            Flash(new Color(1f, 0f, 0f, intensity), 0.25f);
         }
 
         /// <summary>

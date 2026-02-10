@@ -141,29 +141,84 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8482bbbd6ba4c7d49ac0ac9c32c5ca16, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Entities.Boss
-  _maxHealth: 1
-  _speed: 1.5
-  _damage: 5
-  _xpValue: 1
-  _scoreValue: 100
-  _collisionRadius: 0.5
-  _spawnDuration: 0.25
-  _invulnerableDuringSpawn: 1
-  _deathDuration: 0.5
-  _phase2FireRateMultiplier: 0.8
-  _ringAttackCooldown: 3
-  _ringExpandSpeed: 2
-  _ringDuration: 3
-  _ringDamage: 30
-  _ringWidth: 0.5
-  _deathDamageRadius: 12
-  _deathDamageAmount: 75
-  _deathBulletCount: 24
-  _bodyRenderer: {fileID: 0}
-  _coreRenderer: {fileID: 0}
-  _ringVisual: {fileID: 0}
-  _phase1Color: {r: 0.8, g: 0.2, b: 0.2, a: 1}
-  _phase2Color: {r: 1, g: 0.5, b: 0, a: 1}
-  _phase3Color: {r: 1, g: 0, b: 0.5, a: 1}
-  _pulseSpeed: 2
-  _pulseAmount: 0.1
+  m_maxHealth: 1
+  m_speed: 1.5
+  m_damage: 5
+  m_xpValue: 1
+  m_scoreValue: 100
+  m_collisionRadius: 0.5
+  m_spawnDuration: 0.25
+  m_invulnerableDuringSpawn: 1
+  m_spawnScaleCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  m_enableSpawnParticles: 1
+  m_enableSpawnSound: 1
+  m_deathDuration: 0.5
+  m_deathScaleCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: -1
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: -1
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  m_enableDeathParticles: 1
+  m_enableDeathSound: 1
+  m_phase2FireRateMultiplier: 0.8
+  m_ringAttackCooldown: 3
+  m_ringExpandSpeed: 2
+  m_ringDuration: 3
+  m_ringDamage: 30
+  m_ringWidth: 0.5
+  m_deathDamageRadius: 12
+  m_deathDamageAmount: 75
+  m_deathBulletCount: 24
+  m_bodyRenderer: {fileID: 0}
+  m_coreRenderer: {fileID: 0}
+  m_ringVisual: {fileID: 0}
+  m_phase1Color: {r: 0.8, g: 0.2, b: 0.2, a: 1}
+  m_phase2Color: {r: 1, g: 0.5, b: 0, a: 1}
+  m_phase3Color: {r: 1, g: 0, b: 0.5, a: 1}
+  m_pulseSpeed: 2
+  m_pulseAmount: 0.1
+  m_bossScale: 3
+  m_rotationSpeed: 30
+  m_colorFlashSpeed: 1.5

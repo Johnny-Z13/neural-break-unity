@@ -318,8 +318,8 @@ namespace NeuralBreak.Audio
 
         private void OnGameStarted(GameStartedEvent evt)
         {
-            // Start background music
-            PlayMusic();
+            // Music is handled by MusicManager (proper track switching + crossfade)
+            // Do NOT play AudioManager's BGM on top of it - causes droning overlap
             m_currentCombo = 0;
             m_comboPitchBonus = 0f;
         }

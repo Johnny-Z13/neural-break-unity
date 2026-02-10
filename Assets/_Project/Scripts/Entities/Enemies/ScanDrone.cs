@@ -23,7 +23,6 @@ namespace NeuralBreak.Entities
         [Header("Patrol Settings")]
         [SerializeField] private float m_patrolRadius = 10f;
         [SerializeField] private float m_patrolSpeed = 0.8f;
-        [SerializeField] private float m_chaseSpeedMultiplier = 1.5f;
         [SerializeField] private float m_chargeSpeedMultiplier = 2.5f;  // Aggressive charge when alerted
         [SerializeField] private float m_chargeDuration = 1.5f;  // How long to charge before attacking
 

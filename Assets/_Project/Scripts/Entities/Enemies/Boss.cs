@@ -33,7 +33,7 @@ namespace NeuralBreak.Entities
         [SerializeField] private float m_ringWidth = 0.5f;
 
         [Header("Death Explosion")]
-        [SerializeField] private float m_deathDamageRadius = 12f;
+        [SerializeField] private float m_deathDamageRadius = 20f;
         [SerializeField] private int m_deathDamageAmount = 75;
         [SerializeField] private int m_deathBulletCount = 24;
 
@@ -52,7 +52,7 @@ namespace NeuralBreak.Entities
         [SerializeField] private Color m_phase3Color = new Color(1f, 0f, 0.5f); // Pink
         [SerializeField] private float m_pulseSpeed = 2f;
         [SerializeField] private float m_pulseAmount = 0.1f;
-        [SerializeField] private float m_bossScale = 3.0f; // BIG boss (3x normal enemy size)
+        [SerializeField] private float m_bossScale = 12.0f; // BIG boss (400% of original 3x = 12x)
         [SerializeField] private float m_rotationSpeed = 30f; // Slow menacing rotation
         [SerializeField] private float m_colorFlashSpeed = 1.5f; // Color flash speed
 
@@ -85,8 +85,9 @@ namespace NeuralBreak.Entities
             m_isRingActive = false;
             m_currentRingRadius = 0f;
 
-            // Set BIG boss scale (3x normal enemy size - like VoidSphere)
+            // Set BIG boss scale and sync with m_targetScale so death animation matches
             transform.localScale = Vector3.one * m_bossScale;
+            m_targetScale = Vector3.one * m_bossScale;
 
             // Hide ring visual initially
             if (m_ringVisual != null)
@@ -371,10 +372,11 @@ namespace NeuralBreak.Entities
             // Get VFXManager reference
             var vfxManager = FindFirstObjectByType<VFXManager>();
 
-            // Stage 1: Multiple explosions emanating from boss (0.8s)
+            // Stage 1: Multiple explosions emanating from boss (0.8s) - scaled to boss size
+            float explosionSpread = m_bossScale * 0.5f; // Scale offsets with boss size
             for (int i = 0; i < 8; i++)
             {
-                Vector2 offset = Random.insideUnitCircle * 2f;
+                Vector2 offset = Random.insideUnitCircle * explosionSpread;
                 if (vfxManager != null)
                 {
                     vfxManager.PlayExplosion(
@@ -393,7 +395,7 @@ namespace NeuralBreak.Entities
                 {
                     vfxManager.PlayExplosion(
                         deathPosition,
-                        Graphics.ExplosionSize.Boss, // Use Boss size (largest available)
+                        Graphics.ExplosionSize.Boss,
                         Color.white
                     );
                 }
@@ -415,16 +417,33 @@ namespace NeuralBreak.Entities
             // Stage 4: Deal death damage to nearby enemies
             DealDeathDamage();
 
-            // Stage 5: Final massive explosion burst (0.5s)
-            for (int i = 0; i < 12; i++)
+            // Stage 5: Final massive explosion burst - staggered in 2 waves to reduce frame spike
+            float burstRadius = m_bossScale * 0.6f; // Scale with boss size
+            for (int i = 0; i < 6; i++)
             {
-                float angle = i * 30f * Mathf.Deg2Rad;
-                Vector2 offset = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * 3f;
+                float angle = i * 60f * Mathf.Deg2Rad;
+                Vector2 offset = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * burstRadius;
                 if (vfxManager != null)
                 {
                     vfxManager.PlayExplosion(
                         deathPosition + (Vector3)offset,
-                        Graphics.ExplosionSize.Boss, // Use Boss size (largest available)
+                        Graphics.ExplosionSize.Boss,
+                        Color.Lerp(Color.red, Color.yellow, Random.value)
+                    );
+                }
+            }
+
+            yield return new WaitForSeconds(0.15f);
+
+            for (int i = 0; i < 6; i++)
+            {
+                float angle = (i * 60f + 30f) * Mathf.Deg2Rad; // Offset by 30 degrees
+                Vector2 offset = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * burstRadius;
+                if (vfxManager != null)
+                {
+                    vfxManager.PlayExplosion(
+                        deathPosition + (Vector3)offset,
+                        Graphics.ExplosionSize.Boss,
                         Color.Lerp(Color.red, Color.yellow, Random.value)
                     );
                 }
@@ -438,10 +457,11 @@ namespace NeuralBreak.Entities
 
         // Cached array for overlap checks (zero allocation)
         private static Collider2D[] s_hitBuffer = new Collider2D[32];
+        private static readonly ContactFilter2D s_noFilter = ContactFilter2D.noFilter;
 
         private void DealDeathDamage()
         {
-            int hitCount = Physics2D.OverlapCircleNonAlloc(transform.position, m_deathDamageRadius, s_hitBuffer);
+            int hitCount = Physics2D.OverlapCircle(transform.position, m_deathDamageRadius, s_noFilter, s_hitBuffer);
 
             for (int i = 0; i < hitCount; i++)
             {

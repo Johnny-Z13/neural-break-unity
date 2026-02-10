@@ -254,12 +254,19 @@ namespace NeuralBreak.Entities
                 m_currentShields--;
                 m_damageInvulnerabilityTimer = DamageInvulnerabilityDuration;
 
-                // Feedback (Feel removed)
-
                 EventBus.Publish(new ShieldChangedEvent
                 {
                     currentShields = m_currentShields,
                     maxShields = m_maxShields
+                });
+
+                // Still publish damage event so feedback systems trigger (red flash, camera shake)
+                EventBus.Publish(new PlayerDamagedEvent
+                {
+                    damage = 0,
+                    currentHealth = m_currentHealth,
+                    maxHealth = m_maxHealth,
+                    damageSource = damageSource
                 });
 
                 // Reset combo when hit

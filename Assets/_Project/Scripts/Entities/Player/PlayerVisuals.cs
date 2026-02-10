@@ -19,8 +19,8 @@ namespace NeuralBreak.Entities
         [SerializeField] private Color m_damageColor = Color.red; // Red flash when hit
 
         [Header("Timing")]
-        [SerializeField] private float m_damageFashDuration = 0.15f;
-        [SerializeField] private float m_damageFlashSpeed = 20f;
+        [SerializeField] private float m_damageFashDuration = 0.4f;
+        [SerializeField] private float m_damageFlashSpeed = 15f;
 
         [Header("Shield Glow")]
         [SerializeField] private float m_shieldGlowIntensity = 1.3f; // Brightness multiplier

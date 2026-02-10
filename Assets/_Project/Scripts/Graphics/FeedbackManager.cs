@@ -39,7 +39,7 @@ namespace NeuralBreak.Graphics
 
         // Cached reference (avoid FindFirstObjectByType in hot paths)
         private ScreenFlash m_screenFlash;
-        [SerializeField] private Color m_damageFlashColor = new Color(1f, 0f, 0f, 0.3f);
+        [SerializeField] private Color m_damageFlashColor = new Color(1f, 0f, 0f, 0.5f);
         [SerializeField] private Color m_healFlashColor = new Color(0f, 1f, 0f, 0.2f);
         [SerializeField] private Color m_powerUpFlashColor = new Color(1f, 0.8f, 0f, 0.2f);
         [SerializeField] private float m_flashDuration = 0.1f;
@@ -72,13 +72,20 @@ namespace NeuralBreak.Graphics
             // Cache ScreenFlash reference (avoid FindFirstObjectByType in hot paths)
             m_screenFlash = FindFirstObjectByType<ScreenFlash>();
 
-            // Cache camera controller via GameObject.Find
+            // Cache camera controller - try serialized field, then tag, then Find
             if (m_cameraController == null)
             {
-                var camGO = GameObject.Find("MainCamera");
+                // Try by tag first (reliable - camera tagged "MainCamera" by default)
+                var camGO = GameObject.FindGameObjectWithTag("MainCamera");
                 if (camGO != null)
                 {
                     m_cameraController = camGO.GetComponent<CameraController>();
+                }
+
+                // Fallback to FindFirstObjectByType
+                if (m_cameraController == null)
+                {
+                    m_cameraController = FindFirstObjectByType<CameraController>();
                 }
 
                 if (m_cameraController == null)
@@ -199,7 +206,7 @@ namespace NeuralBreak.Graphics
 
         private void OnPlayerDamaged(PlayerDamagedEvent evt)
         {
-            TriggerCameraShake(MediumShakeIntensity, MediumShakeDuration);
+            TriggerCameraShake(LargeShakeIntensity, LargeShakeDuration);
             TriggerScreenFlash(m_damageFlashColor);
             TriggerHitstop(m_mediumHitstopDuration);
         }

@@ -71,7 +71,8 @@
       "WebFetch(domain:localhost)",
       "Bash(curl:*)",
       "Bash(git checkout:*)",
-      "Bash(git diff:*)"
+      "Bash(git diff:*)",
+      "mcp__UnityMCP__manage_prefabs"
     ]
   },
   "enabledMcpjsonServers": [

@@ -34,6 +34,7 @@ namespace NeuralBreak.Combat
 
         // Static buffer for BoxCast (zero allocation)
         private static RaycastHit2D[] s_boxCastBuffer = new RaycastHit2D[32];
+        private ContactFilter2D m_enemyContactFilter;
 
         private void Awake()
         {
@@ -46,6 +47,11 @@ namespace NeuralBreak.Combat
 
             m_isActive = false;
             m_lineRenderer.enabled = false;
+
+            // Setup contact filter using the enemy layer mask
+            m_enemyContactFilter = new ContactFilter2D();
+            m_enemyContactFilter.SetLayerMask(m_enemyLayer);
+            m_enemyContactFilter.useLayerMask = true;
         }
 
         private void SetupLineRenderer()
@@ -132,14 +138,14 @@ namespace NeuralBreak.Combat
             Vector2 direction = (end - start).normalized;
             float distance = Vector2.Distance(start, end);
 
-            int hitCount = Physics2D.BoxCastNonAlloc(
-                origin: start,
-                size: new Vector2(m_beamWidth, distance),
-                angle: Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg,
-                direction: direction,
-                distance: distance,
-                results: s_boxCastBuffer,
-                layerMask: m_enemyLayer
+            int hitCount = Physics2D.BoxCast(
+                start,
+                new Vector2(m_beamWidth, distance),
+                Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg,
+                direction,
+                m_enemyContactFilter,
+                s_boxCastBuffer,
+                distance
             );
 
             for (int i = 0; i < hitCount; i++)

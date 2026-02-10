@@ -13,7 +13,6 @@ namespace NeuralBreak.UI
     {
         [Header("Score")]
         [SerializeField] private TextMeshProUGUI m_scoreText;
-        [SerializeField] private string m_scoreFormat = "{0:N0}";
 
         [Header("Delta Popup")]
         [SerializeField] private TextMeshProUGUI m_deltaText;

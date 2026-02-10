@@ -303,10 +303,11 @@ namespace NeuralBreak.Entities
 
         // Cached array for overlap checks (zero allocation)
         private static Collider2D[] s_hitBuffer = new Collider2D[32];
+        private static readonly ContactFilter2D s_noFilter = ContactFilter2D.noFilter;
 
         private void DealDeathDamage()
         {
-            int hitCount = Physics2D.OverlapCircleNonAlloc(transform.position, m_deathDamageRadius, s_hitBuffer);
+            int hitCount = Physics2D.OverlapCircle(transform.position, m_deathDamageRadius, s_noFilter, s_hitBuffer);
 
             for (int i = 0; i < hitCount; i++)
             {
