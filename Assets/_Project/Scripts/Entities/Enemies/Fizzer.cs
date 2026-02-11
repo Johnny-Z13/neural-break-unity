@@ -9,9 +9,10 @@ namespace NeuralBreak.Entities
     /// Very fast movement with unpredictable zigzag patterns.
     /// Based on TypeScript Fizzer.ts.
     ///
-    /// Stats: HP=2, Speed=8.0 (VERY FAST), Damage=6, XP=15
+    /// Stats: HP=1 (GLASS CANNON), Speed=8.0 (VERY FAST), Damage=51, XP=15
     /// Burst Fire: 2 shots, 3.0s between bursts, 0.2s between shots
     /// Death Damage: 15 in 2.0 radius (electric explosion)
+    /// Design: Fast and dangerous but dies in one hit - high risk/reward
     /// </summary>
     public class Fizzer : EnemyBase
     {
@@ -34,7 +35,7 @@ namespace NeuralBreak.Entities
         private int m_projectileDamage => EnemyConfig?.projectileDamage ?? 6;
 
         [Header("Visual")]
-        [SerializeField] private SpriteRenderer m_spriteRenderer;
+        // m_spriteRenderer inherited from EnemyBase (protected field)
         [SerializeField] private TrailRenderer m_trailRenderer;
         [SerializeField] private FizzerVisuals m_visuals;
         [SerializeField] private Color m_electricColor = new Color(0.2f, 0.8f, 1f); // Electric cyan-blue
@@ -42,6 +43,11 @@ namespace NeuralBreak.Entities
         [Header("Vapor Trail")]
         [SerializeField] private bool m_enableVaporTrail = true;
         private ParticleSystem m_vaporParticles;
+
+        [Header("Audio")]
+        [SerializeField] private AudioSource m_audioSource;
+        private AudioClip m_sparkleSound;
+        private AudioClip m_fireSound;
 
         // Note: MMFeedbacks removed
 
@@ -67,21 +73,51 @@ namespace NeuralBreak.Entities
             m_burstTimer = m_burstCooldown * Random.Range(0.3f, 0.7f); // Random initial delay
             m_isFiringBurst = false;
 
+            // Ensure audio source
+            if (m_audioSource == null)
+            {
+                m_audioSource = gameObject.AddComponent<AudioSource>();
+                m_audioSource.spatialBlend = 0.5f; // Partial 3D sound
+                m_audioSource.volume = 0.4f;
+                m_audioSource.minDistance = 5f;
+                m_audioSource.maxDistance = 30f;
+            }
+
+            // Generate sparkly sounds if not already created
+            if (m_sparkleSound == null)
+            {
+                m_sparkleSound = GenerateSparkleSound();
+            }
+            if (m_fireSound == null)
+            {
+                m_fireSound = GenerateFireSound();
+            }
+
+            // Play spawn sparkle sound
+            if (m_sparkleSound != null && m_audioSource != null)
+            {
+                m_audioSource.pitch = Random.Range(0.95f, 1.05f);
+                m_audioSource.PlayOneShot(m_sparkleSound, 0.6f);
+            }
+
             // Setup trail renderer with material and color
             if (m_trailRenderer != null)
             {
-                // Load trail material if not assigned
-                if (m_trailRenderer.sharedMaterial == null)
+                // Use VFXHelpers to create proper material with texture and blending
+                var trailMat = Graphics.VFX.VFXHelpers.CreateParticleMaterial(
+                    m_electricColor,
+                    emissionIntensity: 1.5f,
+                    additive: true // Additive for glowing trail
+                );
+
+                if (trailMat != null)
                 {
-                    var trailMaterial = Resources.Load<Material>("Materials/VFX/FizzerTrail");
-                    if (trailMaterial != null)
-                    {
-                        m_trailRenderer.sharedMaterial = trailMaterial;
-                    }
-                    else
-                    {
-                        Debug.LogWarning("[Fizzer] FizzerTrail material not found in Resources!");
-                    }
+                    trailMat.name = "FizzerTrail_Runtime";
+                    m_trailRenderer.sharedMaterial = trailMat;
+                }
+                else
+                {
+                    Debug.LogWarning("[Fizzer] Failed to create trail material via VFXHelpers");
                 }
 
                 m_trailRenderer.startColor = m_electricColor;
@@ -174,13 +210,15 @@ namespace NeuralBreak.Entities
 
                 if (shader != null)
                 {
-                    var mat = new Material(shader);
-                    mat.SetColor("_BaseColor", Color.white);
-                    // Enable alpha blending
-                    mat.SetFloat("_Surface", 1); // Transparent
-                    mat.SetFloat("_Blend", 0);   // Alpha blend
-                    mat.renderQueue = 3000;
-                    renderer.material = mat;
+                    var mat = Graphics.VFX.VFXHelpers.CreateParticleMaterial(
+                        Color.white,
+                        emissionIntensity: 1f,
+                        additive: true // Fizzer trail uses additive
+                    );
+                    if (mat != null)
+                    {
+                        renderer.material = mat;
+                    }
                 }
             }
             renderer.sortingOrder = -1;
@@ -297,6 +335,13 @@ namespace NeuralBreak.Entities
                 m_projectileDamage,
                 m_electricColor
             );
+
+            // Play electric zap sound
+            if (m_fireSound != null && m_audioSource != null)
+            {
+                m_audioSource.pitch = Random.Range(0.9f, 1.1f);
+                m_audioSource.PlayOneShot(m_fireSound, 0.5f);
+            }
         }
 
         public override void Kill()
@@ -310,16 +355,20 @@ namespace NeuralBreak.Entities
             base.Kill();
         }
 
+        // Cached array for overlap checks (zero allocation)
+        private static Collider2D[] s_hitBuffer = new Collider2D[32];
+        private static readonly ContactFilter2D s_noFilter = ContactFilter2D.noFilter;
+
         private void DealDeathDamage()
         {
-            // Find all enemies in radius and damage them
-            Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, m_deathDamageRadius);
+            // Find all enemies in radius and damage them (zero allocation via buffer)
+            int hitCount = Physics2D.OverlapCircle(transform.position, m_deathDamageRadius, s_noFilter, s_hitBuffer);
 
-            foreach (var hit in hits)
+            for (int i = 0; i < hitCount; i++)
             {
-                if (hit.gameObject == gameObject) continue;
+                if (s_hitBuffer[i].gameObject == gameObject) continue;
 
-                EnemyBase enemy = hit.GetComponent<EnemyBase>();
+                EnemyBase enemy = s_hitBuffer[i].GetComponent<EnemyBase>();
                 if (enemy != null && enemy.IsAlive)
                 {
                     enemy.TakeDamage(m_deathDamageAmount, transform.position);
@@ -374,6 +423,66 @@ namespace NeuralBreak.Entities
             {
                 m_trailRenderer.Clear();
             }
+        }
+
+        /// <summary>
+        /// Generate procedural sparkly electric sound for Fizzer
+        /// </summary>
+        private AudioClip GenerateSparkleSound()
+        {
+            int sampleRate = 44100;
+            float duration = 0.3f;
+            int sampleCount = Mathf.FloorToInt(sampleRate * duration);
+            float[] samples = new float[sampleCount];
+
+            // Create sparkly electric sound with multiple frequency components
+            for (int i = 0; i < sampleCount; i++)
+            {
+                float t = (float)i / sampleRate;
+
+                // High-frequency sparkle (3-6 kHz range with FM modulation)
+                float sparkle1 = Mathf.Sin(2f * Mathf.PI * 3500f * t + 8f * Mathf.Sin(2f * Mathf.PI * 12f * t));
+                float sparkle2 = Mathf.Sin(2f * Mathf.PI * 5200f * t + 5f * Mathf.Sin(2f * Mathf.PI * 18f * t));
+                float sparkle3 = Mathf.Sin(2f * Mathf.PI * 4100f * t + 6f * Mathf.Sin(2f * Mathf.PI * 25f * t));
+
+                // Add some noise for crackle
+                float noise = Random.Range(-0.15f, 0.15f);
+
+                // Combine with exponential decay envelope
+                float envelope = Mathf.Exp(-8f * t);
+                samples[i] = (sparkle1 * 0.3f + sparkle2 * 0.25f + sparkle3 * 0.2f + noise * 0.25f) * envelope * 0.4f;
+            }
+
+            AudioClip clip = AudioClip.Create("FizzerSparkle", sampleCount, 1, sampleRate, false);
+            clip.SetData(samples, 0);
+            return clip;
+        }
+
+        /// <summary>
+        /// Generate quick electric zap sound for firing
+        /// </summary>
+        private AudioClip GenerateFireSound()
+        {
+            int sampleRate = 44100;
+            float duration = 0.15f;
+            int sampleCount = Mathf.FloorToInt(sampleRate * duration);
+            float[] samples = new float[sampleCount];
+
+            for (int i = 0; i < sampleCount; i++)
+            {
+                float t = (float)i / sampleRate;
+
+                // Sharp electric zap (higher frequency)
+                float zap = Mathf.Sin(2f * Mathf.PI * 7000f * t + 10f * Mathf.Sin(2f * Mathf.PI * 30f * t));
+
+                // Quick attack/decay envelope
+                float envelope = Mathf.Exp(-25f * t);
+                samples[i] = zap * envelope * 0.3f;
+            }
+
+            AudioClip clip = AudioClip.Create("FizzerFire", sampleCount, 1, sampleRate, false);
+            clip.SetData(samples, 0);
+            return clip;
         }
 
         protected override void OnDrawGizmosSelected()

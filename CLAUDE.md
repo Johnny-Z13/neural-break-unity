@@ -1,441 +1,806 @@
 # CLAUDE.md - Neural Break
 
-## Project Overview
-
-**Neural Break** is a twin-stick survival arena shooter (Unity 6000.x). 99 levels, 8 enemy types, rogue-like card upgrades.
-
-- **Engine**: Unity 6000.0.31f1+ (URP)
-- **Input**: Unity Input System (NOT legacy `UnityEngine.Input`)
-- **Architecture**: Event-driven, config-driven, zero-allocation pooling
-- **Shared Code**: Z13.Core package for reusable systems
+> **Unity C# Technical Reference** for Claude Code
+> Senior Unity engineer-level instructions for AI-assisted development
 
 ---
 
-## Z13 Shared Package Philosophy
+## 🎮 Project Overview
 
-**Goal**: Build reusable packages across all Z13 Labs game projects.
+**Neural Break** is a twin-stick survival arena shooter built in Unity 6000.x with URP.
 
-### When Writing New Code, Always Ask:
-1. **Is this game-specific or generic?** Generic code → Z13.Core
-2. **Can this be split?** Generic base class in Z13.Core + game-specific subclass in project
-3. **Does it reference game types?** If yes, keep in project. If no, consider Z13.Core
-
-### Pattern: Generic Base + Game-Specific Implementation
-```csharp
-// Z13.Core - Generic base (no game knowledge)
-public abstract class SaveSystemBase<T> where T : class, new() { }
-
-// Game Project - Specific implementation
-public class SaveSystem : Z13.Core.SaveSystemBase<SaveData> { }
-```
-
-### Z13.Core Package Location
-`Assets/_Project/Packages/Z13.Core/`
-
-### Current Z13.Core Contents
-| Module | Purpose |
-|--------|---------|
-| `EventBus` | Type-safe pub/sub messaging |
-| `ObjectPool<T>` | Zero-allocation object pooling |
-| `LogHelper` | Editor-only logging (stripped in builds) |
-| `SaveSystemBase<T>` | Generic save/load with JSON |
-| `IBootable` | Interface for controlled singleton initialization |
-
-### Adding to Z13.Core
-1. Create in `Assets/_Project/Packages/Z13.Core/Runtime/`
-2. Use namespace `Z13.Core`
-3. **No game-specific types** - must be fully generic
-4. Update `Z13.Core/README.md`
-
-### Using Z13.Core in Game Code
-Add `using Z13.Core;` at the top of files that need EventBus, ObjectPool, LogHelper, etc:
-```csharp
-using Z13.Core;
-
-// Then use directly
-EventBus.Publish(new MyEvent { value = 10 });
-LogHelper.Log("Debug message");
-```
+- **Unity Version**: 6000.0.31f1+ (LTS recommended)
+- **Rendering**: Universal Render Pipeline (URP) 17.0.3+
+- **Platform Target**: PC (Windows/Mac/Linux), 1920x1080 base resolution
+- **Architecture**: Event-driven, config-driven, zero-allocation hot paths
+- **Genre**: Twin-stick shooter, rogue-like progression, 99 levels, 8 enemy types
 
 ---
 
-## Development Philosophy
+## 🛠️ MCP Servers Available
 
-### No Backward Compatibility Code
-When refactoring, **delete code that's no longer relevant**. Do not:
-- Keep wrapper classes for backward compatibility
-- Leave `// DEPRECATED` comments on old APIs
-- Add `// TODO: Remove this` comments
-- Keep unused parameters or methods "just in case"
+Claude Code typically runs with these MCP (Model Context Protocol) servers:
 
-```csharp
-// ❌ WRONG - Don't keep compatibility wrappers
-namespace NeuralBreak.Core
-{
-    // DEPRECATED: Use Z13.Core.EventBus directly
-    public static class EventBus { ... }
-}
+- **Unity MCP Server** (if configured): Provides Unity API awareness, GameObject inspection, Scene hierarchy access
+- **File System MCP** (default): Read/Write/Search local files
+- **Git MCP** (default): Git operations and version control
 
-// ✅ CORRECT - Just use the real thing
-using Z13.Core;
-EventBus.Publish(new MyEvent());
-```
-
-### Delete Over Comment
-If code is no longer needed, **delete it entirely**. Don't comment it out or mark it deprecated:
-```csharp
-// ❌ WRONG
-// Note: OnDestroy does NOT null Instance - true singletons live forever
-private void OnDestroy() { }
-
-// ❌ WRONG
-// DEPRECATED: Access via serialized field instead of Instance
-public static MyClass Instance { get; private set; }
-
-// ✅ CORRECT - Just write clean code without explanatory comments for removed features
-private void OnDestroy() { }
-public static MyClass Instance { get; private set; }
-```
-
-### Prefer Direct Imports
-Use `using` statements rather than fully qualified names:
-```csharp
-// ❌ WRONG
-Z13.Core.EventBus.Publish(evt);
-Z13.Core.LogHelper.Log("message");
-
-// ✅ CORRECT
-using Z13.Core;
-EventBus.Publish(evt);
-LogHelper.Log("message");
-```
+**Note**: If Unity-specific MCP is not configured, Claude Code will still function but may need more explicit Unity API references.
 
 ---
 
-## Critical Rules (Non-Negotiable)
+## 📚 Unity C# Coding Conventions
 
-### Input System
+### Naming Conventions (Strict)
+
 ```csharp
-// ❌ WRONG - causes InvalidOperationException
-Input.GetKeyDown(KeyCode.Space)
-
 // ✅ CORRECT
-Keyboard.current.spaceKey.wasPressedThisFrame
-InputManager.Instance.OnConfirmPressed += HandleConfirm;
-```
+private int m_health;                    // m_ prefix for private instance fields
+private static int s_instanceCount;      // s_ prefix for static fields
+public int MaxHealth { get; private set; }  // PascalCase for properties
+private void UpdateHealth() { }          // PascalCase for methods
+public const int MAX_LEVEL = 99;         // SCREAMING_SNAKE_CASE for constants
 
-### Unity 6000.x APIs
-```csharp
-// ❌ WRONG (deprecated)
-FindObjectOfType<GameManager>()
-
-// ✅ CORRECT
-FindFirstObjectByType<GameManager>()
-```
-
-### File Size Limit
-All files must be **≤300 LOC**. Extract helpers to separate files if exceeded.
-
-### Singleton Architecture (Boot Scene Pattern)
-
-**TRUE SINGLETONS (Boot Scene, App-Lifetime):**
-These live in the Boot scene, implement `IBootable`, and persist via `DontDestroyOnLoad`:
-- `GameStateManager` - Global game flow, state, and mode
-- `InputManager` - Global input handling
-- `AudioManager` - Global audio playback
-- `MusicManager` - Global music playback
-- `SaveSystem` - Persistent save data
-- `AccessibilityManager` - Global accessibility settings
-- `HighScoreManager` - Persistent high scores
-- `ConfigProvider` (static) - Config access
-- `EventBus` (static) - Pub/sub messaging
-
-```csharp
-// ✅ TRUE SINGLETON - Always safe to access (Boot scene guarantees existence)
-GameStateManager.Instance.StartGame(mode);
-AudioManager.Instance.PlaySFX(clip);
-InputManager.Instance.OnFirePressed += HandleFire;
-```
-
-**SCENE-SPECIFIC OBJECTS:**
-These are scene objects. They have `Instance` for convenience but should be accessed via serialized fields when possible:
-- `GameManager` - Scene-specific gameplay: score, combo, enemies
-- `UIManager` - Scene-specific UI management
-- `LevelManager` - Scene-specific level logic
-- `PermanentUpgradeManager` - Game-session specific upgrades
-- `UpgradePoolManager` - Game-session specific pool
-- `EnemyProjectilePool` - Scene-specific projectile pool
-
-```csharp
-// Both work - Instance is available for convenience
-GameManager.Instance.Stats
-
-// Preferred when you have a reference - Use serialized field references
-[SerializeField] private GameManager m_gameManager;
-m_gameManager.Stats
-```
-
-**Boot Scene Setup:**
-Run `Neural Break > Create Boot Scene` to generate the Boot scene with proper singleton initialization order.
-
-### Zero-Allocation Gameplay
-- Use object pools for spawned objects (projectiles, enemies, pickups, VFX)
-- Cache references in Awake/Start
-- No `new` in Update/FixedUpdate
-- No FindObjectOfType in hot paths
-
-### Naming Conventions
-```csharp
 // ❌ WRONG
-private int _health;
-private static int _instanceCount;
-public int Health;
-
-// ✅ CORRECT
-private int m_health;              // m_ prefix for private members
-private static int s_instanceCount; // s_ prefix for static members
-public int health;                  // camelCase for public fields (data structs only)
+private int _health;                     // Underscore prefix (not used)
+private int health;                      // No prefix (confusing)
+public int maxHealth;                    // Public field (use property)
+private void update_health() { }         // snake_case (not C#)
 ```
 
-**Rules:**
-- `m_` prefix for all private instance members
-- `s_` prefix for all static members (private or public)
-- Public fields allowed **only** on data-only structs (DTOs, events, configs)
-- Public fields use camelCase (look like properties)
-- Classes should use properties for public data, not fields
+**Field/Property Rules**:
+- Private instance fields: `m_fieldName`
+- Private static fields: `s_fieldName`
+- Public properties: `PropertyName` (PascalCase)
+- Public fields: **Only allowed in data-only structs** (events, DTOs)
+- Constants: `CONSTANT_NAME` (SCREAMING_SNAKE_CASE)
 
+**Data-Only Structs** (public fields OK):
 ```csharp
-// Data-only struct - public fields OK
 public struct EnemyKilledEvent
 {
-    public EnemyType enemyType;
+    public EnemyType enemyType;  // camelCase for struct fields
     public Vector2 position;
     public int pointValue;
 }
+```
 
-// Class - use properties or private fields
+**Classes** (use properties):
+```csharp
 public class WeaponSystem : MonoBehaviour
 {
     private float m_heat;
     private static int s_activeWeapons;
 
     public float Heat => m_heat;  // Property for external access
+    public static int ActiveWeapons => s_activeWeapons;
 }
 ```
 
 ---
 
-## Agent Operating Rules
+## ⚡ Performance Rules (Non-Negotiable)
 
-### Before Coding
-1. Restate task (1-2 lines), outline plan, note risks
-2. List files to touch and why
-3. Inspect real project—verify APIs/files exist
-4. Implement as small, atomic diffs
+### Hot Path Performance (Update, FixedUpdate, LateUpdate)
 
-### Zero-Hallucination Rule
-Never invent files, APIs, or package versions. If unsure, ask.
+```csharp
+// ❌ WRONG - NO LINQ in hot paths
+void Update()
+{
+    var enemies = FindObjectsOfType<Enemy>().Where(e => e.IsAlive).ToList();  // LINQ allocation
+    float avgHealth = enemies.Average(e => e.Health);  // More LINQ
+}
 
-### After Work
-Show diffs, reasoning, risks, rollback path.
+// ✅ CORRECT - Manual iteration, zero allocations
+void Update()
+{
+    int aliveCount = 0;
+    float totalHealth = 0f;
+
+    for (int i = 0; i < m_cachedEnemies.Count; i++)
+    {
+        if (m_cachedEnemies[i].IsAlive)
+        {
+            aliveCount++;
+            totalHealth += m_cachedEnemies[i].Health;
+        }
+    }
+
+    float avgHealth = aliveCount > 0 ? totalHealth / aliveCount : 0f;
+}
+```
+
+**Hot Path Rules**:
+1. ❌ **NO LINQ** (`Where`, `Select`, `ToList`, `Any`, `FirstOrDefault`, etc.)
+2. ❌ **NO `new` keyword** (no heap allocations)
+3. ❌ **NO `FindObjectOfType` / `GetComponent`** (cache in Awake/Start)
+4. ❌ **NO string concatenation** (use `StringBuilder` or cached strings)
+5. ❌ **NO boxing** (avoid `object` casts on value types)
+6. ❌ **NO foreach on Lists** (use indexed `for` loop to avoid enumerator allocation)
+7. ✅ **YES object pools** for spawned objects (projectiles, enemies, VFX)
+8. ✅ **YES cached component references** (cache in Awake/Start)
+9. ✅ **YES indexed for loops** (`for (int i = 0; i < list.Count; i++)`)
+10. ✅ **YES Unity Jobs** (if needed for heavy computation)
+
+### Object Pooling (Required for Spawned Objects)
+
+```csharp
+// ✅ Use Z13.Core.ObjectPool<T> for all spawned objects
+private ObjectPool<Projectile> m_projectilePool;
+
+void Awake()
+{
+    m_projectilePool = new ObjectPool<Projectile>(
+        m_projectilePrefab,
+        m_container,
+        poolSize: 200,
+        onReturn: proj => proj.OnReturnToPool()
+    );
+}
+
+void Fire()
+{
+    Projectile proj = m_projectilePool.Get(position, rotation);
+    proj.Initialize(direction, speed, damage);
+    // Later: m_projectilePool.Return(proj);
+}
+```
+
+**Pooled Objects**:
+- Projectiles (player + enemy)
+- Enemies
+- Pickups
+- VFX particles
+- UI popup text (damage numbers, combo text)
+
+### Caching Component References
+
+```csharp
+// ❌ WRONG - GetComponent every frame (expensive!)
+void Update()
+{
+    GetComponent<Rigidbody2D>().linearVelocity = Vector2.zero;
+}
+
+// ✅ CORRECT - Cache in Awake
+private Rigidbody2D m_rb;
+
+void Awake()
+{
+    m_rb = GetComponent<Rigidbody2D>();
+}
+
+void Update()
+{
+    m_rb.linearVelocity = Vector2.zero;
+}
+```
+
+### String Performance
+
+```csharp
+// ❌ WRONG - String concatenation creates garbage
+void Update()
+{
+    m_label.text = "Score: " + score + " Combo: " + combo;
+}
+
+// ✅ CORRECT - Use cached format strings
+private const string SCORE_FORMAT = "Score: {0} Combo: {1}";
+
+void Update()
+{
+    m_label.text = string.Format(SCORE_FORMAT, score, combo);
+}
+
+// ✅ EVEN BETTER - Use TextMeshPro SetText (zero allocation)
+void Update()
+{
+    m_label.SetText("Score: {0} Combo: {1}", score, combo);
+}
+```
 
 ---
 
-## Architecture
+## 🏗️ Unity Architecture Patterns
 
-### Event-Driven Communication
-All systems communicate via **EventBus**. Never use direct references.
+### 1. Event-Driven Communication (Preferred)
+
+**DO**: Use EventBus for cross-system communication
 
 ```csharp
-// Define in EventBus.cs
-public struct MyEvent { public int value; }
+// Publish event
+EventBus.Publish(new EnemyKilledEvent
+{
+    enemyType = EnemyType.Boss,
+    position = transform.position,
+    pointValue = 1000
+});
+
+// Subscribe (in OnEnable) / Unsubscribe (in OnDisable)
+void OnEnable()
+{
+    EventBus.Subscribe<EnemyKilledEvent>(OnEnemyKilled);
+}
+
+void OnDisable()
+{
+    EventBus.Unsubscribe<EnemyKilledEvent>(OnEnemyKilled);
+}
+
+private void OnEnemyKilled(EnemyKilledEvent evt)
+{
+    // Handle event
+}
+```
+
+**DON'T**: Use direct references between systems
+
+```csharp
+// ❌ WRONG - Tight coupling
+public class Enemy : MonoBehaviour
+{
+    public GameManager gameManager;  // Bad!
+
+    void Die()
+    {
+        gameManager.AddScore(100);  // Tightly coupled
+    }
+}
+
+// ✅ CORRECT - Loose coupling via events
+public class Enemy : MonoBehaviour
+{
+    void Die()
+    {
+        EventBus.Publish(new EnemyKilledEvent { pointValue = 100 });
+    }
+}
+```
+
+**Event Subscription Pattern**:
+- Subscribe in `OnEnable()` (not Awake/Start)
+- Unsubscribe in `OnDisable()` (not OnDestroy)
+- This ensures proper cleanup when objects are disabled
+
+### 2. ScriptableObjects for Configuration (Preferred)
+
+**DO**: Use ScriptableObjects for balance values and configs
+
+```csharp
+// GameBalanceConfig.asset (ScriptableObject)
+public class GameBalanceConfig : ScriptableObject
+{
+    public PlayerConfig player;
+    public EnemyConfig[] enemies;
+    public WeaponConfig weapons;
+}
+
+// Access via ConfigProvider (static singleton)
+int maxHealth = ConfigProvider.Player.maxHealth;
+float enemySpeed = ConfigProvider.Balance.GetEnemyConfig(EnemyType.Boss).speed;
+```
+
+**DON'T**: Hardcode balance values in scripts
+
+```csharp
+// ❌ WRONG - Hardcoded values (requires recompile to change)
+public class Player : MonoBehaviour
+{
+    private int m_maxHealth = 100;  // Bad!
+    private float m_speed = 5f;     // Bad!
+}
+
+// ✅ CORRECT - Config-driven
+public class Player : MonoBehaviour
+{
+    private int MaxHealth => ConfigProvider.Player.maxHealth;
+    private float Speed => ConfigProvider.Player.speed;
+}
+```
+
+### 3. Singleton Pattern (Boot Scene Pattern)
+
+**TRUE SINGLETONS** (App-lifetime, persist via DontDestroyOnLoad):
+- `GameStateManager` - Global game state machine
+- `InputManager` - Input handling and events
+- `AudioManager` - Audio playback
+- `MusicManager` - Music management
+- `ConfigProvider` (static) - Config access
+- `EventBus` (static) - Pub/sub messaging
+
+```csharp
+// ✅ TRUE SINGLETON - Safe to access anywhere
+GameStateManager.Instance.ChangeState(GameState.Playing);
+AudioManager.Instance.PlaySFX(clipName);
+InputManager.Instance.OnFirePressed += HandleFire;
+```
+
+**SCENE-SPECIFIC OBJECTS** (Use serialized fields when possible):
+- `GameManager` - Scene-specific gameplay (score, combo)
+- `UIManager` - Scene-specific UI
+- `LevelManager` - Scene-specific level logic
+- `VFXManager` - Scene-specific VFX spawning
+- `FeedbackManager` - Scene-specific game feel
+
+```csharp
+// ✅ PREFERRED - Serialized field reference
+[SerializeField] private GameManager m_gameManager;
+
+void Start()
+{
+    m_gameManager.AddScore(100);
+}
+
+// ⚠️ OK but less preferred - Instance access
+void Start()
+{
+    GameManager.Instance.AddScore(100);
+}
+```
+
+### 4. State Machines (Enums + Switch)
+
+**DO**: Use enum-based state machines with switch statements
+
+```csharp
+private enum EnemyState { Spawning, Alive, Dying, Dead }
+private EnemyState m_state = EnemyState.Spawning;
+
+void Update()
+{
+    switch (m_state)
+    {
+        case EnemyState.Spawning:
+            UpdateSpawning();
+            break;
+        case EnemyState.Alive:
+            UpdateAlive();
+            break;
+        case EnemyState.Dying:
+            UpdateDying();
+            break;
+        case EnemyState.Dead:
+            // Do nothing
+            break;
+    }
+}
+```
+
+**DON'T**: Use boolean flags for complex state
+
+```csharp
+// ❌ WRONG - Boolean soup (hard to maintain)
+private bool m_isSpawning;
+private bool m_isAlive;
+private bool m_isDying;
+private bool m_isDead;
+
+void Update()
+{
+    if (m_isSpawning) { }
+    else if (m_isAlive) { }
+    else if (m_isDying) { }
+}
+```
+
+---
+
+## 🎯 Unity-Specific APIs (6000.x)
+
+### Modern Unity APIs (Required)
+
+```csharp
+// ✅ Unity 6000.x APIs
+Rigidbody2D.linearVelocity         // NOT .velocity (deprecated)
+FindFirstObjectByType<T>()         // NOT FindObjectOfType<T>() (deprecated)
+FindObjectsByType<T>()             // NOT FindObjectsOfType<T>() (deprecated)
+Keyboard.current.spaceKey          // New Input System (NOT Input.GetKey)
+
+// ❌ Deprecated (causes warnings)
+rigidbody2D.velocity               // Use .linearVelocity
+FindObjectOfType<GameManager>()    // Use FindFirstObjectByType
+Input.GetKeyDown(KeyCode.Space)    // Use new Input System
+```
+
+### New Input System (Required)
+
+```csharp
+// ✅ CORRECT - New Input System
+using UnityEngine.InputSystem;
+
+void OnEnable()
+{
+    InputManager.Instance.OnFirePressed += HandleFire;
+}
+
+void OnDisable()
+{
+    InputManager.Instance.OnFirePressed -= HandleFire;
+}
+
+// Or direct access to Keyboard
+if (Keyboard.current.spaceKey.wasPressedThisFrame)
+{
+    Jump();
+}
+```
+
+```csharp
+// ❌ WRONG - Legacy Input (causes InvalidOperationException)
+if (Input.GetKeyDown(KeyCode.Space))  // DO NOT USE!
+{
+    Jump();
+}
+```
+
+### URP-Specific Rendering
+
+```csharp
+// URP Pipeline
+using UnityEngine.Rendering.Universal;
+
+// Access URP-specific features
+var urpAsset = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
+
+// Post-processing (URP Volume system)
+using UnityEngine.Rendering;
+
+Volume m_volume = GetComponent<Volume>();
+if (m_volume.profile.TryGet<Bloom>(out var bloom))
+{
+    bloom.intensity.value = 2f;
+}
+```
+
+---
+
+## 📦 Z13.Core Shared Package
+
+**Location**: `Assets/_Project/Packages/Z13.Core/Runtime/`
+
+**Reusable systems** across all Z13 Labs projects:
+
+| Module | Purpose | Usage |
+|--------|---------|-------|
+| `EventBus` | Type-safe pub/sub messaging | `EventBus.Publish(evt)` |
+| `ObjectPool<T>` | Zero-allocation object pooling | `pool.Get() / pool.Return()` |
+| `LogHelper` | Editor-only logging (stripped in builds) | `LogHelper.Log("msg")` |
+| `SaveSystemBase<T>` | Generic save/load with JSON | Extend for game-specific save |
+| `IBootable` | Singleton initialization interface | Implement for boot scene pattern |
+
+**Rule**: Z13.Core code must be **fully generic** (no game-specific types).
+
+```csharp
+// ✅ CORRECT - Generic reusable code
+namespace Z13.Core
+{
+    public class ObjectPool<T> where T : Component { }
+}
+
+// ❌ WRONG - Game-specific type in Z13.Core
+namespace Z13.Core
+{
+    public class EnemyPool  // References NeuralBreak.Entities.Enemy (bad!)
+    {
+        public Enemy Get() { }
+    }
+}
+```
+
+**Pattern**: Generic base in Z13.Core + Game-specific implementation
+
+```csharp
+// Z13.Core/SaveSystemBase.cs (generic)
+public abstract class SaveSystemBase<T> where T : class, new()
+{
+    public abstract void Save(T data);
+    public abstract T Load();
+}
+
+// NeuralBreak/SaveSystem.cs (game-specific)
+public class SaveSystem : SaveSystemBase<SaveData>
+{
+    public override void Save(SaveData data) { /* ... */ }
+    public override T Load() { /* ... */ }
+}
+```
+
+---
+
+## 🚀 Common Unity Tasks
+
+### Creating New Enemy
+
+1. **Add enum**: `GameEvents.cs` → `public enum EnemyType { DataMite, ScanDrone, NewEnemy }`
+2. **Create class**: Inherit `EnemyBase`, implement `UpdateAI()`
+3. **Add config**: `GameBalanceConfig.asset` → Add `EnemyConfig` entry
+4. **Create prefab**: GameObject with:
+   - `CircleCollider2D` (trigger)
+   - `SpriteRenderer`
+   - `Rigidbody2D` (kinematic, no gravity)
+   - Enemy script component
+5. **Register pool**: `EnemyPoolManager.cs` → Add pool initialization
+
+### Creating New ScriptableObject Config
+
+```csharp
+// 1. Create ScriptableObject class
+[CreateAssetMenu(menuName = "Neural Break/Config/My Config")]
+public class MyConfig : ScriptableObject
+{
+    public int value;
+    public float speed;
+}
+
+// 2. Create asset: Project window → Right-click → Create → Neural Break → Config → My Config
+// 3. Access via ConfigProvider or direct reference
+```
+
+### Creating New Event
+
+```csharp
+// Add to GameEvents.cs (NOT Z13.Core/EventBus.cs)
+public struct MyEvent
+{
+    public int value;
+    public Vector2 position;
+    public EnemyType enemyType;
+}
 
 // Publish
-EventBus.Publish(new MyEvent { value = 10 });
+EventBus.Publish(new MyEvent { value = 10, position = transform.position });
 
-// Subscribe (OnEnable) / Unsubscribe (OnDisable)
+// Subscribe
 EventBus.Subscribe<MyEvent>(OnMyEvent);
-EventBus.Unsubscribe<MyEvent>(OnMyEvent);
-```
-
-**Location**: `Assets/_Project/Packages/Z13.Core/Runtime/EventBus.cs`
-**Game Events**: `Assets/_Project/Scripts/Core/GameEvents.cs`
-
-### Config-Driven Design
-Balance values live in ScriptableObjects, not code.
-
-```csharp
-using NeuralBreak.Config;
-int maxHealth = ConfigProvider.Player?.maxHealth ?? 100;
-var enemy = ConfigProvider.Balance?.GetEnemyConfig(EnemyType.DataMite);
-```
-
-**Master Config**: `Assets/_Project/Resources/Config/GameBalanceConfig.asset`
-
-### Object Pooling
-```csharp
-var projectile = m_projectilePool.Get();
-projectile.Initialize(position, direction, damage);
-// Later...
-m_projectilePool.Return(projectile);
-```
-
-**Location**: `Assets/_Project/Packages/Z13.Core/Runtime/ObjectPool.cs`
-
----
-
-## Key Systems (Quick Reference)
-
-| System | Location | Purpose |
-|--------|----------|---------|
-| BootManager | `Core/BootManager.cs` | Boot scene singleton initialization |
-| GameStateManager | `Core/GameStateManager.cs` | Global state machine (Boot scene singleton) |
-| GameManager | `Core/GameManager.cs` | Scene-specific scoring, combo, level flow |
-| LevelManager | `Core/LevelManager.cs` | Objectives, enemy unlock schedule |
-| EnemySpawner | `Entities/Enemies/EnemySpawner.cs` | Wave/rate-based spawning |
-| InputManager | `Input/InputManager.cs` | Twin-stick controls, events (Boot scene singleton) |
-| WeaponSystem | `Combat/WeaponSystem.cs` | Firing, heat, modifiers |
-| EventBus | `Z13.Core` + `Core/GameEvents.cs` | Pub/sub + game events |
-
-### Game States
-`StartScreen` → `Playing` → `Paused` / `RogueChoice` / `GameOver` / `Victory`
-
-State is managed by `GameStateManager` (global singleton). Scene-specific gameplay (scoring, combo) is handled by `GameManager` (scene object).
-
-### Weapon Modifier Flow
-```
-Base → WeaponUpgradeManager (temp) → PermanentUpgradeManager (perm) → Final
 ```
 
 ---
 
-## Project Structure
+## 🐛 Common Unity Pitfalls
+
+### 1. Transform Position Comparison (Use `transform.position`, not `this.transform`)
+
+```csharp
+// ✅ CORRECT
+Vector2 pos = transform.position;
+
+// ⚠️ REDUNDANT (works but unnecessary)
+Vector2 pos = this.transform.position;
+```
+
+### 2. Coroutine Lifecycle
+
+```csharp
+// ✅ CORRECT - Store coroutine reference to stop later
+private Coroutine m_flashCoroutine;
+
+void StartFlash()
+{
+    if (m_flashCoroutine != null)
+    {
+        StopCoroutine(m_flashCoroutine);
+    }
+    m_flashCoroutine = StartCoroutine(FlashCoroutine());
+}
+
+// ❌ WRONG - Can't stop unnamed coroutine
+void StartFlash()
+{
+    StartCoroutine(FlashCoroutine());  // Can't stop this!
+}
+```
+
+### 3. OnEnable/OnDisable Event Subscription
+
+```csharp
+// ✅ CORRECT - Subscribe in OnEnable, Unsubscribe in OnDisable
+void OnEnable()
+{
+    EventBus.Subscribe<MyEvent>(OnMyEvent);
+}
+
+void OnDisable()
+{
+    EventBus.Unsubscribe<MyEvent>(OnMyEvent);
+}
+
+// ❌ WRONG - Subscribe in Start (won't work if object disabled then re-enabled)
+void Start()
+{
+    EventBus.Subscribe<MyEvent>(OnMyEvent);
+}
+```
+
+### 4. Vector2 vs Vector3
+
+```csharp
+// ✅ CORRECT - Use Vector2 for 2D games
+Vector2 position = transform.position;  // Implicit cast
+Vector2 direction = (targetPos - (Vector2)transform.position).normalized;
+
+// ⚠️ AVOID - Unnecessary Vector3 for 2D
+Vector3 position = transform.position;  // Wastes Z component
+```
+
+### 5. Collider2D Trigger vs Collision
+
+```csharp
+// Trigger Collider (isTrigger = true)
+void OnTriggerEnter2D(Collider2D other)
+{
+    // No physics response, just detection
+}
+
+// Physical Collider (isTrigger = false)
+void OnCollisionEnter2D(Collision2D collision)
+{
+    // Physics response (bounce, stop, etc.)
+}
+```
+
+---
+
+## 📂 Project Structure
 
 ```
 Assets/
 ├── Scenes/
-│   ├── Boot.unity              # Singleton initialization scene (index 0)
-│   └── main-neural-break.unity # Main gameplay scene (index 1)
+│   └── main-neural-break.unity        # Main gameplay scene
 └── _Project/
     ├── Packages/
-    │   └── Z13.Core/           # Shared reusable package
-    │       └── Runtime/        # EventBus, ObjectPool, LogHelper, SaveSystemBase, IBootable
+    │   └── Z13.Core/                  # Shared package (generic reusable code)
+    │       └── Runtime/
+    │           ├── EventBus.cs        # Type-safe pub/sub
+    │           ├── ObjectPool.cs      # Zero-alloc pooling
+    │           ├── LogHelper.cs       # Editor-only logging
+    │           ├── SaveSystemBase.cs  # Generic save/load
+    │           └── IBootable.cs       # Singleton interface
     ├── Scripts/
-    │   ├── Audio/              # AudioManager, MusicManager (Boot scene singletons)
-    │   ├── Combat/             # WeaponSystem, Projectile, Upgrades/
-    │   ├── Config/             # ConfigProvider, GameBalanceConfig
-    │   ├── Core/               # BootManager, GameStateManager, GameManager, LevelManager
-    │   │   ├── BootManager.cs      # Initializes singletons, loads main scene
-    │   │   ├── GameStateManager.cs # Global state (Boot scene singleton)
-    │   │   ├── GameManager.cs      # Scene-specific gameplay
-    │   │   ├── GameEvents.cs       # Game-specific events & enums
-    │   │   └── SaveSystem.cs       # Extends Z13.Core.SaveSystemBase
-    │   ├── Entities/           # Player, Enemies/, Pickups/
-    │   ├── Graphics/           # CameraController, VFX, Starfield
-    │   ├── Input/              # InputManager, GamepadRumble (Boot scene singleton)
-    │   └── UI/                 # UIManager, HUD, Screens (scene-specific)
-    ├── Prefabs/                # Enemies/, Pickups/, UI/
-    └── Resources/              # Config/, Upgrades/
+    │   ├── Audio/                     # AudioManager, MusicManager
+    │   ├── Combat/                    # WeaponSystem, Projectile, Upgrades/
+    │   ├── Config/                    # ConfigProvider, GameBalanceConfig
+    │   ├── Core/                      # GameStateManager, GameManager, LevelManager
+    │   │   ├── GameEvents.cs          # ⭐ Game-specific events & enums
+    │   │   ├── GameStateManager.cs    # Global state machine (singleton)
+    │   │   └── GameManager.cs         # Scene-specific gameplay
+    │   ├── Entities/                  # Player/, Enemies/, Pickups/
+    │   │   ├── Player/
+    │   │   │   ├── PlayerController.cs
+    │   │   │   ├── PlayerHealth.cs
+    │   │   │   └── PlayerVisuals.cs
+    │   │   └── Enemies/
+    │   │       ├── EnemyBase.cs       # Base class for all enemies
+    │   │       ├── DataMite.cs
+    │   │       ├── ScanDrone.cs
+    │   │       └── ...
+    │   ├── Graphics/                  # VFXManager, FeedbackManager, CameraController
+    │   ├── Input/                     # InputManager (singleton)
+    │   └── UI/                        # UIManager, HUD, Menus
+    ├── Prefabs/
+    │   ├── Enemies/                   # Enemy prefabs
+    │   ├── Pickups/                   # Pickup prefabs
+    │   └── UI/                        # UI prefabs
+    └── Resources/
+        ├── Config/
+        │   └── GameBalanceConfig.asset  # ⭐ Master balance config
+        └── Upgrades/                    # Upgrade definitions
 ```
 
-### Namespaces
-- `Z13.Core` - Shared package (EventBus, ObjectPool, LogHelper, SaveSystemBase)
-- `NeuralBreak.*` - Game-specific (Core, Entities, Combat, Input, Graphics, UI, Audio, Config, Utils)
+**Key Files**:
+- `GameEvents.cs` - All game-specific events and enums
+- `GameBalanceConfig.asset` - Master balance config (ScriptableObject)
+- `EnemyBase.cs` - Base class for all enemies (inherit from this)
+- `ConfigProvider.cs` - Static access to configs
 
 ---
 
-## Common Tasks
+## 🎨 Namespaces
 
-### Creating New Enemy
-1. Add to `EnemyType` enum in `EventBus.cs`
-2. Create class inheriting `EnemyBase`, implement `UpdateAI()`
-3. Add config in `GameBalanceConfig.asset`
-4. Create prefab (CircleCollider2D trigger, SpriteRenderer, Rigidbody2D kinematic)
-5. Register pool in `EnemyPoolManager`
-
-### Creating New Upgrade
-1. Create `UpgradeDefinition` asset: `Create > Neural Break > Upgrades > Definition`
-2. Configure: ID, name, description, tier, modifiers
-3. Place in `Resources/Upgrades/[Category]/`
-
-### Adding New Event
-Add struct to `GameEvents.cs` (NOT EventBus.cs):
 ```csharp
-public struct MyEvent { public int value; public Vector2 pos; }
+// Z13.Core - Shared reusable package
+namespace Z13.Core
+{
+    public class EventBus { }
+    public class ObjectPool<T> { }
+}
+
+// NeuralBreak.* - Game-specific code
+namespace NeuralBreak.Core { }        // GameManager, LevelManager, etc.
+namespace NeuralBreak.Entities { }    // Player, Enemies, Pickups
+namespace NeuralBreak.Combat { }      // WeaponSystem, Projectile, Upgrades
+namespace NeuralBreak.Graphics { }    // VFXManager, CameraController
+namespace NeuralBreak.Input { }       // InputManager
+namespace NeuralBreak.UI { }          // UIManager, HUD
+namespace NeuralBreak.Audio { }       // AudioManager, MusicManager
+namespace NeuralBreak.Config { }      // ConfigProvider, GameBalanceConfig
 ```
 
 ---
 
-## Known Issues
+## 🔧 Development Workflow
 
-| Issue | Fix |
-|-------|-----|
-| "PermanentUpgradeManager not found" | Add component to Managers GameObject |
-| Blank upgrade cards | Run: Neural Break > Create Upgrades > Create Starter Pack |
-| InvalidOperationException (Input) | Replace `Input.*` with `Keyboard.current.*` |
+### Before Coding
+1. **Restate task** (1-2 lines) and outline plan
+2. **List files** to modify and why
+3. **Verify APIs/files exist** in project (no hallucination)
+4. **Implement as small atomic diffs** (easier to review)
 
----
+### After Coding
+1. **Show diffs** and reasoning
+2. **Note potential risks** or breaking changes
+3. **Provide rollback path** if needed
 
-## Dependencies
-
-| Package | Purpose |
-|---------|---------|
-| Z13.Core (local) | EventBus, ObjectPool, SaveSystem, LogHelper |
-| URP 17.0.3+ | Rendering |
-| Input System 1.11.2+ | Modern input |
-| TextMeshPro 3.0.8+ | UI text |
-| Feel (MMFeedbacks) | Game juice |
-
----
-
-## Git Workflow
-
+### Git Commit Format
 ```
 type(scope): summary
 
-feat(combat): add beam weapon
-fix(enemies): collision detection
-config(balance): adjust boss health
+feat(combat): add beam weapon upgrade
+fix(enemies): collision detection on VoidSphere
+config(balance): reduce Level 3 spawn rates by 20%
+refactor(core): extract LevelGenerator from LevelManager
 ```
 
 ---
 
-## Quick Reference
+## 📖 Quick Reference
 
-### Files You'll Edit Most
+### Most-Edited Files
 1. `GameBalanceConfig.asset` - Balance values
-2. `GameManager.cs` - State, scoring
-3. `WeaponSystem.cs` - Firing patterns
-4. `EnemyBase.cs` - Enemy AI
-5. `GameEvents.cs` - Event definitions (game-specific events)
+2. `LevelGenerator.cs` - Level configurations
+3. `EnemyBase.cs` - Enemy AI patterns
+4. `WeaponSystem.cs` - Weapon behavior
+5. `GameEvents.cs` - Event/enum definitions
 
 ### Common Events
 ```csharp
 EventBus.Subscribe<GameStartedEvent>(OnGameStarted);
 EventBus.Subscribe<EnemyKilledEvent>(OnEnemyKilled);
+EventBus.Subscribe<PlayerDamagedEvent>(OnPlayerDamaged);
 EventBus.Subscribe<LevelCompletedEvent>(OnLevelCompleted);
 EventBus.Subscribe<UpgradeSelectedEvent>(OnUpgradeSelected);
 ```
 
-### Debug Menu
-- `Neural Break > Create Boot Scene` - Generate Boot scene with singletons
-- `Neural Break > Validate Boot Scene Setup` - Check Boot scene configuration
-- `Neural Break > Create Upgrades > Create Starter Pack`
-- `Neural Break > Clear Save Data`
-- Right-click GameManager > Debug commands
+### Debug Menu Commands
+- **Neural Break > Create Upgrades > Create Starter Pack** - Generate upgrade assets
+- **Neural Break > Clear Save Data** - Reset player progress
+- **Right-click GameManager** - Debug commands (add score, spawn enemies, etc.)
 
 ---
 
-## Extended Reference
+## 🚨 Critical Rules Summary
 
-See `CLAUDE_REFERENCE.md` for:
-- Detailed code examples and patterns
-- Complete scene setup checklist
-- Performance guidelines
-- MMFeedbacks integration
-- Full object pool sizing guide
+1. ⚡ **NO LINQ in hot paths** (Update, FixedUpdate, LateUpdate)
+2. ⚡ **NO allocations in hot paths** (no `new`, no string concat, no boxing)
+3. ⚡ **Cache all component references** in Awake/Start
+4. 🎯 **Use EventBus for cross-system communication** (not direct references)
+5. 🎯 **Use ScriptableObjects for balance values** (not hardcoded constants)
+6. 🎯 **Use object pools for spawned objects** (projectiles, enemies, VFX)
+7. 🔧 **Use new Input System APIs** (not legacy `Input.*`)
+8. 🔧 **Use Unity 6000.x APIs** (`FindFirstObjectByType`, `linearVelocity`, etc.)
+9. 📝 **Follow naming conventions** (`m_` prefix, `s_` prefix, PascalCase properties)
+10. 📦 **Keep Z13.Core generic** (no game-specific types)
 
 ---
 
-**Developer**: Johnny @ Z13 Labs | johnny@z13labs.com
-**Original TS/Three.js**: `D:\Projects\Neural-Break-Unity`
+## 📚 Extended Documentation
+
+See `Documents/` folder for detailed guides:
+- `CLAUDE_REFERENCE.md` - Detailed patterns and examples
+- `UPGRADE_SYSTEM_SPEC.md` - Upgrade system architecture
+- `PLAYER_VISUAL_FEEDBACK_FIX.md` - Player visual feedback system
+- `SHOWCASE_LEVELS_4_10_FIX.md` - Level design showcase
+
+---
+
+## 👨‍💻 Developer
+
+**Johnny @ Z13 Labs** | johnny@z13labs.com
+
+**Original TypeScript/Three.js Prototype**: `D:\Projects\Neural-Break-Unity`
+- Reference for game design decisions, balance values, original gameplay feel
+- Built with TypeScript, Three.js, Web Audio API
+
+---
+
+**Last Updated**: 2026-02-10

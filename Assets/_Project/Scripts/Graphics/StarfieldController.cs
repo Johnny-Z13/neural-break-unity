@@ -29,7 +29,6 @@ namespace NeuralBreak.Graphics
         [SerializeField] private float m_minStarSize = 0.02f;
         [SerializeField] private float m_maxStarSize = 0.15f;
         [SerializeField] private float m_twinkleSpeed = 2f;
-        [SerializeField] private float m_trailLength = 0.3f;
         [SerializeField] private bool m_enableTrails = true;
 
         [Header("Star Colors")]

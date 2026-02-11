@@ -40,6 +40,9 @@ namespace NeuralBreak.Entities
         private Transform m_outerRing;
         private Transform m_beacon;
         private Transform[] m_sensorEyes;
+        private SpriteRenderer[] m_sensorEyeRenderers;
+        private SpriteRenderer m_hexBodyRenderer;
+        private SpriteRenderer m_scanBeamRenderer;
         private SpriteRenderer[] m_allRenderers;
 
         // State
@@ -69,6 +72,7 @@ namespace NeuralBreak.Entities
             // Create hexagonal body
             m_hexBody = CreateHexagon("HexBody", m_scale * 0.35f, m_bodyColor);
             m_hexBody.localPosition = Vector3.zero;
+            m_hexBodyRenderer = m_hexBody.GetComponent<SpriteRenderer>();
 
             // Create wireframe outline (slightly larger)
             m_hexWireframe = CreateHexagonOutline("HexWireframe", m_scale * 0.37f, m_wireframeColor);
@@ -245,6 +249,7 @@ namespace NeuralBreak.Entities
             beamSr.color = new Color(1f, 0f, 0f, 0.6f); // Red
             beamSr.sortingOrder = 8;
             m_scanBeam = beam.transform;
+            m_scanBeamRenderer = beamSr;
 
             return group.transform;
         }
@@ -263,6 +268,7 @@ namespace NeuralBreak.Entities
         private void CreateSensorEyes()
         {
             m_sensorEyes = new Transform[6];
+            m_sensorEyeRenderers = new SpriteRenderer[6];
             float hexRadius = m_scale * 0.35f;
 
             for (int i = 0; i < 6; i++)
@@ -293,6 +299,7 @@ namespace NeuralBreak.Entities
                 eyeSr.sortingOrder = 13;
 
                 m_sensorEyes[i] = eye.transform;
+                m_sensorEyeRenderers[i] = eyeSr;
             }
         }
 
@@ -567,7 +574,7 @@ namespace NeuralBreak.Entities
                     float eyeScale = blinkPhase > 0.5f ? 1.3f : 0.8f;
                     m_sensorEyes[i].localScale = Vector3.one * eyeScale;
 
-                    var sr = m_sensorEyes[i].GetComponent<SpriteRenderer>();
+                    var sr = m_sensorEyeRenderers[i];
                     if (sr != null)
                     {
                         float alpha = blinkPhase > 0.5f ? 1f : 0.3f;
@@ -583,23 +590,15 @@ namespace NeuralBreak.Entities
             m_isAlerted = alerted;
 
             // Change body color based on alert state
-            if (m_hexBody != null)
+            if (m_hexBodyRenderer != null)
             {
-                var sr = m_hexBody.GetComponent<SpriteRenderer>();
-                if (sr != null)
-                {
-                    sr.color = m_isAlerted ? new Color(1f, 0f, 0f, 0.5f) : m_bodyColor;
-                }
+                m_hexBodyRenderer.color = m_isAlerted ? new Color(1f, 0f, 0f, 0.5f) : m_bodyColor;
             }
 
             // Change scan beam color
-            if (m_scanBeam != null)
+            if (m_scanBeamRenderer != null)
             {
-                var sr = m_scanBeam.GetComponent<SpriteRenderer>();
-                if (sr != null)
-                {
-                    sr.color = m_isAlerted ? new Color(1f, 0f, 0f, 0.8f) : new Color(1f, 0.27f, 0f, 0.6f);
-                }
+                m_scanBeamRenderer.color = m_isAlerted ? new Color(1f, 0f, 0f, 0.8f) : new Color(1f, 0.27f, 0f, 0.6f);
             }
         }
 

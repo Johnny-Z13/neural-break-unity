@@ -396,6 +396,9 @@ namespace NeuralBreak.Graphics
                     duration = 0.3f;
                     break;
                 case EnemyType.ChaosWorm:
+                    intensity = 0.8f; // Bigger shake for worm!
+                    duration = 0.35f;
+                    break;
                 case EnemyType.CrystalShard:
                     intensity = 0.5f;
                     duration = 0.25f;

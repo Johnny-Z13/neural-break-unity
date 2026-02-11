@@ -18,7 +18,7 @@ namespace NeuralBreak.Input
 
         [Header("Input Settings")]
         [SerializeField] private float m_gamepadDeadzone = 0.15f;
-        [SerializeField] private bool m_autoFireWhenAiming = false; // Disabled - require explicit fire input
+        [SerializeField] private bool m_autoFireWhenAiming = true; // Twin-stick: right stick auto-fires
 
         [Header("Mouse Settings")]
         [SerializeField] private bool m_useMouseForAim = true;
@@ -63,6 +63,9 @@ namespace NeuralBreak.Input
         // Reference to player transform for mouse aim calculation
         private Transform m_playerTransform;
 
+        // Cached camera reference (Camera.main allocates ~64 bytes per call via FindGameObjectWithTag)
+        private Camera m_cachedCamera;
+
         /// <summary>
         /// Called by BootManager for controlled initialization order.
         /// </summary>
@@ -75,6 +78,7 @@ namespace NeuralBreak.Input
             AimInput = Vector2.up;
 
             SetupInputActions();
+            CacheCamera();
             Debug.Log("[InputManager] Initialized via BootManager");
         }
 
@@ -93,6 +97,17 @@ namespace NeuralBreak.Input
             // Development fallback - initialize directly
             Initialize();
             Debug.LogWarning("[InputManager] Initialized via Awake fallback - should use Boot scene in production");
+        }
+
+        private void CacheCamera()
+        {
+            m_cachedCamera = Camera.main;
+        }
+
+        private void OnGameStarted(Core.GameStartedEvent evt)
+        {
+            // Re-cache camera after scene loads (camera may have changed)
+            CacheCamera();
         }
 
         private void SetupInputActions()
@@ -122,6 +137,9 @@ namespace NeuralBreak.Input
             MoveInput = Vector2.zero;
             AimInput = Vector2.zero;
             HasAimInput = false;
+
+            // Re-cache camera on game start (scene may have changed)
+            Z13.Core.EventBus.Subscribe<Core.GameStartedEvent>(OnGameStarted);
 
             if (m_inputActionsAsset != null)
             {
@@ -225,6 +243,8 @@ namespace NeuralBreak.Input
             {
                 m_cancelAction.performed -= OnCancel;
             }
+
+            Z13.Core.EventBus.Unsubscribe<Core.GameStartedEvent>(OnGameStarted);
 
             if (m_inputActionsAsset != null)
             {
@@ -394,7 +414,7 @@ namespace NeuralBreak.Input
                 else if (IsUsingGamepad)
                 {
                     // Stop firing when right stick released (gamepad only)
-                    if (m_autoFireWhenAiming && FireHeld && !gamepad.rightTrigger.isPressed)
+                    if (m_autoFireWhenAiming && FireHeld)
                     {
                         FireHeld = false;
                         OnFireReleased?.Invoke();
@@ -410,12 +430,11 @@ namespace NeuralBreak.Input
                 var mouse = Mouse.current;
                 if (mouse != null && m_playerTransform != null)
                 {
-                    // Get mouse world position
+                    // Get mouse world position (use cached camera - Camera.main allocates per call)
                     Vector2 mouseScreenPos = mouse.position.ReadValue();
-                    Camera cam = Camera.main;
-                    if (cam != null)
+                    if (m_cachedCamera != null)
                     {
-                        Vector3 mouseWorldPos = cam.ScreenToWorldPoint(new Vector3(mouseScreenPos.x, mouseScreenPos.y, 10f));
+                        Vector3 mouseWorldPos = m_cachedCamera.ScreenToWorldPoint(new Vector3(mouseScreenPos.x, mouseScreenPos.y, 10f));
                         Vector2 playerPos = m_playerTransform.position;
                         Vector2 toMouse = (Vector2)mouseWorldPos - playerPos;
 

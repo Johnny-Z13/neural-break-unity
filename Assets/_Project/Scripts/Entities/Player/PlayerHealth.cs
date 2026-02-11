@@ -81,11 +81,31 @@ namespace NeuralBreak.Entities
             m_bonusShields = 0;
             m_bonusHealth = 0;
 
+            // Re-enable player controller (was disabled on death)
+            if (m_controller != null)
+            {
+                m_controller.enabled = true;
+            }
+
+            // Re-enable weapon system (was disabled on death)
+            var weaponSystem = GetComponent<WeaponSystem>();
+            if (weaponSystem != null)
+            {
+                weaponSystem.enabled = true;
+            }
+
             // Re-show player (was hidden on death)
             var spriteRenderer = GetComponent<SpriteRenderer>();
             if (spriteRenderer != null)
             {
                 spriteRenderer.enabled = true;
+            }
+
+            // Re-enable collider (was disabled on death)
+            var col = GetComponent<Collider2D>();
+            if (col != null)
+            {
+                col.enabled = true;
             }
 
             // Reset position to center
@@ -234,12 +254,19 @@ namespace NeuralBreak.Entities
                 m_currentShields--;
                 m_damageInvulnerabilityTimer = DamageInvulnerabilityDuration;
 
-                // Feedback (Feel removed)
-
                 EventBus.Publish(new ShieldChangedEvent
                 {
                     currentShields = m_currentShields,
                     maxShields = m_maxShields
+                });
+
+                // Still publish damage event so feedback systems trigger (red flash, camera shake)
+                EventBus.Publish(new PlayerDamagedEvent
+                {
+                    damage = 0,
+                    currentHealth = m_currentHealth,
+                    maxHealth = m_maxHealth,
+                    damageSource = damageSource
                 });
 
                 // Reset combo when hit
@@ -293,7 +320,32 @@ namespace NeuralBreak.Entities
         {
             m_isDead = true;
 
-            // Feedback (Feel removed)
+            // Disable player controller (stops movement)
+            if (m_controller != null)
+            {
+                m_controller.enabled = false;
+            }
+
+            // Disable weapon system (stops shooting)
+            var weaponSystem = GetComponent<WeaponSystem>();
+            if (weaponSystem != null)
+            {
+                weaponSystem.enabled = false;
+            }
+
+            // Hide player visual immediately
+            var sr = GetComponent<SpriteRenderer>();
+            if (sr != null)
+            {
+                sr.enabled = false;
+            }
+
+            // Disable collider so no more damage
+            var col = GetComponent<Collider2D>();
+            if (col != null)
+            {
+                col.enabled = false;
+            }
 
             EventBus.Publish(new PlayerDiedEvent
             {

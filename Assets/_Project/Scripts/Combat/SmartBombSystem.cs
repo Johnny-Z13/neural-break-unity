@@ -41,6 +41,9 @@ namespace NeuralBreak.Combat
         // Cached reference - avoids FindObjectsByType every bomb!
         private Entities.EnemySpawner m_enemySpawner;
 
+        // Staggered kill state
+        private Coroutine m_killSequenceCoroutine;
+
         // Public accessors
         public int CurrentBombs => m_currentBombs;
         public int MaxBombs => m_maxBombs + m_bonusBombs;
@@ -158,6 +161,12 @@ namespace NeuralBreak.Combat
         /// </summary>
         public void TryActivateBomb()
         {
+            // Don't allow smart bomb activation unless actively playing
+            if (GameManager.Instance == null || !GameManager.Instance.IsPlaying)
+            {
+                return;
+            }
+
             Debug.Log($"[SmartBombSystem] TryActivateBomb called! Bombs: {m_currentBombs}, IsActivating: {m_isActivating}, CanUseBomb: {CanUseBomb}");
 
             if (!CanUseBomb)
@@ -181,7 +190,12 @@ namespace NeuralBreak.Combat
                 m_audioSource.PlayOneShot(m_epicExplosionSound, m_explosionVolume);
             }
 
-            // Feedback (Feel removed)
+            // EPIC camera shake!
+            var camera = FindFirstObjectByType<Graphics.CameraController>();
+            if (camera != null)
+            {
+                camera.Shake(2.0f, 0.8f); // MASSIVE shake!
+            }
 
             // Visual effect
             if (m_explosionParticles != null)
@@ -189,8 +203,15 @@ namespace NeuralBreak.Combat
                 m_explosionParticles.Play();
             }
 
-            // Kill all enemies
-            KillAllEnemies();
+            // Create epic flash effect
+            CreateEpicFlash();
+
+            // Kill all enemies with staggered timing (0.5s total)
+            if (m_killSequenceCoroutine != null)
+            {
+                StopCoroutine(m_killSequenceCoroutine);
+            }
+            m_killSequenceCoroutine = StartCoroutine(KillAllEnemiesStaggered());
 
             // Publish event
             EventBus.Publish(new SmartBombActivatedEvent { position = transform.position });
@@ -203,25 +224,23 @@ namespace NeuralBreak.Combat
             Debug.Log($"[SmartBombSystem] SMART BOMB ACTIVATED! Bombs remaining: {m_currentBombs}");
         }
 
-        private void KillAllEnemies()
+        private System.Collections.IEnumerator KillAllEnemiesStaggered()
         {
             // Use cached EnemySpawner.ActiveEnemies instead of FindObjectsByType
             if (m_enemySpawner == null)
                 m_enemySpawner = FindFirstObjectByType<Entities.EnemySpawner>();
 
-            int killedCount = 0;
+            var enemiesToKill = new System.Collections.Generic.List<EnemyBase>();
 
             if (m_enemySpawner != null)
             {
-                // Iterate the cached active enemies list
+                // Collect alive enemies
                 var enemies = m_enemySpawner.ActiveEnemies;
                 foreach (var enemy in enemies)
                 {
-                    // Only kill enemies that are alive (not spawning, not already dead)
                     if (enemy != null && enemy.IsAlive)
                     {
-                        enemy.Kill();
-                        killedCount++;
+                        enemiesToKill.Add(enemy);
                     }
                 }
             }
@@ -231,15 +250,123 @@ namespace NeuralBreak.Combat
                 var enemies = FindObjectsByType<EnemyBase>(FindObjectsSortMode.None);
                 foreach (var enemy in enemies)
                 {
-                    if (enemy.IsAlive)
+                    if (enemy != null && enemy.IsAlive)
                     {
-                        enemy.Kill();
-                        killedCount++;
+                        enemiesToKill.Add(enemy);
                     }
                 }
             }
 
-            Debug.Log($"[SmartBombSystem] Killed {killedCount} enemies!");
+            int totalEnemies = enemiesToKill.Count;
+            Debug.Log($"[SmartBombSystem] Starting staggered kill sequence: {totalEnemies} enemies");
+
+            if (totalEnemies == 0)
+            {
+                m_killSequenceCoroutine = null;
+                yield break;
+            }
+
+            // Shuffle for random death order
+            for (int i = totalEnemies - 1; i > 0; i--)
+            {
+                int randomIndex = Random.Range(0, i + 1);
+                var temp = enemiesToKill[i];
+                enemiesToKill[i] = enemiesToKill[randomIndex];
+                enemiesToKill[randomIndex] = temp;
+            }
+
+            // Calculate delay to fit all kills in 0.5s
+            float totalDuration = 0.5f;
+            float delayPerKill = totalEnemies > 1 ? totalDuration / (totalEnemies - 1) : 0f;
+
+            // Kill enemies one by one
+            foreach (var enemy in enemiesToKill)
+            {
+                if (enemy != null && enemy.IsAlive)
+                {
+                    enemy.Kill();
+                }
+                yield return new WaitForSeconds(delayPerKill);
+            }
+
+            Debug.Log($"[SmartBombSystem] Staggered kill sequence complete!");
+            m_killSequenceCoroutine = null;
+        }
+
+        private void CreateEpicFlash()
+        {
+            // Create massive screen flash
+            var flashGO = new GameObject("SmartBombFlash");
+            flashGO.transform.position = transform.position;
+
+            var ps = flashGO.AddComponent<ParticleSystem>();
+
+            // Stop the system first to ensure we can modify it
+            ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+            var main = ps.main;
+            main.duration = 0.3f;
+            main.loop = false;
+            main.startLifetime = 0.3f;
+            main.startSpeed = 0f;
+            main.startSize = 50f; // HUGE - covers entire screen
+            main.startColor = new Color(1f, 1f, 0.8f, 1f); // Bright white-yellow
+            main.gravityModifier = 0f;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.playOnAwake = false;
+            main.maxParticles = 1;
+
+            var emission = ps.emission;
+            emission.enabled = true;
+            emission.rateOverTime = 0;
+            emission.SetBursts(new ParticleSystem.Burst[] { new ParticleSystem.Burst(0f, 1) });
+
+            var shape = ps.shape;
+            shape.enabled = false;
+
+            var sizeOverLifetime = ps.sizeOverLifetime;
+            sizeOverLifetime.enabled = true;
+            var curve = new AnimationCurve();
+            curve.AddKey(0f, 1.5f);
+            curve.AddKey(0.1f, 1f);
+            curve.AddKey(1f, 0f);
+            sizeOverLifetime.size = new ParticleSystem.MinMaxCurve(1f, curve);
+
+            var colorOverLifetime = ps.colorOverLifetime;
+            colorOverLifetime.enabled = true;
+            var gradient = new Gradient();
+            gradient.SetKeys(
+                new GradientColorKey[] {
+                    new GradientColorKey(Color.white, 0f),
+                    new GradientColorKey(new Color(1f, 0.9f, 0.5f), 0.3f),
+                    new GradientColorKey(new Color(1f, 0.5f, 0f), 1f)
+                },
+                new GradientAlphaKey[] {
+                    new GradientAlphaKey(1f, 0f),
+                    new GradientAlphaKey(0.6f, 0.3f),
+                    new GradientAlphaKey(0f, 1f)
+                }
+            );
+            colorOverLifetime.color = new ParticleSystem.MinMaxGradient(gradient);
+
+            // Create material with proper texture and blending
+            var renderer = ps.GetComponent<ParticleSystemRenderer>();
+            var mat = Graphics.VFX.VFXHelpers.CreateParticleMaterial(
+                new Color(1f, 1f, 0.8f, 1f),
+                emissionIntensity: 2f,
+                additive: true // Additive for bright flash
+            );
+
+            if (mat != null)
+            {
+                mat.renderQueue = 4000; // Render on top
+                renderer.material = mat;
+                renderer.sortingOrder = 1000; // Very high
+                renderer.renderMode = ParticleSystemRenderMode.Billboard;
+            }
+
+            ps.Play();
+            Destroy(flashGO, 1f);
         }
 
         /// <summary>
@@ -288,28 +415,44 @@ namespace NeuralBreak.Combat
         {
             var main = m_explosionParticles.main;
             main.startColor = new ParticleSystem.MinMaxGradient(m_explosionStartColor, m_explosionEndColor);
-            main.startLifetime = 1f;
-            main.startSpeed = new ParticleSystem.MinMaxCurve(10f, 20f);
-            main.startSize = new ParticleSystem.MinMaxCurve(0.5f, 2f);
-            main.maxParticles = 500;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(1.2f, 1.8f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(15f, 30f); // MUCH faster!
+            main.startSize = new ParticleSystem.MinMaxCurve(0.8f, 2.5f); // BIGGER!
+            main.maxParticles = 800; // MORE particles!
             main.loop = false;
 
             var emission = m_explosionParticles.emission;
             emission.rateOverTime = 0;
             emission.SetBursts(new ParticleSystem.Burst[]
             {
-                new ParticleSystem.Burst(0f, 500)
+                new ParticleSystem.Burst(0f, 600), // First wave
+                new ParticleSystem.Burst(0.1f, 200) // Second wave for extra impact
             });
 
             var shape = m_explosionParticles.shape;
             shape.shapeType = ParticleSystemShapeType.Sphere;
-            shape.radius = 15f; // Cover full screen
+            shape.radius = 20f; // LARGER radius - full screen coverage!
 
             var colorOverLifetime = m_explosionParticles.colorOverLifetime;
             colorOverLifetime.enabled = true;
+            var gradient = new Gradient();
+            gradient.SetKeys(
+                new GradientColorKey[] {
+                    new GradientColorKey(new Color(1f, 1f, 0.8f), 0f), // Bright white
+                    new GradientColorKey(new Color(1f, 0.8f, 0.2f), 0.3f), // Yellow
+                    new GradientColorKey(new Color(1f, 0.3f, 0f), 1f) // Orange-red
+                },
+                new GradientAlphaKey[] {
+                    new GradientAlphaKey(1f, 0f),
+                    new GradientAlphaKey(0.8f, 0.5f),
+                    new GradientAlphaKey(0f, 1f)
+                }
+            );
+            colorOverLifetime.color = new ParticleSystem.MinMaxGradient(gradient);
 
             var sizeOverLifetime = m_explosionParticles.sizeOverLifetime;
             sizeOverLifetime.enabled = true;
+            sizeOverLifetime.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.EaseInOut(0f, 1f, 1f, 0.2f));
         }
 
         [ContextMenu("Debug: Activate Smart Bomb")]

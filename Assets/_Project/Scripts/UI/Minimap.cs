@@ -51,6 +51,7 @@ namespace NeuralBreak.UI
         private Image m_borderImage;
         private RectTransform m_playerBlip;
         private List<RectTransform> m_enemyBlipPool = new List<RectTransform>();
+        private List<Image> m_enemyBlipImages = new List<Image>(); // Cached Image components (zero-alloc)
         private List<RectTransform> m_pickupBlipPool = new List<RectTransform>();
         private int m_activeEnemyBlips;
         private int m_activePickupBlips;
@@ -185,7 +186,11 @@ namespace NeuralBreak.UI
 
             // Pre-create blip pools (reuse cached sprite)
             for (int i = 0; i < 50; i++)
-                m_enemyBlipPool.Add(CreateBlip("EnemyBlip", m_enemyBlipSize, EnemyColor));
+            {
+                var blipRect = CreateBlip("EnemyBlip", m_enemyBlipSize, EnemyColor);
+                m_enemyBlipPool.Add(blipRect);
+                m_enemyBlipImages.Add(blipRect.GetComponent<Image>());
+            }
             for (int i = 0; i < 20; i++)
                 m_pickupBlipPool.Add(CreateBlip("PickupBlip", m_pickupBlipSize, PickupColor));
         }
@@ -230,22 +235,27 @@ namespace NeuralBreak.UI
             if (m_enemySpawner != null)
             {
                 var enemies = m_enemySpawner.ActiveEnemies;
-                foreach (var enemy in enemies)
+                for (int ei = 0; ei < enemies.Count; ei++)
                 {
+                    var enemy = enemies[ei];
                     if (enemy == null || !enemy.gameObject.activeInHierarchy) continue;
 
                     Vector3 offset = enemy.transform.position - playerPos;
                     if (offset.sqrMagnitude > m_mapRadius * m_mapRadius) continue;
 
                     if (m_activeEnemyBlips >= m_enemyBlipPool.Count)
-                        m_enemyBlipPool.Add(CreateBlip("EnemyBlip", m_enemyBlipSize, EnemyColor));
+                    {
+                        var newBlip = CreateBlip("EnemyBlip", m_enemyBlipSize, EnemyColor);
+                        m_enemyBlipPool.Add(newBlip);
+                        m_enemyBlipImages.Add(newBlip.GetComponent<Image>());
+                    }
 
                     var blip = m_enemyBlipPool[m_activeEnemyBlips];
                     blip.gameObject.SetActive(true);
                     blip.anchoredPosition = new Vector2(offset.x, offset.y) / m_mapRadius * m_displayRadius;
 
-                    var blipImage = blip.GetComponent<Image>();
-                    var eliteMod = enemy.GetComponent<EliteModifier>();
+                    var blipImage = m_enemyBlipImages[m_activeEnemyBlips];
+                    enemy.TryGetComponent<EliteModifier>(out var eliteMod);
 
                     if (enemy.EnemyType == EnemyType.Boss)
                     {
@@ -276,8 +286,9 @@ namespace NeuralBreak.UI
             if (m_pickupSpawner != null)
             {
                 var pickups = m_pickupSpawner.ActivePickups;
-                foreach (var pickup in pickups)
+                for (int pi = 0; pi < pickups.Count; pi++)
                 {
+                    var pickup = pickups[pi];
                     if (pickup == null || !pickup.gameObject.activeInHierarchy) continue;
 
                     Vector3 offset = pickup.transform.position - playerPos;

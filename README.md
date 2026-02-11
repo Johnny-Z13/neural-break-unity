@@ -98,7 +98,7 @@ Originally developed as a TypeScript/Three.js web game, Neural Break has been fu
    - Open with Unity 6000.0.31f1 or compatible version
 
 3. **Open the main scene**
-   - Navigate to `Assets/main-neural-break.unity`
+   - Navigate to `Assets/Scenes/main-neural-break.unity`
    - Press **Play** to start the game
 
 ### Quick Start
@@ -129,11 +129,13 @@ Originally developed as a TypeScript/Three.js web game, Neural Break has been fu
 | Action | Button |
 |--------|--------|
 | Move | Left Stick |
-| Aim | Right Stick |
-| Fire | Right Trigger (hold) |
+| Aim/Fire | Right Stick (auto-fires when moved) |
 | Dash | A / X Button |
-| Thrust | Left Trigger / Right Bumper |
+| Smart Bomb | B / Circle Button |
+| Thrust | Left Trigger |
 | Pause | Start / Options |
+
+**Note**: Twin-stick gamepad controls use **right stick movement** for both aiming and firing (auto-fire when stick magnitude > deadzone).
 
 ---
 
@@ -186,18 +188,26 @@ Neural Break features **8 unique enemy types**, each with distinct behaviors and
 
 ---
 
-## 💎 Pickups & Power-Ups
+## 💎 Pickups & Upgrades
 
-| Pickup | Effect | Duration |
-|--------|--------|----------|
-| **Power Up** | +1 Weapon Level (more damage, spread) | Permanent |
-| **Speed Up** | 1.5x Movement Speed | 10 seconds |
-| **Med Pack** | Restore 35 Health | Instant |
-| **Shield** | +1 Shield (absorbs one hit) | Until hit |
-| **Invulnerable** | God Mode | 7 seconds |
-| **Multishot** | Fire multiple projectiles | Permanent |
-| **Piercing** | Projectiles pass through enemies | Permanent |
-| **Homing** | Projectiles seek enemies | Permanent |
+### Floating Arena Pickups (spawn during gameplay)
+
+Only 4 pickup types float in the arena. Spawn rates are config-driven via GameBalanceConfig for easy balance tweaking.
+
+| Pickup | Effect | Notes |
+|--------|--------|-------|
+| **Med Pack** | Heal +20 HP | Only spawns when health < 80% |
+| **Shield** | +1 Shield (absorbs one hit) | Max 3 shields |
+| **Smart Bomb** | +1 Smart Bomb charge | Max 3 bombs |
+| **Invulnerable** | Temporary god mode (7s) | VERY RARE |
+
+### End-of-Level Upgrade Selection
+
+After completing each level, players choose from 3 upgrade cards (weighted by rarity). These are permanent for the run:
+
+- Weapon upgrades (damage, fire rate, projectile size, multi-shot)
+- Special abilities (piercing, homing, chain lightning, ricochet, explosions)
+- Utility (extra shields, extra smart bombs)
 
 ---
 
@@ -226,39 +236,72 @@ Final Score = (Base Points × Enemy Multiplier) × Combo Multiplier
 
 ```
 Assets/
+├── Scenes/
+│   └── main-neural-break.unity  # Main game scene
 ├── _Project/
-│   ├── Scripts/           # 105+ C# scripts (~32,000 LOC)
+│   ├── Packages/
+│   │   └── Z13.Core/      # Shared reusable package
+│   │       └── Runtime/   # EventBus, ObjectPool, LogHelper, SaveSystemBase
+│   ├── Scripts/           # 170+ C# scripts
 │   │   ├── Audio/         # AudioManager, MusicManager, ProceduralSFX
-│   │   ├── Combat/        # WeaponSystem, Projectile, Upgrades
+│   │   ├── Combat/        # WeaponSystem, Projectile, Upgrades, SmartBomb
 │   │   ├── Config/        # ConfigProvider, GameBalanceConfig
-│   │   ├── Core/          # GameManager, EventBus, ObjectPool
+│   │   ├── Core/          # GameSetup, GameStateManager, GameManager
 │   │   ├── Entities/      # Player, Enemies, Pickups
-│   │   ├── Graphics/      # Camera, VFX, Starfield
+│   │   ├── Graphics/      # VFXManager, FeedbackManager, ArenaManager
 │   │   ├── Input/         # InputManager, GamepadRumble
-│   │   ├── UI/            # HUD, Menus, Screens
+│   │   ├── UI/            # UIManager, HUD, Screens, Builders
 │   │   └── Utils/         # Helpers, Extensions
 │   ├── Prefabs/           # Game object prefabs
-│   ├── Art/               # Sprites and textures
-│   └── Audio/             # Music and SFX
-├── Resources/
-│   └── Config/            # Runtime-loadable configuration
+│   ├── Resources/         # Runtime-loadable assets
+│   │   ├── Config/        # GameBalanceConfig.asset
+│   │   └── Upgrades/      # Upgrade definitions
+│   └── Art/               # Sprites and textures
 ├── Feel/                  # MMFeedbacks asset (game juice)
-└── main-neural-break.unity  # Main game scene
+└── Documents/             # Technical documentation & implementation notes
 ```
 
 ### Namespace Organization
 
 ```csharp
-NeuralBreak.Core        // GameManager, EventBus, GameState
+Z13.Core                // EventBus, ObjectPool, LogHelper (shared package)
+NeuralBreak.Core        // GameSetup, GameStateManager, GameManager
 NeuralBreak.Entities    // Player, Enemies, Pickups
-NeuralBreak.Combat      // Weapons, Projectiles, Upgrades
-NeuralBreak.Input       // Input handling
-NeuralBreak.Graphics    // Camera, VFX, Particles
-NeuralBreak.UI          // HUD, Menus, Screens
-NeuralBreak.Audio       // Sound management
-NeuralBreak.Config      // Configuration system
-NeuralBreak.Utils       // Utilities
+NeuralBreak.Combat      // Weapons, Projectiles, Upgrades, SmartBomb
+NeuralBreak.Input       // InputManager, GamepadRumble
+NeuralBreak.Graphics    // VFXManager, FeedbackManager, ArenaManager
+NeuralBreak.UI          // UIManager, HUD, Screens, Builders
+NeuralBreak.Audio       // AudioManager, MusicManager, ProceduralSFX
+NeuralBreak.Config      // ConfigProvider, GameBalanceConfig
+NeuralBreak.Utils       // Utilities, Extensions
 ```
+
+---
+
+## 🔧 Systems Inventory (Source of Truth)
+
+### Active Systems
+
+| Category | Systems | Key Files |
+|----------|---------|-----------|
+| **Z13.Core** | EventBus, ObjectPool\<T\>, LogHelper, SaveSystemBase\<T\>, IBootable | `Packages/Z13.Core/Runtime/` |
+| **Core** | GameStateManager, GameManager, GameSetup, LevelManager, LevelGenerator, PlayerLevelSystem, AchievementSystem, HighScoreManager, SaveSystem, PostProcessManager | `Scripts/Core/` |
+| **Input** | InputManager (twin-stick + KB/M auto-fire), GamepadRumble | `Scripts/Input/` |
+| **Audio** | AudioManager, MusicManager, ProceduralSFX, UpgradeSystemAudio | `Scripts/Audio/` |
+| **Combat** | WeaponSystem (stat-based 0-100), SmartBombSystem, BeamWeapon, WeaponUpgradeManager, PermanentUpgradeManager, UpgradePoolManager, 5 Projectile Behaviors, ProjectileVisualProfile | `Scripts/Combat/` |
+| **Entities** | PlayerController, PlayerHealth, 8 Enemy Types, EnemySpawner (4-file system), 4 Floating Pickups, PickupSpawner | `Scripts/Entities/` |
+| **Graphics** | VFXManager, EnemyDeathVFX (pooled), FeedbackManager, CameraController, ArenaManager (7 themes), Starfield (5 files) | `Scripts/Graphics/` |
+| **UI** | UIManager, Builder pattern (4 screens), HUD (8 displays), DamageNumberPopup, UpgradeSelectionScreen, GameOverScreen (press-any-key) | `Scripts/UI/` |
+| **Config** | ConfigProvider, GameBalanceConfig (master ScriptableObject) | `Scripts/Config/` |
+
+### Scaffolded / Not Yet Active
+
+| System | Status |
+|--------|--------|
+| Boot Scene (BootManager) | Code ready, scene NOT created. Singletons self-init via Awake fallback. |
+| ShipCustomization | 3 files, partially implemented |
+| AccessibilityManager | Implements IBootable, needs completion |
+| Rogue Mode | GameMode.Rogue supported, card pool incomplete |
 
 ---
 
@@ -291,8 +334,9 @@ Simply select the asset in Unity and modify values in the Inspector. Changes tak
 | **Jan 2026** | Unity port initiated |
 | **Jan 22, 2026** | Core systems complete (85%) |
 | **Jan 23, 2026** | Major refactoring - God classes split, singletons reduced |
-| **Jan 25, 2026** | Bug fixes, input system improvements |
-| **Jan 26, 2026** | TypeScript balance config ported, camera system updated |
+| **Jan 25-26, 2026** | TypeScript balance config ported, bug fixes |
+| **Feb 9, 2026** | Twin-stick auto-fire control fix, smart bomb system |
+| **Feb 10, 2026** | Documentation overhaul, Z13.Core package formalized |
 
 ### TypeScript to Unity Port
 
@@ -311,11 +355,12 @@ The Unity port maintains feature parity while adding:
 ### Architecture Improvements
 
 During the port, significant architectural improvements were made:
-- **Singleton Reduction**: 29 → 8 singletons
-- **Event-Driven Design**: All systems communicate via EventBus
-- **Object Pooling**: Zero garbage collection during gameplay
-- **Config-Driven Balance**: All values in ScriptableObjects
-- **Modular Code**: All files under 300 LOC
+- **Z13.Core Package**: Extracted reusable systems (EventBus, ObjectPool, LogHelper) for use across all Z13 Labs projects
+- **Event-Driven Design**: All systems communicate via type-safe EventBus (no direct coupling)
+- **Object Pooling**: Zero-allocation gameplay via ObjectPool<T>
+- **Config-Driven Balance**: All values in GameBalanceConfig ScriptableObject
+- **Singleton Architecture**: Clear distinction between app-lifetime (Boot scene) and scene-specific managers
+- **Modular Code**: Target 300 LOC per file (guideline, not strict)
 
 ---
 
@@ -354,16 +399,26 @@ For licensing inquiries, contact: johnny@z13labs.com
 
 ---
 
+## 📚 Developer Documentation
+
+For contributors and AI agents working on this codebase:
+
+- **CLAUDE.md** - Core development rules, architecture patterns, critical guidelines
+- **CLAUDE_REFERENCE.md** - Extended examples, detailed patterns, checklists
+- **Z13.Core/README.md** - Shared package usage and API reference
+- **Documents/** - Implementation notes, refactoring summaries (archived in Documents/Archive/)
+
 ## 🐛 Known Issues
 
+- Boot scene architecture designed but not yet implemented (single-scene initialization via GameSetup)
 - Camera dynamic zoom may need tuning for different screen sizes
-- Some visual effects may vary on different hardware
 
 ## 🔮 Future Plans
 
+- [ ] Boot scene implementation (two-scene architecture)
+- [ ] Rogue mode card upgrade system completion
 - [ ] Online leaderboards
-- [ ] Additional game modes
-- [ ] New enemy types
+- [ ] Additional enemy types
 - [ ] Boss rush mode
 - [ ] Steam/Console release
 

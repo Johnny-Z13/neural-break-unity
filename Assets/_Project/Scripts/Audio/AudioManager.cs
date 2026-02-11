@@ -47,6 +47,19 @@ namespace NeuralBreak.Audio
         private AudioClip m_bgmClip;
         private AudioClip[] m_enemyDeathClips;
 
+        [Header("Sound Throttling")]
+        [SerializeField] private int m_maxSimultaneousSounds = 8;
+        [SerializeField] private float m_throttleWindowTime = 0.1f;
+
+        // Sound throttling tracking
+        private System.Collections.Generic.Dictionary<string, float> m_lastPlayedTimes = new System.Collections.Generic.Dictionary<string, float>();
+        private System.Collections.Generic.Dictionary<string, int> m_soundCountsInWindow = new System.Collections.Generic.Dictionary<string, int>();
+        private float m_lastThrottleCleanupTime;
+        private const float THROTTLE_CLEANUP_INTERVAL = 5f;
+
+        // Static buffer for throttle cleanup (zero allocation)
+        private static readonly System.Collections.Generic.List<string> s_keysToRemoveBuffer = new System.Collections.Generic.List<string>(32);
+
         // Combo pitch tracking
         private int m_currentCombo;
         private float m_comboPitchBonus;
@@ -200,6 +213,44 @@ namespace NeuralBreak.Audio
 
         #endregion
 
+        private void Update()
+        {
+            // Periodically clean up old throttle entries to prevent dictionary bloat
+            if (Time.unscaledTime - m_lastThrottleCleanupTime > THROTTLE_CLEANUP_INTERVAL)
+            {
+                CleanupThrottleTracking();
+                m_lastThrottleCleanupTime = Time.unscaledTime;
+            }
+        }
+
+        /// <summary>
+        /// Remove old entries from throttle tracking dictionaries
+        /// </summary>
+        private void CleanupThrottleTracking()
+        {
+            float currentTime = Time.unscaledTime;
+            s_keysToRemoveBuffer.Clear();
+
+            // Find expired entries using enumerator pattern (avoids foreach boxing)
+            var enumerator = m_lastPlayedTimes.GetEnumerator();
+            while (enumerator.MoveNext())
+            {
+                var kvp = enumerator.Current;
+                if (currentTime - kvp.Value > m_throttleWindowTime * 2f)
+                {
+                    s_keysToRemoveBuffer.Add(kvp.Key);
+                }
+            }
+            enumerator.Dispose();
+
+            // Remove expired entries (indexed for loop - zero allocation)
+            for (int i = 0; i < s_keysToRemoveBuffer.Count; i++)
+            {
+                m_lastPlayedTimes.Remove(s_keysToRemoveBuffer[i]);
+                m_soundCountsInWindow.Remove(s_keysToRemoveBuffer[i]);
+            }
+        }
+
         #region Event Handlers
 
         private void OnProjectileFired(ProjectileFiredEvent evt)
@@ -267,8 +318,8 @@ namespace NeuralBreak.Audio
 
         private void OnGameStarted(GameStartedEvent evt)
         {
-            // Start background music
-            PlayMusic();
+            // Music is handled by MusicManager (proper track switching + crossfade)
+            // Do NOT play AudioManager's BGM on top of it - causes droning overlap
             m_currentCombo = 0;
             m_comboPitchBonus = 0f;
         }
@@ -291,12 +342,56 @@ namespace NeuralBreak.Audio
         #region Playback Methods
 
         /// <summary>
-        /// Play a sound effect
+        /// Play a sound effect with automatic throttling to prevent audio overload
         /// </summary>
         public void PlaySFX(AudioClip clip, float volumeMultiplier = 1f, float pitchMultiplier = 1f)
         {
             if (clip == null || m_sfxSource == null) return;
 
+            // Use clip name as throttle key
+            string clipKey = clip.name;
+            float currentTime = Time.unscaledTime;
+
+            // Check if this sound type is being throttled
+            if (m_lastPlayedTimes.ContainsKey(clipKey))
+            {
+                float timeSinceLastPlay = currentTime - m_lastPlayedTimes[clipKey];
+
+                // If within throttle window, check count
+                if (timeSinceLastPlay < m_throttleWindowTime)
+                {
+                    // Increment count in window
+                    if (m_soundCountsInWindow.ContainsKey(clipKey))
+                    {
+                        m_soundCountsInWindow[clipKey]++;
+                    }
+                    else
+                    {
+                        m_soundCountsInWindow[clipKey] = 1;
+                    }
+
+                    // Skip if over limit
+                    if (m_soundCountsInWindow[clipKey] >= m_maxSimultaneousSounds)
+                    {
+                        return; // Throttle this sound
+                    }
+                }
+                else
+                {
+                    // Window expired, reset count
+                    m_soundCountsInWindow[clipKey] = 1;
+                }
+            }
+            else
+            {
+                // First play of this sound
+                m_soundCountsInWindow[clipKey] = 1;
+            }
+
+            // Update last played time
+            m_lastPlayedTimes[clipKey] = currentTime;
+
+            // Play the sound
             m_sfxSource.pitch = pitchMultiplier;
             m_sfxSource.PlayOneShot(clip, m_masterVolume * m_sfxVolume * volumeMultiplier);
         }

@@ -22,6 +22,9 @@ namespace NeuralBreak.Combat
         [SerializeField] private SpriteRenderer m_spriteRenderer;
         [SerializeField] private TrailRenderer m_trailRenderer;
 
+        // Visual profile for special weapon effects
+        private ProjectileVisualProfile m_visualProfile;
+
         // Physics
         private Rigidbody2D m_rb;
         private CircleCollider2D m_collider;
@@ -39,12 +42,21 @@ namespace NeuralBreak.Combat
         private int m_pierceCount;
         private const int MAX_PIERCE = 5;
 
+        // Shared static buffer for NonAlloc physics queries (homing target search)
+        private static readonly Collider2D[] s_colliderBuffer = new Collider2D[64];
+        private static readonly ContactFilter2D s_noFilter = ContactFilter2D.noFilter;
+
         // Homing target lock
         private Transform m_lockedTarget;
+        private EnemyBase m_lockedEnemy; // Cached EnemyBase for locked target (avoids GetComponent per frame)
         private float m_reacquireTimer;
-        private const float REACQUIRE_DELAY = 0.2f;
-        private const float AIM_CONE_ANGLE = 45f;
+        private const float REACQUIRE_DELAY = 0.1f;
+        private const float AIM_CONE_ANGLE = 90f;
         private const float AIM_PRIORITY_MULTIPLIER = 0.5f;
+
+        // Close-range tracking boost: when closer than this, turn rate is amplified
+        private const float CLOSE_RANGE_THRESHOLD = 3f;
+        private const float CLOSE_RANGE_BOOST = 3f;
 
         // Cached reference - avoids FindFirstObjectByType every frame!
         private static WeaponUpgradeManager s_cachedUpgradeManager;
@@ -141,9 +153,13 @@ namespace NeuralBreak.Combat
             // Check if we need to reacquire target
             if (m_lockedTarget == null || !IsTargetValid(m_lockedTarget, range))
             {
+                // Clear cached enemy when target is lost
+                if (m_lockedTarget == null) m_lockedEnemy = null;
+
                 m_reacquireTimer -= Time.deltaTime;
                 if (m_reacquireTimer <= 0f)
                 {
+                    // FindBestTarget also sets m_lockedEnemy
                     m_lockedTarget = FindBestTarget(range);
                     m_reacquireTimer = REACQUIRE_DELAY;
                 }
@@ -152,8 +168,19 @@ namespace NeuralBreak.Combat
             // If we have a valid target, home toward it
             if (m_lockedTarget != null && IsTargetValid(m_lockedTarget, range))
             {
-                Vector2 toTarget = ((Vector2)m_lockedTarget.position - (Vector2)transform.position).normalized;
-                m_direction = Vector2.Lerp(m_direction, toTarget, strength * Time.deltaTime).normalized;
+                Vector2 toTarget = (Vector2)m_lockedTarget.position - (Vector2)transform.position;
+                float distToTarget = toTarget.magnitude;
+                Vector2 toTargetDir = distToTarget > 0.01f ? toTarget / distToTarget : m_direction;
+
+                // Boost turn rate when close to target to prevent fly-by misses
+                float effectiveStrength = strength;
+                if (distToTarget < CLOSE_RANGE_THRESHOLD)
+                {
+                    float closeness = 1f - (distToTarget / CLOSE_RANGE_THRESHOLD);
+                    effectiveStrength += strength * CLOSE_RANGE_BOOST * closeness;
+                }
+
+                m_direction = Vector2.Lerp(m_direction, toTargetDir, effectiveStrength * Time.deltaTime).normalized;
             }
             // else: maintain current direction (fly straight)
         }
@@ -165,8 +192,8 @@ namespace NeuralBreak.Combat
             float dist = Vector2.Distance(transform.position, target.position);
             if (dist > range * 1.5f) return false;
 
-            var enemy = target.GetComponent<EnemyBase>();
-            if (enemy == null || !enemy.IsAlive) return false;
+            // Use cached enemy reference (set when target is locked) to avoid GetComponent per frame
+            if (m_lockedEnemy == null || !m_lockedEnemy.IsAlive) return false;
 
             return true;
         }
@@ -177,16 +204,19 @@ namespace NeuralBreak.Combat
         private Transform FindBestTarget(float range)
         {
             Transform bestTarget = null;
+            EnemyBase bestEnemy = null;
             float bestScore = float.MaxValue;
 
-            Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, range);
+            int count = Physics2D.OverlapCircle(transform.position, range, s_noFilter, s_colliderBuffer);
 
-            foreach (var col in colliders)
+            for (int i = 0; i < count; i++)
             {
+                var col = s_colliderBuffer[i];
                 if (!col.CompareTag("Enemy")) continue;
 
-                var enemy = col.GetComponent<EnemyBase>();
-                if (enemy == null || !enemy.IsAlive) continue;
+                // TryGetComponent is zero-alloc (unlike GetComponent which may allocate on null)
+                if (!col.TryGetComponent<EnemyBase>(out var enemy)) continue;
+                if (!enemy.IsAlive) continue;
 
                 Vector2 toEnemy = (Vector2)col.transform.position - (Vector2)transform.position;
                 float dist = toEnemy.magnitude;
@@ -204,18 +234,21 @@ namespace NeuralBreak.Combat
                 {
                     score *= AIM_PRIORITY_MULTIPLIER; // Prioritize enemies in aim cone
                 }
-                else if (angleDeg > 90f)
+                else if (angleDeg > 120f)
                 {
-                    score *= 2f; // Penalize enemies behind
+                    score *= 1.5f; // Penalize enemies far behind
                 }
 
                 if (score < bestScore)
                 {
                     bestScore = score;
                     bestTarget = col.transform;
+                    bestEnemy = enemy;
                 }
             }
 
+            // Cache the enemy reference for the locked target
+            m_lockedEnemy = bestEnemy;
             return bestTarget;
         }
 
@@ -224,7 +257,8 @@ namespace NeuralBreak.Combat
         /// All values are FIXED at spawn time - each projectile is fully independent.
         /// </summary>
         public void Initialize(Vector2 position, Vector2 direction, int damage, int powerLevel,
-            System.Action<Projectile> returnToPool, bool isPiercing = false, bool isHoming = false)
+            System.Action<Projectile> returnToPool, bool isPiercing = false, bool isHoming = false,
+            ProjectileVisualProfile visualProfile = null, float speedMultiplier = 1f, float sizeMultiplier = 1f)
         {
             // Unparent to ensure projectile moves independently in world space
             transform.SetParent(null);
@@ -236,10 +270,14 @@ namespace NeuralBreak.Combat
 
             // Reset homing state
             m_lockedTarget = null;
+            m_lockedEnemy = null;
             m_reacquireTimer = 0f;
 
+            // Store visual profile (use default if not provided)
+            m_visualProfile = visualProfile ?? ProjectileVisualProfile.Default;
+
             // Store speed at spawn time (FIXED - each bullet has its own speed)
-            m_speed = ConfigProvider.WeaponSystem.baseProjectileSpeed;
+            m_speed = ConfigProvider.WeaponSystem.baseProjectileSpeed * speedMultiplier;
 
             // Store damage at spawn time (FIXED)
             m_damage = damage;
@@ -257,9 +295,9 @@ namespace NeuralBreak.Combat
             // Get projectile size from config
             m_baseRadius = ConfigProvider.WeaponSystem?.projectileSize ?? 0.15f;
 
-            // Apply projectile size per level scaling from config
+            // Apply projectile size per level scaling from config, plus upgrade size multiplier
             float sizePerLevel = ConfigProvider.WeaponSystem?.powerLevels?.projectileSizePerLevel ?? 0.01f;
-            float scaledRadius = m_baseRadius * (1f + powerLevel * sizePerLevel);
+            float scaledRadius = m_baseRadius * (1f + powerLevel * sizePerLevel) * sizeMultiplier;
 
             // Update collider radius
             if (m_collider != null)
@@ -281,47 +319,47 @@ namespace NeuralBreak.Combat
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
             transform.rotation = Quaternion.Euler(0, 0, angle - 90f);
 
-            // Visual scale - use config-based radius with visual multiplier
-            float visualScale = scaledRadius * 3f;
+            // Visual scale - use config-based radius with visual profile size multiplier
+            float visualScale = scaledRadius * 3f * m_visualProfile.sizeMultiplier;
             transform.localScale = Vector3.one * visualScale;
 
-            // Visual indication for special projectiles
-            UpdateVisualForUpgrades();
+            // Apply visual profile
+            ApplyVisualProfile();
 
             // Reset trail
             if (m_trailRenderer != null)
             {
                 m_trailRenderer.Clear();
-
-                // Change trail color for special projectiles
-                if (m_isPiercing || m_isHoming)
-                {
-                    Color trailColor = m_isPiercing ? new Color(1f, 0.5f, 0f) : new Color(0.5f, 1f, 0.5f);
-                    m_trailRenderer.startColor = trailColor;
-                    m_trailRenderer.endColor = new Color(trailColor.r, trailColor.g, trailColor.b, 0f);
-                }
             }
         }
 
-        private void UpdateVisualForUpgrades()
+        /// <summary>
+        /// Apply visual profile settings (color, trail, glow, particles).
+        /// </summary>
+        private void ApplyVisualProfile()
         {
-            if (m_spriteRenderer == null) return;
+            if (m_visualProfile == null) return;
 
-            if (m_isPiercing && m_isHoming)
+            // Apply projectile color with HDR glow intensity
+            if (m_spriteRenderer != null)
             {
-                m_spriteRenderer.color = new Color(1f, 0.8f, 0.2f); // Gold
+                Color finalColor = m_visualProfile.projectileColor * m_visualProfile.glowIntensity;
+                m_spriteRenderer.color = finalColor;
             }
-            else if (m_isPiercing)
+
+            // Apply trail color
+            if (m_trailRenderer != null)
             {
-                m_spriteRenderer.color = new Color(1f, 0.5f, 0f); // Orange
+                Color trailColor = m_visualProfile.trailColor;
+                m_trailRenderer.startColor = trailColor;
+                m_trailRenderer.endColor = new Color(trailColor.r, trailColor.g, trailColor.b, 0f);
             }
-            else if (m_isHoming)
+
+            // Spawn particle effect if provided
+            if (m_visualProfile.particleEffectPrefab != null)
             {
-                m_spriteRenderer.color = new Color(0.5f, 1f, 0.5f); // Green
-            }
-            else
-            {
-                m_spriteRenderer.color = Color.white;
+                GameObject particles = Instantiate(m_visualProfile.particleEffectPrefab, transform.position, Quaternion.identity);
+                particles.transform.SetParent(transform); // Attach to projectile
             }
         }
 
@@ -374,6 +412,8 @@ namespace NeuralBreak.Combat
         public void OnReturnToPool()
         {
             m_isActive = false;
+            m_lockedTarget = null;
+            m_lockedEnemy = null;
             if (m_trailRenderer != null)
             {
                 m_trailRenderer.Clear();
@@ -390,7 +430,8 @@ namespace NeuralBreak.Combat
                 bool hitSomething = false;
 
                 // First try EnemyBase (standard enemies)
-                var enemy = other.GetComponent<EnemyBase>();
+                // TryGetComponent is zero-alloc (unlike GetComponent which may allocate on null)
+                other.TryGetComponent<EnemyBase>(out var enemy);
                 if (enemy != null && enemy.IsAlive)
                 {
                     enemy.TakeDamage(m_damage, transform.position);
@@ -399,7 +440,7 @@ namespace NeuralBreak.Combat
                 else
                 {
                     // Try WormSegment (ChaosWorm body segments)
-                    var wormSegment = other.GetComponent<WormSegment>();
+                    other.TryGetComponent<WormSegment>(out var wormSegment);
                     if (wormSegment != null)
                     {
                         wormSegment.TakeDamage(m_damage, transform.position);

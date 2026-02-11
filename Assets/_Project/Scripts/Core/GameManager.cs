@@ -43,6 +43,9 @@ namespace NeuralBreak.Core
         private Coroutine m_levelTransitionCoroutine;
         private bool m_isPlayerDead;
 
+        // Static empty list to avoid allocation in UpgradeSelectionStartedEvent
+        private static readonly System.Collections.Generic.List<Combat.UpgradeDefinition> s_emptyUpgradeList = new System.Collections.Generic.List<Combat.UpgradeDefinition>(0);
+
         private void Awake()
         {
             Instance = this;
@@ -275,10 +278,15 @@ namespace NeuralBreak.Core
                 yield break;
             }
 
+            // Randomized firework death sequence over 1.5 seconds!
             if (m_enemySpawner != null)
             {
-                m_enemySpawner.ClearAllEnemies();
+                // Each enemy gets a random death time between 0 and 1.5 seconds
+                yield return StartCoroutine(m_enemySpawner.KillAllEnemiesFireworks(1.5f));
             }
+
+            // Extra second delay before showing upgrade menu (let fireworks finish)
+            yield return new WaitForSeconds(1.0f);
 
             bool showUpgradeSelection = ShouldShowUpgradeSelection();
 
@@ -288,7 +296,7 @@ namespace NeuralBreak.Core
 
                 EventBus.Publish(new UpgradeSelectionStartedEvent
                 {
-                    options = new System.Collections.Generic.List<Combat.UpgradeDefinition>()
+                    options = s_emptyUpgradeList
                 });
 
                 m_upgradeSelected = false;

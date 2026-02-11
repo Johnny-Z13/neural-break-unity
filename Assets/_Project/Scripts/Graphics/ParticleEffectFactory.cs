@@ -9,57 +9,18 @@ namespace NeuralBreak.Graphics
     /// </summary>
     public static class ParticleEffectFactory
     {
+        /// <summary>
+        /// Global VFX juice multiplier - makes all particles bigger and more dramatic!
+        /// </summary>
+        private const float GLOBAL_VFX_SCALE = 2.0f; // 2X size for extra juice!
 
         /// <summary>
-        /// Get or create a URP-compatible particle material
+        /// Get or create a URP-compatible particle material with proper soft texture
         /// </summary>
-        private static Material GetParticleMaterial(Color color)
+        private static Material GetParticleMaterial(Color color, bool additive = true)
         {
-            // Try URP particle shader first
-            Shader shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
-            if (shader == null)
-            {
-                // Fallback to Sprites/Default which works in both pipelines
-                shader = Shader.Find("Sprites/Default");
-            }
-            if (shader == null)
-            {
-                // Final fallback
-                shader = Shader.Find("Particles/Standard Unlit");
-            }
-
-            if (shader != null)
-            {
-                Material mat = new Material(shader);
-
-                // Set the base color - CRITICAL for URP particles to be visible
-                mat.SetColor("_BaseColor", color);
-                mat.SetColor("_Color", color);
-
-                // Configure for additive blending
-                mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-                mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.One);
-                mat.SetInt("_ZWrite", 0);
-                mat.renderQueue = 3000; // Transparent queue
-
-                // URP specific settings
-                if (mat.HasProperty("_Surface"))
-                {
-                    mat.SetFloat("_Surface", 1); // Transparent
-                    mat.SetFloat("_Blend", 1); // Additive
-                }
-
-                // Enable color from particle system
-                mat.EnableKeyword("_COLOROVERLAY_ON");
-                mat.EnableKeyword("_COLORCOLOR_ON");
-
-                return mat;
-            }
-            else
-            {
-                Debug.LogWarning("[ParticleEffectFactory] Could not find particle shader!");
-                return null;
-            }
+            // Use VFXHelpers to create material with proper soft texture and blending
+            return VFX.VFXHelpers.CreateParticleMaterial(color, emissionIntensity: 1f, additive: additive);
         }
 
         /// <summary>
@@ -95,8 +56,8 @@ namespace NeuralBreak.Graphics
             main.duration = 0.6f;
             main.loop = false;
             main.startLifetime = new ParticleSystem.MinMaxCurve(0.3f, 0.6f);
-            main.startSpeed = new ParticleSystem.MinMaxCurve(size * 3f, size * 6f);
-            main.startSize = new ParticleSystem.MinMaxCurve(size * 0.1f, size * 0.3f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(size * 3f * GLOBAL_VFX_SCALE, size * 6f * GLOBAL_VFX_SCALE);
+            main.startSize = new ParticleSystem.MinMaxCurve(size * 0.1f * GLOBAL_VFX_SCALE, size * 0.3f * GLOBAL_VFX_SCALE);
             main.startColor = color;
             main.gravityModifier = 0f;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
@@ -115,7 +76,7 @@ namespace NeuralBreak.Graphics
             var shape = ps.shape;
             shape.enabled = true;
             shape.shapeType = ParticleSystemShapeType.Sphere;
-            shape.radius = size * 0.1f;
+            shape.radius = size * 0.1f * GLOBAL_VFX_SCALE;
 
             // Color over lifetime - bright flash then fade
             var colorOverLifetime = ps.colorOverLifetime;
@@ -169,7 +130,7 @@ namespace NeuralBreak.Graphics
             main.loop = false;
             main.startLifetime = 0.15f;
             main.startSpeed = 0f;
-            main.startSize = size * 1.5f;
+            main.startSize = size * 1.5f * GLOBAL_VFX_SCALE;
             main.startColor = Color.white;
             main.gravityModifier = 0f;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
@@ -221,8 +182,8 @@ namespace NeuralBreak.Graphics
             main.duration = 0.3f;
             main.loop = false;
             main.startLifetime = 0.3f;
-            main.startSpeed = size * 8f;
-            main.startSize = size * 0.08f;
+            main.startSpeed = size * 8f * GLOBAL_VFX_SCALE;
+            main.startSize = size * 0.08f * GLOBAL_VFX_SCALE;
             main.startColor = color;
             main.gravityModifier = 0f;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
@@ -238,7 +199,7 @@ namespace NeuralBreak.Graphics
             var shape = ps.shape;
             shape.enabled = true;
             shape.shapeType = ParticleSystemShapeType.Circle;
-            shape.radius = size * 0.05f;
+            shape.radius = size * 0.05f * GLOBAL_VFX_SCALE;
             shape.arc = 360f;
             shape.arcMode = ParticleSystemShapeMultiModeValue.Random;
 
@@ -279,8 +240,8 @@ namespace NeuralBreak.Graphics
             main.duration = 0.8f;
             main.loop = false;
             main.startLifetime = new ParticleSystem.MinMaxCurve(0.4f, 0.8f);
-            main.startSpeed = new ParticleSystem.MinMaxCurve(size * 1f, size * 3f);
-            main.startSize = new ParticleSystem.MinMaxCurve(size * 0.03f, size * 0.08f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(size * 1f * GLOBAL_VFX_SCALE, size * 3f * GLOBAL_VFX_SCALE);
+            main.startSize = new ParticleSystem.MinMaxCurve(size * 0.03f * GLOBAL_VFX_SCALE, size * 0.08f * GLOBAL_VFX_SCALE);
             main.startColor = color;
             main.gravityModifier = 0.3f; // Light gravity for debris feel
             main.simulationSpace = ParticleSystemSimulationSpace.World;
@@ -298,7 +259,7 @@ namespace NeuralBreak.Graphics
             var shape = ps.shape;
             shape.enabled = true;
             shape.shapeType = ParticleSystemShapeType.Sphere;
-            shape.radius = size * 0.2f;
+            shape.radius = size * 0.2f * GLOBAL_VFX_SCALE;
 
             // Twinkle effect - oscillate alpha
             var colorOverLifetime = ps.colorOverLifetime;
@@ -330,8 +291,8 @@ namespace NeuralBreak.Graphics
             main.duration = 0.2f;
             main.loop = false;
             main.startLifetime = new ParticleSystem.MinMaxCurve(0.1f, 0.2f);
-            main.startSpeed = new ParticleSystem.MinMaxCurve(3f, 8f);
-            main.startSize = new ParticleSystem.MinMaxCurve(0.05f, 0.15f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(3f * GLOBAL_VFX_SCALE, 8f * GLOBAL_VFX_SCALE);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.05f * GLOBAL_VFX_SCALE, 0.15f * GLOBAL_VFX_SCALE);
             main.startColor = color;
             main.gravityModifier = 0f;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
@@ -350,7 +311,7 @@ namespace NeuralBreak.Graphics
             var shape = ps.shape;
             shape.enabled = true;
             shape.shapeType = ParticleSystemShapeType.Hemisphere;
-            shape.radius = 0.1f;
+            shape.radius = 0.1f * GLOBAL_VFX_SCALE;
 
             // Color over lifetime
             var colorOverLifetime = ps.colorOverLifetime;
@@ -386,8 +347,8 @@ namespace NeuralBreak.Graphics
             main.duration = 0.6f;
             main.loop = false;
             main.startLifetime = new ParticleSystem.MinMaxCurve(0.3f, 0.6f);
-            main.startSpeed = new ParticleSystem.MinMaxCurve(3f, 6f);
-            main.startSize = new ParticleSystem.MinMaxCurve(0.08f, 0.18f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(3f * GLOBAL_VFX_SCALE, 6f * GLOBAL_VFX_SCALE);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.08f * GLOBAL_VFX_SCALE, 0.18f * GLOBAL_VFX_SCALE);
             main.startColor = color;
             main.gravityModifier = 0f;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
@@ -406,7 +367,7 @@ namespace NeuralBreak.Graphics
             var shape = ps.shape;
             shape.enabled = true;
             shape.shapeType = ParticleSystemShapeType.Sphere;
-            shape.radius = 0.15f;
+            shape.radius = 0.15f * GLOBAL_VFX_SCALE;
 
             // Color over lifetime - bright flash then fade with color
             var colorOverLifetime = ps.colorOverLifetime;
@@ -464,7 +425,7 @@ namespace NeuralBreak.Graphics
             main.loop = false;
             main.startLifetime = 0.2f;
             main.startSpeed = 0f;
-            main.startSize = 1.2f;
+            main.startSize = 1.2f * GLOBAL_VFX_SCALE;
             main.startColor = Color.white;
             main.gravityModifier = 0f;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
@@ -517,8 +478,8 @@ namespace NeuralBreak.Graphics
             main.duration = 0.4f;
             main.loop = false;
             main.startLifetime = 0.4f;
-            main.startSpeed = 8f;
-            main.startSize = 0.06f;
+            main.startSpeed = 8f * GLOBAL_VFX_SCALE;
+            main.startSize = 0.06f * GLOBAL_VFX_SCALE;
             main.startColor = color;
             main.gravityModifier = 0f;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
@@ -534,7 +495,7 @@ namespace NeuralBreak.Graphics
             var shape = ps.shape;
             shape.enabled = true;
             shape.shapeType = ParticleSystemShapeType.Circle;
-            shape.radius = 0.1f;
+            shape.radius = 0.1f * GLOBAL_VFX_SCALE;
             shape.arc = 360f;
             shape.rotation = Vector3.zero; // Emit in XY plane
 
@@ -567,8 +528,8 @@ namespace NeuralBreak.Graphics
             main.duration = 0.8f;
             main.loop = false;
             main.startLifetime = new ParticleSystem.MinMaxCurve(0.5f, 0.8f);
-            main.startSpeed = new ParticleSystem.MinMaxCurve(0.5f, 2f);
-            main.startSize = new ParticleSystem.MinMaxCurve(0.04f, 0.1f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(0.5f * GLOBAL_VFX_SCALE, 2f * GLOBAL_VFX_SCALE);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.04f * GLOBAL_VFX_SCALE, 0.1f * GLOBAL_VFX_SCALE);
             main.startColor = color;
             main.gravityModifier = -1.5f; // Float upward
             main.simulationSpace = ParticleSystemSimulationSpace.World;
@@ -587,7 +548,7 @@ namespace NeuralBreak.Graphics
             var shape = ps.shape;
             shape.enabled = true;
             shape.shapeType = ParticleSystemShapeType.Circle;
-            shape.radius = 0.3f;
+            shape.radius = 0.3f * GLOBAL_VFX_SCALE;
             shape.rotation = Vector3.zero;
 
             // Twinkle effect
@@ -639,7 +600,7 @@ namespace NeuralBreak.Graphics
             main.loop = true;
             main.startLifetime = new ParticleSystem.MinMaxCurve(0.2f, 0.4f);
             main.startSpeed = 0f;
-            main.startSize = new ParticleSystem.MinMaxCurve(0.1f, 0.2f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.1f * GLOBAL_VFX_SCALE, 0.2f * GLOBAL_VFX_SCALE);
             main.startColor = color;
             main.gravityModifier = 0f;
             main.simulationSpace = ParticleSystemSimulationSpace.World;

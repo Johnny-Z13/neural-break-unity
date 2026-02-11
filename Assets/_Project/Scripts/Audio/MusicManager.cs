@@ -206,12 +206,13 @@ namespace NeuralBreak.Audio
                 float bassEnv = Mathf.Exp(-beatPhase * 5f);
                 sample += Mathf.Sin(2f * Mathf.PI * bassNote * t) * bassEnv * 0.25f * (0.5f + track.intensity * 0.5f);
 
-                // Pad/atmosphere
+                // Pad/atmosphere - pulsed with beat to avoid constant drone
                 float padFreq = track.isBossTrack ? 220f : 330f;
-                float pad = Mathf.Sin(2f * Mathf.PI * padFreq * t) * 0.05f;
-                pad += Mathf.Sin(2f * Mathf.PI * padFreq * 1.5f * t) * 0.03f;
-                pad += Mathf.Sin(2f * Mathf.PI * padFreq * 2f * t) * 0.02f;
-                sample += pad * (1f - track.intensity * 0.5f);
+                float padEnv = Mathf.Exp(-beatPhase * 3f) * 0.6f + 0.1f; // Attack on each beat, decays
+                float pad = Mathf.Sin(2f * Mathf.PI * padFreq * t) * 0.04f;
+                pad += Mathf.Sin(2f * Mathf.PI * padFreq * 1.5f * t) * 0.02f;
+                pad += Mathf.Sin(2f * Mathf.PI * padFreq * 2f * t) * 0.015f;
+                sample += pad * padEnv * (1f - track.intensity * 0.5f);
 
                 // Arpeggio for higher intensity
                 if (track.intensity > 0.5f)

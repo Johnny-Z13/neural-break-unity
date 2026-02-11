@@ -355,16 +355,16 @@ namespace NeuralBreak.Audio
                 float osc2 = Mathf.Sin(2f * Mathf.PI * arpFreq * 1.005f * t);
                 sample += (osc1 + osc2) * 0.5f * arpEnv * 0.15f;
 
-                // Pad (sustained chord, low volume)
+                // Pad (chord, pulsed with beat to avoid constant drone)
                 float padFreq1 = scale[0];
                 float padFreq2 = scale[2];
                 float padFreq3 = scale[4];
                 float pad = Mathf.Sin(2f * Mathf.PI * padFreq1 * t) +
                            Mathf.Sin(2f * Mathf.PI * padFreq2 * t) * 0.7f +
                            Mathf.Sin(2f * Mathf.PI * padFreq3 * t) * 0.5f;
-                // Slow LFO for movement
-                float padLfo = 0.7f + 0.3f * Mathf.Sin(t * 0.5f);
-                sample += pad * 0.05f * padLfo;
+                // Pulse with beat envelope instead of constant drone
+                float padBeatEnv = Mathf.Exp(-beatFrac * 4f) * 0.7f + 0.1f;
+                sample += pad * 0.04f * padBeatEnv;
 
                 data[i] = Mathf.Clamp(sample, -1f, 1f);
             }

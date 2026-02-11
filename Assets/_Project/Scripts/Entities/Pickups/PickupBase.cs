@@ -11,6 +11,7 @@ namespace NeuralBreak.Entities
     /// Handles magnetism, collection, and pooling.
     /// Based on TypeScript PickupManager.ts pattern.
     /// </summary>
+    [RequireComponent(typeof(PickupPhysicsFix))]
     public abstract class PickupBase : MonoBehaviour
     {
         [Header("Pickup Settings")]

@@ -43,7 +43,7 @@ namespace NeuralBreak.Entities
         private int m_projectileDamage => EnemyConfig?.projectileDamage ?? 14;
 
         [Header("Visual")]
-        [SerializeField] private SpriteRenderer m_spriteRenderer;
+        // m_spriteRenderer inherited from EnemyBase (protected field)
         [SerializeField] private Transform m_domeLight;
         [SerializeField] private UFOVisuals m_visuals;
         [SerializeField] private Color m_ufoColor = new Color(0.7f, 0.7f, 0.8f); // Silver
@@ -418,15 +418,19 @@ namespace NeuralBreak.Entities
             base.Kill();
         }
 
+        // Cached array for overlap checks (zero allocation)
+        private static Collider2D[] s_hitBuffer = new Collider2D[32];
+        private static readonly ContactFilter2D s_noFilter = ContactFilter2D.noFilter;
+
         private void DealDeathDamage()
         {
-            Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, m_deathDamageRadius);
+            int hitCount = Physics2D.OverlapCircle(transform.position, m_deathDamageRadius, s_noFilter, s_hitBuffer);
 
-            foreach (var hit in hits)
+            for (int i = 0; i < hitCount; i++)
             {
-                if (hit.gameObject == gameObject) continue;
+                if (s_hitBuffer[i].gameObject == gameObject) continue;
 
-                EnemyBase enemy = hit.GetComponent<EnemyBase>();
+                EnemyBase enemy = s_hitBuffer[i].GetComponent<EnemyBase>();
                 if (enemy != null && enemy.IsAlive)
                 {
                     enemy.TakeDamage(m_deathDamageAmount, transform.position);

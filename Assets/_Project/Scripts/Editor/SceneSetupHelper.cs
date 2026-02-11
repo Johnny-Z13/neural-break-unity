@@ -44,11 +44,10 @@ namespace NeuralBreak.Editor
                     playerProp.objectReferenceValue = player.transform;
                 }
 
-                // Load and set prefabs
-                SetPrefabReference(so, "m_powerUpPrefab", "Assets/_Project/Prefabs/Pickups/PowerUpPickup.prefab");
-                SetPrefabReference(so, "m_speedUpPrefab", "Assets/_Project/Prefabs/Pickups/SpeedUpPickup.prefab");
+                // Load and set prefabs (only 4 floating pickup types)
                 SetPrefabReference(so, "m_medPackPrefab", "Assets/_Project/Prefabs/Pickups/MedPackPickup.prefab");
                 SetPrefabReference(so, "m_shieldPrefab", "Assets/_Project/Prefabs/Pickups/ShieldPickup.prefab");
+                SetPrefabReference(so, "m_smartBombPrefab", "Assets/_Project/Prefabs/Pickups/SmartBombPickup.prefab");
                 SetPrefabReference(so, "m_invulnerablePrefab", "Assets/_Project/Prefabs/Pickups/InvulnerablePickup.prefab");
 
                 so.ApplyModifiedProperties();

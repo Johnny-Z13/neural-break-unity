@@ -162,28 +162,6 @@
                 },
                 {
                     "name": "",
-                    "id": "c5d6e7f8-a9b0-1234-cdef-345678901234",
-                    "path": "<Gamepad>/rightTrigger",
-                    "interactions": "Press(behavior=2)",
-                    "processors": "",
-                    "groups": "Gamepad",
-                    "action": "Attack",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "b4c5d6e7-f8a9-0123-bcde-456789012345",
-                    "path": "<Gamepad>/buttonWest",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "Gamepad",
-                    "action": "Attack",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
                     "id": "d6e7f8a9-b0c1-2345-defa-456789012345",
                     "path": "<Keyboard>/space",
                     "interactions": "",

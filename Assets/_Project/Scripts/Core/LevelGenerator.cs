@@ -59,6 +59,12 @@ namespace NeuralBreak.Core
             int clampedLevel = Mathf.Clamp(level, 1, TOTAL_LEVELS);
             Debug.Log($"[LevelGenerator] Returning ARCADE MODE config (level {clampedLevel})");
 
+            // Special themed levels 4-10 to showcase variety
+            if (clampedLevel >= 4 && clampedLevel <= 10)
+            {
+                return GetShowcaseLevelConfig(clampedLevel);
+            }
+
             // Surprise levels every 5th level
             if (clampedLevel % 5 == 0 && clampedLevel > 0)
                 return GetSurpriseLevelConfig(clampedLevel);
@@ -309,6 +315,197 @@ namespace NeuralBreak.Core
         }
 
         /// <summary>
+        /// Showcase levels 4-10: Each level features different enemy types to show variety
+        /// Level 4: Fizzers + Boss
+        /// Level 5: Worms + Mites
+        /// Level 6: Drones + Mites
+        /// Level 7: Crystals + Mites
+        /// Level 8: Void Spheres + Drones
+        /// Level 9: UFOs + Mixed
+        /// Level 10: All enemies (chaos showcase)
+        /// </summary>
+        private static LevelConfig GetShowcaseLevelConfig(int level)
+        {
+            float difficultyScale = 1f + (level - 1) * DifficultyPerLevel;
+            float spawnScale = Mathf.Max(MinSpawnRateMultiplier, Mathf.Pow(SpawnRateScalePerLevel, level - 1));
+
+            switch (level)
+            {
+                case 4: // FIZZER STORM
+                    return new LevelConfig
+                    {
+                        level = 4,
+                        name = "FIZZER STORM!",
+                        objectives = new LevelObjectives
+                        {
+                            fizzers = 30,
+                            bosses = 1
+                        },
+                        spawnRates = new SpawnRates
+                        {
+                            dataMiteRate = float.PositiveInfinity,
+                            scanDroneRate = float.PositiveInfinity,
+                            chaosWormRate = float.PositiveInfinity,
+                            voidSphereRate = float.PositiveInfinity,
+                            crystalShardRate = float.PositiveInfinity,
+                            fizzerRate = 1.8f,
+                            ufoRate = float.PositiveInfinity,
+                            bossRate = 50.0f
+                        }
+                    };
+
+                case 5: // WORM INVASION
+                    return new LevelConfig
+                    {
+                        level = 5,
+                        name = "WORM INVASION!",
+                        objectives = new LevelObjectives
+                        {
+                            dataMites = Mathf.FloorToInt(15 * difficultyScale),
+                            chaosWorms = Mathf.FloorToInt(10 * difficultyScale)
+                        },
+                        spawnRates = new SpawnRates
+                        {
+                            dataMiteRate = 1.5f * spawnScale,
+                            scanDroneRate = float.PositiveInfinity,
+                            chaosWormRate = 6.0f * spawnScale,
+                            voidSphereRate = float.PositiveInfinity,
+                            crystalShardRate = float.PositiveInfinity,
+                            fizzerRate = float.PositiveInfinity,
+                            ufoRate = float.PositiveInfinity,
+                            bossRate = float.PositiveInfinity
+                        }
+                    };
+
+                case 6: // DRONE SWARM
+                    return new LevelConfig
+                    {
+                        level = 6,
+                        name = "DRONE SWARM!",
+                        objectives = new LevelObjectives
+                        {
+                            dataMites = Mathf.FloorToInt(20 * difficultyScale),
+                            scanDrones = Mathf.FloorToInt(25 * difficultyScale)
+                        },
+                        spawnRates = new SpawnRates
+                        {
+                            dataMiteRate = 1.2f * spawnScale,
+                            scanDroneRate = 2.5f * spawnScale,
+                            chaosWormRate = float.PositiveInfinity,
+                            voidSphereRate = float.PositiveInfinity,
+                            crystalShardRate = float.PositiveInfinity,
+                            fizzerRate = float.PositiveInfinity,
+                            ufoRate = float.PositiveInfinity,
+                            bossRate = float.PositiveInfinity
+                        }
+                    };
+
+                case 7: // CRYSTAL CAVERN
+                    return new LevelConfig
+                    {
+                        level = 7,
+                        name = "CRYSTAL CAVERN!",
+                        objectives = new LevelObjectives
+                        {
+                            dataMites = Mathf.FloorToInt(18 * difficultyScale),
+                            crystalShards = Mathf.FloorToInt(12 * difficultyScale)
+                        },
+                        spawnRates = new SpawnRates
+                        {
+                            dataMiteRate = 1.3f * spawnScale,
+                            scanDroneRate = float.PositiveInfinity,
+                            chaosWormRate = float.PositiveInfinity,
+                            voidSphereRate = float.PositiveInfinity,
+                            crystalShardRate = 5.0f * spawnScale,
+                            fizzerRate = float.PositiveInfinity,
+                            ufoRate = float.PositiveInfinity,
+                            bossRate = float.PositiveInfinity
+                        }
+                    };
+
+                case 8: // VOID NIGHTMARE
+                    return new LevelConfig
+                    {
+                        level = 8,
+                        name = "VOID NIGHTMARE!",
+                        objectives = new LevelObjectives
+                        {
+                            scanDrones = Mathf.FloorToInt(15 * difficultyScale),
+                            voidSpheres = Mathf.FloorToInt(8 * difficultyScale)
+                        },
+                        spawnRates = new SpawnRates
+                        {
+                            dataMiteRate = float.PositiveInfinity,
+                            scanDroneRate = 4.0f * spawnScale,
+                            chaosWormRate = float.PositiveInfinity,
+                            voidSphereRate = 10.0f * spawnScale,
+                            crystalShardRate = float.PositiveInfinity,
+                            fizzerRate = float.PositiveInfinity,
+                            ufoRate = float.PositiveInfinity,
+                            bossRate = float.PositiveInfinity
+                        }
+                    };
+
+                case 9: // UFO ARMADA
+                    return new LevelConfig
+                    {
+                        level = 9,
+                        name = "UFO ARMADA!",
+                        objectives = new LevelObjectives
+                        {
+                            dataMites = Mathf.FloorToInt(12 * difficultyScale),
+                            scanDrones = Mathf.FloorToInt(8 * difficultyScale),
+                            fizzers = Mathf.FloorToInt(6 * difficultyScale),
+                            ufos = Mathf.FloorToInt(10 * difficultyScale)
+                        },
+                        spawnRates = new SpawnRates
+                        {
+                            dataMiteRate = 1.5f * spawnScale,
+                            scanDroneRate = 5.0f * spawnScale,
+                            chaosWormRate = float.PositiveInfinity,
+                            voidSphereRate = float.PositiveInfinity,
+                            crystalShardRate = float.PositiveInfinity,
+                            fizzerRate = 8.0f * spawnScale,
+                            ufoRate = 7.0f * spawnScale,
+                            bossRate = float.PositiveInfinity
+                        }
+                    };
+
+                case 10: // TOTAL CHAOS (all enemies)
+                    return new LevelConfig
+                    {
+                        level = 10,
+                        name = "TOTAL CHAOS!",
+                        objectives = new LevelObjectives
+                        {
+                            dataMites = Mathf.FloorToInt(20 * difficultyScale),
+                            scanDrones = Mathf.FloorToInt(10 * difficultyScale),
+                            chaosWorms = Mathf.FloorToInt(4 * difficultyScale),
+                            voidSpheres = Mathf.FloorToInt(3 * difficultyScale),
+                            crystalShards = Mathf.FloorToInt(4 * difficultyScale),
+                            fizzers = Mathf.FloorToInt(8 * difficultyScale),
+                            ufos = Mathf.FloorToInt(5 * difficultyScale),
+                            bosses = 1
+                        },
+                        spawnRates = new SpawnRates
+                        {
+                            dataMiteRate = 0.8f * spawnScale,
+                            scanDroneRate = 3.5f * spawnScale,
+                            chaosWormRate = 12.0f * spawnScale,
+                            voidSphereRate = 18.0f * spawnScale,
+                            crystalShardRate = 15.0f * spawnScale,
+                            fizzerRate = 4.0f * spawnScale,
+                            ufoRate = 10.0f * spawnScale,
+                            bossRate = 40.0f
+                        }
+                    };
+
+                default:
+                    return GenerateDynamicLevelConfig(level);
+            }
+        }
+
+        /// <summary>
         /// Generate dynamic level config with ramping difficulty
         /// All enemy types unlocked by level 5 for faster progression
         /// </summary>
@@ -321,11 +518,11 @@ namespace NeuralBreak.Core
                 {
                     level = 1,
                     name = "NEURAL INITIALIZATION - LVL 1",
-                    objectives = new LevelObjectives { dataMites = 8 },
+                    objectives = new LevelObjectives { dataMites = 6, scanDrones = 2 },  // Added ScanDrones!
                     spawnRates = new SpawnRates
                     {
-                        dataMiteRate = 1.5f,
-                        scanDroneRate = float.PositiveInfinity,
+                        dataMiteRate = 0.5f,  // 3X FASTER for immediate action!
+                        scanDroneRate = 4.0f,  // ScanDrones spawn from Level 1! (shoots at player)
                         chaosWormRate = float.PositiveInfinity,
                         voidSphereRate = float.PositiveInfinity,
                         crystalShardRate = float.PositiveInfinity,
@@ -352,7 +549,7 @@ namespace NeuralBreak.Core
             bool hasCrystals = level >= 3;
             bool hasUFOs = level >= 4;
             bool hasBosses = level >= 5;
-            bool hasFizzers = level >= 6;
+            bool hasFizzers = level >= 2;  // Fizzers now spawn from Level 2!
 
             // Calculate objectives - ensure minimum of 1 when enemy type is enabled
             var objectives = new LevelObjectives
@@ -362,24 +559,36 @@ namespace NeuralBreak.Core
                 chaosWorms = hasWorms ? Mathf.Max(1, Mathf.FloorToInt((1 + level * 0.2f) * difficultyScale)) : 0,
                 voidSpheres = hasVoidSpheres ? Mathf.Max(1, Mathf.FloorToInt((1 + level * 0.1f) * difficultyScale)) : 0,
                 crystalShards = hasCrystals ? Mathf.Max(1, Mathf.FloorToInt((1 + level * 0.12f) * difficultyScale)) : 0,
-                fizzers = hasFizzers ? Mathf.Max(1, Mathf.FloorToInt((2 + level * 0.15f) * difficultyScale)) : 0,
+                fizzers = hasFizzers ? Mathf.Max(2, Mathf.FloorToInt((4 + level * 0.3f) * difficultyScale)) : 0,  // 2X more Fizzers! (was 2 + level * 0.15)
                 ufos = hasUFOs ? Mathf.Max(1, Mathf.FloorToInt((1 + level * 0.12f) * difficultyScale)) : 0,
                 bosses = hasBosses ? Mathf.Max(1, Mathf.FloorToInt(level * 0.06f)) : 0
             };
 
-            // Calculate spawn rates - slower at start, faster as level increases
+            // Calculate spawn rates - MUCH faster for intense action!
             // Higher number = slower spawn (time in seconds between spawns)
             var spawnRates = new SpawnRates
             {
-                dataMiteRate = Mathf.Max(1.5f, 3.0f - level * 0.015f) * spawnScale,      // Starts at 3s, min 1.5s
-                scanDroneRate = Mathf.Max(6.0f, 12f - level * 0.06f) * spawnScale,       // Starts at 12s, min 6s
-                chaosWormRate = hasWorms ? Mathf.Max(15f, 40f - level * 0.25f) * spawnScale : float.PositiveInfinity,
-                voidSphereRate = hasVoidSpheres ? Mathf.Max(18f, 60f - level * 0.42f) * spawnScale : float.PositiveInfinity,
-                crystalShardRate = hasCrystals ? Mathf.Max(16f, 50f - level * 0.34f) * spawnScale : float.PositiveInfinity,
-                fizzerRate = hasFizzers ? Mathf.Max(10f, 30f - level * 0.2f) * spawnScale : float.PositiveInfinity,
-                ufoRate = hasUFOs ? Mathf.Max(20f, 50f - level * 0.3f) * spawnScale : float.PositiveInfinity,
-                bossRate = hasBosses ? Mathf.Max(45f, 120f - level * 0.75f) : float.PositiveInfinity
+                dataMiteRate = Mathf.Max(0.3f, 1.0f - level * 0.01f) * spawnScale,       // Starts at 1s, min 0.3s - 5X FASTER!
+                scanDroneRate = Mathf.Max(1.5f, 3.0f - level * 0.015f) * spawnScale,     // Starts at 3s, min 1.5s - 4X FASTER!
+                chaosWormRate = hasWorms ? Mathf.Max(4f, 10f - level * 0.06f) * spawnScale : float.PositiveInfinity,  // 4X FASTER!
+                voidSphereRate = hasVoidSpheres ? Mathf.Max(5f, 15f - level * 0.1f) * spawnScale : float.PositiveInfinity,  // 4X FASTER!
+                crystalShardRate = hasCrystals ? Mathf.Max(4f, 12f - level * 0.08f) * spawnScale : float.PositiveInfinity,  // 4X FASTER!
+                fizzerRate = hasFizzers ? Mathf.Max(2.5f, 7.5f - level * 0.05f) * spawnScale : float.PositiveInfinity,  // 4X FASTER!
+                ufoRate = hasUFOs ? Mathf.Max(5f, 12.5f - level * 0.075f) * spawnScale : float.PositiveInfinity,  // 4X FASTER!
+                bossRate = hasBosses ? Mathf.Max(11f, 30f - level * 0.19f) : float.PositiveInfinity  // 4X FASTER!
             };
+
+            // Level 3 - Reduce spawn rates by 20% (too crowded!)
+            // Higher spawn rate = slower spawning (more time between spawns)
+            if (level == 3)
+            {
+                spawnRates.dataMiteRate *= 1.25f;      // 25% slower = 20% fewer spawns
+                spawnRates.scanDroneRate *= 1.25f;
+                spawnRates.chaosWormRate *= 1.25f;
+                spawnRates.voidSphereRate *= 1.25f;
+                spawnRates.crystalShardRate *= 1.25f;
+                spawnRates.fizzerRate *= 1.25f;
+            }
 
             return new LevelConfig
             {

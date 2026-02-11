@@ -9,6 +9,10 @@ namespace NeuralBreak.Entities
     /// </summary>
     public class EnemySpawnRateManager
     {
+        // Pre-allocated buffer for spawn requests (avoids per-frame List + ToArray allocation)
+        private readonly EnemySpawnRequest[] m_spawnBuffer = new EnemySpawnRequest[8];
+        private int m_spawnCount;
+
         // Spawn rates (time between spawns in seconds)
         private float m_dataMiteRate;
         private float m_scanDroneRate;
@@ -112,15 +116,15 @@ namespace NeuralBreak.Entities
         /// Update timers and check which enemies should spawn.
         /// Returns list of enemy types ready to spawn.
         /// </summary>
-        public EnemySpawnRequest[] UpdateAndGetReadySpawns(float deltaTime)
+        public int UpdateAndGetReadySpawns(float deltaTime, EnemySpawnRequest[] buffer)
         {
-            var readySpawns = new System.Collections.Generic.List<EnemySpawnRequest>();
+            int count = 0;
 
             // DataMite
             m_dataMiteTimer += deltaTime;
             if (m_dataMiteTimer >= m_dataMiteRate)
             {
-                readySpawns.Add(new EnemySpawnRequest(EnemyType.DataMite));
+                buffer[count++] = new EnemySpawnRequest(EnemyType.DataMite);
                 m_dataMiteTimer = 0f;
             }
 
@@ -128,7 +132,7 @@ namespace NeuralBreak.Entities
             m_scanDroneTimer += deltaTime;
             if (m_scanDroneTimer >= m_scanDroneRate)
             {
-                readySpawns.Add(new EnemySpawnRequest(EnemyType.ScanDrone));
+                buffer[count++] = new EnemySpawnRequest(EnemyType.ScanDrone);
                 m_scanDroneTimer = 0f;
             }
 
@@ -138,7 +142,7 @@ namespace NeuralBreak.Entities
                 m_fizzerTimer += deltaTime;
                 if (m_fizzerTimer >= m_fizzerRate)
                 {
-                    readySpawns.Add(new EnemySpawnRequest(EnemyType.Fizzer));
+                    buffer[count++] = new EnemySpawnRequest(EnemyType.Fizzer);
                     m_fizzerTimer = 0f;
                 }
             }
@@ -147,7 +151,7 @@ namespace NeuralBreak.Entities
             m_ufoTimer += deltaTime;
             if (m_ufoTimer >= m_ufoRate)
             {
-                readySpawns.Add(new EnemySpawnRequest(EnemyType.UFO));
+                buffer[count++] = new EnemySpawnRequest(EnemyType.UFO);
                 m_ufoTimer = 0f;
             }
 
@@ -155,7 +159,7 @@ namespace NeuralBreak.Entities
             m_chaosWormTimer += deltaTime;
             if (m_chaosWormTimer >= m_chaosWormRate)
             {
-                readySpawns.Add(new EnemySpawnRequest(EnemyType.ChaosWorm));
+                buffer[count++] = new EnemySpawnRequest(EnemyType.ChaosWorm);
                 m_chaosWormTimer = 0f;
             }
 
@@ -163,7 +167,7 @@ namespace NeuralBreak.Entities
             m_voidSphereTimer += deltaTime;
             if (m_voidSphereTimer >= m_voidSphereRate)
             {
-                readySpawns.Add(new EnemySpawnRequest(EnemyType.VoidSphere));
+                buffer[count++] = new EnemySpawnRequest(EnemyType.VoidSphere);
                 m_voidSphereTimer = 0f;
             }
 
@@ -171,7 +175,7 @@ namespace NeuralBreak.Entities
             m_crystalShardTimer += deltaTime;
             if (m_crystalShardTimer >= m_crystalShardRate)
             {
-                readySpawns.Add(new EnemySpawnRequest(EnemyType.CrystalShard));
+                buffer[count++] = new EnemySpawnRequest(EnemyType.CrystalShard);
                 m_crystalShardTimer = 0f;
             }
 
@@ -181,12 +185,12 @@ namespace NeuralBreak.Entities
                 m_bossTimer += deltaTime;
                 if (m_bossTimer >= m_bossRate)
                 {
-                    readySpawns.Add(new EnemySpawnRequest(EnemyType.Boss, useEdgeSpawn: true));
+                    buffer[count++] = new EnemySpawnRequest(EnemyType.Boss, useEdgeSpawn: true);
                     m_bossTimer = 0f;
                 }
             }
 
-            return readySpawns.ToArray();
+            return count;
         }
     }
 

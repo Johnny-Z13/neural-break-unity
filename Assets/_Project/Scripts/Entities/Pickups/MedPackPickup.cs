@@ -16,7 +16,7 @@ namespace NeuralBreak.Entities
         public override PickupType PickupType => PickupType.MedPack;
 
         [Header("MedPack Settings")]
-        [SerializeField] private int m_healAmount = 35;
+        [SerializeField] private int m_healAmount = 20;
         [SerializeField] private Color m_pickupColor = new Color(0f, 1f, 0f, 0.9f); // Bright green #00FF00
 
         [Header("Visual")]

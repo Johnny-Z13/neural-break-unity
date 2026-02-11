@@ -196,39 +196,4 @@ namespace Z13.Core
             return obj;
         }
     }
-
-    /// <summary>
-    /// Non-generic pool manager for use in inspector/prefab references
-    /// </summary>
-    public class GameObjectPool : MonoBehaviour
-    {
-        [SerializeField] private GameObject m_prefab;
-        [SerializeField] private int m_initialSize = 20;
-
-        private ObjectPool<Transform> m_pool;
-
-        private void Awake()
-        {
-            m_pool = new ObjectPool<Transform>(
-                m_prefab.transform,
-                transform,
-                m_initialSize
-            );
-        }
-
-        public GameObject Get()
-        {
-            return m_pool.Get().gameObject;
-        }
-
-        public GameObject Get(Vector3 position, Quaternion rotation)
-        {
-            return m_pool.Get(position, rotation).gameObject;
-        }
-
-        public void Return(GameObject obj)
-        {
-            m_pool.Return(obj.transform);
-        }
-    }
 }

@@ -23,7 +23,13 @@ namespace NeuralBreak.Entities
         [Header("Patrol Settings")]
         [SerializeField] private float m_patrolRadius = 10f;
         [SerializeField] private float m_patrolSpeed = 0.8f;
-        [SerializeField] private float m_chaseSpeedMultiplier = 1.5f;
+        [SerializeField] private float m_chargeSpeedMultiplier = 2.5f;  // Aggressive charge when alerted
+        [SerializeField] private float m_chargeDuration = 1.5f;  // How long to charge before attacking
+
+        [Header("Alert Behavior")]
+        [SerializeField] private Color m_normalColor = new Color(0.3f, 0.7f, 1f);  // Cyan-blue
+        [SerializeField] private Color m_alertColor = Color.red;  // Red when charging
+        private float m_chargeTimer;
 
         // Config-driven shooting values
         private float m_fireRate => EnemyConfig?.fireRate ?? 2f;
@@ -31,7 +37,7 @@ namespace NeuralBreak.Entities
         private int m_projectileDamage => EnemyConfig?.projectileDamage ?? 15;
 
         [Header("Visual")]
-        [SerializeField] private SpriteRenderer m_spriteRenderer;
+        // m_spriteRenderer inherited from EnemyBase (protected field)
         [SerializeField] private ScanDroneVisuals m_visuals;
 #pragma warning disable CS0414 // Reserved for rotation animation feature
         [SerializeField] private float m_rotationSpeed = 90f; // degrees per second
@@ -57,6 +63,7 @@ namespace NeuralBreak.Entities
             m_fireTimer = m_fireRate * 0.5f; // Start partially ready
             m_currentRotation = Random.Range(0f, 360f);
             m_wasPlayerInRange = false;
+            m_chargeTimer = 0f;
 
             // Generate procedural visuals if not yet done
             if (!m_visualsGenerated)
@@ -95,12 +102,19 @@ namespace NeuralBreak.Entities
                     if (playerInRange)
                     {
                         m_droneState = DroneState.Alerted;
+                        m_chargeTimer = 0f;  // Start charge timer
                         // Feedback (Feel removed)
                         m_visuals?.SetAlerted(true);
 
+                        // Turn red when alerted!
+                        if (m_spriteRenderer != null)
+                        {
+                            m_spriteRenderer.color = m_alertColor;
+                        }
+
                         if (!m_wasPlayerInRange)
                         {
-                            Debug.Log("[ScanDrone] Player detected!");
+                            Debug.Log("[ScanDrone] Player detected! Charging!");
                         }
                     }
                     break;
@@ -111,10 +125,21 @@ namespace NeuralBreak.Entities
                         m_droneState = DroneState.Patrolling;
                         m_patrolTarget = GetNewPatrolTarget();
                         m_visuals?.SetAlerted(false);
+
+                        // Return to normal color
+                        if (m_spriteRenderer != null)
+                        {
+                            m_spriteRenderer.color = m_normalColor;
+                        }
                     }
-                    else if (distanceToPlayer < m_fireRange)
+                    else
                     {
-                        m_droneState = DroneState.Attacking;
+                        // Charge for duration, then attack
+                        m_chargeTimer += Time.deltaTime;
+                        if (m_chargeTimer >= m_chargeDuration || distanceToPlayer < m_fireRange)
+                        {
+                            m_droneState = DroneState.Attacking;
+                        }
                     }
                     break;
 
@@ -124,10 +149,23 @@ namespace NeuralBreak.Entities
                         m_droneState = DroneState.Patrolling;
                         m_patrolTarget = GetNewPatrolTarget();
                         m_visuals?.SetAlerted(false);
+
+                        // Return to normal color
+                        if (m_spriteRenderer != null)
+                        {
+                            m_spriteRenderer.color = m_normalColor;
+                        }
                     }
                     else if (distanceToPlayer > m_fireRange)
                     {
                         m_droneState = DroneState.Alerted;
+                        m_chargeTimer = 0f;  // Reset charge timer
+
+                        // Turn red again when re-alerted
+                        if (m_spriteRenderer != null)
+                        {
+                            m_spriteRenderer.color = m_alertColor;
+                        }
                     }
                     break;
             }
@@ -169,11 +207,11 @@ namespace NeuralBreak.Entities
 
         private void UpdateChase()
         {
-            // Move toward player
+            // AGGRESSIVE CHARGE toward player when alerted (red state)
             Vector2 direction = GetDirectionToPlayer();
-            float chaseSpeed = m_speed * m_chaseSpeedMultiplier;
+            float chargeSpeed = m_speed * m_chargeSpeedMultiplier;  // 2.5x speed (FAST!)
 
-            transform.position = (Vector2)transform.position + direction * chaseSpeed * Time.deltaTime;
+            transform.position = (Vector2)transform.position + direction * chargeSpeed * Time.deltaTime;
         }
 
         private void UpdateAttack()
@@ -228,7 +266,8 @@ namespace NeuralBreak.Entities
                     m_spriteRenderer.color = new Color(0.5f, 0.8f, 1f, 0.5f); // Light blue, transparent
                     break;
                 case EnemyState.Alive:
-                    m_spriteRenderer.color = new Color(0.3f, 0.7f, 1f, 1f); // Cyan-blue
+                    // Start with normal color (will turn red when alerted)
+                    m_spriteRenderer.color = m_normalColor;
                     break;
                 case EnemyState.Dying:
                     m_spriteRenderer.color = Color.white;

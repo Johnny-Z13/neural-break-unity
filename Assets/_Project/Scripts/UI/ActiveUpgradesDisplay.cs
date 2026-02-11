@@ -29,6 +29,7 @@ namespace NeuralBreak.UI
         private Canvas m_canvas;
         private RectTransform m_container;
         private Dictionary<PickupType, UpgradeIcon> m_icons = new Dictionary<PickupType, UpgradeIcon>();
+        private List<PickupType> m_iconKeysBuffer = new List<PickupType>(8);  // Buffer for dict iteration
 
         // Cached reference - avoids FindFirstObjectByType every frame!
         private WeaponUpgradeManager m_upgradeManager;
@@ -40,6 +41,7 @@ namespace NeuralBreak.UI
             public TextMeshProUGUI label;
             public TextMeshProUGUI timer;
             public Color baseColor;
+            public int lastDisplayTenths = -1;  // Cache to avoid per-frame string allocation
         }
 
         private void Start()
@@ -250,10 +252,19 @@ namespace NeuralBreak.UI
                 if (m_upgradeManager == null) return;
             }
 
-            foreach (var kvp in m_icons)
+            // Copy keys to buffer to avoid Dictionary enumerator allocation
+            m_iconKeysBuffer.Clear();
+            var enumerator = m_icons.GetEnumerator();
+            while (enumerator.MoveNext())
             {
-                PickupType type = kvp.Key;
-                UpgradeIcon icon = kvp.Value;
+                m_iconKeysBuffer.Add(enumerator.Current.Key);
+            }
+            enumerator.Dispose();
+
+            for (int i = 0; i < m_iconKeysBuffer.Count; i++)
+            {
+                PickupType type = m_iconKeysBuffer[i];
+                UpgradeIcon icon = m_icons[type];
 
                 float remaining = m_upgradeManager.GetRemainingTime(type);
 
@@ -264,7 +275,13 @@ namespace NeuralBreak.UI
                         icon.gameObject.SetActive(true);
                     }
 
-                    icon.timer.text = remaining.ToString("F1") + "s";
+                    // Only update text when value changes (avoids per-frame string allocation)
+                    int displayTenths = (int)(remaining * 10);
+                    if (icon.lastDisplayTenths != displayTenths)
+                    {
+                        icon.lastDisplayTenths = displayTenths;
+                        icon.timer.text = remaining.ToString("F1");
+                    }
 
                     // Pulse when low time
                     if (remaining <= m_lowTimeThreshold)
@@ -309,9 +326,18 @@ namespace NeuralBreak.UI
 
         private void OnGameStarted(GameStartedEvent evt)
         {
-            foreach (var icon in m_icons.Values)
+            // Use keysBuffer to avoid .Values allocation
+            m_iconKeysBuffer.Clear();
+            var enumerator = m_icons.GetEnumerator();
+            while (enumerator.MoveNext())
             {
-                icon.gameObject.SetActive(false);
+                m_iconKeysBuffer.Add(enumerator.Current.Key);
+            }
+            enumerator.Dispose();
+
+            for (int i = 0; i < m_iconKeysBuffer.Count; i++)
+            {
+                m_icons[m_iconKeysBuffer[i]].gameObject.SetActive(false);
             }
         }
     }

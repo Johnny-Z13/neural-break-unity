@@ -10,13 +10,17 @@ namespace NeuralBreak.Graphics
     /// Coordinator for enemy death visual effects using procedural particle systems.
     /// Uses a factory pattern to delegate VFX generation to per-enemy-type generators.
     /// Each enemy type has a unique death particle system matching their visual style.
+    ///
+    /// POOLED: Pre-creates VFX GameObjects per enemy type at startup.
+    /// On death: reposition + replay. On effect complete: return to pool.
+    /// Zero Instantiate/Destroy during gameplay.
     /// </summary>
     public class EnemyDeathVFX : MonoBehaviour
     {
-
         [Header("Settings")]
         [SerializeField] private bool m_enabled = true;
         [SerializeField] private int m_maxVFXPerFrame = 5;
+        [SerializeField] private int m_poolSizePerType = 10;
 
         [Header("Particle Settings")]
         [SerializeField] private float m_emissionIntensity = 3f;
@@ -25,10 +29,28 @@ namespace NeuralBreak.Graphics
         private Material m_particleMaterial;
         private Dictionary<EnemyType, IEnemyVFXGenerator> m_vfxGenerators;
 
+        // Object pools per enemy type
+        private Dictionary<EnemyType, Queue<GameObject>> m_vfxPools;
+        private Dictionary<EnemyType, float> m_vfxLifetimes;
+        private Transform m_poolContainer;
+
+        // Cached ParticleSystem arrays per VFX GameObject (avoids GetComponentsInChildren allocation)
+        private Dictionary<GameObject, ParticleSystem[]> m_cachedParticleSystems = new Dictionary<GameObject, ParticleSystem[]>();
+
+        // Timer-based pool returns (replaces StartCoroutine per death - zero allocation)
+        private struct ActiveDeathVFX
+        {
+            public GameObject vfxGO;
+            public Queue<GameObject> pool;
+            public float returnTime;
+        }
+        private readonly List<ActiveDeathVFX> m_activeDeathVFX = new List<ActiveDeathVFX>(32);
+
         private void Awake()
         {
             CreateParticleMaterial();
             InitializeVFXGenerators();
+            InitializePools();
         }
 
         private void Start()
@@ -49,11 +71,25 @@ namespace NeuralBreak.Graphics
         private void LateUpdate()
         {
             m_vfxThisFrame = 0;
+
+            // Timer-based pool returns (replaces StartCoroutine per death - zero allocation)
+            float time = Time.time;
+            for (int i = m_activeDeathVFX.Count - 1; i >= 0; i--)
+            {
+                var active = m_activeDeathVFX[i];
+                if (time >= active.returnTime)
+                {
+                    if (active.vfxGO != null)
+                    {
+                        StopAllParticles(active.vfxGO);
+                        active.vfxGO.SetActive(false);
+                        active.pool.Enqueue(active.vfxGO);
+                    }
+                    m_activeDeathVFX.RemoveAt(i);
+                }
+            }
         }
 
-        /// <summary>
-        /// Initializes the VFX generator registry with all enemy type generators.
-        /// </summary>
         private void InitializeVFXGenerators()
         {
             m_vfxGenerators = new Dictionary<EnemyType, IEnemyVFXGenerator>
@@ -69,9 +105,40 @@ namespace NeuralBreak.Graphics
             };
         }
 
-        /// <summary>
-        /// Creates the shared particle material used by all VFX generators.
-        /// </summary>
+        private void InitializePools()
+        {
+            m_poolContainer = new GameObject("DeathVFX_Pool").transform;
+            m_poolContainer.SetParent(transform);
+
+            m_vfxPools = new Dictionary<EnemyType, Queue<GameObject>>();
+            m_vfxLifetimes = new Dictionary<EnemyType, float>();
+
+            if (m_particleMaterial == null) return;
+
+            foreach (var kvp in m_vfxGenerators)
+            {
+                var enemyType = kvp.Key;
+                var generator = kvp.Value;
+                var pool = new Queue<GameObject>();
+
+                m_vfxLifetimes[enemyType] = generator.GetEffectLifetime();
+
+                for (int i = 0; i < m_poolSizePerType; i++)
+                {
+                    var vfxGO = generator.GenerateDeathEffect(Vector3.zero, m_particleMaterial, m_emissionIntensity);
+                    vfxGO.name = $"DeathVFX_{enemyType}_{i}";
+                    vfxGO.transform.SetParent(m_poolContainer);
+                    // Cache particle systems to avoid GetComponentsInChildren allocation during gameplay
+                    m_cachedParticleSystems[vfxGO] = vfxGO.GetComponentsInChildren<ParticleSystem>(true);
+                    StopAllParticles(vfxGO);
+                    vfxGO.SetActive(false);
+                    pool.Enqueue(vfxGO);
+                }
+
+                m_vfxPools[enemyType] = pool;
+            }
+        }
+
         private void CreateParticleMaterial()
         {
             Shader shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
@@ -88,7 +155,6 @@ namespace NeuralBreak.Graphics
             {
                 m_particleMaterial = new Material(shader);
 
-                // Assign soft particle texture to avoid quad rendering
                 var softTexture = VFXHelpers.GetSoftParticleTexture();
                 if (m_particleMaterial.HasProperty("_BaseMap"))
                     m_particleMaterial.SetTexture("_BaseMap", softTexture);
@@ -98,7 +164,7 @@ namespace NeuralBreak.Graphics
                 m_particleMaterial.SetColor("_BaseColor", Color.white);
                 m_particleMaterial.SetColor("_Color", Color.white);
                 m_particleMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-                m_particleMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.One);
+                m_particleMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
                 m_particleMaterial.SetInt("_ZWrite", 0);
                 m_particleMaterial.renderQueue = 3000;
                 m_particleMaterial.EnableKeyword("_EMISSION");
@@ -120,24 +186,66 @@ namespace NeuralBreak.Graphics
             m_vfxThisFrame++;
         }
 
-        /// <summary>
-        /// Spawns a death effect for the specified enemy type at the given position.
-        /// </summary>
         public void SpawnDeathEffect(Vector3 position, EnemyType enemyType)
         {
             if (!m_enabled) return;
-            if (m_particleMaterial == null) return;
+            if (!m_vfxPools.TryGetValue(enemyType, out var pool)) return;
 
-            // Get the appropriate VFX generator
-            if (m_vfxGenerators.TryGetValue(enemyType, out IEnemyVFXGenerator generator))
+            GameObject vfxGO;
+
+            if (pool.Count > 0)
             {
-                GameObject vfxGO = generator.GenerateDeathEffect(position, m_particleMaterial, m_emissionIntensity);
-                float lifetime = generator.GetEffectLifetime();
-                Destroy(vfxGO, lifetime);
+                // Reuse from pool
+                vfxGO = pool.Dequeue();
             }
             else
             {
-                Debug.LogWarning($"No VFX generator registered for enemy type: {enemyType}");
+                // Pool exhausted — create a new one (rare, pool should be sized correctly)
+                if (m_vfxGenerators.TryGetValue(enemyType, out var generator) && m_particleMaterial != null)
+                {
+                    vfxGO = generator.GenerateDeathEffect(position, m_particleMaterial, m_emissionIntensity);
+                    vfxGO.name = $"DeathVFX_{enemyType}_overflow";
+                    vfxGO.transform.SetParent(m_poolContainer);
+                    // Cache particle systems for overflow objects too
+                    m_cachedParticleSystems[vfxGO] = vfxGO.GetComponentsInChildren<ParticleSystem>(true);
+                }
+                else
+                {
+                    return;
+                }
+            }
+
+            // Reposition and replay
+            vfxGO.transform.position = position;
+            vfxGO.SetActive(true);
+            PlayAllParticles(vfxGO);
+
+            // Schedule return to pool (timer-based, zero allocation - no coroutine)
+            float lifetime = m_vfxLifetimes.TryGetValue(enemyType, out float lt) ? lt : 1.5f;
+            m_activeDeathVFX.Add(new ActiveDeathVFX
+            {
+                vfxGO = vfxGO,
+                pool = pool,
+                returnTime = Time.time + lifetime
+            });
+        }
+
+        private void PlayAllParticles(GameObject go)
+        {
+            if (!m_cachedParticleSystems.TryGetValue(go, out var particles)) return;
+            for (int i = 0; i < particles.Length; i++)
+            {
+                particles[i].Clear();
+                particles[i].Play();
+            }
+        }
+
+        private void StopAllParticles(GameObject go)
+        {
+            if (!m_cachedParticleSystems.TryGetValue(go, out var particles)) return;
+            for (int i = 0; i < particles.Length; i++)
+            {
+                particles[i].Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             }
         }
 

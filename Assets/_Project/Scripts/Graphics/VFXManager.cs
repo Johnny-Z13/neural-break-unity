@@ -12,6 +12,13 @@ namespace NeuralBreak.Graphics
     /// </summary>
     public class VFXManager : MonoBehaviour
     {
+        // Tracked active effects for timer-based pool returns (zero-alloc, no coroutines)
+        private struct ActiveEffect
+        {
+            public ParticleSystem effect;
+            public ParticleSystem prefab;
+        }
+        private readonly List<ActiveEffect> m_activeEffects = new List<ActiveEffect>(64);
 
         [Header("Explosion Effects")]
         [SerializeField] private ParticleSystem m_smallExplosionPrefab;
@@ -41,8 +48,12 @@ namespace NeuralBreak.Graphics
         // Particle pools
         private Dictionary<ParticleSystem, Queue<ParticleSystem>> m_particlePools = new Dictionary<ParticleSystem, Queue<ParticleSystem>>();
 
+        // Cached ParticleSystemRenderer per particle instance (avoids GetComponent per play)
+        private Dictionary<ParticleSystem, ParticleSystemRenderer> m_cachedRenderers = new Dictionary<ParticleSystem, ParticleSystemRenderer>();
+
         // Cached references
         private Transform m_playerTransform;
+        private SpriteRenderer m_playerSpriteRenderer;
 
         private void Awake()
         {
@@ -54,6 +65,23 @@ namespace NeuralBreak.Graphics
             SubscribeToEvents();
         }
 
+        private void Update()
+        {
+            // Timer-based pool returns (replaces StartCoroutine per effect - zero allocation)
+            for (int i = m_activeEffects.Count - 1; i >= 0; i--)
+            {
+                var active = m_activeEffects[i];
+                if (active.effect == null || !active.effect.isPlaying)
+                {
+                    if (active.effect != null)
+                    {
+                        ReturnToPool(active.effect, active.prefab);
+                    }
+                    m_activeEffects.RemoveAt(i);
+                }
+            }
+        }
+
         private void OnDestroy()
         {
             UnsubscribeFromEvents();
@@ -63,7 +91,7 @@ namespace NeuralBreak.Graphics
 
         private void SubscribeToEvents()
         {
-            EventBus.Subscribe<EnemyKilledEvent>(OnEnemyKilled);
+            // EnemyKilledEvent VFX handled exclusively by EnemyDeathVFX (per-type customization)
             EventBus.Subscribe<EnemyDamagedEvent>(OnEnemyDamaged);
             EventBus.Subscribe<PlayerDamagedEvent>(OnPlayerDamaged);
             EventBus.Subscribe<PlayerDiedEvent>(OnPlayerDied);
@@ -81,20 +109,15 @@ namespace NeuralBreak.Graphics
             // First, try to find player if not cached
             CachePlayerTransform();
 
-            if (m_playerTransform != null)
+            if (m_playerSpriteRenderer != null)
             {
-                var spriteRenderer = m_playerTransform.GetComponent<SpriteRenderer>();
-                if (spriteRenderer != null)
-                {
-                    spriteRenderer.enabled = true;
-                    Debug.Log("[VFXManager] Re-enabled player sprite on game start");
-                }
+                m_playerSpriteRenderer.enabled = true;
+                Debug.Log("[VFXManager] Re-enabled player sprite on game start");
             }
         }
 
         private void UnsubscribeFromEvents()
         {
-            EventBus.Unsubscribe<EnemyKilledEvent>(OnEnemyKilled);
             EventBus.Unsubscribe<EnemyDamagedEvent>(OnEnemyDamaged);
             EventBus.Unsubscribe<PlayerDamagedEvent>(OnPlayerDamaged);
             EventBus.Unsubscribe<PlayerDiedEvent>(OnPlayerDied);
@@ -110,28 +133,6 @@ namespace NeuralBreak.Graphics
 
         #region Event Handlers
 
-        private void OnEnemyKilled(EnemyKilledEvent evt)
-        {
-            // Choose explosion size based on enemy type
-            ParticleSystem prefab = evt.enemyType switch
-            {
-                EnemyType.DataMite => m_smallExplosionPrefab,
-                EnemyType.Fizzer => m_smallExplosionPrefab,
-                EnemyType.ScanDrone => m_mediumExplosionPrefab,
-                EnemyType.UFO => m_mediumExplosionPrefab,
-                EnemyType.ChaosWorm => m_largeExplosionPrefab,
-                EnemyType.VoidSphere => m_largeExplosionPrefab,
-                EnemyType.CrystalShard => m_mediumExplosionPrefab,
-                EnemyType.Boss => m_bossExplosionPrefab,
-                _ => m_smallExplosionPrefab
-            };
-
-            // Get color based on enemy type
-            Color explosionColor = GetEnemyColor(evt.enemyType);
-
-            PlayEffect(prefab, evt.position, explosionColor);
-        }
-
         private void OnEnemyDamaged(EnemyDamagedEvent evt)
         {
             // Small hit effect
@@ -145,18 +146,62 @@ namespace NeuralBreak.Graphics
 
         private void OnPlayerDied(PlayerDiedEvent evt)
         {
-            // Big explosion at player death location
-            PlayExplosion(evt.position, ExplosionSize.Boss, Color.cyan);
+            // Spectacular multi-stage death sequence
+            StartCoroutine(PlayerDeathExplosionSequence(evt.position));
 
             // Hide player ship
             CachePlayerTransform();
-            if (m_playerTransform != null)
+            if (m_playerSpriteRenderer != null)
             {
-                var spriteRenderer = m_playerTransform.GetComponent<SpriteRenderer>();
-                if (spriteRenderer != null)
-                {
-                    spriteRenderer.enabled = false;
-                }
+                m_playerSpriteRenderer.enabled = false;
+            }
+        }
+
+        /// <summary>
+        /// Spectacular multi-stage player death explosion sequence.
+        /// Creates a series of explosions with varying sizes and colors for maximum impact.
+        /// </summary>
+        private System.Collections.IEnumerator PlayerDeathExplosionSequence(Vector3 position)
+        {
+            // Stage 1: Small rapid explosions (fragmentation)
+            for (int i = 0; i < 6; i++)
+            {
+                Vector2 offset = UnityEngine.Random.insideUnitCircle * 0.5f;
+                Color fragmentColor = Color.Lerp(Color.cyan, Color.white, UnityEngine.Random.value);
+                PlayExplosion(position + (Vector3)offset, ExplosionSize.Small, fragmentColor);
+                yield return new WaitForSeconds(0.05f);
+            }
+
+            yield return new WaitForSeconds(0.1f);
+
+            // Stage 2: Medium explosions (expanding shockwave)
+            for (int i = 0; i < 4; i++)
+            {
+                float angle = i * 90f * Mathf.Deg2Rad;
+                Vector2 offset = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * 1f;
+                Color shockwaveColor = Color.Lerp(Color.cyan, new Color(0.5f, 1f, 1f), 0.5f);
+                PlayExplosion(position + (Vector3)offset, ExplosionSize.Medium, shockwaveColor);
+                yield return new WaitForSeconds(0.08f);
+            }
+
+            yield return new WaitForSeconds(0.15f);
+
+            // Stage 3: MASSIVE central explosion (final burst)
+            PlayExplosion(position, ExplosionSize.Boss, Color.cyan);
+
+            yield return new WaitForSeconds(0.05f);
+
+            // Add secondary burst for extra impact
+            PlayExplosion(position, ExplosionSize.Boss, Color.white);
+
+            yield return new WaitForSeconds(0.1f);
+
+            // Stage 4: Lingering glow particles (aftermath)
+            for (int i = 0; i < 8; i++)
+            {
+                Vector2 offset = UnityEngine.Random.insideUnitCircle * 2f;
+                PlayExplosion(position + (Vector3)offset, ExplosionSize.Small, new Color(0.2f, 0.8f, 1f, 0.5f));
+                yield return new WaitForSeconds(0.1f);
             }
         }
 
@@ -233,6 +278,7 @@ namespace NeuralBreak.Graphics
                 if (playerGO != null)
                 {
                     m_playerTransform = playerGO.transform;
+                    m_playerSpriteRenderer = playerGO.GetComponent<SpriteRenderer>();
                 }
             }
         }
@@ -288,20 +334,19 @@ namespace NeuralBreak.Graphics
             var main = effect.main;
             main.startColor = color;
 
-            // Update material color for URP compatibility
-            var renderer = effect.GetComponent<ParticleSystemRenderer>();
-            if (renderer != null && renderer.material != null)
+            // Update material color for URP compatibility (use cached renderer)
+            if (m_cachedRenderers.TryGetValue(effect, out var cachedRenderer) && cachedRenderer != null && cachedRenderer.material != null)
             {
                 Color emissiveColor = color * 3f; // Match emission intensity
-                renderer.material.SetColor("_BaseColor", emissiveColor);
-                renderer.material.SetColor("_Color", emissiveColor);
+                cachedRenderer.material.SetColor("_BaseColor", emissiveColor);
+                cachedRenderer.material.SetColor("_Color", emissiveColor);
             }
 
             effect.gameObject.SetActive(true);
             effect.Play();
 
-            // Return to pool when done
-            StartCoroutine(ReturnToPoolWhenDone(effect, prefab));
+            // Track for timer-based pool return (zero allocation - no coroutine)
+            m_activeEffects.Add(new ActiveEffect { effect = effect, prefab = prefab });
         }
 
         #endregion
@@ -390,6 +435,12 @@ namespace NeuralBreak.Graphics
             {
                 ParticleSystem instance = Instantiate(prefab, m_effectContainer);
                 instance.gameObject.SetActive(false);
+                // Cache ParticleSystemRenderer to avoid GetComponent during gameplay
+                var psr = instance.GetComponent<ParticleSystemRenderer>();
+                if (psr != null)
+                {
+                    m_cachedRenderers[instance] = psr;
+                }
                 pool.Enqueue(instance);
             }
 
@@ -414,6 +465,12 @@ namespace NeuralBreak.Graphics
 
             // Pool exhausted, create new instance
             ParticleSystem newInstance = Instantiate(prefab, m_effectContainer);
+            // Cache renderer for overflow instances
+            var psr = newInstance.GetComponent<ParticleSystemRenderer>();
+            if (psr != null)
+            {
+                m_cachedRenderers[newInstance] = psr;
+            }
             return newInstance;
         }
 
@@ -426,14 +483,6 @@ namespace NeuralBreak.Graphics
             {
                 pool.Enqueue(effect);
             }
-        }
-
-        private System.Collections.IEnumerator ReturnToPoolWhenDone(ParticleSystem effect, ParticleSystem prefab)
-        {
-            // Wait for particle system to finish
-            yield return new WaitUntil(() => !effect.isPlaying);
-
-            ReturnToPool(effect, prefab);
         }
 
         #endregion

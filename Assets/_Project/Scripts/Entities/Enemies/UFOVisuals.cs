@@ -25,6 +25,8 @@ namespace NeuralBreak.Entities
         private Transform m_domeWireframe;
         private Transform m_bottomGlow;
         private Transform[] m_runningLights;
+        private SpriteRenderer m_domeRenderer;
+        private SpriteRenderer[] m_runningLightRenderers;
         private Transform m_laser;
         private SpriteRenderer m_laserRenderer;
 
@@ -51,6 +53,7 @@ namespace NeuralBreak.Entities
             // Top dome
             m_dome = CreateDome("Dome", m_saucerRadius * 0.5f, m_domeColor, 15);
             m_dome.localPosition = new Vector3(0, m_saucerRadius * 0.15f, 0);
+            m_domeRenderer = m_dome.GetComponent<SpriteRenderer>();
 
             // Dome wireframe
             m_domeWireframe = CreateDomeOutline("DomeWireframe", m_saucerRadius * 0.52f, m_wireframeColor * 0.7f, 16);
@@ -70,6 +73,7 @@ namespace NeuralBreak.Entities
         private void CreateRunningLights()
         {
             m_runningLights = new Transform[12];
+            m_runningLightRenderers = new SpriteRenderer[12];
             Color[] lightColors = new Color[]
             {
                 Color.red, Color.red, Color.red, Color.red,
@@ -97,6 +101,7 @@ namespace NeuralBreak.Entities
                 light.transform.localScale = Vector3.one * 0.08f;
 
                 m_runningLights[i] = light.transform;
+                m_runningLightRenderers[i] = sr;
             }
         }
 
@@ -127,14 +132,10 @@ namespace NeuralBreak.Entities
             transform.localPosition = new Vector3(transform.localPosition.x, hover, transform.localPosition.z);
 
             // Dome opacity pulse
-            if (m_dome != null)
+            if (m_domeRenderer != null)
             {
-                var sr = m_dome.GetComponent<SpriteRenderer>();
-                if (sr != null)
-                {
-                    float alpha = 0.5f + Mathf.Sin(m_time * 3f) * 0.2f;
-                    sr.color = new Color(m_domeColor.r, m_domeColor.g, m_domeColor.b, alpha);
-                }
+                float alpha = 0.5f + Mathf.Sin(m_time * 3f) * 0.2f;
+                m_domeRenderer.color = new Color(m_domeColor.r, m_domeColor.g, m_domeColor.b, alpha);
             }
 
             // Bottom glow pulse
@@ -174,7 +175,7 @@ namespace NeuralBreak.Entities
             for (int i = 0; i < m_runningLights.Length; i++)
             {
                 if (m_runningLights[i] == null) continue;
-                var sr = m_runningLights[i].GetComponent<SpriteRenderer>();
+                var sr = m_runningLightRenderers[i];
                 if (sr == null) continue;
 
                 // Brighten current light, dim others

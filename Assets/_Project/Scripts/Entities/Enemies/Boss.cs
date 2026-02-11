@@ -1,6 +1,8 @@
 using UnityEngine;
 using NeuralBreak.Core;
 using NeuralBreak.Combat;
+using NeuralBreak.Audio;
+using NeuralBreak.Graphics;
 using Z13.Core;
 
 namespace NeuralBreak.Entities
@@ -31,7 +33,7 @@ namespace NeuralBreak.Entities
         [SerializeField] private float m_ringWidth = 0.5f;
 
         [Header("Death Explosion")]
-        [SerializeField] private float m_deathDamageRadius = 12f;
+        [SerializeField] private float m_deathDamageRadius = 20f;
         [SerializeField] private int m_deathDamageAmount = 75;
         [SerializeField] private int m_deathBulletCount = 24;
 
@@ -50,12 +52,18 @@ namespace NeuralBreak.Entities
         [SerializeField] private Color m_phase3Color = new Color(1f, 0f, 0.5f); // Pink
         [SerializeField] private float m_pulseSpeed = 2f;
         [SerializeField] private float m_pulseAmount = 0.1f;
+        [SerializeField] private float m_bossScale = 12.0f; // BIG boss (400% of original 3x = 12x)
+        [SerializeField] private float m_rotationSpeed = 30f; // Slow menacing rotation
+        [SerializeField] private float m_colorFlashSpeed = 1.5f; // Color flash speed
 
         // Note: MMFeedbacks removed
 
         // State
         private enum BossPhase { Phase1, Phase2, Phase3 }
         private BossPhase m_currentPhase = BossPhase.Phase1;
+
+        // Cached component references
+        private PlayerHealth m_playerHealth;
 
         private float m_fireTimer;
         private float m_ringTimer;
@@ -77,6 +85,10 @@ namespace NeuralBreak.Entities
             m_isRingActive = false;
             m_currentRingRadius = 0f;
 
+            // Set BIG boss scale and sync with m_targetScale so death animation matches
+            transform.localScale = Vector3.one * m_bossScale;
+            m_targetScale = Vector3.one * m_bossScale;
+
             // Hide ring visual initially
             if (m_ringVisual != null)
             {
@@ -94,6 +106,8 @@ namespace NeuralBreak.Entities
             UpdatePhase();
             UpdateMovement();
             UpdatePulse();
+            UpdateRotation();
+            UpdateColorFlash();
 
             switch (m_currentPhase)
             {
@@ -166,7 +180,7 @@ namespace NeuralBreak.Entities
         {
             m_pulsePhase += Time.deltaTime * m_pulseSpeed;
             float pulse = 1f + Mathf.Sin(m_pulsePhase) * m_pulseAmount;
-            transform.localScale = Vector3.one * pulse * 1.5f; // Boss is larger
+            transform.localScale = Vector3.one * pulse * m_bossScale; // BIG boss with pulse
 
             // Core glow intensity
             if (m_coreRenderer != null)
@@ -176,6 +190,25 @@ namespace NeuralBreak.Entities
                 coreColor.a = glow;
                 m_coreRenderer.color = coreColor;
             }
+        }
+
+        private void UpdateRotation()
+        {
+            // Slow menacing rotation
+            transform.Rotate(0f, 0f, m_rotationSpeed * Time.deltaTime);
+        }
+
+        private void UpdateColorFlash()
+        {
+            if (m_bodyRenderer == null) return;
+
+            // Flash between phase color and brighter variant
+            Color baseColor = GetPhaseColor();
+            Color flashColor = baseColor * 1.5f; // Brighter version
+            flashColor.a = 1f;
+
+            float t = (Mathf.Sin(Time.time * m_colorFlashSpeed) + 1f) * 0.5f; // 0-1
+            m_bodyRenderer.color = Color.Lerp(baseColor, flashColor, t * 0.3f); // Subtle flash
         }
 
         private void UpdateProjectileAttack()
@@ -270,6 +303,13 @@ namespace NeuralBreak.Entities
         {
             if (m_playerTarget == null) return;
 
+            // Cache the player's PlayerHealth (lazy init, only once)
+            if (m_playerHealth == null)
+            {
+                m_playerHealth = m_playerTarget.GetComponent<PlayerHealth>();
+                if (m_playerHealth == null) return;
+            }
+
             float distanceToPlayer = GetDistanceToPlayer();
             float innerRadius = m_currentRingRadius - m_ringWidth;
             float outerRadius = m_currentRingRadius + m_ringWidth;
@@ -277,12 +317,7 @@ namespace NeuralBreak.Entities
             // Check if player is within ring band
             if (distanceToPlayer >= innerRadius && distanceToPlayer <= outerRadius)
             {
-                // Damage player
-                PlayerHealth playerHealth = m_playerTarget.GetComponent<PlayerHealth>();
-                if (playerHealth != null)
-                {
-                    playerHealth.TakeDamage(m_ringDamage, transform.position);
-                }
+                m_playerHealth.TakeDamage(m_ringDamage, transform.position);
             }
         }
 
@@ -320,20 +355,13 @@ namespace NeuralBreak.Entities
             // Announce boss defeated
             PublishBossEvent(false);
 
-            // Feedback (Feel removed)
-            DealDeathDamage();
+            // EPIC DEATH SEQUENCE - Start coroutine
+            StartCoroutine(EpicBossDeathSequence());
+        }
 
-            // Epic death bullet nova
-            if (EnemyProjectilePool.Instance != null)
-            {
-                EnemyProjectilePool.Instance.FireRing(
-                    transform.position,
-                    m_projectileSpeed * 1.5f,
-                    m_projectileDamage,
-                    m_deathBulletCount,
-                    Color.red
-                );
-            }
+        private System.Collections.IEnumerator EpicBossDeathSequence()
+        {
+            Vector3 deathPosition = transform.position;
 
             // Hide ring
             if (m_ringVisual != null)
@@ -341,18 +369,105 @@ namespace NeuralBreak.Entities
                 m_ringVisual.gameObject.SetActive(false);
             }
 
+            // Get VFXManager reference
+            var vfxManager = FindFirstObjectByType<VFXManager>();
+
+            // Stage 1: Multiple explosions emanating from boss (0.8s) - scaled to boss size
+            float explosionSpread = m_bossScale * 0.5f; // Scale offsets with boss size
+            for (int i = 0; i < 8; i++)
+            {
+                Vector2 offset = Random.insideUnitCircle * explosionSpread;
+                if (vfxManager != null)
+                {
+                    vfxManager.PlayExplosion(
+                        deathPosition + (Vector3)offset,
+                        Graphics.ExplosionSize.Large,
+                        Color.Lerp(m_phase1Color, m_phase3Color, i / 8f)
+                    );
+                }
+                yield return new WaitForSeconds(0.1f);
+            }
+
+            // Stage 2: Screen flash + massive shockwave (0.3s)
+            for (int i = 0; i < 3; i++)
+            {
+                if (vfxManager != null)
+                {
+                    vfxManager.PlayExplosion(
+                        deathPosition,
+                        Graphics.ExplosionSize.Boss,
+                        Color.white
+                    );
+                }
+                yield return new WaitForSeconds(0.1f);
+            }
+
+            // Stage 3: Bullet nova (all directions)
+            if (EnemyProjectilePool.Instance != null)
+            {
+                EnemyProjectilePool.Instance.FireRing(
+                    deathPosition,
+                    m_projectileSpeed * 1.5f,
+                    m_projectileDamage,
+                    m_deathBulletCount,
+                    Color.red
+                );
+            }
+
+            // Stage 4: Deal death damage to nearby enemies
+            DealDeathDamage();
+
+            // Stage 5: Final massive explosion burst - staggered in 2 waves to reduce frame spike
+            float burstRadius = m_bossScale * 0.6f; // Scale with boss size
+            for (int i = 0; i < 6; i++)
+            {
+                float angle = i * 60f * Mathf.Deg2Rad;
+                Vector2 offset = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * burstRadius;
+                if (vfxManager != null)
+                {
+                    vfxManager.PlayExplosion(
+                        deathPosition + (Vector3)offset,
+                        Graphics.ExplosionSize.Boss,
+                        Color.Lerp(Color.red, Color.yellow, Random.value)
+                    );
+                }
+            }
+
+            yield return new WaitForSeconds(0.15f);
+
+            for (int i = 0; i < 6; i++)
+            {
+                float angle = (i * 60f + 30f) * Mathf.Deg2Rad; // Offset by 30 degrees
+                Vector2 offset = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * burstRadius;
+                if (vfxManager != null)
+                {
+                    vfxManager.PlayExplosion(
+                        deathPosition + (Vector3)offset,
+                        Graphics.ExplosionSize.Boss,
+                        Color.Lerp(Color.red, Color.yellow, Random.value)
+                    );
+                }
+            }
+
+            yield return new WaitForSeconds(0.3f);
+
+            // Finally call base death
             base.Kill();
         }
 
+        // Cached array for overlap checks (zero allocation)
+        private static Collider2D[] s_hitBuffer = new Collider2D[32];
+        private static readonly ContactFilter2D s_noFilter = ContactFilter2D.noFilter;
+
         private void DealDeathDamage()
         {
-            Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, m_deathDamageRadius);
+            int hitCount = Physics2D.OverlapCircle(transform.position, m_deathDamageRadius, s_noFilter, s_hitBuffer);
 
-            foreach (var hit in hits)
+            for (int i = 0; i < hitCount; i++)
             {
-                if (hit.gameObject == gameObject) continue;
+                if (s_hitBuffer[i].gameObject == gameObject) continue;
 
-                EnemyBase enemy = hit.GetComponent<EnemyBase>();
+                EnemyBase enemy = s_hitBuffer[i].GetComponent<EnemyBase>();
                 if (enemy != null && enemy.IsAlive)
                 {
                     enemy.TakeDamage(m_deathDamageAmount, transform.position);

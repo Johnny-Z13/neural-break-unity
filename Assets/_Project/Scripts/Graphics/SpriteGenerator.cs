@@ -109,12 +109,12 @@ namespace NeuralBreak.Graphics
             {
                 for (int x = 0; x < size; x++)
                 {
-                    // Triangle shape
-                    float yNorm = (float)y / size;
+                    // Triangle shape (point at top, base at bottom)
+                    float yNorm = 1f - (float)y / size;
                     float halfWidth = yNorm * 0.5f;
                     float xNorm = (float)x / size - 0.5f;
 
-                    if (y > 0 && Mathf.Abs(xNorm) < halfWidth)
+                    if (y < size - 1 && Mathf.Abs(xNorm) < halfWidth)
                     {
                         float edgeDist = Mathf.Min(halfWidth - Mathf.Abs(xNorm), yNorm, 1f - yNorm);
                         float alpha = Mathf.Clamp01(edgeDist * size / 2f);

@@ -57,12 +57,57 @@ namespace NeuralBreak.Core
         /// </summary>
         public void SetupAllSprites()
         {
+            AutoWireReferences();
             SetupPlayerSprite();
             SetupProjectileSprites();
             SetupEnemyPrefabSprites();
 
             Debug.Log("[PrefabSpriteSetup] All sprites configured");
         }
+
+        /// <summary>
+        /// Auto-wire prefab and scene references if not assigned in Inspector.
+        /// </summary>
+        private void AutoWireReferences()
+        {
+            if (m_player == null)
+            {
+                var playerGO = GameObject.FindGameObjectWithTag("Player");
+                if (playerGO != null) m_player = playerGO.GetComponent<PlayerController>();
+            }
+
+            #if UNITY_EDITOR
+            if (m_projectilePrefab == null)
+                m_projectilePrefab = LoadPrefab<Projectile>("Assets/_Project/Prefabs/Projectiles/Projectile.prefab");
+            if (m_enemyProjectilePrefab == null)
+                m_enemyProjectilePrefab = LoadPrefab<EnemyProjectile>("Assets/_Project/Prefabs/Projectiles/EnemyProjectile.prefab");
+            if (m_dataMitePrefab == null)
+                m_dataMitePrefab = LoadPrefab<DataMite>("Assets/_Project/Prefabs/Enemies/DataMite.prefab");
+            if (m_scanDronePrefab == null)
+                m_scanDronePrefab = LoadPrefab<ScanDrone>("Assets/_Project/Prefabs/Enemies/ScanDrone.prefab");
+            if (m_fizzerPrefab == null)
+                m_fizzerPrefab = LoadPrefab<Fizzer>("Assets/_Project/Prefabs/Enemies/Fizzer.prefab");
+            if (m_ufoPrefab == null)
+                m_ufoPrefab = LoadPrefab<UFO>("Assets/_Project/Prefabs/Enemies/UFO.prefab");
+            if (m_chaosWormPrefab == null)
+                m_chaosWormPrefab = LoadPrefab<ChaosWorm>("Assets/_Project/Prefabs/Enemies/ChaosWorm.prefab");
+            if (m_voidSpherePrefab == null)
+                m_voidSpherePrefab = LoadPrefab<VoidSphere>("Assets/_Project/Prefabs/Enemies/VoidSphere.prefab");
+            if (m_crystalShardPrefab == null)
+                m_crystalShardPrefab = LoadPrefab<CrystalShard>("Assets/_Project/Prefabs/Enemies/CrystalShard.prefab");
+            if (m_bossPrefab == null)
+                m_bossPrefab = LoadPrefab<Boss>("Assets/_Project/Prefabs/Enemies/Boss.prefab");
+            #endif
+        }
+
+        #if UNITY_EDITOR
+        private T LoadPrefab<T>(string path) where T : Component
+        {
+            var prefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (prefab != null) return prefab.GetComponent<T>();
+            return null;
+        }
+        #endif
 
         private void SetupPlayerSprite()
         {

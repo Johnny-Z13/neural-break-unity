@@ -27,6 +27,7 @@ namespace NeuralBreak.Entities
         private Transform[] m_spikes;
         private Transform[] m_sparks;
         private SpriteRenderer[] m_allRenderers;
+        private SpriteRenderer m_ringRenderer;
 
         private float m_time;
         private float[] m_spikePhases;
@@ -48,6 +49,7 @@ namespace NeuralBreak.Entities
 
             // Pulsing ring
             m_ring = CreateRing("Ring", m_radius * 1.1f, m_radius * 1.3f, m_ringColor, 8);
+            m_ringRenderer = m_ring.GetComponent<SpriteRenderer>();
 
             // Random direction spikes
             CreateSpikes();
@@ -131,11 +133,10 @@ namespace NeuralBreak.Entities
             if (m_ring != null)
             {
                 m_ring.Rotate(0, 0, Time.deltaTime * 180f);
-                var sr = m_ring.GetComponent<SpriteRenderer>();
-                if (sr != null)
+                if (m_ringRenderer != null)
                 {
                     float alpha = 0.4f + Mathf.Sin(m_time * 10f) * 0.3f;
-                    sr.color = new Color(m_ringColor.r, m_ringColor.g, m_ringColor.b, alpha);
+                    m_ringRenderer.color = new Color(m_ringColor.r, m_ringColor.g, m_ringColor.b, alpha);
                 }
             }
 

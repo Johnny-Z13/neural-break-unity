@@ -216,35 +216,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9fe638d42df9fde4ca5e1b04961be04f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Graphics.StarfieldController
-  _starCount: 400
-  _starFieldDepth: 100
-  _starFieldRadius: 50
-  _speed: 2
-  _minSpeed: 0.5
-  _maxSpeed: 10
-  _minStarSize: 0.02
-  _maxStarSize: 0.15
-  _twinkleSpeed: 2
-  _trailLength: 0.3
-  _enableTrails: 1
-  _whiteStarColor: {r: 1, g: 1, b: 1, a: 1}
-  _blueWhiteStarColor: {r: 0.88, g: 0.91, b: 1, a: 1}
-  _yellowWhiteStarColor: {r: 1, g: 0.96, b: 0.88, a: 1}
-  _orangeStarColor: {r: 1, g: 0.88, b: 0.75, a: 1}
-  _cyanStarColor: {r: 0, g: 1, b: 1, a: 1}
-  _lightBlueStarColor: {r: 0.75, g: 0.75, b: 1, a: 1}
-  _redStarColor: {r: 1, g: 0.75, b: 0.75, a: 1}
-  _enableNebula: 1
-  _nebulaCount: 3
-  _nebulaSize: 15
-  _nebulaIntensity: 0.1
-  _nebulaMoveSpeed: 0.1
-  _enableGrid: 1
-  _gridColor: {r: 0, g: 1, b: 1, a: 0.06}
-  _gridHorizonY: 0
-  _enableScanlines: 0
-  _scanlineIntensity: 0.1
-  _starParticles: {fileID: 0}
+  m_starCount: 400
+  m_starFieldDepth: 100
+  m_starFieldRadius: 50
+  m_autoSizeToArena: 1
+  m_speed: 2
+  m_minSpeed: 0.5
+  m_maxSpeed: 10
+  m_minStarSize: 0.02
+  m_maxStarSize: 0.15
+  m_twinkleSpeed: 2
+  m_trailLength: 0.3
+  m_enableTrails: 1
+  m_whiteStarColor: {r: 1, g: 1, b: 1, a: 1}
+  m_blueWhiteStarColor: {r: 0.88, g: 0.91, b: 1, a: 1}
+  m_yellowWhiteStarColor: {r: 1, g: 0.96, b: 0.88, a: 1}
+  m_orangeStarColor: {r: 1, g: 0.88, b: 0.75, a: 1}
+  m_cyanStarColor: {r: 0, g: 1, b: 1, a: 1}
+  m_lightBlueStarColor: {r: 0.75, g: 0.75, b: 1, a: 1}
+  m_redStarColor: {r: 1, g: 0.75, b: 0.75, a: 1}
+  m_enableNebula: 1
+  m_nebulaCount: 3
+  m_nebulaSize: 15
+  m_nebulaIntensity: 0.1
+  m_nebulaMoveSpeed: 0.1
+  m_enableGrid: 1
+  m_gridColor: {r: 0, g: 1, b: 1, a: 0.06}
+  m_gridHorizonY: 0
+  m_enableScanlines: 0
+  m_scanlineIntensity: 0.1
+  m_starParticles: {fileID: 0}
 --- !u!4 &113583238
 Transform:
   m_ObjectHideFlags: 0
@@ -289,12 +290,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de9886fee9c8bce45bce27abd6744ba8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.UI.UIManager
-  _startScreen: {fileID: 0}
-  _pauseScreen: {fileID: 0}
-  _gameOverScreen: {fileID: 0}
-  _upgradeSelectionScreen: {fileID: 0}
-  _hudRoot: {fileID: 0}
-  _showHUDDuringPause: 1
+  m_startScreen: {fileID: 0}
+  m_pauseScreen: {fileID: 0}
+  m_gameOverScreen: {fileID: 0}
+  m_upgradeSelectionScreen: {fileID: 0}
+  m_hudRoot: {fileID: 0}
+  m_showHUDDuringPause: 1
 --- !u!4 &305620131
 Transform:
   m_ObjectHideFlags: 0
@@ -460,21 +461,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0eebc5a5736c45c4d835844ae968452b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Graphics.CameraController
-  _target: {fileID: 0}
-  _offset: {x: 0, y: 0, z: -10}
-  _followSpeed: 5
-  _deadZone: 0.5
-  _enableDynamicZoom: 1
-  _minZoom: 10
-  _maxZoom: 22
-  _baseSize: 12
-  _zoomSpeed: 3
-  _maxEnemiesForZoom: 20
-  _maxComboForZoom: 15
-  _shakeDecay: 0.9
-  _maxShakeOffset: 1
-  _shakeEnabled: 1
-  _impactShakeFeedback: {fileID: 0}
+  m_target: {fileID: 0}
+  m_offset: {x: 0, y: 0, z: -10}
+  m_followSpeed: 5
+  m_deadZone: 0.5
+  m_enableDynamicZoom: 1
+  m_minZoom: 5
+  m_maxZoom: 18
+  m_baseSize: 8
+  m_zoomSpeed: 4
+  m_maxEnemiesForZoom: 15
+  m_maxComboForZoom: 10
+  m_shakeDecay: 0.85
+  m_maxShakeOffset: 1.5
+  m_shakeMultiplier: 1.5
+  m_shakeEnabled: 1
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -631,19 +632,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0efa757471e3d7c44b4980eb9e199cdd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Audio.AudioManager
-  _masterVolume: 1
-  _sfxVolume: 0.8
-  _musicVolume: 0.4
-  _uiVolume: 0.6
-  _sfxSource: {fileID: 0}
-  _musicSource: {fileID: 0}
-  _uiSource: {fileID: 0}
-  _shootClipOverride: {fileID: 0}
-  _hitClipOverride: {fileID: 0}
-  _explosionClipOverride: {fileID: 0}
-  _damageClipOverride: {fileID: 0}
-  _pickupClipOverride: {fileID: 0}
-  _menuClickClipOverride: {fileID: 0}
+  m_masterVolume: 1
+  m_sfxVolume: 0.8
+  m_musicVolume: 0.4
+  m_uiVolume: 0.6
+  m_sfxSource: {fileID: 0}
+  m_musicSource: {fileID: 0}
+  m_uiSource: {fileID: 0}
+  m_shootClipOverride: {fileID: 0}
+  m_hitClipOverride: {fileID: 0}
+  m_explosionClipOverride: {fileID: 0}
+  m_damageClipOverride: {fileID: 0}
+  m_pickupClipOverride: {fileID: 0}
+  m_menuClickClipOverride: {fileID: 0}
+  m_maxSimultaneousSounds: 8
+  m_throttleWindowTime: 0.1
 --- !u!4 &452206677
 Transform:
   m_ObjectHideFlags: 0
@@ -688,11 +691,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c36fb23c013b2e49a68f09fab7c262e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Testing.DebugGameTest
-  _spawnTestEnemy: 1
-  _spawnDelay: 1
-  _testModeEnabled: 1
-  _testModeSpawnInterval: 0.5
-  _testModeSpawnAllOnStart: 1
+  m_spawnTestEnemy: 0
+  m_spawnDelay: 3
+  m_testModeEnabled: 0
+  m_testModeSpawnInterval: 0.5
+  m_testModeSpawnAllOnStart: 0
 --- !u!4 &467544449
 Transform:
   m_ObjectHideFlags: 0
@@ -737,9 +740,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4a0a9b4a7dd1c324393e0ca4c318a815, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Combat.EnemyProjectilePool
-  _projectilePrefab: {fileID: 2843790199372898552, guid: 530285be5f15f91459459cdd49e40e40, type: 3}
-  _poolSize: 200
-  _container: {fileID: 0}
+  m_projectilePrefab: {fileID: 2843790199372898552, guid: 530285be5f15f91459459cdd49e40e40, type: 3}
+  m_poolSize: 200
+  m_container: {fileID: 0}
 --- !u!4 &578968689
 Transform:
   m_ObjectHideFlags: 0
@@ -784,21 +787,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 48c243ab96bc8594e817d5b5cfed2c62, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Graphics.VFXManager
-  _smallExplosionPrefab: {fileID: 0}
-  _mediumExplosionPrefab: {fileID: 0}
-  _largeExplosionPrefab: {fileID: 0}
-  _bossExplosionPrefab: {fileID: 0}
-  _bulletHitPrefab: {fileID: 0}
-  _playerHitPrefab: {fileID: 0}
-  _shieldHitPrefab: {fileID: 0}
-  _pickupCollectPrefab: {fileID: 0}
-  _powerUpPrefab: {fileID: 0}
-  _healPrefab: {fileID: 0}
-  _invulnerabilityPrefab: {fileID: 0}
-  _comboEffectPrefab: {fileID: 0}
-  _levelUpPrefab: {fileID: 0}
-  _poolSizePerEffect: 20
-  _effectContainer: {fileID: 0}
+  m_smallExplosionPrefab: {fileID: 0}
+  m_mediumExplosionPrefab: {fileID: 0}
+  m_largeExplosionPrefab: {fileID: 0}
+  m_bossExplosionPrefab: {fileID: 0}
+  m_bulletHitPrefab: {fileID: 0}
+  m_playerHitPrefab: {fileID: 0}
+  m_shieldHitPrefab: {fileID: 0}
+  m_pickupCollectPrefab: {fileID: 0}
+  m_powerUpPrefab: {fileID: 0}
+  m_healPrefab: {fileID: 0}
+  m_invulnerabilityPrefab: {fileID: 0}
+  m_comboEffectPrefab: {fileID: 0}
+  m_levelUpPrefab: {fileID: 0}
+  m_poolSizePerEffect: 20
+  m_effectContainer: {fileID: 0}
 --- !u!4 &677013181
 Transform:
   m_ObjectHideFlags: 0
@@ -935,13 +938,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7be82048c689b4b4689956ab5e1c1bad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Audio.MusicManager
-  _sourceA: {fileID: 0}
-  _sourceB: {fileID: 0}
-  _crossfadeDuration: 2
-  _masterVolume: 0.7
-  _autoSelectByIntensity: 1
-  _intensityCheckInterval: 10
-  _tracks: []
+  m_sourceA: {fileID: 0}
+  m_sourceB: {fileID: 0}
+  m_crossfadeDuration: 2
+  m_masterVolume: 0.7
+  m_autoSelectByIntensity: 1
+  m_intensityCheckInterval: 10
+  m_tracks: []
 --- !u!4 &774612688
 Transform:
   m_ObjectHideFlags: 0
@@ -1035,10 +1038,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ee40532df5b91f14ca24b1a67c3849f2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Core.LevelManager
-  _currentLevel: 1
-  _maxLevel: 99
-  _enemySpawner: {fileID: 1715311633}
-  _rogueCurrentLayer: 1
+  m_currentLevel: 1
+  m_enemySpawner: {fileID: 1715311633}
+  m_rogueCurrentLayer: 1
 --- !u!4 &983163549
 Transform:
   m_ObjectHideFlags: 0
@@ -1098,8 +1100,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5555942e7543ac9438e29d56c6820b1f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Graphics.ScreenFlash
-  _defaultDuration: 0.1
-  _flashCurve:
+  m_defaultDuration: 0.1
+  m_flashCurve:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
@@ -1152,7 +1154,7 @@ RectTransform:
   m_GameObject: {fileID: 1045710458}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1029775529}
@@ -1160,7 +1162,7 @@ RectTransform:
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
@@ -1239,14 +1241,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 74ded377dcdc66042bab4a24cd4f1970, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.UI.UIBuilder
-  _uiManager: {fileID: 305620130}
-  _hudController: {fileID: 0}
-  _fontAsset: {fileID: 11400000, guid: 3944eaaf70beffa4097d8c293604125e, type: 2}
-  _useThemeColors: 1
-  _customBackgroundColor: {r: 0.05, g: 0.05, b: 0.1, a: 0.9}
-  _customPrimaryColor: {r: 0, g: 1, b: 1, a: 1}
-  _customAccentColor: {r: 1, g: 0.3, b: 0.5, a: 1}
-  _customTextColor: {r: 1, g: 1, b: 1, a: 1}
+  m_uiManager: {fileID: 0}
+  m_hudController: {fileID: 0}
+  m_fontAsset: {fileID: 0}
+  m_useThemeColors: 1
+  m_customBackgroundColor: {r: 0.05, g: 0.05, b: 0.1, a: 0.9}
+  m_customPrimaryColor: {r: 0, g: 1, b: 1, a: 1}
+  m_customAccentColor: {r: 1, g: 0.3, b: 0.5, a: 1}
+  m_customTextColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &1057606751 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 3365961541476718978, guid: b2c625dd76ff58745b02ee6d43ac6981, type: 3}
@@ -1300,13 +1302,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5ac3f1c607fb301429d9430c6db0e2ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.UI.SmartBombDisplay
-  _iconSize: 45
-  _iconSpacing: 8
-  _activeBombColor: {r: 1, g: 0.8, b: 0.2, a: 1}
-  _inactiveBombColor: {r: 0.3, g: 0.3, b: 0.3, a: 0.5}
-  _pulseColor: {r: 1, g: 0.4, b: 0.1, a: 1}
-  _pulseSpeed: 3
-  _pulseAmount: 0.2
 --- !u!1 &1137795344
 GameObject:
   m_ObjectHideFlags: 0
@@ -1338,10 +1333,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 79782c24dc20c084e9881d4ffa0feb6f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Core.GameSetup
-  _referenceWiring: {fileID: 1137795348}
-  _spriteSetup: {fileID: 1137795347}
-  _autoSetupOnAwake: 1
-  _autoStartGame: 0
+  m_referenceWiring: {fileID: 1137795348}
+  m_spriteSetup: {fileID: 1137795347}
+  m_autoSetupOnAwake: 1
+  m_autoStartGame: 1
 --- !u!4 &1137795346
 Transform:
   m_ObjectHideFlags: 0
@@ -1369,17 +1364,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 043103d05d9f6b4479c0e4afa521e22b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Core.PrefabSpriteSetup
-  _player: {fileID: 2107141845}
-  _projectilePrefab: {fileID: 3755074133138808909, guid: 1ae76b4efd5bc3c4fb103700b47e799a, type: 3}
-  _enemyProjectilePrefab: {fileID: 2843790199372898552, guid: 530285be5f15f91459459cdd49e40e40, type: 3}
-  _dataMitePrefab: {fileID: 313079910149442926, guid: a1a0a042603432b4cb04a57b96ec1344, type: 3}
-  _scanDronePrefab: {fileID: 3126298202117424405, guid: c1d61a4bb91e3d449befd7b02234122b, type: 3}
-  _fizzerPrefab: {fileID: 2639399583251356653, guid: 7a5ccf61681f1f74c82a8587d977cbe8, type: 3}
-  _ufoPrefab: {fileID: 7935807895420086156, guid: f9ca9bca145e468428bf987e77ac9034, type: 3}
-  _chaosWormPrefab: {fileID: 70348419382244498, guid: 5e1e8c760542f93428edad79294e622e, type: 3}
-  _voidSpherePrefab: {fileID: 6422687118183549413, guid: 12f8a48c777b24c4996ea1bb022995d7, type: 3}
-  _crystalShardPrefab: {fileID: 1511544208708049196, guid: 4f42af24845c57a469bcd40f00c8022e, type: 3}
-  _bossPrefab: {fileID: 5853621838815248195, guid: 53eedcd397e87a249982627d3fff075c, type: 3}
+  m_player: {fileID: 0}
+  m_projectilePrefab: {fileID: 0}
+  m_enemyProjectilePrefab: {fileID: 0}
+  m_dataMitePrefab: {fileID: 0}
+  m_scanDronePrefab: {fileID: 0}
+  m_fizzerPrefab: {fileID: 0}
+  m_ufoPrefab: {fileID: 0}
+  m_chaosWormPrefab: {fileID: 0}
+  m_voidSpherePrefab: {fileID: 0}
+  m_crystalShardPrefab: {fileID: 0}
+  m_bossPrefab: {fileID: 0}
 --- !u!114 &1137795348
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1392,46 +1387,50 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 195fa82b1fb5c694e9cfd009ebf99d81, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Core.SceneReferenceWiring
-  _player: {fileID: 2107141845}
-  _cameraController: {fileID: 330585548}
-  _enemySpawner: {fileID: 1715311633}
-  _enemyProjectilePool: {fileID: 578968688}
-  _gameManager: {fileID: 1588116111}
-  _levelManager: {fileID: 983163548}
-  _spawnWarningIndicator: {fileID: 0}
-  _lowHealthVignette: {fileID: 0}
-  _highScoreManager: {fileID: 1968209209}
-  _bossHealthBar: {fileID: 0}
-  _controlsOverlay: {fileID: 0}
-  _weaponUpgradeManager: {fileID: 0}
-  _activeUpgradesDisplay: {fileID: 0}
-  _playerLevelSystem: {fileID: 0}
-  _xpBarDisplay: {fileID: 0}
-  _levelUpAnnouncement: {fileID: 0}
-  _damageNumberPopup: {fileID: 0}
-  _waveAnnouncement: {fileID: 0}
-  _statisticsScreen: {fileID: 0}
-  _arenaManager: {fileID: 0}
-  _gamepadRumble: {fileID: 0}
-  _minimap: {fileID: 0}
-  _accessibilityManager: {fileID: 0}
-  _saveSystem: {fileID: 0}
-  _musicManager: {fileID: 774612687}
-  _environmentParticles: {fileID: 0}
-  _shipCustomization: {fileID: 0}
-  _enemyDeathVFX: {fileID: 0}
-  _uiFeedbacks: {fileID: 0}
-  _achievementSystem: {fileID: 0}
-  _projectilePrefab: {fileID: 3755074133138808909, guid: 1ae76b4efd5bc3c4fb103700b47e799a, type: 3}
-  _enemyProjectilePrefab: {fileID: 2843790199372898552, guid: 530285be5f15f91459459cdd49e40e40, type: 3}
-  _dataMitePrefab: {fileID: 313079910149442926, guid: a1a0a042603432b4cb04a57b96ec1344, type: 3}
-  _scanDronePrefab: {fileID: 3126298202117424405, guid: c1d61a4bb91e3d449befd7b02234122b, type: 3}
-  _fizzerPrefab: {fileID: 2639399583251356653, guid: 7a5ccf61681f1f74c82a8587d977cbe8, type: 3}
-  _ufoPrefab: {fileID: 7935807895420086156, guid: f9ca9bca145e468428bf987e77ac9034, type: 3}
-  _chaosWormPrefab: {fileID: 70348419382244498, guid: 5e1e8c760542f93428edad79294e622e, type: 3}
-  _voidSpherePrefab: {fileID: 6422687118183549413, guid: 12f8a48c777b24c4996ea1bb022995d7, type: 3}
-  _crystalShardPrefab: {fileID: 1511544208708049196, guid: 4f42af24845c57a469bcd40f00c8022e, type: 3}
-  _bossPrefab: {fileID: 5853621838815248195, guid: 53eedcd397e87a249982627d3fff075c, type: 3}
+  m_player: {fileID: 0}
+  m_cameraController: {fileID: 0}
+  m_enemySpawner: {fileID: 0}
+  m_enemyProjectilePool: {fileID: 0}
+  m_gameManager: {fileID: 0}
+  m_levelManager: {fileID: 0}
+  m_spawnWarningIndicator: {fileID: 0}
+  m_lowHealthVignette: {fileID: 0}
+  m_highScoreManager: {fileID: 0}
+  m_bossHealthBar: {fileID: 0}
+  m_controlsOverlay: {fileID: 0}
+  m_weaponUpgradeManager: {fileID: 0}
+  m_activeUpgradesDisplay: {fileID: 0}
+  m_playerLevelSystem: {fileID: 0}
+  m_xpBarDisplay: {fileID: 0}
+  m_levelUpAnnouncement: {fileID: 0}
+  m_damageNumberPopup: {fileID: 0}
+  m_waveAnnouncement: {fileID: 0}
+  m_statisticsScreen: {fileID: 0}
+  m_arenaManager: {fileID: 0}
+  m_gamepadRumble: {fileID: 0}
+  m_minimap: {fileID: 0}
+  m_accessibilityManager: {fileID: 0}
+  m_saveSystem: {fileID: 0}
+  m_musicManager: {fileID: 0}
+  m_environmentParticles: {fileID: 0}
+  m_shipCustomization: {fileID: 0}
+  m_enemyDeathVFX: {fileID: 0}
+  m_uiFeedbacks: {fileID: 0}
+  m_achievementSystem: {fileID: 0}
+  m_medPackPrefab: {fileID: 0}
+  m_shieldPrefab: {fileID: 0}
+  m_smartBombPrefab: {fileID: 0}
+  m_invulnerablePrefab: {fileID: 0}
+  m_projectilePrefab: {fileID: 0}
+  m_enemyProjectilePrefab: {fileID: 0}
+  m_dataMitePrefab: {fileID: 0}
+  m_scanDronePrefab: {fileID: 0}
+  m_fizzerPrefab: {fileID: 0}
+  m_ufoPrefab: {fileID: 0}
+  m_chaosWormPrefab: {fileID: 0}
+  m_voidSpherePrefab: {fileID: 0}
+  m_crystalShardPrefab: {fileID: 0}
+  m_bossPrefab: {fileID: 0}
 --- !u!1 &1141932235
 GameObject:
   m_ObjectHideFlags: 0
@@ -6355,10 +6354,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 151a76ae31ba8bd40b6ffe5ca02eddc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Input.InputManager
-  _gamepadDeadzone: 0.15
-  _autoFireWhenAiming: 1
-  _useMouseForAim: 1
-  _inputActionsAsset: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  m_gamepadDeadzone: 0.15
+  m_autoFireWhenAiming: 1
+  m_useMouseForAim: 1
+  m_inputActionsAsset: {fileID: -944628639613478452, guid: b572e886d455eee40ab77bffbafde057, type: 3}
 --- !u!4 &1221492669
 Transform:
   m_ObjectHideFlags: 0
@@ -6403,41 +6402,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 61b4cb45bc11dd34d89637b6c59a68c1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Entities.PickupSpawner
-  _playerTarget: {fileID: 2107141842}
-  _pickupContainer: {fileID: 0}
-  _arenaRadius: 28
-  _minDistanceFromPlayer: 5
-  _maxSpawnAttempts: 10
-  _powerUpPrefab: {fileID: 7481374631419005134, guid: 8dff3857c777afb47ade0be5646a6f63, type: 3}
-  _speedUpPrefab: {fileID: 5319003277423023954, guid: ea08c716ec0303f4c9cc2c2f32162c45, type: 3}
-  _medPackPrefab: {fileID: 4395750603363808897, guid: fa83db4abd27b9949a02a985e3f9b3f2, type: 3}
-  _shieldPrefab: {fileID: 5083500648721314523, guid: 93e3c9d7038cae8418342c33ae94b34e, type: 3}
-  _invulnerablePrefab: {fileID: 7466130998158676811, guid: da479a677f291c347b4816465ac8fa14, type: 3}
-  _spreadShotPrefab: {fileID: 0}
-  _piercingPrefab: {fileID: 0}
-  _rapidFirePrefab: {fileID: 0}
-  _homingPrefab: {fileID: 0}
-  _powerUpPoolSize: 10
-  _speedUpPoolSize: 10
-  _medPackPoolSize: 15
-  _shieldPoolSize: 10
-  _invulnerablePoolSize: 5
-  _weaponUpgradePoolSize: 5
-  _powerUpSpawnsPerLevel: 2
-  _speedUpSpawnsPerLevel: 2
-  _medPackSpawnsPerLevel: 3
-  _shieldSpawnsPerLevel: 2
-  _invulnerableSpawnsPerLevel: 1
-  _weaponUpgradeSpawnsPerLevel: 1
-  _powerUpInterval: {x: 30, y: 45}
-  _speedUpInterval: {x: 25, y: 35}
-  _medPackInterval: {x: 20, y: 30}
-  _shieldInterval: {x: 20, y: 30}
-  _invulnerableInterval: {x: 60, y: 90}
-  _weaponUpgradeInterval: {x: 25, y: 40}
-  _medPackHealthThreshold: 0.8
-  _spawningEnabled: 1
-  _maxActivePickups: 30
+  m_playerTarget: {fileID: 0}
+  m_pickupContainer: {fileID: 0}
+  m_arenaRadius: 28
+  m_minDistanceFromPlayer: 5
+  m_maxSpawnAttempts: 10
+  m_medPackPrefab: {fileID: 0}
+  m_shieldPrefab: {fileID: 0}
+  m_smartBombPrefab: {fileID: 0}
+  m_invulnerablePrefab: {fileID: 0}
+  m_medPackPoolSize: 15
+  m_shieldPoolSize: 10
+  m_smartBombPoolSize: 5
+  m_invulnerablePoolSize: 5
+  m_smartBombSpawnsPerLevel: 1
+  m_smartBombInterval: {x: 45, y: 75}
+  m_spawningEnabled: 1
+  m_maxActivePickups: 30
 --- !u!4 &1224075988
 Transform:
   m_ObjectHideFlags: 0
@@ -6482,12 +6463,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5f4fe365b90d954280d64c876af11e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.UI.LeaderboardUI
-  _createOnAwake: 1
-  _backgroundColor: {r: 0, g: 0, b: 0.1, a: 0.95}
-  _headerColor: {r: 0, g: 0.8, b: 1, a: 1}
-  _labelColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}
-  _valueColor: {r: 1, g: 1, b: 1, a: 1}
-  _newRecordColor: {r: 1, g: 0.8, b: 0, a: 1}
+  m_createOnAwake: 1
+  m_backgroundColor: {r: 0, g: 0, b: 0.1, a: 0.95}
+  m_headerColor: {r: 0, g: 0.8, b: 1, a: 1}
+  m_labelColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}
+  m_valueColor: {r: 1, g: 1, b: 1, a: 1}
+  m_newRecordColor: {r: 1, g: 0.8, b: 0, a: 1}
 --- !u!4 &1472913744
 Transform:
   m_ObjectHideFlags: 0
@@ -6532,17 +6513,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3388ae23825b4c74d96a248005a08fff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Core.GameManager
-  _currentState: 0
-  _currentMode: 0
-  _isPaused: 0
-  _autoStartOnPlay: 1
-  _player: {fileID: 0}
-  _enemySpawner: {fileID: 0}
-  _levelManager: {fileID: 0}
-  _gameStartFeedback: {fileID: 0}
-  _gameOverFeedback: {fileID: 0}
-  _levelCompleteFeedback: {fileID: 0}
-  _victoryFeedback: {fileID: 0}
+  m_player: {fileID: 0}
+  m_enemySpawner: {fileID: 0}
+  m_levelManager: {fileID: 0}
+  m_autoStartOnPlay: 1
 --- !u!4 &1588116112
 Transform:
   m_ObjectHideFlags: 0
@@ -6587,22 +6561,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9ab718fb75b0d4a4e9ef0d1d564ec454, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Entities.EnemySpawner
-  _playerTarget: {fileID: 2107141842}
-  _enemyContainer: {fileID: 0}
-  _dataMitePrefab: {fileID: 313079910149442926, guid: a1a0a042603432b4cb04a57b96ec1344, type: 3}
-  _scanDronePrefab: {fileID: 3126298202117424405, guid: c1d61a4bb91e3d449befd7b02234122b, type: 3}
-  _fizzerPrefab: {fileID: 2639399583251356653, guid: 7a5ccf61681f1f74c82a8587d977cbe8, type: 3}
-  _ufoPrefab: {fileID: 7935807895420086156, guid: f9ca9bca145e468428bf987e77ac9034, type: 3}
-  _chaosWormPrefab: {fileID: 70348419382244498, guid: 5e1e8c760542f93428edad79294e622e, type: 3}
-  _voidSpherePrefab: {fileID: 6422687118183549413, guid: 12f8a48c777b24c4996ea1bb022995d7, type: 3}
-  _crystalShardPrefab: {fileID: 1511544208708049196, guid: 4f42af24845c57a469bcd40f00c8022e, type: 3}
-  _bossPrefab: {fileID: 5853621838815248195, guid: 53eedcd397e87a249982627d3fff075c, type: 3}
-  _spawningEnabled: 1
-  _enableWarnings: 1
-  _warningDuration: 0.6
-  _bossWarningDuration: 1.5
-  _minEnemySpacing: 2
-  _maxSpawnAttempts: 10
+  m_playerTarget: {fileID: 2107141842}
+  m_enemyContainer: {fileID: 0}
+  m_dataMitePrefab: {fileID: 313079910149442926, guid: a1a0a042603432b4cb04a57b96ec1344, type: 3}
+  m_scanDronePrefab: {fileID: 3126298202117424405, guid: c1d61a4bb91e3d449befd7b02234122b, type: 3}
+  m_fizzerPrefab: {fileID: 2639399583251356653, guid: 7a5ccf61681f1f74c82a8587d977cbe8, type: 3}
+  m_ufoPrefab: {fileID: 7935807895420086156, guid: f9ca9bca145e468428bf987e77ac9034, type: 3}
+  m_chaosWormPrefab: {fileID: 70348419382244498, guid: 5e1e8c760542f93428edad79294e622e, type: 3}
+  m_voidSpherePrefab: {fileID: 6422687118183549413, guid: 12f8a48c777b24c4996ea1bb022995d7, type: 3}
+  m_crystalShardPrefab: {fileID: 1511544208708049196, guid: 4f42af24845c57a469bcd40f00c8022e, type: 3}
+  m_bossPrefab: {fileID: 5853621838815248195, guid: 53eedcd397e87a249982627d3fff075c, type: 3}
+  m_spawningEnabled: 1
+  m_enableWarnings: 1
+  m_warningDuration: 0.6
+  m_bossWarningDuration: 1.5
+  m_minEnemySpacing: 2
+  m_maxSpawnAttempts: 10
 --- !u!4 &1715311634
 Transform:
   m_ObjectHideFlags: 0
@@ -6662,191 +6636,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6da43522623d4704e979466dc7650b65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MoreMountains.Tools::MoreMountains.Feedbacks.MMF_Player
-  Feedbacks: []
-  InitializationMode: 0
-  AutoInitialization: 1
-  SafeMode: 3
-  Direction: 0
-  AutoChangeDirectionOnEnd: 0
-  AutoPlayOnStart: 0
-  AutoPlayOnEnable: 0
-  ForceTimescaleMode: 0
-  ForcedTimescaleMode: 1
-  DurationMultiplier: 1
-  TimescaleMultiplier: 1
-  RandomizeDuration: 0
-  RandomDurationMultiplier: {x: 0.5, y: 1.5}
-  DisplayFullDurationDetails: 0
-  PlayerTimescaleMode: 0
-  OnlyPlayIfWithinRange: 0
-  RangeCenter: {fileID: 0}
-  RangeDistance: 5
-  UseRangeFalloff: 0
-  RangeFalloff:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  RemapRangeFalloff: {x: 0, y: 1}
-  IgnoreRangeEvents: 0
-  CooldownDuration: 0
-  InitialDelay: 0
-  CanPlay: 1
-  CanPlayWhileAlreadyPlaying: 1
-  ChanceToPlay: 100
-  FeedbacksIntensity: 1
-  Events:
-    TriggerMMFeedbacksEvents: 0
-    TriggerUnityEvents: 1
-    OnPlay:
-      m_PersistentCalls:
-        m_Calls: []
-    OnPause:
-      m_PersistentCalls:
-        m_Calls: []
-    OnStop:
-      m_PersistentCalls:
-        m_Calls: []
-    OnResume:
-      m_PersistentCalls:
-        m_Calls: []
-    OnChangeDirection:
-      m_PersistentCalls:
-        m_Calls: []
-    OnComplete:
-      m_PersistentCalls:
-        m_Calls: []
-    OnRestoreInitialValues:
-      m_PersistentCalls:
-        m_Calls: []
-    OnSkipToTheEnd:
-      m_PersistentCalls:
-        m_Calls: []
-    OnInitializationComplete:
-      m_PersistentCalls:
-        m_Calls: []
-    OnEnable:
-      m_PersistentCalls:
-        m_Calls: []
-    OnDisable:
-      m_PersistentCalls:
-        m_Calls: []
-  DebugActive: 0
-  InScriptDrivenPause: 0
-  FeedbacksList:
-  - rid: 2410573173315862712
-  KeepPlayModeChanges: 0
-  PerformanceMode: 0
-  RestoreInitialValuesOnDisable: 0
-  StopFeedbacksOnDisable: 0
-  PlayCount: 0
-  MMF_ChannelMode: 0
-  MMF_Channel: 0
-  MMF_ChannelDefinition: {fileID: 0}
-  references:
-    version: 2
-    RefIds:
-    - rid: 2410573173315862712
-      type: {class: MMF_CameraShake, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
-      data:
-        Active: 1
-        UniqueID: 45326587
-        Label: Smart Bomb Camera Shake
-        OriginalLabel: Camera Shake
-        ChannelMode: 0
-        Channel: 0
-        MMChannelDefinition: {fileID: 0}
-        Chance: 100
-        Timing:
-          TimescaleMode: 0
-          ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
-          InitialDelay: 0
-          CooldownDuration: 0
-          InterruptsOnStop: 1
-          NumberOfRepeats: 0
-          RepeatForever: 0
-          DelayBetweenRepeats: 1
-          PlayCount: 0
-          LimitPlayCount: 0
-          MaxPlayCount: 3
-          SetPlayCountToZeroOnReset: 0
-          MMFeedbacksDirectionCondition: 0
-          PlayDirection: 0
-          ConstantIntensity: 0
-          UseIntensityInterval: 0
-          IntensityIntervalMin: 0
-          IntensityIntervalMax: 0
-          Sequence: {fileID: 0}
-          TrackID: 0
-          Quantized: 0
-          TargetBPM: 120
-        AutomatedTargetAcquisition:
-          Mode: 0
-          ChildIndex: 0
-        RandomizeOutput: 0
-        RandomMultiplier: {x: 0.8, y: 1}
-        RandomizeDuration: 0
-        RandomDurationMultiplier: {x: 0.5, y: 2}
-        UseRange: 0
-        RangeDistance: 5
-        UseRangeFalloff: 0
-        RangeFalloff:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        RemapRangeFalloff: {x: 0, y: 1}
-        AutomaticShakerSetupButton:
-          ButtonText: Automatic Shaker Setup
-        Owner: {fileID: 1803443042}
-        DebugActive: 0
-        RepeatUntilStopped: 0
-        CameraShakeProperties:
-          Duration: 0.1
-          Amplitude: 0.2
-          Frequency: 40
-          AmplitudeX: 0
-          AmplitudeY: 0
-          AmplitudeZ: 0
 --- !u!1 &1815845572
 GameObject:
   m_ObjectHideFlags: 0
@@ -6890,7 +6679,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f137247be922d3d40a6ad22cdbef84ea, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Combat.PermanentUpgradeManager
 --- !u!114 &1815845575
 MonoBehaviour:
@@ -6902,15 +6691,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 287fe2b3a19639140b59b05359760dee, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Combat.UpgradePoolManager
-  _cardsPerSelection: 3
-  _allowDuplicates: 0
-  _commonWeight: 60
-  _rareWeight: 25
-  _epicWeight: 12
-  _legendaryWeight: 3
-  _logSelections: 1
+  m_cardsPerSelection: 3
+  m_allowDuplicates: 0
+  m_commonWeight: 60
+  m_rareWeight: 25
+  m_epicWeight: 12
+  m_legendaryWeight: 3
+  m_logSelections: 1
 --- !u!1 &1878016614
 GameObject:
   m_ObjectHideFlags: 0
@@ -6940,30 +6729,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b39e1bcd146131c418cf4334b78ff85b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Graphics.FeedbackManager
-  _smallShakeIntensity: 0.5
-  _smallShakeDuration: 0.1
-  _mediumShakeIntensity: 1.5
-  _mediumShakeDuration: 0.2
-  _largeShakeIntensity: 3
-  _largeShakeDuration: 0.4
-  _bossShakeIntensity: 5
-  _bossShakeDuration: 0.6
-  _enableHitstop: 1
-  _smallHitstopDuration: 0.02
-  _mediumHitstopDuration: 0.05
-  _largeHitstopDuration: 0.1
-  _bossHitstopDuration: 0.2
-  _enableScreenFlash: 1
-  _damageFlashColor: {r: 1, g: 0, b: 0, a: 0.3}
-  _healFlashColor: {r: 0, g: 1, b: 0, a: 0.2}
-  _powerUpFlashColor: {r: 1, g: 0.8, b: 0, a: 0.2}
-  _flashDuration: 0.1
-  _enableSlowMotion: 1
-  _slowMotionScale: 0.3
-  _slowMotionDuration: 0.15
-  _comboShakeMultiplier: 0.1
-  _comboMilestone: 10
-  _cameraController: {fileID: 330585548}
+  m_bossShakeIntensity: 5
+  m_bossShakeDuration: 0.6
+  m_enableHitstop: 1
+  m_smallHitstopDuration: 0.02
+  m_mediumHitstopDuration: 0.05
+  m_largeHitstopDuration: 0.1
+  m_bossHitstopDuration: 0.2
+  m_enableScreenFlash: 1
+  m_damageFlashColor: {r: 1, g: 0, b: 0, a: 0.3}
+  m_healFlashColor: {r: 0, g: 1, b: 0, a: 0.2}
+  m_powerUpFlashColor: {r: 1, g: 0.8, b: 0, a: 0.2}
+  m_flashDuration: 0.1
+  m_enableSlowMotion: 1
+  m_slowMotionScale: 0.3
+  m_slowMotionDuration: 0.15
+  m_comboShakeMultiplier: 0.1
+  m_comboMilestone: 10
+  m_cameraController: {fileID: 0}
 --- !u!4 &1878016616
 Transform:
   m_ObjectHideFlags: 0
@@ -7178,12 +6961,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 43e8107ab25711449998f7c5a82ae531, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Graphics.ArenaBoundary
-  _boundaryColor: {r: 0.2, g: 0.6, b: 1, a: 0.5}
-  _warningColor: {r: 1, g: 0.3, b: 0.2, a: 0.8}
-  _lineWidth: 0.15
-  _segments: 64
-  _warningDistance: 3
-  _pulseSpeed: 3
+  m_boundaryColor: {r: 0.2, g: 0.6, b: 1, a: 0.5}
+  m_warningColor: {r: 1, g: 0.3, b: 0.2, a: 0.8}
+  m_lineWidth: 0.15
+  m_segments: 64
+  m_warningDistance: 3
+  m_pulseSpeed: 3
 --- !u!4 &2107141842 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1185388566381748, guid: b2c625dd76ff58745b02ee6d43ac6981, type: 3}
@@ -7212,16 +6995,34 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a880bb669426607499e792a09bbda01f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Combat.SmartBombSystem
-  _startingBombs: 1
-  _maxBombs: 3
-  _activationDuration: 0.5
-  _explosionParticles: {fileID: 1141932238}
-  _explosionStartColor: {r: 1, g: 0.8, b: 0.2, a: 1}
-  _explosionEndColor: {r: 1, g: 0.3, b: 0.1, a: 0}
-  _activationFeedback: {fileID: 2114939654}
-  _cameraShakeFeedback: {fileID: 1803443042}
-  _epicExplosionSound: {fileID: 8300000, guid: 46dcfa1187f4a1e4cb3793dd1351f669, type: 3}
-  _explosionVolume: 0.8
+  m_startingBombs: 0
+  m_maxBombs: 3
+  m_activationDuration: 0.5
+  m_explosionParticles: {fileID: 0}
+  m_explosionStartColor: {r: 1, g: 0.8, b: 0.2, a: 1}
+  m_explosionEndColor: {r: 1, g: 0.3, b: 0.1, a: 0}
+  m_epicExplosionSound: {fileID: 0}
+  m_explosionVolume: 0.8
+--- !u!114 &2107141855
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1057606751}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c7c1281e4a0da0b48ab65fc9477c9c06, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Entities.PlayerVisuals
+  m_normalColor: {r: 0.3, g: 0.8, b: 1, a: 1}
+  m_shieldColor: {r: 0.2, g: 0.5, b: 1, a: 1}
+  m_damageColor: {r: 1, g: 0, b: 0, a: 1}
+  m_damageFashDuration: 0.4
+  m_damageFlashSpeed: 15
+  m_shieldGlowIntensity: 1.3
+  m_shieldPulseSpeed: 2
+  m_shieldPulseAmount: 0.2
 --- !u!1 &2114939652
 GameObject:
   m_ObjectHideFlags: 0
@@ -7266,188 +7067,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6da43522623d4704e979466dc7650b65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MoreMountains.Tools::MoreMountains.Feedbacks.MMF_Player
-  Feedbacks: []
-  InitializationMode: 0
-  AutoInitialization: 1
-  SafeMode: 3
-  Direction: 0
-  AutoChangeDirectionOnEnd: 0
-  AutoPlayOnStart: 0
-  AutoPlayOnEnable: 0
-  ForceTimescaleMode: 0
-  ForcedTimescaleMode: 1
-  DurationMultiplier: 1
-  TimescaleMultiplier: 1
-  RandomizeDuration: 0
-  RandomDurationMultiplier: {x: 0.5, y: 1.5}
-  DisplayFullDurationDetails: 0
-  PlayerTimescaleMode: 0
-  OnlyPlayIfWithinRange: 0
-  RangeCenter: {fileID: 0}
-  RangeDistance: 5
-  UseRangeFalloff: 0
-  RangeFalloff:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  RemapRangeFalloff: {x: 0, y: 1}
-  IgnoreRangeEvents: 0
-  CooldownDuration: 0
-  InitialDelay: 0
-  CanPlay: 1
-  CanPlayWhileAlreadyPlaying: 1
-  ChanceToPlay: 100
-  FeedbacksIntensity: 1
-  Events:
-    TriggerMMFeedbacksEvents: 0
-    TriggerUnityEvents: 1
-    OnPlay:
-      m_PersistentCalls:
-        m_Calls: []
-    OnPause:
-      m_PersistentCalls:
-        m_Calls: []
-    OnStop:
-      m_PersistentCalls:
-        m_Calls: []
-    OnResume:
-      m_PersistentCalls:
-        m_Calls: []
-    OnChangeDirection:
-      m_PersistentCalls:
-        m_Calls: []
-    OnComplete:
-      m_PersistentCalls:
-        m_Calls: []
-    OnRestoreInitialValues:
-      m_PersistentCalls:
-        m_Calls: []
-    OnSkipToTheEnd:
-      m_PersistentCalls:
-        m_Calls: []
-    OnInitializationComplete:
-      m_PersistentCalls:
-        m_Calls: []
-    OnEnable:
-      m_PersistentCalls:
-        m_Calls: []
-    OnDisable:
-      m_PersistentCalls:
-        m_Calls: []
-  DebugActive: 0
-  InScriptDrivenPause: 0
-  FeedbacksList:
-  - rid: 2410573173315862713
-  KeepPlayModeChanges: 0
-  PerformanceMode: 0
-  RestoreInitialValuesOnDisable: 0
-  StopFeedbacksOnDisable: 0
-  PlayCount: 0
-  MMF_ChannelMode: 0
-  MMF_Channel: 0
-  MMF_ChannelDefinition: {fileID: 0}
-  references:
-    version: 2
-    RefIds:
-    - rid: 2410573173315862713
-      type: {class: MMF_Flash, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
-      data:
-        Active: 1
-        UniqueID: -2109260096
-        Label: Smart Bomb Flash
-        OriginalLabel: 
-        ChannelMode: 0
-        Channel: 0
-        MMChannelDefinition: {fileID: 0}
-        Chance: 100
-        Timing:
-          TimescaleMode: 0
-          ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
-          InitialDelay: 0
-          CooldownDuration: 0
-          InterruptsOnStop: 1
-          NumberOfRepeats: 0
-          RepeatForever: 0
-          DelayBetweenRepeats: 1
-          PlayCount: 0
-          LimitPlayCount: 0
-          MaxPlayCount: 3
-          SetPlayCountToZeroOnReset: 0
-          MMFeedbacksDirectionCondition: 0
-          PlayDirection: 0
-          ConstantIntensity: 0
-          UseIntensityInterval: 0
-          IntensityIntervalMin: 0
-          IntensityIntervalMax: 0
-          Sequence: {fileID: 0}
-          TrackID: 0
-          Quantized: 0
-          TargetBPM: 120
-        AutomatedTargetAcquisition:
-          Mode: 0
-          ChildIndex: 0
-        RandomizeOutput: 0
-        RandomMultiplier: {x: 0.8, y: 1}
-        RandomizeDuration: 0
-        RandomDurationMultiplier: {x: 0.5, y: 2}
-        UseRange: 0
-        RangeDistance: 5
-        UseRangeFalloff: 0
-        RangeFalloff:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        RemapRangeFalloff: {x: 0, y: 1}
-        AutomaticShakerSetupButton:
-          ButtonText: Automatic Shaker Setup
-        Owner: {fileID: 2114939654}
-        DebugActive: 0
-        FlashColor: {r: 1, g: 0.8, b: 0.2, a: 0.8}
-        FlashDuration: 0.3
-        FlashAlpha: 1
-        FlashID: 0
-        TargetFlash: {fileID: 0}
 --- !u!1001 &4989507563906846139
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7524,6 +7143,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3365961541476718978, guid: b2c625dd76ff58745b02ee6d43ac6981, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2107141849}
+    - targetCorrespondingSourceObject: {fileID: 3365961541476718978, guid: b2c625dd76ff58745b02ee6d43ac6981, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2107141855}
   m_SourcePrefab: {fileID: 100100000, guid: b2c625dd76ff58745b02ee6d43ac6981, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

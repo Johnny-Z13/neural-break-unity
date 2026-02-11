@@ -141,32 +141,83 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a88f91cda639a9e4f987a85762cd4c3e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: NeuralBreak::NeuralBreak.Entities.UFO
-  _maxHealth: 1
-  _speed: 1.5
-  _damage: 5
-  _xpValue: 1
-  _scoreValue: 100
-  _collisionRadius: 0.5
-  _spawnDuration: 0.25
-  _invulnerableDuringSpawn: 1
-  _deathDuration: 0.5
-  _dashSpeed: 12
-  _normalSpeed: 3
-  _strafeSpeed: 6
-  _preferredDistance: 7
-  _minDistance: 4
-  _maxDistance: 12
-  _dashCooldown: 2
-  _dashDuration: 0.3
-  _hoverDuration: 1.5
-  _strafeDuration: 2
-  _deathDamageRadius: 3
-  _deathDamageAmount: 25
-  _spriteRenderer: {fileID: 0}
-  _domeLight: {fileID: 0}
-  _visuals: {fileID: 0}
-  _ufoColor: {r: 0.7, g: 0.7, b: 0.8, a: 1}
-  _domeColor: {r: 0.3, g: 0.8, b: 1, a: 1}
-  _wobbleSpeed: 2
-  _wobbleAmount: 5
-  _tiltAmount: 15
+  m_maxHealth: 1
+  m_speed: 1.5
+  m_damage: 5
+  m_xpValue: 1
+  m_scoreValue: 100
+  m_collisionRadius: 0.5
+  m_spawnDuration: 0.25
+  m_invulnerableDuringSpawn: 1
+  m_spawnScaleCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  m_enableSpawnParticles: 1
+  m_enableSpawnSound: 1
+  m_deathDuration: 0.5
+  m_deathScaleCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: -1
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: -1
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  m_enableDeathParticles: 1
+  m_enableDeathSound: 1
+  m_dashSpeed: 12
+  m_normalSpeed: 3
+  m_strafeSpeed: 6
+  m_preferredDistance: 7
+  m_minDistance: 4
+  m_maxDistance: 12
+  m_dashCooldown: 2
+  m_dashDuration: 0.3
+  m_hoverDuration: 1.5
+  m_strafeDuration: 2
+  m_deathDamageRadius: 3
+  m_deathDamageAmount: 25
+  m_domeLight: {fileID: 0}
+  m_visuals: {fileID: 0}
+  m_ufoColor: {r: 0.7, g: 0.7, b: 0.8, a: 1}
+  m_domeColor: {r: 0.3, g: 0.8, b: 1, a: 1}
+  m_wobbleSpeed: 3
+  m_wobbleAmount: 8
+  m_tiltAmount: 15

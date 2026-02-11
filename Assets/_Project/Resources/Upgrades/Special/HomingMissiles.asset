@@ -36,7 +36,7 @@ MonoBehaviour:
     enableRicochet: 0
     enableChainLightning: 0
     enableBeamWeapon: 0
-    homingStrength: 5
+    homingStrength: 8
     explosionRadius: 0
     ricochetCount: 0
     chainLightningTargets: 0

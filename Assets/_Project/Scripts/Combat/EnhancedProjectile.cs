@@ -23,6 +23,9 @@ namespace NeuralBreak.Combat
         [SerializeField] private SpriteRenderer m_spriteRenderer;
         [SerializeField] private TrailRenderer m_trailRenderer;
 
+        // Visual profile for special weapon effects
+        private ProjectileVisualProfile m_visualProfile;
+
         // Physics
         private Rigidbody2D m_rb;
         private CircleCollider2D m_collider;
@@ -37,6 +40,13 @@ namespace NeuralBreak.Combat
 
         // Behaviors (modular composition)
         private List<IProjectileBehavior> m_behaviors = new List<IProjectileBehavior>();
+
+        // Cached behavior instances (reused across shots - zero allocation after first use)
+        private HomingBehavior m_cachedHomingBehavior;
+        private PiercingBehavior m_cachedPiercingBehavior;
+        private ExplosionBehavior m_cachedExplosionBehavior;
+        private ChainLightningBehavior m_cachedChainLightningBehavior;
+        private RicochetBehavior m_cachedRicochetBehavior;
 
         // Pool callback
         private System.Action<EnhancedProjectile> m_returnToPool;
@@ -81,10 +91,10 @@ namespace NeuralBreak.Combat
         {
             if (!m_isActive) return;
 
-            // Update behaviors
-            foreach (var behavior in m_behaviors)
+            // Update behaviors (indexed for loop - zero allocation)
+            for (int i = 0; i < m_behaviors.Count; i++)
             {
-                behavior.Update(Time.deltaTime);
+                m_behaviors[i].Update(Time.deltaTime);
             }
 
             // Move projectile
@@ -107,7 +117,8 @@ namespace NeuralBreak.Combat
             int damage,
             int powerLevel,
             System.Action<EnhancedProjectile> returnToPool,
-            WeaponModifiers modifiers)
+            WeaponModifiers modifiers,
+            ProjectileVisualProfile visualProfile = null)
         {
             transform.SetParent(null);
             transform.position = position;
@@ -117,49 +128,72 @@ namespace NeuralBreak.Combat
             m_returnToPool = returnToPool;
             m_isActive = true;
 
+            // Store visual profile (use default if not provided)
+            m_visualProfile = visualProfile ?? ProjectileVisualProfile.Default;
+
             // Apply speed modifier
             m_speed = ConfigProvider.WeaponSystem.baseProjectileSpeed * modifiers.projectileSpeedMultiplier;
 
             // Apply lifetime
             m_lifeTimer = ConfigProvider.WeaponSystem.projectileLifetime;
 
-            // Clear previous behaviors
-            foreach (var behavior in m_behaviors)
+            // Clear previous behaviors (indexed for loop - zero allocation)
+            for (int i = 0; i < m_behaviors.Count; i++)
             {
-                behavior.OnDeactivate();
+                m_behaviors[i].OnDeactivate();
             }
             m_behaviors.Clear();
 
-            // Add behaviors based on modifiers
+            // Add behaviors based on modifiers (cached instances - zero allocation after first shot)
             if (modifiers.enableHoming)
             {
-                m_behaviors.Add(new HomingBehavior(modifiers.homingStrength));
+                if (m_cachedHomingBehavior == null)
+                    m_cachedHomingBehavior = new HomingBehavior(modifiers.homingStrength);
+                else
+                    m_cachedHomingBehavior.Reset(modifiers.homingStrength);
+                m_behaviors.Add(m_cachedHomingBehavior);
             }
 
             if (modifiers.piercingCount > 0)
             {
-                m_behaviors.Add(new PiercingBehavior(modifiers.piercingCount));
+                if (m_cachedPiercingBehavior == null)
+                    m_cachedPiercingBehavior = new PiercingBehavior(modifiers.piercingCount);
+                else
+                    m_cachedPiercingBehavior.Reset(modifiers.piercingCount);
+                m_behaviors.Add(m_cachedPiercingBehavior);
             }
 
             if (modifiers.enableExplosion)
             {
-                m_behaviors.Add(new ExplosionBehavior(modifiers.explosionRadius));
+                if (m_cachedExplosionBehavior == null)
+                    m_cachedExplosionBehavior = new ExplosionBehavior(modifiers.explosionRadius);
+                else
+                    m_cachedExplosionBehavior.Reset(modifiers.explosionRadius);
+                m_behaviors.Add(m_cachedExplosionBehavior);
             }
 
             if (modifiers.enableChainLightning)
             {
-                m_behaviors.Add(new ChainLightningBehavior(modifiers.chainLightningTargets));
+                if (m_cachedChainLightningBehavior == null)
+                    m_cachedChainLightningBehavior = new ChainLightningBehavior(modifiers.chainLightningTargets);
+                else
+                    m_cachedChainLightningBehavior.Reset(modifiers.chainLightningTargets);
+                m_behaviors.Add(m_cachedChainLightningBehavior);
             }
 
             if (modifiers.enableRicochet)
             {
-                m_behaviors.Add(new RicochetBehavior(modifiers.ricochetCount));
+                if (m_cachedRicochetBehavior == null)
+                    m_cachedRicochetBehavior = new RicochetBehavior(modifiers.ricochetCount);
+                else
+                    m_cachedRicochetBehavior.Reset(modifiers.ricochetCount);
+                m_behaviors.Add(m_cachedRicochetBehavior);
             }
 
-            // Initialize all behaviors
-            foreach (var behavior in m_behaviors)
+            // Initialize all behaviors (indexed for loop - zero allocation)
+            for (int i = 0; i < m_behaviors.Count; i++)
             {
-                behavior.Initialize(this);
+                m_behaviors[i].Initialize(this);
             }
 
             // Set rotation
@@ -179,18 +213,57 @@ namespace NeuralBreak.Combat
                 m_collider.radius = scaledRadius;
             }
 
-            // Visual scale - use config-based radius with visual multiplier
-            float visualScale = scaledRadius * 3f;
+            // Visual scale - use config-based radius with visual profile size multiplier
+            float visualScale = scaledRadius * 3f * m_visualProfile.sizeMultiplier;
             transform.localScale = Vector3.one * visualScale;
 
-            // Update visuals
-            UpdateVisualForBehaviors();
+            // Apply visual profile (overrides default behavior colors)
+            if (visualProfile != null)
+            {
+                ApplyVisualProfile();
+            }
+            else
+            {
+                // Fallback to behavior-based colors if no profile
+                UpdateVisualForBehaviors();
+            }
 
             // Reset trail
             if (m_trailRenderer != null)
             {
                 m_trailRenderer.Clear();
-                UpdateTrailColor();
+                if (visualProfile != null)
+                {
+                    Color trailColor = m_visualProfile.trailColor;
+                    m_trailRenderer.startColor = trailColor;
+                    m_trailRenderer.endColor = new Color(trailColor.r, trailColor.g, trailColor.b, 0f);
+                }
+                else
+                {
+                    UpdateTrailColor();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Apply visual profile settings (color, trail, glow, particles).
+        /// </summary>
+        private void ApplyVisualProfile()
+        {
+            if (m_visualProfile == null) return;
+
+            // Apply projectile color with HDR glow intensity
+            if (m_spriteRenderer != null)
+            {
+                Color finalColor = m_visualProfile.projectileColor * m_visualProfile.glowIntensity;
+                m_spriteRenderer.color = finalColor;
+            }
+
+            // Spawn particle effect if provided
+            if (m_visualProfile.particleEffectPrefab != null)
+            {
+                GameObject particles = Instantiate(m_visualProfile.particleEffectPrefab, transform.position, Quaternion.identity);
+                particles.transform.SetParent(transform); // Attach to projectile
             }
         }
 
@@ -249,9 +322,9 @@ namespace NeuralBreak.Combat
 
         private bool HasBehavior<T>() where T : IProjectileBehavior
         {
-            foreach (var behavior in m_behaviors)
+            for (int i = 0; i < m_behaviors.Count; i++)
             {
-                if (behavior is T) return true;
+                if (m_behaviors[i] is T) return true;
             }
             return false;
         }
@@ -282,10 +355,10 @@ namespace NeuralBreak.Combat
 
             m_isActive = false;
 
-            // Notify behaviors
-            foreach (var behavior in m_behaviors)
+            // Notify behaviors (indexed for loop - zero allocation)
+            for (int i = 0; i < m_behaviors.Count; i++)
             {
-                behavior.OnDeactivate();
+                m_behaviors[i].OnDeactivate();
             }
 
             m_returnToPool?.Invoke(this);
@@ -309,12 +382,13 @@ namespace NeuralBreak.Combat
                 EnemyBase enemy = null;
 
                 // First try EnemyBase (standard enemies)
-                enemy = other.GetComponent<EnemyBase>();
+                // TryGetComponent is zero-alloc (unlike GetComponent which may allocate on null)
+                other.TryGetComponent<EnemyBase>(out enemy);
 
                 // If not found, try WormSegment (ChaosWorm body segments)
                 if (enemy == null)
                 {
-                    var wormSegment = other.GetComponent<WormSegment>();
+                    other.TryGetComponent<WormSegment>(out var wormSegment);
                     if (wormSegment != null)
                     {
                         // Forward damage to worm segment (which forwards to parent)
@@ -336,11 +410,11 @@ namespace NeuralBreak.Combat
                     // Apply base damage
                     enemy.TakeDamage(m_damage, transform.position);
 
-                    // Let behaviors handle hit
+                    // Let behaviors handle hit (indexed for loop - zero allocation)
                     bool shouldDestroy = true;
-                    foreach (var behavior in m_behaviors)
+                    for (int i = 0; i < m_behaviors.Count; i++)
                     {
-                        bool behaviorSaysDestroy = behavior.OnHitEnemy(enemy);
+                        bool behaviorSaysDestroy = m_behaviors[i].OnHitEnemy(enemy);
                         // If ANY behavior says don't destroy, keep projectile alive
                         if (!behaviorSaysDestroy)
                         {

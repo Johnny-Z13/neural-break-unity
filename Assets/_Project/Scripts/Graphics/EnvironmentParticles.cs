@@ -219,8 +219,10 @@ namespace NeuralBreak.Graphics
             float time = Time.time;
             float speedMult = m_reactToIntensity ? (0.5f + m_currentIntensity * 1f) : 1f;
 
-            foreach (var p in m_particles)
+            // Indexed for loop (zero allocation - foreach on List boxes enumerator in Mono)
+            for (int i = 0; i < m_particles.Count; i++)
             {
+                var p = m_particles[i];
                 if (p.transform == null) continue;
 
                 // Move particle
