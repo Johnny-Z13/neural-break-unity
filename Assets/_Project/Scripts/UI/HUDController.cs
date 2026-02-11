@@ -1,5 +1,6 @@
 using UnityEngine;
 using NeuralBreak.Core;
+using Z13.Core;
 
 namespace NeuralBreak.UI
 {
@@ -9,10 +10,10 @@ namespace NeuralBreak.UI
     public class HUDController : MonoBehaviour
     {
         [Header("Display Components")]
-        [SerializeField] private HealthDisplay _healthDisplay;
-        [SerializeField] private ScoreDisplay _scoreDisplay;
-        [SerializeField] private WeaponHeatDisplay _heatDisplay;
-        [SerializeField] private LevelDisplay _levelDisplay;
+        [SerializeField] private HealthDisplay m_healthDisplay;
+        [SerializeField] private ScoreDisplay m_scoreDisplay;
+        [SerializeField] private WeaponHeatDisplay m_heatDisplay;
+        [SerializeField] private LevelDisplay m_levelDisplay;
 
         private void Awake()
         {
@@ -46,50 +47,50 @@ namespace NeuralBreak.UI
         private void OnGameStarted(GameStartedEvent evt)
         {
             // Reset all displays
-            _healthDisplay?.ResetDisplay();
-            _scoreDisplay?.ResetDisplay();
-            _heatDisplay?.ResetDisplay();
-            _levelDisplay?.SetLevel(1);
+            m_healthDisplay?.ResetDisplay();
+            m_scoreDisplay?.ResetDisplay();
+            m_heatDisplay?.ResetDisplay();
+            m_levelDisplay?.SetLevel(1);
         }
 
         private void OnPlayerDamaged(PlayerDamagedEvent evt)
         {
-            _healthDisplay?.UpdateHealth(evt.currentHealth, evt.maxHealth);
+            m_healthDisplay?.UpdateHealth(evt.currentHealth, evt.maxHealth);
         }
 
         private void OnPlayerHealed(PlayerHealedEvent evt)
         {
-            _healthDisplay?.UpdateHealth(evt.currentHealth, evt.maxHealth);
+            m_healthDisplay?.UpdateHealth(evt.currentHealth, evt.maxHealth);
         }
 
         private void OnShieldChanged(ShieldChangedEvent evt)
         {
-            _healthDisplay?.UpdateShields(evt.currentShields, evt.maxShields);
+            m_healthDisplay?.UpdateShields(evt.currentShields, evt.maxShields);
         }
 
         private void OnScoreChanged(ScoreChangedEvent evt)
         {
-            _scoreDisplay?.UpdateScore(evt.newScore, evt.delta, evt.worldPosition);
+            m_scoreDisplay?.UpdateScore(evt.newScore, evt.delta, evt.worldPosition);
         }
 
         private void OnComboChanged(ComboChangedEvent evt)
         {
-            _scoreDisplay?.UpdateCombo(evt.comboCount, evt.multiplier);
+            m_scoreDisplay?.UpdateCombo(evt.comboCount, evt.multiplier);
         }
 
         private void OnWeaponHeatChanged(WeaponHeatChangedEvent evt)
         {
-            _heatDisplay?.UpdateHeat(evt.heat, evt.maxHeat, evt.isOverheated);
+            m_heatDisplay?.UpdateHeat(evt.heat, evt.maxHeat, evt.isOverheated);
         }
 
         private void OnPowerUpChanged(PowerUpChangedEvent evt)
         {
-            _heatDisplay?.UpdatePowerLevel(evt.newLevel, 10); // Max level is 10
+            m_heatDisplay?.UpdatePowerLevel(evt.newLevel, 10); // Max level is 10
         }
 
         private void OnLevelStarted(LevelStartedEvent evt)
         {
-            _levelDisplay?.SetLevel(evt.levelNumber);
+            m_levelDisplay?.SetLevel(evt.levelNumber);
         }
     }
 }

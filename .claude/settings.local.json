@@ -61,7 +61,13 @@
       "mcp__UnityMCP__batch_execute",
       "mcp__UnityMCP__manage_scene",
       "mcp__UnityMCP__manage_components",
-      "mcp__UnityMCP__manage_gameobject"
+      "mcp__UnityMCP__manage_gameobject",
+      "Bash(del \"D:\\\\Projects\\\\Unity\\\\neural-break-unity\\\\.claude\\\\CLAUDE.md\")",
+      "Bash(for file in Assets/_Project/Scripts/UI/Builders/*.cs)",
+      "Bash(do sed -i 's/\"\"_\\\\\\([a-zA-Z]\\\\\\)/\"\"m_\\\\1/g' \"$file\")",
+      "Bash(done)",
+      "mcp__UnityMCP__validate_script",
+      "mcp__UnityMCP__manage_asset"
     ]
   }
 }

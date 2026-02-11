@@ -1,98 +1,12 @@
-using System;
-using System.Collections.Generic;
 using UnityEngine;
+using System.Collections.Generic;
+using NeuralBreak.Combat;
+using NeuralBreak.Entities;
 
 namespace NeuralBreak.Core
 {
-    /// <summary>
-    /// Simple event bus for decoupled communication between systems.
-    /// Provides type-safe events without tight coupling.
-    /// </summary>
-    public static class EventBus
-    {
-        private static readonly Dictionary<Type, Delegate> _events = new Dictionary<Type, Delegate>();
-
-        /// <summary>
-        /// Subscribe to an event type
-        /// </summary>
-        public static void Subscribe<T>(Action<T> handler) where T : struct
-        {
-            if (handler == null)
-            {
-                Debug.LogError($"[EventBus] Cannot subscribe to {typeof(T).Name} - handler is null!");
-                return;
-            }
-
-            Type eventType = typeof(T);
-
-            if (_events.TryGetValue(eventType, out Delegate existing))
-            {
-                _events[eventType] = Delegate.Combine(existing, handler);
-            }
-            else
-            {
-                _events[eventType] = handler;
-            }
-        }
-
-        /// <summary>
-        /// Unsubscribe from an event type
-        /// </summary>
-        public static void Unsubscribe<T>(Action<T> handler) where T : struct
-        {
-            if (handler == null)
-            {
-                Debug.LogError($"[EventBus] Cannot unsubscribe from {typeof(T).Name} - handler is null!");
-                return;
-            }
-
-            Type eventType = typeof(T);
-
-            if (_events.TryGetValue(eventType, out Delegate existing))
-            {
-                Delegate newDelegate = Delegate.Remove(existing, handler);
-                if (newDelegate == null)
-                {
-                    _events.Remove(eventType);
-                }
-                else
-                {
-                    _events[eventType] = newDelegate;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Publish an event to all subscribers
-        /// </summary>
-        public static void Publish<T>(T eventData) where T : struct
-        {
-            Type eventType = typeof(T);
-
-            if (_events.TryGetValue(eventType, out Delegate handler))
-            {
-                try
-                {
-                    (handler as Action<T>)?.Invoke(eventData);
-                }
-                catch (System.Exception ex)
-                {
-                    Debug.LogError($"[EventBus] Error invoking event {typeof(T).Name}: {ex.Message}\n{ex.StackTrace}");
-                }
-            }
-        }
-
-        /// <summary>
-        /// Clear all event subscriptions (call on scene unload)
-        /// </summary>
-        public static void Clear()
-        {
-            _events.Clear();
-        }
-    }
-
     // ============================================
-    // GAME EVENTS - Add new event structs here
+    // GAME EVENTS - Neural Break specific events
     // ============================================
 
     #region Game State Events
@@ -334,6 +248,87 @@ namespace NeuralBreak.Core
 
     #endregion
 
+    #region Weapon Upgrade Events
+
+    public struct WeaponUpgradeActivatedEvent
+    {
+        public PickupType upgradeType;
+        public float duration;
+    }
+
+    public struct WeaponUpgradeExpiredEvent
+    {
+        public PickupType upgradeType;
+    }
+
+    // Permanent upgrade events
+    public struct PermanentUpgradeAddedEvent
+    {
+        public UpgradeDefinition upgrade;
+    }
+
+    public struct PermanentUpgradeRemovedEvent
+    {
+        public string upgradeId;
+    }
+
+    public struct WeaponModifiersChangedEvent
+    {
+        public WeaponModifiers modifiers;
+    }
+
+    // Card selection events
+    public struct UpgradeSelectionStartedEvent
+    {
+        public List<UpgradeDefinition> options;
+    }
+
+    public struct UpgradeSelectedEvent
+    {
+        public UpgradeDefinition selected;
+    }
+
+    public struct UpgradeSelectionCancelledEvent { }
+
+    // Special weapon events
+    public struct ExplosionTriggeredEvent
+    {
+        public Vector2 position;
+        public float radius;
+    }
+
+    public struct ChainLightningEvent
+    {
+        public List<EnemyBase> targets;
+    }
+
+    #endregion
+
+    #region UI Events
+
+    public struct ScreenFlashRequestEvent
+    {
+        public Color color;
+        public float duration;
+    }
+
+    public struct DamageFlashRequestEvent
+    {
+        public float intensity;
+    }
+
+    public struct HealFlashRequestEvent
+    {
+        public float intensity;
+    }
+
+    public struct PickupFlashRequestEvent
+    {
+        public float intensity;
+    }
+
+    #endregion
+
     // ============================================
     // ENUMS for event data
     // ============================================
@@ -368,85 +363,4 @@ namespace NeuralBreak.Core
         RapidFire,
         Homing
     }
-
-    #region Weapon Upgrade Events
-
-    public struct WeaponUpgradeActivatedEvent
-    {
-        public PickupType upgradeType;
-        public float duration;
-    }
-
-    public struct WeaponUpgradeExpiredEvent
-    {
-        public PickupType upgradeType;
-    }
-
-    // Permanent upgrade events
-    public struct PermanentUpgradeAddedEvent
-    {
-        public Combat.UpgradeDefinition upgrade;
-    }
-
-    public struct PermanentUpgradeRemovedEvent
-    {
-        public string upgradeId;
-    }
-
-    public struct WeaponModifiersChangedEvent
-    {
-        public Combat.WeaponModifiers modifiers;
-    }
-
-    // Card selection events
-    public struct UpgradeSelectionStartedEvent
-    {
-        public System.Collections.Generic.List<Combat.UpgradeDefinition> options;
-    }
-
-    public struct UpgradeSelectedEvent
-    {
-        public Combat.UpgradeDefinition selected;
-    }
-
-    public struct UpgradeSelectionCancelledEvent { }
-
-    // Special weapon events
-    public struct ExplosionTriggeredEvent
-    {
-        public UnityEngine.Vector2 position;
-        public float radius;
-    }
-
-    public struct ChainLightningEvent
-    {
-        public System.Collections.Generic.List<Entities.EnemyBase> targets;
-    }
-
-    #endregion
-
-    #region UI Events
-
-    public struct ScreenFlashRequestEvent
-    {
-        public Color color;
-        public float duration;
-    }
-
-    public struct DamageFlashRequestEvent
-    {
-        public float intensity;
-    }
-
-    public struct HealFlashRequestEvent
-    {
-        public float intensity;
-    }
-
-    public struct PickupFlashRequestEvent
-    {
-        public float intensity;
-    }
-
-    #endregion
 }

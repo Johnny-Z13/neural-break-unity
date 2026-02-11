@@ -2,7 +2,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using NeuralBreak.Core;
-using NeuralBreak.Utils;
 
 namespace NeuralBreak.UI
 {
@@ -12,93 +11,119 @@ namespace NeuralBreak.UI
     public class StartScreen : ScreenBase
     {
         [Header("Title")]
-        [SerializeField] private TextMeshProUGUI _titleText;
-        [SerializeField] private string _gameTitle = "NEURAL BREAK";
+        [SerializeField] private TextMeshProUGUI m_titleText;
+        [SerializeField] private string m_gameTitle = "NEURAL BREAK";
 
         [Header("Subtitle")]
-        [SerializeField] private TextMeshProUGUI _subtitleText;
-        [SerializeField] private string _subtitle = "SURVIVE THE DIGITAL SWARM";
+        [SerializeField] private TextMeshProUGUI m_subtitleText;
+        [SerializeField] private string m_subtitle = "SURVIVE THE DIGITAL SWARM";
 
         [Header("Buttons")]
-        [SerializeField] private Button _playButton;
-        [SerializeField] private Button _arcadeButton;
-        [SerializeField] private Button _rogueButton;
+        [SerializeField] private Button m_playButton;
+        [SerializeField] private Button m_arcadeButton;
+        [SerializeField] private Button m_rogueButton;
 
         [Header("Version")]
-        [SerializeField] private TextMeshProUGUI _versionText;
+        [SerializeField] private TextMeshProUGUI m_versionText;
+
+        private bool m_buttonsWired;
 
         protected override void Awake()
         {
             base.Awake();
+            WireButtons();
+        }
 
-            // Wire up button events
-            if (_playButton != null)
+        private void Start()
+        {
+            // Wire buttons again in Start() in case they were set via reflection after Awake()
+            WireButtons();
+        }
+
+        /// <summary>
+        /// Wire button click listeners. Called by UIBuilder after setting fields via reflection.
+        /// </summary>
+        public void InitializeButtons()
+        {
+            WireButtons();
+        }
+
+        private void WireButtons()
+        {
+            if (m_buttonsWired) return;
+
+            if (m_playButton != null)
             {
-                _playButton.onClick.AddListener(() => StartGame(GameMode.Arcade));
+                m_playButton.onClick.AddListener(() => StartGame(GameMode.Arcade));
+                m_buttonsWired = true;
             }
 
-            if (_arcadeButton != null)
+            if (m_arcadeButton != null)
             {
-                _arcadeButton.onClick.AddListener(() => StartGame(GameMode.Arcade));
+                m_arcadeButton.onClick.AddListener(() => StartGame(GameMode.Arcade));
+                m_buttonsWired = true;
             }
 
-            if (_rogueButton != null)
+            if (m_rogueButton != null)
             {
-                _rogueButton.onClick.AddListener(() => StartGame(GameMode.Rogue));
+                m_rogueButton.onClick.AddListener(() => StartGame(GameMode.Rogue));
+                m_buttonsWired = true;
             }
         }
 
         protected override void OnShow()
         {
             // Set title text
-            if (_titleText != null)
+            if (m_titleText != null)
             {
-                _titleText.text = _gameTitle;
+                m_titleText.text = m_gameTitle;
             }
 
-            if (_subtitleText != null)
+            if (m_subtitleText != null)
             {
-                _subtitleText.text = _subtitle;
+                m_subtitleText.text = m_subtitle;
             }
 
             // Set version text
-            if (_versionText != null)
+            if (m_versionText != null)
             {
-                _versionText.text = $"v{Application.version}";
+                m_versionText.text = $"v{Application.version}";
             }
 
             // Select first button
-            if (_firstSelected == null)
+            if (m_firstSelected == null)
             {
-                if (_playButton != null)
-                    _firstSelected = _playButton;
-                else if (_arcadeButton != null)
-                    _firstSelected = _arcadeButton;
+                if (m_playButton != null)
+                    m_firstSelected = m_playButton;
+                else if (m_arcadeButton != null)
+                    m_firstSelected = m_arcadeButton;
             }
         }
 
         private void StartGame(GameMode mode)
         {
-            LogHelper.Log($"[StartScreen] ========================================");
-            LogHelper.Log($"[StartScreen] PLAY BUTTON CLICKED!");
-            LogHelper.Log($"[StartScreen] Launching ARCADE MODE (GameMode.{mode})");
-            LogHelper.Log($"[StartScreen] ========================================");
+            Debug.Log($"[StartScreen] ========================================");
+            Debug.Log($"[StartScreen] PLAY BUTTON CLICKED!");
+            Debug.Log($"[StartScreen] Launching {mode} MODE");
+            Debug.Log($"[StartScreen] ========================================");
 
-            if (GameManager.Instance == null)
+            // Hide this screen FIRST (before state change event)
+            Hide();
+
+            // Use GameStateManager (guaranteed to exist from Boot scene)
+            // GameManager.StartGame delegates to GameStateManager anyway
+            if (GameManager.Instance != null)
             {
-                LogHelper.LogError("[StartScreen] ERROR: GameManager.Instance is NULL! Cannot start game!");
-                return;
+                // Use scene-specific GameManager if available (handles stats reset)
+                GameManager.Instance.StartGame(mode);
+            }
+            else
+            {
+                // Fall back to global GameStateManager
+                GameStateManager.Instance.StartGame(mode);
             }
 
-            LogHelper.Log($"[StartScreen] GameManager found, calling StartGame({mode})");
-
-            // Start the game
-            GameManager.Instance.StartGame(mode);
-
-            LogHelper.Log($"[StartScreen] StartGame() called successfully");
-
-            // Hide this screen
-            Hide();
+            Debug.Log($"[StartScreen] StartGame() called successfully");
         }
     }
 }

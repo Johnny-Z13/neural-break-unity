@@ -17,40 +17,40 @@ namespace NeuralBreak.Entities
         public override PickupType PickupType => PickupType.RapidFire;
 
         [Header("Rapid Fire Settings")]
-        [SerializeField] private float _duration = 6f;
-        [SerializeField] private Color _pickupColor = new Color(0f, 0.67f, 0.27f, 0.9f); // Deep Emerald #00AA44
+        [SerializeField] private float m_duration = 6f;
+        [SerializeField] private Color m_pickupColor = new Color(0f, 0.67f, 0.27f, 0.9f); // Deep Emerald #00AA44
 
         [Header("Visual")]
-        [SerializeField] private PowerUpVisuals _visuals;
-        private bool _visualsGenerated;
+        [SerializeField] private PowerUpVisuals m_visuals;
+        private bool m_visualsGenerated;
 
-        protected override Color GetPickupColor() => _pickupColor;
+        protected override Color GetPickupColor() => m_pickupColor;
 
         public override void Initialize(Vector2 position, Transform playerTarget, System.Action<PickupBase> returnCallback)
         {
             base.Initialize(position, playerTarget, returnCallback);
 
-            if (!_visualsGenerated)
+            if (!m_visualsGenerated)
             {
                 EnsureVisuals();
-                _visualsGenerated = true;
+                m_visualsGenerated = true;
             }
         }
 
         private void EnsureVisuals()
         {
-            if (_visuals == null)
+            if (m_visuals == null)
             {
-                _visuals = GetComponentInChildren<PowerUpVisuals>();
+                m_visuals = GetComponentInChildren<PowerUpVisuals>();
             }
 
-            if (_visuals == null)
+            if (m_visuals == null)
             {
                 var visualsGO = new GameObject("Visuals");
                 visualsGO.transform.SetParent(transform, false);
                 visualsGO.transform.localPosition = Vector3.zero;
-                _visuals = visualsGO.AddComponent<PowerUpVisuals>();
-                _visuals.SetLetter('R');
+                m_visuals = visualsGO.AddComponent<PowerUpVisuals>();
+                m_visuals.SetLetter('R');
             }
         }
 
@@ -59,8 +59,8 @@ namespace NeuralBreak.Entities
             var upgradeManager = FindFirstObjectByType<WeaponUpgradeManager>();
             if (upgradeManager != null)
             {
-                upgradeManager.ActivateUpgrade(PickupType.RapidFire, _duration);
-                Debug.Log($"[RapidFire] Activated for {_duration} seconds!");
+                upgradeManager.ActivateUpgrade(PickupType.RapidFire, m_duration);
+                Debug.Log($"[RapidFire] Activated for {m_duration} seconds!");
             }
             else
             {

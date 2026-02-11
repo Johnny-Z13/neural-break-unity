@@ -8,20 +8,20 @@ namespace NeuralBreak.Entities
     /// </summary>
     public class ShipVisualsRenderer
     {
-        private SpriteRenderer _spriteRenderer;
-        private TrailRenderer _trailRenderer;
-        private PlayerController _player;
+        private SpriteRenderer m_spriteRenderer;
+        private TrailRenderer m_trailRenderer;
+        private PlayerController m_player;
 
         /// <summary>
         /// Initialize the renderer with player references
         /// </summary>
         public void Initialize(PlayerController player)
         {
-            _player = player;
-            if (_player != null)
+            m_player = player;
+            if (m_player != null)
             {
-                _spriteRenderer = _player.GetComponent<SpriteRenderer>();
-                _trailRenderer = _player.GetComponentInChildren<TrailRenderer>();
+                m_spriteRenderer = m_player.GetComponent<SpriteRenderer>();
+                m_trailRenderer = m_player.GetComponentInChildren<TrailRenderer>();
             }
         }
 
@@ -30,27 +30,27 @@ namespace NeuralBreak.Entities
         /// </summary>
         public void ApplyVisuals(ShipSkin skin)
         {
-            if (_player == null || skin == null)
+            if (m_player == null || skin == null)
             {
                 Debug.LogWarning("[ShipVisualsRenderer] Cannot apply visuals - missing player or skin");
                 return;
             }
 
             // Ensure components are found
-            if (_spriteRenderer == null)
+            if (m_spriteRenderer == null)
             {
-                _spriteRenderer = _player.GetComponent<SpriteRenderer>();
+                m_spriteRenderer = m_player.GetComponent<SpriteRenderer>();
             }
-            if (_trailRenderer == null)
+            if (m_trailRenderer == null)
             {
-                _trailRenderer = _player.GetComponentInChildren<TrailRenderer>();
+                m_trailRenderer = m_player.GetComponentInChildren<TrailRenderer>();
             }
 
             // Apply sprite and color
-            if (_spriteRenderer != null)
+            if (m_spriteRenderer != null)
             {
-                _spriteRenderer.sprite = GenerateShipSprite(skin.shape, 64);
-                _spriteRenderer.color = skin.primaryColor;
+                m_spriteRenderer.sprite = GenerateShipSprite(skin.shape, 64);
+                m_spriteRenderer.color = skin.primaryColor;
 
                 // Apply glow if enabled
                 if (skin.hasGlow)
@@ -60,12 +60,12 @@ namespace NeuralBreak.Entities
             }
 
             // Apply trail colors
-            if (_trailRenderer != null)
+            if (m_trailRenderer != null)
             {
-                _trailRenderer.startColor = skin.trailColor;
+                m_trailRenderer.startColor = skin.trailColor;
                 Color endColor = skin.trailColor;
                 endColor.a = 0;
-                _trailRenderer.endColor = endColor;
+                m_trailRenderer.endColor = endColor;
             }
         }
 

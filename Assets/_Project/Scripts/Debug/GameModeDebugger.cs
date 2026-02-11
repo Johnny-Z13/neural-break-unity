@@ -1,6 +1,7 @@
 using UnityEngine;
 using NeuralBreak.Core;
 using System.IO;
+using Z13.Core;
 
 namespace NeuralBreak.Testing
 {
@@ -9,12 +10,12 @@ namespace NeuralBreak.Testing
     /// </summary>
     public class GameModeDebugger : MonoBehaviour
     {
-        private string _logPath;
+        private string m_logPath;
 
         private void Awake()
         {
-            _logPath = Path.Combine(Application.dataPath, "..", "gamemode_debug.txt");
-            File.WriteAllText(_logPath, $"=== GAME MODE DEBUGGER STARTED ===\n");
+            m_logPath = Path.Combine(Application.dataPath, "..", "gamemode_debug.txt");
+            File.WriteAllText(m_logPath, $"=== GAME MODE DEBUGGER STARTED ===\n");
             Log("GameModeDebugger Awake");
 
             EventBus.Subscribe<GameStartedEvent>(OnGameStarted);
@@ -60,7 +61,7 @@ namespace NeuralBreak.Testing
         private void Log(string message)
         {
             string timestamped = $"[{Time.time:F2}s] {message}\n";
-            File.AppendAllText(_logPath, timestamped);
+            File.AppendAllText(m_logPath, timestamped);
             Debug.Log($"[GameModeDebugger] {message}");
         }
 

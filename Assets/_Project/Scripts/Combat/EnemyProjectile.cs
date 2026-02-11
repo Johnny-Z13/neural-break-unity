@@ -12,44 +12,44 @@ namespace NeuralBreak.Combat
     public class EnemyProjectile : MonoBehaviour
     {
         [Header("Settings")]
-        [SerializeField] private float _speed = 7f;
-        [SerializeField] private float _lifetime = 5f;
-        [SerializeField] private int _damage = 10;
-        [SerializeField] private float _collisionRadius = 0.3f;
+        [SerializeField] private float m_speed = 7f;
+        [SerializeField] private float m_lifetime = 5f;
+        [SerializeField] private int m_damage = 10;
+        [SerializeField] private float m_collisionRadius = 0.3f;
 
         [Header("Visual")]
-        [SerializeField] private SpriteRenderer _spriteRenderer;
-        [SerializeField] private TrailRenderer _trailRenderer;
-        [SerializeField] private Color _projectileColor = new Color(1f, 0.3f, 0.1f); // Orange-red
+        [SerializeField] private SpriteRenderer m_spriteRenderer;
+        [SerializeField] private TrailRenderer m_trailRenderer;
+        [SerializeField] private Color m_projectileColor = new Color(1f, 0.3f, 0.1f); // Orange-red
 
         // Components
-        private Rigidbody2D _rb;
+        private Rigidbody2D m_rb;
 
         // State
-        private Vector2 _direction;
-        private float _spawnTime;
-        private bool _isActive;
-        private bool _isOrphaned; // Enemy that fired this died
-        private System.Action<EnemyProjectile> _returnToPool;
+        private Vector2 m_direction;
+        private float m_spawnTime;
+        private bool m_isActive;
+        private bool m_isOrphaned; // Enemy that fired this died
+        private System.Action<EnemyProjectile> m_returnToPool;
 
         // Public accessors
-        public bool IsActive => _isActive;
-        public int Damage => _damage;
-        public bool IsOrphaned => _isOrphaned;
+        public bool IsActive => m_isActive;
+        public int Damage => m_damage;
+        public bool IsOrphaned => m_isOrphaned;
 
         private void Awake()
         {
-            _rb = GetComponent<Rigidbody2D>();
-            _rb.gravityScale = 0f;
-            _rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+            m_rb = GetComponent<Rigidbody2D>();
+            m_rb.gravityScale = 0f;
+            m_rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
-            if (_spriteRenderer == null)
+            if (m_spriteRenderer == null)
             {
-                _spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+                m_spriteRenderer = GetComponentInChildren<SpriteRenderer>();
             }
-            if (_trailRenderer == null)
+            if (m_trailRenderer == null)
             {
-                _trailRenderer = GetComponentInChildren<TrailRenderer>();
+                m_trailRenderer = GetComponentInChildren<TrailRenderer>();
             }
         }
 
@@ -60,32 +60,32 @@ namespace NeuralBreak.Combat
             System.Action<EnemyProjectile> returnToPool, Color? color = null)
         {
             transform.position = position;
-            _direction = direction.normalized;
-            _speed = speed;
-            _damage = damage;
-            _returnToPool = returnToPool;
-            _spawnTime = Time.time;
-            _isActive = true;
-            _isOrphaned = false;
+            m_direction = direction.normalized;
+            m_speed = speed;
+            m_damage = damage;
+            m_returnToPool = returnToPool;
+            m_spawnTime = Time.time;
+            m_isActive = true;
+            m_isOrphaned = false;
 
             // Set velocity
-            _rb.linearVelocity = _direction * _speed;
+            m_rb.linearVelocity = m_direction * m_speed;
 
             // Rotate to face direction
-            float angle = Mathf.Atan2(_direction.y, _direction.x) * Mathf.Rad2Deg;
+            float angle = Mathf.Atan2(m_direction.y, m_direction.x) * Mathf.Rad2Deg;
             transform.rotation = Quaternion.Euler(0, 0, angle - 90f);
 
             // Set color
-            Color useColor = color ?? _projectileColor;
-            if (_spriteRenderer != null)
+            Color useColor = color ?? m_projectileColor;
+            if (m_spriteRenderer != null)
             {
-                _spriteRenderer.color = useColor;
+                m_spriteRenderer.color = useColor;
             }
-            if (_trailRenderer != null)
+            if (m_trailRenderer != null)
             {
-                _trailRenderer.Clear();
-                _trailRenderer.startColor = useColor;
-                _trailRenderer.endColor = new Color(useColor.r, useColor.g, useColor.b, 0f);
+                m_trailRenderer.Clear();
+                m_trailRenderer.startColor = useColor;
+                m_trailRenderer.endColor = new Color(useColor.r, useColor.g, useColor.b, 0f);
             }
 
             gameObject.SetActive(true);
@@ -96,15 +96,15 @@ namespace NeuralBreak.Combat
         /// </summary>
         public void MarkOrphaned()
         {
-            _isOrphaned = true;
+            m_isOrphaned = true;
         }
 
         private void Update()
         {
-            if (!_isActive) return;
+            if (!m_isActive) return;
 
             // Check lifetime
-            if (Time.time - _spawnTime > _lifetime)
+            if (Time.time - m_spawnTime > m_lifetime)
             {
                 ReturnToPool();
                 return;
@@ -113,7 +113,7 @@ namespace NeuralBreak.Combat
 
         private void OnTriggerEnter2D(Collider2D other)
         {
-            if (!_isActive) return;
+            if (!m_isActive) return;
 
             // Check player hit
             if (other.CompareTag("Player"))
@@ -122,7 +122,7 @@ namespace NeuralBreak.Combat
                 if (playerHealth != null && !playerHealth.IsDead)
                 {
                     // Only damage player if alive
-                    playerHealth.TakeDamage(_damage, transform.position);
+                    playerHealth.TakeDamage(m_damage, transform.position);
                 }
 
                 ReturnToPool();
@@ -139,18 +139,18 @@ namespace NeuralBreak.Combat
 
         private void ReturnToPool()
         {
-            if (!_isActive) return;
+            if (!m_isActive) return;
 
-            _isActive = false;
-            _rb.linearVelocity = Vector2.zero;
+            m_isActive = false;
+            m_rb.linearVelocity = Vector2.zero;
 
-            if (_trailRenderer != null)
+            if (m_trailRenderer != null)
             {
-                _trailRenderer.Clear();
+                m_trailRenderer.Clear();
             }
 
             gameObject.SetActive(false);
-            _returnToPool?.Invoke(this);
+            m_returnToPool?.Invoke(this);
         }
 
         /// <summary>
@@ -158,14 +158,14 @@ namespace NeuralBreak.Combat
         /// </summary>
         public void OnReturnToPool()
         {
-            _isActive = false;
-            _isOrphaned = false;
+            m_isActive = false;
+            m_isOrphaned = false;
         }
 
         private void OnDrawGizmosSelected()
         {
             Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(transform.position, _collisionRadius);
+            Gizmos.DrawWireSphere(transform.position, m_collisionRadius);
         }
     }
 }

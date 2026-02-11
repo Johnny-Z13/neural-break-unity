@@ -11,90 +11,90 @@ namespace NeuralBreak.UI
     public class ScoreDisplay : MonoBehaviour
     {
         [Header("Score")]
-        [SerializeField] private TextMeshProUGUI _scoreText;
-        [SerializeField] private string _scoreFormat = "{0:N0}";
+        [SerializeField] private TextMeshProUGUI m_scoreText;
+        [SerializeField] private string m_scoreFormat = "{0:N0}";
 
         [Header("Delta Popup")]
-        [SerializeField] private TextMeshProUGUI _deltaText;
-        [SerializeField] private float _deltaDisplayTime = 0.8f;
-        [SerializeField] private float _deltaFadeTime = 0.3f;
-        [SerializeField] private Vector2 _deltaOffset = new Vector2(0, 30f);
+        [SerializeField] private TextMeshProUGUI m_deltaText;
+        [SerializeField] private float m_deltaDisplayTime = 0.8f;
+        [SerializeField] private float m_deltaFadeTime = 0.3f;
+        [SerializeField] private Vector2 m_deltaOffset = new Vector2(0, 30f);
 
         [Header("Combo/Multiplier")]
-        [SerializeField] private TextMeshProUGUI _comboText;
-        [SerializeField] private TextMeshProUGUI _multiplierText;
-        [SerializeField] private GameObject _comboContainer;
+        [SerializeField] private TextMeshProUGUI m_comboText;
+        [SerializeField] private TextMeshProUGUI m_multiplierText;
+        [SerializeField] private GameObject m_comboContainer;
 
         [Header("Combo Milestone")]
-        [SerializeField] private TextMeshProUGUI _milestoneText;
-        [SerializeField] private float _milestoneDuration = 1.5f;
-        [SerializeField] private float _milestoneScale = 1.5f;
+        [SerializeField] private TextMeshProUGUI m_milestoneText;
+        [SerializeField] private float m_milestoneDuration = 1.5f;
+        [SerializeField] private float m_milestoneScale = 1.5f;
 
         [Header("Animation")]
-        [SerializeField] private float _scoreAnimSpeed = 15f;
-        [SerializeField] private bool _animateScore = true;
-        [SerializeField] private float _comboPunchScale = 1.2f;
+        [SerializeField] private float m_scoreAnimSpeed = 15f;
+        [SerializeField] private bool m_animateScore = true;
+        [SerializeField] private float m_comboPunchScale = 1.2f;
 
         // Milestone thresholds and messages - use UITheme for consistency
         private static (int threshold, string message, Color color)[] ComboMilestones => UITheme.ComboMilestones;
 
         // State
-        private int _currentScore;
-        private int _displayedScore;
-        private int _currentCombo;
-        private float _currentMultiplier = 1f;
-        private Coroutine _deltaCoroutine;
-        private Coroutine _milestoneCoroutine;
-        private Coroutine _multiplierPunchCoroutine;
-        private Vector3 _comboOriginalScale;
-        private Vector3 _multiplierOriginalScale;
-        private int _lastMilestoneShown = 0;
+        private int m_currentScore;
+        private int m_displayedScore;
+        private int m_currentCombo;
+        private float m_currentMultiplier = 1f;
+        private Coroutine m_deltaCoroutine;
+        private Coroutine m_milestoneCoroutine;
+        private Coroutine m_multiplierPunchCoroutine;
+        private Vector3 m_comboOriginalScale;
+        private Vector3 m_multiplierOriginalScale;
+        private int m_lastMilestoneShown = 0;
 
         private void Awake()
         {
-            if (_comboContainer != null)
+            if (m_comboContainer != null)
             {
-                _comboOriginalScale = _comboContainer.transform.localScale;
-                _comboContainer.SetActive(false);
+                m_comboOriginalScale = m_comboContainer.transform.localScale;
+                m_comboContainer.SetActive(false);
             }
 
-            if (_multiplierText != null)
+            if (m_multiplierText != null)
             {
-                _multiplierOriginalScale = _multiplierText.transform.localScale;
+                m_multiplierOriginalScale = m_multiplierText.transform.localScale;
             }
 
-            if (_deltaText != null)
+            if (m_deltaText != null)
             {
-                _deltaText.gameObject.SetActive(false);
+                m_deltaText.gameObject.SetActive(false);
             }
 
-            if (_milestoneText != null)
+            if (m_milestoneText != null)
             {
-                _milestoneText.gameObject.SetActive(false);
+                m_milestoneText.gameObject.SetActive(false);
             }
         }
 
         private void Update()
         {
-            if (!_animateScore) return;
+            if (!m_animateScore) return;
 
             // Smooth score counting
-            if (_displayedScore != _currentScore)
+            if (m_displayedScore != m_currentScore)
             {
-                float diff = _currentScore - _displayedScore;
-                int step = Mathf.CeilToInt(Mathf.Abs(diff) * Time.unscaledDeltaTime * _scoreAnimSpeed);
+                float diff = m_currentScore - m_displayedScore;
+                int step = Mathf.CeilToInt(Mathf.Abs(diff) * Time.unscaledDeltaTime * m_scoreAnimSpeed);
                 step = Mathf.Max(1, step);
 
                 if (diff > 0)
                 {
-                    _displayedScore = Mathf.Min(_displayedScore + step, _currentScore);
+                    m_displayedScore = Mathf.Min(m_displayedScore + step, m_currentScore);
                 }
                 else
                 {
-                    _displayedScore = Mathf.Max(_displayedScore - step, _currentScore);
+                    m_displayedScore = Mathf.Max(m_displayedScore - step, m_currentScore);
                 }
 
-                UpdateScoreText(_displayedScore);
+                UpdateScoreText(m_displayedScore);
             }
         }
 
@@ -103,16 +103,16 @@ namespace NeuralBreak.UI
         /// </summary>
         public void UpdateScore(int newScore, int delta, Vector3 worldPosition)
         {
-            _currentScore = newScore;
+            m_currentScore = newScore;
 
-            if (!_animateScore)
+            if (!m_animateScore)
             {
-                _displayedScore = newScore;
+                m_displayedScore = newScore;
                 UpdateScoreText(newScore);
             }
 
             // Show delta popup
-            if (delta > 0 && _deltaText != null)
+            if (delta > 0 && m_deltaText != null)
             {
                 ShowDelta(delta);
             }
@@ -123,34 +123,34 @@ namespace NeuralBreak.UI
         /// </summary>
         public void UpdateCombo(int comboCount, float multiplier)
         {
-            int previousCombo = _currentCombo;
-            float previousMultiplier = _currentMultiplier;
-            _currentCombo = comboCount;
-            _currentMultiplier = multiplier;
+            int previousCombo = m_currentCombo;
+            float previousMultiplier = m_currentMultiplier;
+            m_currentCombo = comboCount;
+            m_currentMultiplier = multiplier;
 
             bool showCombo = comboCount > 1 || multiplier > 1f;
 
-            if (_comboContainer != null)
+            if (m_comboContainer != null)
             {
-                _comboContainer.SetActive(showCombo);
+                m_comboContainer.SetActive(showCombo);
 
                 if (showCombo && comboCount > previousCombo)
                 {
                     // Punch scale on combo increase
-                    StartCoroutine(PunchScale(_comboContainer.transform, _comboOriginalScale));
+                    StartCoroutine(PunchScale(m_comboContainer.transform, m_comboOriginalScale));
                 }
             }
 
-            if (_comboText != null)
+            if (m_comboText != null)
             {
-                _comboText.text = comboCount > 1 ? $"{comboCount}x COMBO" : "";
+                m_comboText.text = comboCount > 1 ? $"{comboCount}x COMBO" : "";
             }
 
-            if (_multiplierText != null)
+            if (m_multiplierText != null)
             {
                 if (multiplier > 1f)
                 {
-                    _multiplierText.text = $"x{multiplier:F1}";
+                    m_multiplierText.text = $"x{multiplier:F1}";
 
                     // Scale bump on multiplier increase
                     if (multiplier > previousMultiplier)
@@ -160,7 +160,7 @@ namespace NeuralBreak.UI
                 }
                 else
                 {
-                    _multiplierText.text = "";
+                    m_multiplierText.text = "";
                 }
             }
 
@@ -170,20 +170,20 @@ namespace NeuralBreak.UI
             // Reset milestone tracking when combo breaks
             if (comboCount == 0)
             {
-                _lastMilestoneShown = 0;
+                m_lastMilestoneShown = 0;
             }
         }
 
         private void PunchMultiplier()
         {
-            if (_multiplierText == null) return;
+            if (m_multiplierText == null) return;
 
-            if (_multiplierPunchCoroutine != null)
+            if (m_multiplierPunchCoroutine != null)
             {
-                StopCoroutine(_multiplierPunchCoroutine);
-                _multiplierText.transform.localScale = _multiplierOriginalScale;
+                StopCoroutine(m_multiplierPunchCoroutine);
+                m_multiplierText.transform.localScale = m_multiplierOriginalScale;
             }
-            _multiplierPunchCoroutine = StartCoroutine(PunchScale(_multiplierText.transform, _multiplierOriginalScale));
+            m_multiplierPunchCoroutine = StartCoroutine(PunchScale(m_multiplierText.transform, m_multiplierOriginalScale));
         }
 
         private void CheckComboMilestone(int comboCount)
@@ -192,10 +192,10 @@ namespace NeuralBreak.UI
             for (int i = ComboMilestones.Length - 1; i >= 0; i--)
             {
                 var milestone = ComboMilestones[i];
-                if (comboCount >= milestone.threshold && milestone.threshold > _lastMilestoneShown)
+                if (comboCount >= milestone.threshold && milestone.threshold > m_lastMilestoneShown)
                 {
                     ShowMilestone(milestone.message, milestone.color);
-                    _lastMilestoneShown = milestone.threshold;
+                    m_lastMilestoneShown = milestone.threshold;
                     break;
                 }
             }
@@ -203,24 +203,24 @@ namespace NeuralBreak.UI
 
         private void ShowMilestone(string message, Color color)
         {
-            if (_milestoneText == null) return;
+            if (m_milestoneText == null) return;
 
-            if (_milestoneCoroutine != null)
+            if (m_milestoneCoroutine != null)
             {
-                StopCoroutine(_milestoneCoroutine);
+                StopCoroutine(m_milestoneCoroutine);
             }
-            _milestoneCoroutine = StartCoroutine(MilestoneCoroutine(message, color));
+            m_milestoneCoroutine = StartCoroutine(MilestoneCoroutine(message, color));
         }
 
         private IEnumerator MilestoneCoroutine(string message, Color color)
         {
-            _milestoneText.gameObject.SetActive(true);
-            _milestoneText.text = message;
-            _milestoneText.color = color;
+            m_milestoneText.gameObject.SetActive(true);
+            m_milestoneText.text = message;
+            m_milestoneText.color = color;
 
-            RectTransform rect = _milestoneText.rectTransform;
+            RectTransform rect = m_milestoneText.rectTransform;
             Vector3 originalScale = Vector3.one;
-            Vector3 targetScale = Vector3.one * _milestoneScale;
+            Vector3 targetScale = Vector3.one * m_milestoneScale;
 
             // Scale up and fade in
             float elapsed = 0f;
@@ -232,12 +232,12 @@ namespace NeuralBreak.UI
                 rect.localScale = Vector3.Lerp(targetScale * 1.5f, targetScale, t);
                 Color c = color;
                 c.a = t;
-                _milestoneText.color = c;
+                m_milestoneText.color = c;
                 yield return null;
             }
 
             // Hold
-            yield return new WaitForSecondsRealtime(_milestoneDuration - 0.3f);
+            yield return new WaitForSecondsRealtime(m_milestoneDuration - 0.3f);
 
             // Scale down and fade out
             elapsed = 0f;
@@ -249,13 +249,13 @@ namespace NeuralBreak.UI
                 rect.localScale = Vector3.Lerp(targetScale, originalScale * 0.8f, t);
                 Color c = color;
                 c.a = 1f - t;
-                _milestoneText.color = c;
+                m_milestoneText.color = c;
                 yield return null;
             }
 
-            _milestoneText.gameObject.SetActive(false);
+            m_milestoneText.gameObject.SetActive(false);
             rect.localScale = originalScale;
-            _milestoneCoroutine = null;
+            m_milestoneCoroutine = null;
         }
 
         /// <summary>
@@ -263,90 +263,90 @@ namespace NeuralBreak.UI
         /// </summary>
         public void ResetDisplay()
         {
-            _currentScore = 0;
-            _displayedScore = 0;
-            _currentCombo = 0;
-            _currentMultiplier = 1f;
-            _lastMilestoneShown = 0;
+            m_currentScore = 0;
+            m_displayedScore = 0;
+            m_currentCombo = 0;
+            m_currentMultiplier = 1f;
+            m_lastMilestoneShown = 0;
 
             UpdateScoreText(0);
 
-            if (_comboContainer != null)
+            if (m_comboContainer != null)
             {
-                _comboContainer.SetActive(false);
+                m_comboContainer.SetActive(false);
             }
 
-            if (_deltaText != null)
+            if (m_deltaText != null)
             {
-                _deltaText.gameObject.SetActive(false);
+                m_deltaText.gameObject.SetActive(false);
             }
 
-            if (_milestoneText != null)
+            if (m_milestoneText != null)
             {
-                _milestoneText.gameObject.SetActive(false);
+                m_milestoneText.gameObject.SetActive(false);
             }
         }
 
         private void UpdateScoreText(int score)
         {
-            if (_scoreText != null)
+            if (m_scoreText != null)
             {
-                _scoreText.text = string.Format(_scoreFormat, score);
+                m_scoreText.text = string.Format(m_scoreFormat, score);
             }
         }
 
         private void ShowDelta(int delta)
         {
-            if (_deltaCoroutine != null)
+            if (m_deltaCoroutine != null)
             {
-                StopCoroutine(_deltaCoroutine);
+                StopCoroutine(m_deltaCoroutine);
             }
-            _deltaCoroutine = StartCoroutine(DeltaPopupCoroutine(delta));
+            m_deltaCoroutine = StartCoroutine(DeltaPopupCoroutine(delta));
         }
 
         private IEnumerator DeltaPopupCoroutine(int delta)
         {
-            _deltaText.gameObject.SetActive(true);
-            _deltaText.text = $"+{delta:N0}";
+            m_deltaText.gameObject.SetActive(true);
+            m_deltaText.text = $"+{delta:N0}";
 
             // Set initial position
-            RectTransform rect = _deltaText.rectTransform;
+            RectTransform rect = m_deltaText.rectTransform;
             Vector2 startPos = rect.anchoredPosition;
-            Vector2 endPos = startPos + _deltaOffset;
+            Vector2 endPos = startPos + m_deltaOffset;
 
             // Fade in
-            Color color = _deltaText.color;
+            Color color = m_deltaText.color;
             color.a = 1f;
-            _deltaText.color = color;
+            m_deltaText.color = color;
 
             // Display time
             float elapsed = 0f;
-            while (elapsed < _deltaDisplayTime)
+            while (elapsed < m_deltaDisplayTime)
             {
                 elapsed += Time.unscaledDeltaTime;
-                float t = elapsed / _deltaDisplayTime;
+                float t = elapsed / m_deltaDisplayTime;
                 rect.anchoredPosition = Vector2.Lerp(startPos, endPos, t * 0.5f);
                 yield return null;
             }
 
             // Fade out
             elapsed = 0f;
-            while (elapsed < _deltaFadeTime)
+            while (elapsed < m_deltaFadeTime)
             {
                 elapsed += Time.unscaledDeltaTime;
-                color.a = 1f - (elapsed / _deltaFadeTime);
-                _deltaText.color = color;
+                color.a = 1f - (elapsed / m_deltaFadeTime);
+                m_deltaText.color = color;
                 yield return null;
             }
 
-            _deltaText.gameObject.SetActive(false);
+            m_deltaText.gameObject.SetActive(false);
             rect.anchoredPosition = startPos;
-            _deltaCoroutine = null;
+            m_deltaCoroutine = null;
         }
 
         private IEnumerator PunchScale(Transform target, Vector3 originalScale)
         {
-            Vector3 punchedScale = originalScale * _comboPunchScale;
+            Vector3 punchedScale = originalScale * m_comboPunchScale;
 
             // Scale up
             float elapsed = 0f;
@@ -373,7 +373,7 @@ namespace NeuralBreak.UI
         #region Debug
 
         [ContextMenu("Debug: Add 500 Score")]
-        private void DebugAddScore() => UpdateScore(_currentScore + 500, 500, Vector3.zero);
+        private void DebugAddScore() => UpdateScore(m_currentScore + 500, 500, Vector3.zero);
 
         [ContextMenu("Debug: Set 5x Combo")]
         private void DebugCombo() => UpdateCombo(5, 2.5f);

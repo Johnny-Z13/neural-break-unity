@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using NeuralBreak.Core;
+using Z13.Core;
 
 namespace NeuralBreak.Entities
 {
@@ -25,61 +26,61 @@ namespace NeuralBreak.Entities
     public class EliteModifier : MonoBehaviour
     {
         [Header("Elite Settings")]
-        [SerializeField] private EliteType _eliteType = EliteType.None;
-        [SerializeField] private bool _randomizeOnSpawn = true;
-        [SerializeField] private float _eliteChance = 0.1f; // 10% chance to be elite
+        [SerializeField] private EliteType m_eliteType = EliteType.None;
+        [SerializeField] private bool m_randomizeOnSpawn = true;
+        [SerializeField] private float m_eliteChance = 0.1f; // 10% chance to be elite
 
         [Header("Visual")]
-        [SerializeField] private Color _eliteGlowColor = new Color(1f, 0.8f, 0f); // Gold
-        [SerializeField] private float _glowPulseSpeed = 3f;
+        [SerializeField] private Color m_eliteGlowColor = new Color(1f, 0.8f, 0f); // Gold
+        [SerializeField] private float m_glowPulseSpeed = 3f;
 
         // Type-specific settings
         [Header("Armored")]
-        [SerializeField] private float _armoredHealthMultiplier = 2f;
-        [SerializeField] private float _armoredSpeedMultiplier = 0.7f;
+        [SerializeField] private float m_armoredHealthMultiplier = 2f;
+        [SerializeField] private float m_armoredSpeedMultiplier = 0.7f;
 
         [Header("Swift")]
-        [SerializeField] private float _swiftSpeedMultiplier = 1.8f;
+        [SerializeField] private float m_swiftSpeedMultiplier = 1.8f;
 
         [Header("Shielded")]
-        [SerializeField] private int _shieldAmount = 3;
-        [SerializeField] private float _shieldRegenTime = 5f;
-        [SerializeField] private Color _shieldColor = new Color(0.3f, 0.8f, 1f, 0.5f);
+        [SerializeField] private int m_shieldAmount = 3;
+        [SerializeField] private float m_shieldRegenTime = 5f;
+        [SerializeField] private Color m_shieldColor = new Color(0.3f, 0.8f, 1f, 0.5f);
 
         [Header("Berserker")]
-        [SerializeField] private float _berserkerThreshold = 0.3f; // Enrage at 30% health
-        [SerializeField] private float _berserkerSpeedMultiplier = 1.5f;
-        [SerializeField] private float _berserkerDamageMultiplier = 1.5f;
-        [SerializeField] private Color _berserkerColor = new Color(1f, 0.2f, 0.2f);
+        [SerializeField] private float m_berserkerThreshold = 0.3f; // Enrage at 30% health
+        [SerializeField] private float m_berserkerSpeedMultiplier = 1.5f;
+        [SerializeField] private float m_berserkerDamageMultiplier = 1.5f;
+        [SerializeField] private Color m_berserkerColor = new Color(1f, 0.2f, 0.2f);
 
         [Header("Teleporter")]
-        [SerializeField] private float _teleportCooldown = 3f;
-        [SerializeField] private float _teleportRange = 5f;
-        [SerializeField] private float _teleportChance = 0.3f; // Chance to teleport when hit
+        [SerializeField] private float m_teleportCooldown = 3f;
+        [SerializeField] private float m_teleportRange = 5f;
+        [SerializeField] private float m_teleportChance = 0.3f; // Chance to teleport when hit
 
         [Header("Splitter")]
-        [SerializeField] private int _splitCount = 2;
+        [SerializeField] private int m_splitCount = 2;
 
         // State
-        private EnemyBase _enemy;
-        private SpriteRenderer _spriteRenderer;
-        private bool _isElite;
-        private int _currentShield;
-        private float _shieldRegenTimer;
-        private bool _isBerserk;
-        private float _teleportTimer;
-        private float _originalSpeed;
-        private int _originalDamage;
-        private GameObject _shieldVisual;
-        private GameObject _eliteGlow;
+        private EnemyBase m_enemy;
+        private SpriteRenderer m_spriteRenderer;
+        private bool m_isElite;
+        private int m_currentShield;
+        private float m_shieldRegenTimer;
+        private bool m_isBerserk;
+        private float m_teleportTimer;
+        private float m_originalSpeed;
+        private int m_originalDamage;
+        private GameObject m_shieldVisual;
+        private GameObject m_eliteGlow;
 
-        public bool IsElite => _isElite;
-        public EliteType Type => _eliteType;
+        public bool IsElite => m_isElite;
+        public EliteType Type => m_eliteType;
 
         private void Awake()
         {
-            _enemy = GetComponent<EnemyBase>();
-            _spriteRenderer = GetComponent<SpriteRenderer>();
+            m_enemy = GetComponent<EnemyBase>();
+            m_spriteRenderer = GetComponent<SpriteRenderer>();
         }
 
         /// <summary>
@@ -87,45 +88,45 @@ namespace NeuralBreak.Entities
         /// </summary>
         public void InitializeElite()
         {
-            if (_randomizeOnSpawn)
+            if (m_randomizeOnSpawn)
             {
                 // Random chance to become elite
-                if (Random.value < _eliteChance)
+                if (Random.value < m_eliteChance)
                 {
                     // Random elite type
-                    _eliteType = (EliteType)Random.Range(1, System.Enum.GetValues(typeof(EliteType)).Length);
-                    _isElite = true;
+                    m_eliteType = (EliteType)Random.Range(1, System.Enum.GetValues(typeof(EliteType)).Length);
+                    m_isElite = true;
                 }
                 else
                 {
-                    _eliteType = EliteType.None;
-                    _isElite = false;
+                    m_eliteType = EliteType.None;
+                    m_isElite = false;
                 }
             }
             else
             {
-                _isElite = _eliteType != EliteType.None;
+                m_isElite = m_eliteType != EliteType.None;
             }
 
-            if (!_isElite) return;
+            if (!m_isElite) return;
 
             CacheOriginalStats();
             ApplyEliteModifiers();
             CreateEliteVisuals();
 
-            Debug.Log($"[EliteModifier] {_enemy.EnemyType} became {_eliteType} elite!");
+            Debug.Log($"[EliteModifier] {m_enemy.EnemyType} became {m_eliteType} elite!");
         }
 
         private void CacheOriginalStats()
         {
             // Cache original values for berserker
-            var speedField = typeof(EnemyBase).GetField("_speed",
+            var speedField = typeof(EnemyBase).GetField("m_speed",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var damageField = typeof(EnemyBase).GetField("_damage",
+            var damageField = typeof(EnemyBase).GetField("m_damage",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
-            if (speedField != null) _originalSpeed = (float)speedField.GetValue(_enemy);
-            if (damageField != null) _originalDamage = (int)damageField.GetValue(_enemy);
+            if (speedField != null) m_originalSpeed = (float)speedField.GetValue(m_enemy);
+            if (damageField != null) m_originalDamage = (int)damageField.GetValue(m_enemy);
         }
 
         private void ApplyEliteModifiers()
@@ -133,45 +134,45 @@ namespace NeuralBreak.Entities
             var bindingFlags = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
             var enemyType = typeof(EnemyBase);
 
-            switch (_eliteType)
+            switch (m_eliteType)
             {
                 case EliteType.Armored:
                     // Increase health, decrease speed
-                    var healthField = enemyType.GetField("_maxHealth", bindingFlags);
-                    var currentHealthField = enemyType.GetField("_currentHealth", bindingFlags);
-                    var speedField = enemyType.GetField("_speed", bindingFlags);
+                    var healthField = enemyType.GetField("m_maxHealth", bindingFlags);
+                    var currentHealthField = enemyType.GetField("m_currentHealth", bindingFlags);
+                    var speedField = enemyType.GetField("m_speed", bindingFlags);
 
                     if (healthField != null)
                     {
-                        int newHealth = Mathf.RoundToInt((int)healthField.GetValue(_enemy) * _armoredHealthMultiplier);
-                        healthField.SetValue(_enemy, newHealth);
-                        currentHealthField?.SetValue(_enemy, newHealth);
+                        int newHealth = Mathf.RoundToInt((int)healthField.GetValue(m_enemy) * m_armoredHealthMultiplier);
+                        healthField.SetValue(m_enemy, newHealth);
+                        currentHealthField?.SetValue(m_enemy, newHealth);
                     }
                     if (speedField != null)
                     {
-                        speedField.SetValue(_enemy, (float)speedField.GetValue(_enemy) * _armoredSpeedMultiplier);
+                        speedField.SetValue(m_enemy, (float)speedField.GetValue(m_enemy) * m_armoredSpeedMultiplier);
                     }
                     break;
 
                 case EliteType.Swift:
-                    var swiftSpeedField = enemyType.GetField("_speed", bindingFlags);
+                    var swiftSpeedField = enemyType.GetField("m_speed", bindingFlags);
                     if (swiftSpeedField != null)
                     {
-                        swiftSpeedField.SetValue(_enemy, (float)swiftSpeedField.GetValue(_enemy) * _swiftSpeedMultiplier);
+                        swiftSpeedField.SetValue(m_enemy, (float)swiftSpeedField.GetValue(m_enemy) * m_swiftSpeedMultiplier);
                     }
                     break;
 
                 case EliteType.Shielded:
-                    _currentShield = _shieldAmount;
-                    _shieldRegenTimer = 0f;
+                    m_currentShield = m_shieldAmount;
+                    m_shieldRegenTimer = 0f;
                     break;
 
                 case EliteType.Berserker:
-                    _isBerserk = false;
+                    m_isBerserk = false;
                     break;
 
                 case EliteType.Teleporter:
-                    _teleportTimer = _teleportCooldown;
+                    m_teleportTimer = m_teleportCooldown;
                     break;
             }
         }
@@ -179,38 +180,38 @@ namespace NeuralBreak.Entities
         private void CreateEliteVisuals()
         {
             // Create glow effect
-            _eliteGlow = new GameObject("EliteGlow");
-            _eliteGlow.transform.SetParent(transform);
-            _eliteGlow.transform.localPosition = Vector3.zero;
-            _eliteGlow.transform.localScale = Vector3.one * 1.5f;
+            m_eliteGlow = new GameObject("EliteGlow");
+            m_eliteGlow.transform.SetParent(transform);
+            m_eliteGlow.transform.localPosition = Vector3.zero;
+            m_eliteGlow.transform.localScale = Vector3.one * 1.5f;
 
-            var glowSR = _eliteGlow.AddComponent<SpriteRenderer>();
-            glowSR.sprite = Graphics.SpriteGenerator.CreateGlow(64, _eliteGlowColor, "EliteGlow");
-            glowSR.color = new Color(_eliteGlowColor.r, _eliteGlowColor.g, _eliteGlowColor.b, 0.3f);
-            glowSR.sortingOrder = _spriteRenderer != null ? _spriteRenderer.sortingOrder - 1 : 0;
+            var glowSR = m_eliteGlow.AddComponent<SpriteRenderer>();
+            glowSR.sprite = Graphics.SpriteGenerator.CreateGlow(64, m_eliteGlowColor, "EliteGlow");
+            glowSR.color = new Color(m_eliteGlowColor.r, m_eliteGlowColor.g, m_eliteGlowColor.b, 0.3f);
+            glowSR.sortingOrder = m_spriteRenderer != null ? m_spriteRenderer.sortingOrder - 1 : 0;
 
             // Shield visual for shielded elites
-            if (_eliteType == EliteType.Shielded)
+            if (m_eliteType == EliteType.Shielded)
             {
-                _shieldVisual = new GameObject("ShieldVisual");
-                _shieldVisual.transform.SetParent(transform);
-                _shieldVisual.transform.localPosition = Vector3.zero;
-                _shieldVisual.transform.localScale = Vector3.one * 1.3f;
+                m_shieldVisual = new GameObject("ShieldVisual");
+                m_shieldVisual.transform.SetParent(transform);
+                m_shieldVisual.transform.localPosition = Vector3.zero;
+                m_shieldVisual.transform.localScale = Vector3.one * 1.3f;
 
-                var shieldSR = _shieldVisual.AddComponent<SpriteRenderer>();
-                shieldSR.sprite = Graphics.SpriteGenerator.CreateCircle(64, _shieldColor, "Shield");
-                shieldSR.color = _shieldColor;
-                shieldSR.sortingOrder = _spriteRenderer != null ? _spriteRenderer.sortingOrder + 1 : 1;
+                var shieldSR = m_shieldVisual.AddComponent<SpriteRenderer>();
+                shieldSR.sprite = Graphics.SpriteGenerator.CreateCircle(64, m_shieldColor, "Shield");
+                shieldSR.color = m_shieldColor;
+                shieldSR.sortingOrder = m_spriteRenderer != null ? m_spriteRenderer.sortingOrder + 1 : 1;
             }
         }
 
         private void Update()
         {
-            if (!_isElite || !_enemy.IsAlive) return;
+            if (!m_isElite || !m_enemy.IsAlive) return;
 
             UpdateEliteGlow();
 
-            switch (_eliteType)
+            switch (m_eliteType)
             {
                 case EliteType.Shielded:
                     UpdateShieldRegen();
@@ -221,20 +222,20 @@ namespace NeuralBreak.Entities
                     break;
 
                 case EliteType.Teleporter:
-                    _teleportTimer += Time.deltaTime;
+                    m_teleportTimer += Time.deltaTime;
                     break;
             }
         }
 
         private void UpdateEliteGlow()
         {
-            if (_eliteGlow == null) return;
+            if (m_eliteGlow == null) return;
 
-            var glowSR = _eliteGlow.GetComponent<SpriteRenderer>();
+            var glowSR = m_eliteGlow.GetComponent<SpriteRenderer>();
             if (glowSR != null)
             {
-                float pulse = 0.2f + Mathf.Sin(Time.time * _glowPulseSpeed) * 0.1f;
-                Color c = _eliteGlowColor;
+                float pulse = 0.2f + Mathf.Sin(Time.time * m_glowPulseSpeed) * 0.1f;
+                Color c = m_eliteGlowColor;
                 c.a = pulse;
                 glowSR.color = c;
             }
@@ -242,35 +243,35 @@ namespace NeuralBreak.Entities
 
         private void UpdateShieldRegen()
         {
-            if (_currentShield >= _shieldAmount) return;
+            if (m_currentShield >= m_shieldAmount) return;
 
-            _shieldRegenTimer += Time.deltaTime;
-            if (_shieldRegenTimer >= _shieldRegenTime)
+            m_shieldRegenTimer += Time.deltaTime;
+            if (m_shieldRegenTimer >= m_shieldRegenTime)
             {
-                _currentShield = Mathf.Min(_currentShield + 1, _shieldAmount);
-                _shieldRegenTimer = 0f;
+                m_currentShield = Mathf.Min(m_currentShield + 1, m_shieldAmount);
+                m_shieldRegenTimer = 0f;
                 UpdateShieldVisual();
             }
         }
 
         private void UpdateShieldVisual()
         {
-            if (_shieldVisual == null) return;
+            if (m_shieldVisual == null) return;
 
-            var sr = _shieldVisual.GetComponent<SpriteRenderer>();
+            var sr = m_shieldVisual.GetComponent<SpriteRenderer>();
             if (sr != null)
             {
-                Color c = _shieldColor;
-                c.a = _currentShield > 0 ? 0.5f : 0f;
+                Color c = m_shieldColor;
+                c.a = m_currentShield > 0 ? 0.5f : 0f;
                 sr.color = c;
             }
         }
 
         private void UpdateBerserker()
         {
-            if (_isBerserk) return;
+            if (m_isBerserk) return;
 
-            if (_enemy.HealthPercent <= _berserkerThreshold)
+            if (m_enemy.HealthPercent <= m_berserkerThreshold)
             {
                 EnterBerserkMode();
             }
@@ -278,36 +279,36 @@ namespace NeuralBreak.Entities
 
         private void EnterBerserkMode()
         {
-            _isBerserk = true;
+            m_isBerserk = true;
 
             var bindingFlags = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
             var enemyType = typeof(EnemyBase);
 
             // Boost speed and damage
-            var speedField = enemyType.GetField("_speed", bindingFlags);
-            var damageField = enemyType.GetField("_damage", bindingFlags);
+            var speedField = enemyType.GetField("m_speed", bindingFlags);
+            var damageField = enemyType.GetField("m_damage", bindingFlags);
 
             if (speedField != null)
             {
-                speedField.SetValue(_enemy, _originalSpeed * _berserkerSpeedMultiplier);
+                speedField.SetValue(m_enemy, m_originalSpeed * m_berserkerSpeedMultiplier);
             }
             if (damageField != null)
             {
-                damageField.SetValue(_enemy, Mathf.RoundToInt(_originalDamage * _berserkerDamageMultiplier));
+                damageField.SetValue(m_enemy, Mathf.RoundToInt(m_originalDamage * m_berserkerDamageMultiplier));
             }
 
             // Visual feedback
-            if (_spriteRenderer != null)
+            if (m_spriteRenderer != null)
             {
-                _spriteRenderer.color = _berserkerColor;
+                m_spriteRenderer.color = m_berserkerColor;
             }
-            if (_eliteGlow != null)
+            if (m_eliteGlow != null)
             {
-                var glowSR = _eliteGlow.GetComponent<SpriteRenderer>();
-                if (glowSR != null) glowSR.color = _berserkerColor;
+                var glowSR = m_eliteGlow.GetComponent<SpriteRenderer>();
+                if (glowSR != null) glowSR.color = m_berserkerColor;
             }
 
-            Debug.Log($"[EliteModifier] {_enemy.EnemyType} entered BERSERK mode!");
+            Debug.Log($"[EliteModifier] {m_enemy.EnemyType} entered BERSERK mode!");
         }
 
         /// <summary>
@@ -315,15 +316,15 @@ namespace NeuralBreak.Entities
         /// </summary>
         public bool OnTakeDamage(int damage, Vector2 source)
         {
-            if (!_isElite) return false;
+            if (!m_isElite) return false;
 
-            switch (_eliteType)
+            switch (m_eliteType)
             {
                 case EliteType.Shielded:
-                    if (_currentShield > 0)
+                    if (m_currentShield > 0)
                     {
-                        _currentShield--;
-                        _shieldRegenTimer = 0f;
+                        m_currentShield--;
+                        m_shieldRegenTimer = 0f;
                         UpdateShieldVisual();
                         // Shield absorbs hit
                         return true;
@@ -331,10 +332,10 @@ namespace NeuralBreak.Entities
                     break;
 
                 case EliteType.Teleporter:
-                    if (_teleportTimer >= _teleportCooldown && Random.value < _teleportChance)
+                    if (m_teleportTimer >= m_teleportCooldown && Random.value < m_teleportChance)
                     {
                         Teleport();
-                        _teleportTimer = 0f;
+                        m_teleportTimer = 0f;
                     }
                     break;
             }
@@ -346,7 +347,7 @@ namespace NeuralBreak.Entities
         {
             // Find random position away from damage
             Vector2 randomDir = Random.insideUnitCircle.normalized;
-            Vector2 newPos = (Vector2)transform.position + randomDir * _teleportRange;
+            Vector2 newPos = (Vector2)transform.position + randomDir * m_teleportRange;
 
             // Visual effect at old position
             StartCoroutine(TeleportEffect(transform.position, newPos));
@@ -357,12 +358,12 @@ namespace NeuralBreak.Entities
         private IEnumerator TeleportEffect(Vector2 from, Vector2 to)
         {
             // Simple flash effect
-            if (_spriteRenderer != null)
+            if (m_spriteRenderer != null)
             {
-                Color original = _spriteRenderer.color;
-                _spriteRenderer.color = Color.white;
+                Color original = m_spriteRenderer.color;
+                m_spriteRenderer.color = Color.white;
                 yield return new WaitForSeconds(0.1f);
-                _spriteRenderer.color = original;
+                m_spriteRenderer.color = original;
             }
         }
 
@@ -371,40 +372,40 @@ namespace NeuralBreak.Entities
         /// </summary>
         public void OnDeath()
         {
-            if (!_isElite) return;
+            if (!m_isElite) return;
 
-            if (_eliteType == EliteType.Splitter)
+            if (m_eliteType == EliteType.Splitter)
             {
                 // Spawn mini versions (handled by spawner)
                 EventBus.Publish(new EliteSplitEvent
                 {
                     position = transform.position,
-                    enemyType = _enemy.EnemyType,
-                    splitCount = _splitCount
+                    enemyType = m_enemy.EnemyType,
+                    splitCount = m_splitCount
                 });
             }
 
             // Cleanup visuals
-            if (_eliteGlow != null) Destroy(_eliteGlow);
-            if (_shieldVisual != null) Destroy(_shieldVisual);
+            if (m_eliteGlow != null) Destroy(m_eliteGlow);
+            if (m_shieldVisual != null) Destroy(m_shieldVisual);
         }
 
         public void Reset()
         {
-            _isElite = false;
-            _eliteType = EliteType.None;
-            _isBerserk = false;
-            _currentShield = 0;
+            m_isElite = false;
+            m_eliteType = EliteType.None;
+            m_isBerserk = false;
+            m_currentShield = 0;
 
-            if (_eliteGlow != null)
+            if (m_eliteGlow != null)
             {
-                Destroy(_eliteGlow);
-                _eliteGlow = null;
+                Destroy(m_eliteGlow);
+                m_eliteGlow = null;
             }
-            if (_shieldVisual != null)
+            if (m_shieldVisual != null)
             {
-                Destroy(_shieldVisual);
-                _shieldVisual = null;
+                Destroy(m_shieldVisual);
+                m_shieldVisual = null;
             }
         }
     }

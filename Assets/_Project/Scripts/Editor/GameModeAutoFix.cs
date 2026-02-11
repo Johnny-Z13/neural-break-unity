@@ -20,7 +20,7 @@ namespace NeuralBreak.Editor
             if (gameManager != null)
             {
                 SerializedObject so = new SerializedObject(gameManager);
-                SerializedProperty autoStart = so.FindProperty("_autoStartOnPlay");
+                SerializedProperty autoStart = so.FindProperty("m_autoStartOnPlay");
 
                 if (autoStart != null)
                 {
@@ -46,7 +46,7 @@ namespace NeuralBreak.Editor
             if (gameSetup != null)
             {
                 SerializedObject so = new SerializedObject(gameSetup);
-                SerializedProperty autoStart = so.FindProperty("_autoStartGame");
+                SerializedProperty autoStart = so.FindProperty("m_autoStartGame");
 
                 if (autoStart != null)
                 {

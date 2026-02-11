@@ -16,39 +16,39 @@ namespace NeuralBreak.Entities
         public override PickupType PickupType => PickupType.Invulnerable;
 
         [Header("Invulnerable Settings")]
-        [SerializeField] private float _invulnerabilityDuration = 7f;
-        [SerializeField] private Color _pickupColor = new Color(0f, 1f, 0f, 0.9f); // Bright green #00FF00
+        [SerializeField] private float m_invulnerabilityDuration = 7f;
+        [SerializeField] private Color m_pickupColor = new Color(0f, 1f, 0f, 0.9f); // Bright green #00FF00
 
         [Header("Visual")]
-        [SerializeField] private InvulnerableVisuals _visuals;
-        private bool _visualsGenerated;
+        [SerializeField] private InvulnerableVisuals m_visuals;
+        private bool m_visualsGenerated;
 
-        protected override Color GetPickupColor() => _pickupColor;
+        protected override Color GetPickupColor() => m_pickupColor;
 
         public override void Initialize(Vector2 position, Transform playerTarget, System.Action<PickupBase> returnCallback)
         {
             base.Initialize(position, playerTarget, returnCallback);
 
-            if (!_visualsGenerated)
+            if (!m_visualsGenerated)
             {
                 EnsureVisuals();
-                _visualsGenerated = true;
+                m_visualsGenerated = true;
             }
         }
 
         private void EnsureVisuals()
         {
-            if (_visuals == null)
+            if (m_visuals == null)
             {
-                _visuals = GetComponentInChildren<InvulnerableVisuals>();
+                m_visuals = GetComponentInChildren<InvulnerableVisuals>();
             }
 
-            if (_visuals == null)
+            if (m_visuals == null)
             {
                 var visualsGO = new GameObject("Visuals");
                 visualsGO.transform.SetParent(transform, false);
                 visualsGO.transform.localPosition = Vector3.zero;
-                _visuals = visualsGO.AddComponent<InvulnerableVisuals>();
+                m_visuals = visualsGO.AddComponent<InvulnerableVisuals>();
             }
         }
 
@@ -57,8 +57,8 @@ namespace NeuralBreak.Entities
             PlayerHealth health = player.GetComponent<PlayerHealth>();
             if (health != null)
             {
-                health.ActivateInvulnerability(_invulnerabilityDuration);
-                Debug.Log($"[Invulnerable] Activated for {_invulnerabilityDuration} seconds!");
+                health.ActivateInvulnerability(m_invulnerabilityDuration);
+                Debug.Log($"[Invulnerable] Activated for {m_invulnerabilityDuration} seconds!");
             }
             else
             {

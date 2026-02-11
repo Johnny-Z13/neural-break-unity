@@ -10,8 +10,8 @@ namespace NeuralBreak.Editor
     /// </summary>
     public class LevelValidator : EditorWindow
     {
-        private Vector2 _scrollPos;
-        private string _report = "";
+        private Vector2 m_scrollPos;
+        private string m_report = "";
 
         [MenuItem("Neural Break/Validate Levels")]
         public static void ShowWindow()
@@ -47,14 +47,14 @@ namespace NeuralBreak.Editor
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Report:", EditorStyles.boldLabel);
 
-            _scrollPos = EditorGUILayout.BeginScrollView(_scrollPos, GUILayout.Height(400));
-            EditorGUILayout.TextArea(_report, GUILayout.ExpandHeight(true));
+            m_scrollPos = EditorGUILayout.BeginScrollView(m_scrollPos, GUILayout.Height(400));
+            EditorGUILayout.TextArea(m_report, GUILayout.ExpandHeight(true));
             EditorGUILayout.EndScrollView();
         }
 
         private void ValidateAllLevels()
         {
-            _report = "=== LEVEL VALIDATION REPORT ===\n\n";
+            m_report = "=== LEVEL VALIDATION REPORT ===\n\n";
             int issueCount = 0;
 
             for (int level = 1; level <= 99; level++)
@@ -64,26 +64,26 @@ namespace NeuralBreak.Editor
 
                 if (issues.Length > 0)
                 {
-                    _report += $"LEVEL {level} ({config.name}):\n";
+                    m_report += $"LEVEL {level} ({config.name}):\n";
                     foreach (var issue in issues)
                     {
-                        _report += $"  - {issue}\n";
+                        m_report += $"  - {issue}\n";
                         issueCount++;
                     }
-                    _report += "\n";
+                    m_report += "\n";
                 }
             }
 
             if (issueCount == 0)
             {
-                _report += "All 99 levels are valid and completable!\n";
+                m_report += "All 99 levels are valid and completable!\n";
             }
             else
             {
-                _report = $"FOUND {issueCount} ISSUES:\n\n" + _report;
+                m_report = $"FOUND {issueCount} ISSUES:\n\n" + m_report;
             }
 
-            Debug.Log(_report);
+            Debug.Log(m_report);
         }
 
         private string[] ValidateLevel(LevelConfig config)
@@ -148,40 +148,40 @@ namespace NeuralBreak.Editor
 
         private void PrintLevelDetails(int startLevel, int endLevel)
         {
-            _report = "";
+            m_report = "";
 
             for (int level = startLevel; level <= endLevel; level++)
             {
                 var config = LevelGenerator.GetLevelConfig(level);
 
-                _report += $"=== LEVEL {level}: {config.name} ===\n";
-                _report += $"OBJECTIVES:\n";
-                _report += $"  DataMites: {config.objectives.dataMites}\n";
-                _report += $"  ScanDrones: {config.objectives.scanDrones}\n";
-                _report += $"  ChaosWorms: {config.objectives.chaosWorms}\n";
-                _report += $"  VoidSpheres: {config.objectives.voidSpheres}\n";
-                _report += $"  CrystalShards: {config.objectives.crystalShards}\n";
-                _report += $"  Fizzers: {config.objectives.fizzers}\n";
-                _report += $"  UFOs: {config.objectives.ufos}\n";
-                _report += $"  Bosses: {config.objectives.bosses}\n";
-                _report += $"  TOTAL: {config.objectives.TotalKillsRequired}\n";
-                _report += $"\nSPAWN RATES (seconds between spawns):\n";
-                _report += $"  DataMite: {FormatRate(config.spawnRates.dataMiteRate)}\n";
-                _report += $"  ScanDrone: {FormatRate(config.spawnRates.scanDroneRate)}\n";
-                _report += $"  ChaosWorm: {FormatRate(config.spawnRates.chaosWormRate)}\n";
-                _report += $"  VoidSphere: {FormatRate(config.spawnRates.voidSphereRate)}\n";
-                _report += $"  CrystalShard: {FormatRate(config.spawnRates.crystalShardRate)}\n";
-                _report += $"  Fizzer: {FormatRate(config.spawnRates.fizzerRate)}\n";
-                _report += $"  UFO: {FormatRate(config.spawnRates.ufoRate)}\n";
-                _report += $"  Boss: {FormatRate(config.spawnRates.bossRate)}\n";
+                m_report += $"=== LEVEL {level}: {config.name} ===\n";
+                m_report += $"OBJECTIVES:\n";
+                m_report += $"  DataMites: {config.objectives.dataMites}\n";
+                m_report += $"  ScanDrones: {config.objectives.scanDrones}\n";
+                m_report += $"  ChaosWorms: {config.objectives.chaosWorms}\n";
+                m_report += $"  VoidSpheres: {config.objectives.voidSpheres}\n";
+                m_report += $"  CrystalShards: {config.objectives.crystalShards}\n";
+                m_report += $"  Fizzers: {config.objectives.fizzers}\n";
+                m_report += $"  UFOs: {config.objectives.ufos}\n";
+                m_report += $"  Bosses: {config.objectives.bosses}\n";
+                m_report += $"  TOTAL: {config.objectives.TotalKillsRequired}\n";
+                m_report += $"\nSPAWN RATES (seconds between spawns):\n";
+                m_report += $"  DataMite: {FormatRate(config.spawnRates.dataMiteRate)}\n";
+                m_report += $"  ScanDrone: {FormatRate(config.spawnRates.scanDroneRate)}\n";
+                m_report += $"  ChaosWorm: {FormatRate(config.spawnRates.chaosWormRate)}\n";
+                m_report += $"  VoidSphere: {FormatRate(config.spawnRates.voidSphereRate)}\n";
+                m_report += $"  CrystalShard: {FormatRate(config.spawnRates.crystalShardRate)}\n";
+                m_report += $"  Fizzer: {FormatRate(config.spawnRates.fizzerRate)}\n";
+                m_report += $"  UFO: {FormatRate(config.spawnRates.ufoRate)}\n";
+                m_report += $"  Boss: {FormatRate(config.spawnRates.bossRate)}\n";
 
                 // Estimate time to complete
                 float estimatedTime = EstimateCompletionTime(config);
-                _report += $"\nESTIMATED TIME: {estimatedTime:F0} seconds ({estimatedTime / 60f:F1} minutes)\n";
-                _report += "\n";
+                m_report += $"\nESTIMATED TIME: {estimatedTime:F0} seconds ({estimatedTime / 60f:F1} minutes)\n";
+                m_report += "\n";
             }
 
-            Debug.Log(_report);
+            Debug.Log(m_report);
         }
 
         private string FormatRate(float rate)

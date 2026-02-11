@@ -1,6 +1,7 @@
 using UnityEngine;
 using NeuralBreak.Core;
 using NeuralBreak.Combat;
+using Z13.Core;
 
 namespace NeuralBreak.Entities
 {
@@ -20,66 +21,66 @@ namespace NeuralBreak.Entities
         public override EnemyType EnemyType => EnemyType.Boss;
 
         [Header("Boss Settings")]
-        [SerializeField] private float _phase2FireRateMultiplier = 0.8f; // Phase 2 is 80% of phase 1 rate
+        [SerializeField] private float m_phase2FireRateMultiplier = 0.8f; // Phase 2 is 80% of phase 1 rate
 
         [Header("Phase 3 Ring Attack")]
-        [SerializeField] private float _ringAttackCooldown = 3f;
-        [SerializeField] private float _ringExpandSpeed = 2f;
-        [SerializeField] private float _ringDuration = 3f;
-        [SerializeField] private int _ringDamage = 30;
-        [SerializeField] private float _ringWidth = 0.5f;
+        [SerializeField] private float m_ringAttackCooldown = 3f;
+        [SerializeField] private float m_ringExpandSpeed = 2f;
+        [SerializeField] private float m_ringDuration = 3f;
+        [SerializeField] private int m_ringDamage = 30;
+        [SerializeField] private float m_ringWidth = 0.5f;
 
         [Header("Death Explosion")]
-        [SerializeField] private float _deathDamageRadius = 12f;
-        [SerializeField] private int _deathDamageAmount = 75;
-        [SerializeField] private int _deathBulletCount = 24;
+        [SerializeField] private float m_deathDamageRadius = 12f;
+        [SerializeField] private int m_deathDamageAmount = 75;
+        [SerializeField] private int m_deathBulletCount = 24;
 
         // Config-driven shooting values
-        private float _phase1FireRate => EnemyConfig?.fireRate ?? 1.5f;
-        private float _phase2FireRate => _phase1FireRate * _phase2FireRateMultiplier;
-        private float _projectileSpeed => EnemyConfig?.projectileSpeed ?? 6.5f;
-        private int _projectileDamage => EnemyConfig?.projectileDamage ?? 18;
+        private float m_phase1FireRate => EnemyConfig?.fireRate ?? 1.5f;
+        private float m_phase2FireRate => m_phase1FireRate * m_phase2FireRateMultiplier;
+        private float m_projectileSpeed => EnemyConfig?.projectileSpeed ?? 6.5f;
+        private int m_projectileDamage => EnemyConfig?.projectileDamage ?? 18;
 
         [Header("Visual")]
-        [SerializeField] private SpriteRenderer _bodyRenderer;
-        [SerializeField] private SpriteRenderer _coreRenderer;
-        [SerializeField] private Transform _ringVisual;
-        [SerializeField] private Color _phase1Color = new Color(0.8f, 0.2f, 0.2f); // Red
-        [SerializeField] private Color _phase2Color = new Color(1f, 0.5f, 0f); // Orange
-        [SerializeField] private Color _phase3Color = new Color(1f, 0f, 0.5f); // Pink
-        [SerializeField] private float _pulseSpeed = 2f;
-        [SerializeField] private float _pulseAmount = 0.1f;
+        [SerializeField] private SpriteRenderer m_bodyRenderer;
+        [SerializeField] private SpriteRenderer m_coreRenderer;
+        [SerializeField] private Transform m_ringVisual;
+        [SerializeField] private Color m_phase1Color = new Color(0.8f, 0.2f, 0.2f); // Red
+        [SerializeField] private Color m_phase2Color = new Color(1f, 0.5f, 0f); // Orange
+        [SerializeField] private Color m_phase3Color = new Color(1f, 0f, 0.5f); // Pink
+        [SerializeField] private float m_pulseSpeed = 2f;
+        [SerializeField] private float m_pulseAmount = 0.1f;
 
         // Note: MMFeedbacks removed
 
         // State
         private enum BossPhase { Phase1, Phase2, Phase3 }
-        private BossPhase _currentPhase = BossPhase.Phase1;
+        private BossPhase m_currentPhase = BossPhase.Phase1;
 
-        private float _fireTimer;
-        private float _ringTimer;
-        private float _pulsePhase;
+        private float m_fireTimer;
+        private float m_ringTimer;
+        private float m_pulsePhase;
 
         // Ring attack state
-        private bool _isRingActive;
-        private float _currentRingRadius;
-        private float _ringActiveTime;
+        private bool m_isRingActive;
+        private float m_currentRingRadius;
+        private float m_ringActiveTime;
 
         protected override void OnInitialize()
         {
             base.OnInitialize();
 
-            _currentPhase = BossPhase.Phase1;
-            _fireTimer = 0f;
-            _ringTimer = 0f;
-            _pulsePhase = 0f;
-            _isRingActive = false;
-            _currentRingRadius = 0f;
+            m_currentPhase = BossPhase.Phase1;
+            m_fireTimer = 0f;
+            m_ringTimer = 0f;
+            m_pulsePhase = 0f;
+            m_isRingActive = false;
+            m_currentRingRadius = 0f;
 
             // Hide ring visual initially
-            if (_ringVisual != null)
+            if (m_ringVisual != null)
             {
-                _ringVisual.gameObject.SetActive(false);
+                m_ringVisual.gameObject.SetActive(false);
             }
 
             UpdatePhaseVisuals();
@@ -94,7 +95,7 @@ namespace NeuralBreak.Entities
             UpdateMovement();
             UpdatePulse();
 
-            switch (_currentPhase)
+            switch (m_currentPhase)
             {
                 case BossPhase.Phase1:
                 case BossPhase.Phase2:
@@ -124,7 +125,7 @@ namespace NeuralBreak.Entities
                 newPhase = BossPhase.Phase3;
             }
 
-            if (newPhase != _currentPhase)
+            if (newPhase != m_currentPhase)
             {
                 TransitionToPhase(newPhase);
             }
@@ -132,9 +133,9 @@ namespace NeuralBreak.Entities
 
         private void TransitionToPhase(BossPhase newPhase)
         {
-            _currentPhase = newPhase;
-            _fireTimer = 0f;
-            _ringTimer = 0f;
+            m_currentPhase = newPhase;
+            m_fireTimer = 0f;
+            m_ringTimer = 0f;
 
             switch (newPhase)
             {
@@ -158,34 +159,34 @@ namespace NeuralBreak.Entities
         {
             // Slow, menacing approach
             Vector2 direction = GetDirectionToPlayer();
-            transform.position = (Vector2)transform.position + direction * _speed * Time.deltaTime;
+            transform.position = (Vector2)transform.position + direction * m_speed * Time.deltaTime;
         }
 
         private void UpdatePulse()
         {
-            _pulsePhase += Time.deltaTime * _pulseSpeed;
-            float pulse = 1f + Mathf.Sin(_pulsePhase) * _pulseAmount;
+            m_pulsePhase += Time.deltaTime * m_pulseSpeed;
+            float pulse = 1f + Mathf.Sin(m_pulsePhase) * m_pulseAmount;
             transform.localScale = Vector3.one * pulse * 1.5f; // Boss is larger
 
             // Core glow intensity
-            if (_coreRenderer != null)
+            if (m_coreRenderer != null)
             {
-                float glow = 0.5f + Mathf.Sin(_pulsePhase * 2f) * 0.3f;
+                float glow = 0.5f + Mathf.Sin(m_pulsePhase * 2f) * 0.3f;
                 Color coreColor = GetPhaseColor();
                 coreColor.a = glow;
-                _coreRenderer.color = coreColor;
+                m_coreRenderer.color = coreColor;
             }
         }
 
         private void UpdateProjectileAttack()
         {
-            float fireRate = _currentPhase == BossPhase.Phase1 ? _phase1FireRate : _phase2FireRate;
+            float fireRate = m_currentPhase == BossPhase.Phase1 ? m_phase1FireRate : m_phase2FireRate;
 
-            _fireTimer += Time.deltaTime;
-            if (_fireTimer >= fireRate)
+            m_fireTimer += Time.deltaTime;
+            if (m_fireTimer >= fireRate)
             {
                 FireAtPlayer();
-                _fireTimer = 0f;
+                m_fireTimer = 0f;
             }
         }
 
@@ -196,14 +197,14 @@ namespace NeuralBreak.Entities
             Vector2 direction = GetDirectionToPlayer();
 
             // Fire spread based on phase
-            int bulletCount = _currentPhase == BossPhase.Phase1 ? 3 : 5;
-            float spread = _currentPhase == BossPhase.Phase1 ? 30f : 45f;
+            int bulletCount = m_currentPhase == BossPhase.Phase1 ? 3 : 5;
+            float spread = m_currentPhase == BossPhase.Phase1 ? 30f : 45f;
 
             EnemyProjectilePool.Instance.FireSpread(
                 transform.position,
                 direction,
-                _projectileSpeed,
-                _projectileDamage,
+                m_projectileSpeed,
+                m_projectileDamage,
                 bulletCount,
                 spread,
                 GetPhaseColor()
@@ -214,31 +215,31 @@ namespace NeuralBreak.Entities
 
         private void UpdateRingAttack()
         {
-            if (_isRingActive)
+            if (m_isRingActive)
             {
                 UpdateActiveRing();
             }
             else
             {
-                _ringTimer += Time.deltaTime;
-                if (_ringTimer >= _ringAttackCooldown)
+                m_ringTimer += Time.deltaTime;
+                if (m_ringTimer >= m_ringAttackCooldown)
                 {
                     StartRingAttack();
-                    _ringTimer = 0f;
+                    m_ringTimer = 0f;
                 }
             }
         }
 
         private void StartRingAttack()
         {
-            _isRingActive = true;
-            _currentRingRadius = 0f;
-            _ringActiveTime = 0f;
+            m_isRingActive = true;
+            m_currentRingRadius = 0f;
+            m_ringActiveTime = 0f;
 
-            if (_ringVisual != null)
+            if (m_ringVisual != null)
             {
-                _ringVisual.gameObject.SetActive(true);
-                _ringVisual.localScale = Vector3.zero;
+                m_ringVisual.gameObject.SetActive(true);
+                m_ringVisual.localScale = Vector3.zero;
             }
 
             // Feedback (Feel removed)
@@ -246,20 +247,20 @@ namespace NeuralBreak.Entities
 
         private void UpdateActiveRing()
         {
-            _ringActiveTime += Time.deltaTime;
-            _currentRingRadius += _ringExpandSpeed * Time.deltaTime;
+            m_ringActiveTime += Time.deltaTime;
+            m_currentRingRadius += m_ringExpandSpeed * Time.deltaTime;
 
             // Update ring visual
-            if (_ringVisual != null)
+            if (m_ringVisual != null)
             {
-                _ringVisual.localScale = Vector3.one * _currentRingRadius * 2f;
+                m_ringVisual.localScale = Vector3.one * m_currentRingRadius * 2f;
             }
 
             // Check player collision with ring
             CheckRingCollision();
 
             // End ring attack
-            if (_ringActiveTime >= _ringDuration)
+            if (m_ringActiveTime >= m_ringDuration)
             {
                 EndRingAttack();
             }
@@ -267,50 +268,50 @@ namespace NeuralBreak.Entities
 
         private void CheckRingCollision()
         {
-            if (_playerTarget == null) return;
+            if (m_playerTarget == null) return;
 
             float distanceToPlayer = GetDistanceToPlayer();
-            float innerRadius = _currentRingRadius - _ringWidth;
-            float outerRadius = _currentRingRadius + _ringWidth;
+            float innerRadius = m_currentRingRadius - m_ringWidth;
+            float outerRadius = m_currentRingRadius + m_ringWidth;
 
             // Check if player is within ring band
             if (distanceToPlayer >= innerRadius && distanceToPlayer <= outerRadius)
             {
                 // Damage player
-                PlayerHealth playerHealth = _playerTarget.GetComponent<PlayerHealth>();
+                PlayerHealth playerHealth = m_playerTarget.GetComponent<PlayerHealth>();
                 if (playerHealth != null)
                 {
-                    playerHealth.TakeDamage(_ringDamage, transform.position);
+                    playerHealth.TakeDamage(m_ringDamage, transform.position);
                 }
             }
         }
 
         private void EndRingAttack()
         {
-            _isRingActive = false;
+            m_isRingActive = false;
 
-            if (_ringVisual != null)
+            if (m_ringVisual != null)
             {
-                _ringVisual.gameObject.SetActive(false);
+                m_ringVisual.gameObject.SetActive(false);
             }
         }
 
         private void UpdatePhaseVisuals()
         {
-            if (_bodyRenderer != null)
+            if (m_bodyRenderer != null)
             {
-                _bodyRenderer.color = GetPhaseColor();
+                m_bodyRenderer.color = GetPhaseColor();
             }
         }
 
         private Color GetPhaseColor()
         {
-            switch (_currentPhase)
+            switch (m_currentPhase)
             {
-                case BossPhase.Phase1: return _phase1Color;
-                case BossPhase.Phase2: return _phase2Color;
-                case BossPhase.Phase3: return _phase3Color;
-                default: return _phase1Color;
+                case BossPhase.Phase1: return m_phase1Color;
+                case BossPhase.Phase2: return m_phase2Color;
+                case BossPhase.Phase3: return m_phase3Color;
+                default: return m_phase1Color;
             }
         }
 
@@ -327,17 +328,17 @@ namespace NeuralBreak.Entities
             {
                 EnemyProjectilePool.Instance.FireRing(
                     transform.position,
-                    _projectileSpeed * 1.5f,
-                    _projectileDamage,
-                    _deathBulletCount,
+                    m_projectileSpeed * 1.5f,
+                    m_projectileDamage,
+                    m_deathBulletCount,
                     Color.red
                 );
             }
 
             // Hide ring
-            if (_ringVisual != null)
+            if (m_ringVisual != null)
             {
-                _ringVisual.gameObject.SetActive(false);
+                m_ringVisual.gameObject.SetActive(false);
             }
 
             base.Kill();
@@ -345,7 +346,7 @@ namespace NeuralBreak.Entities
 
         private void DealDeathDamage()
         {
-            Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, _deathDamageRadius);
+            Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, m_deathDamageRadius);
 
             foreach (var hit in hits)
             {
@@ -354,7 +355,7 @@ namespace NeuralBreak.Entities
                 EnemyBase enemy = hit.GetComponent<EnemyBase>();
                 if (enemy != null && enemy.IsAlive)
                 {
-                    enemy.TakeDamage(_deathDamageAmount, transform.position);
+                    enemy.TakeDamage(m_deathDamageAmount, transform.position);
                 }
             }
         }
@@ -391,18 +392,18 @@ namespace NeuralBreak.Entities
         {
             base.OnStateChanged(newState);
 
-            if (_bodyRenderer == null) return;
+            if (m_bodyRenderer == null) return;
 
             switch (newState)
             {
                 case EnemyState.Spawning:
-                    _bodyRenderer.color = new Color(_phase1Color.r, _phase1Color.g, _phase1Color.b, 0.5f);
+                    m_bodyRenderer.color = new Color(m_phase1Color.r, m_phase1Color.g, m_phase1Color.b, 0.5f);
                     break;
                 case EnemyState.Alive:
                     UpdatePhaseVisuals();
                     break;
                 case EnemyState.Dying:
-                    _bodyRenderer.color = Color.white;
+                    m_bodyRenderer.color = Color.white;
                     break;
             }
         }
@@ -413,14 +414,14 @@ namespace NeuralBreak.Entities
 
             // Death damage radius
             Gizmos.color = new Color(1f, 0f, 0f, 0.2f);
-            Gizmos.DrawSphere(transform.position, _deathDamageRadius);
+            Gizmos.DrawSphere(transform.position, m_deathDamageRadius);
 
             // Current ring radius (if active)
-            if (_isRingActive)
+            if (m_isRingActive)
             {
                 Gizmos.color = new Color(1f, 0f, 0.5f, 0.5f);
-                Gizmos.DrawWireSphere(transform.position, _currentRingRadius - _ringWidth);
-                Gizmos.DrawWireSphere(transform.position, _currentRingRadius + _ringWidth);
+                Gizmos.DrawWireSphere(transform.position, m_currentRingRadius - m_ringWidth);
+                Gizmos.DrawWireSphere(transform.position, m_currentRingRadius + m_ringWidth);
             }
         }
     }

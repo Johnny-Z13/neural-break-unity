@@ -2,6 +2,7 @@ using UnityEngine;
 using NeuralBreak.Core;
 using NeuralBreak.Combat;
 using NeuralBreak.UI;
+using Z13.Core;
 
 namespace NeuralBreak.Graphics
 {
@@ -12,19 +13,19 @@ namespace NeuralBreak.Graphics
     public class UpgradeSelectionVFX : MonoBehaviour
     {
         [Header("References")]
-        [SerializeField] private ParticleSystem _selectionBurstPrefab;
-        [SerializeField] private Transform _vfxContainer;
+        [SerializeField] private ParticleSystem m_selectionBurstPrefab;
+        [SerializeField] private Transform m_vfxContainer;
 
         [Header("Settings")]
-        [SerializeField] private bool _enableScreenFlash = true;
-        [SerializeField] private bool _enableParticles = true;
+        [SerializeField] private bool m_enableScreenFlash = true;
+        [SerializeField] private bool m_enableParticles = true;
 
-        private ScreenFlash _screenFlash;
+        private ScreenFlash m_screenFlash;
 
         private void Start()
         {
             // Find components (ParticleEffectFactory is static, no need to find)
-            _screenFlash = FindFirstObjectByType<ScreenFlash>();
+            m_screenFlash = FindFirstObjectByType<ScreenFlash>();
 
             // Subscribe to events
             EventBus.Subscribe<UpgradeSelectedEvent>(OnUpgradeSelected);
@@ -52,15 +53,15 @@ namespace NeuralBreak.Graphics
         /// </summary>
         private void PlaySelectionVFX(UpgradeDefinition upgrade)
         {
-            if (!_enableParticles) return;
+            if (!m_enableParticles) return;
 
             // Get tier color
             Color tierColor = GetTierColor(upgrade.tier);
 
             // Create particle burst at card position
-            if (_selectionBurstPrefab != null)
+            if (m_selectionBurstPrefab != null)
             {
-                var burst = Instantiate(_selectionBurstPrefab, Vector3.zero, Quaternion.identity, _vfxContainer);
+                var burst = Instantiate(m_selectionBurstPrefab, Vector3.zero, Quaternion.identity, m_vfxContainer);
                 var main = burst.main;
                 main.startColor = tierColor;
                 burst.Play();
@@ -79,8 +80,8 @@ namespace NeuralBreak.Graphics
         /// </summary>
         private void FlashScreenForTier(UpgradeTier tier)
         {
-            if (!_enableScreenFlash) return;
-            if (_screenFlash == null) return;
+            if (!m_enableScreenFlash) return;
+            if (m_screenFlash == null) return;
 
             Color flashColor = GetTierColor(tier);
             float intensity = tier switch
@@ -92,7 +93,7 @@ namespace NeuralBreak.Graphics
                 _ => 0.1f
             };
 
-            _screenFlash.Flash(flashColor.WithAlpha(intensity), 0.3f);
+            m_screenFlash.Flash(flashColor.WithAlpha(intensity), 0.3f);
         }
 
         /// <summary>
@@ -115,7 +116,7 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void CreateCardSparkles(Vector3 position, Color color)
         {
-            if (!_enableParticles) return;
+            if (!m_enableParticles) return;
 
             // ParticleEffectFactory doesn't have CreateBurst - skip for now
             // Could use CreatePickupEffect as alternative

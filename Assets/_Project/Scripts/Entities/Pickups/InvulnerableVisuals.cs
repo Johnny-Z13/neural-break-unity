@@ -10,22 +10,22 @@ namespace NeuralBreak.Entities
     public class InvulnerableVisuals : MonoBehaviour
     {
         [Header("Colors")]
-        [SerializeField] private Color _starColor = new Color(0f, 1f, 0f, 0.9f); // Bright green
-        [SerializeField] private Color _glowColor = new Color(0f, 1f, 0f, 0.6f); // Green glow
-        [SerializeField] private Color _ringColor = new Color(0f, 1f, 0f, 0.5f); // Ring color
+        [SerializeField] private Color m_starColor = new Color(0f, 1f, 0f, 0.9f); // Bright green
+        [SerializeField] private Color m_glowColor = new Color(0f, 1f, 0f, 0.6f); // Green glow
+        [SerializeField] private Color m_ringColor = new Color(0f, 1f, 0f, 0.5f); // Ring color
 
         [Header("Scale")]
-        [SerializeField] private float _radius = 0.5f;
+        [SerializeField] private float m_radius = 0.5f;
 
         // Components
-        private Transform _star;
-        private Transform _innerGlow;
-        private Transform _ring1;
-        private Transform _ring2;
-        private Transform _outerHalo;
-        private Transform[] _particles;
+        private Transform m_star;
+        private Transform m_innerGlow;
+        private Transform m_ring1;
+        private Transform m_ring2;
+        private Transform m_outerHalo;
+        private Transform[] m_particles;
 
-        private float _time;
+        private float m_time;
 
         private void Start()
         {
@@ -37,23 +37,23 @@ namespace NeuralBreak.Entities
             ClearChildren();
 
             // Outer halo glow
-            _outerHalo = CreateCircle("OuterHalo", _radius * 2.4f,
-                new Color(_glowColor.r, _glowColor.g, _glowColor.b, 0.25f), 1);
+            m_outerHalo = CreateCircle("OuterHalo", m_radius * 2.4f,
+                new Color(m_glowColor.r, m_glowColor.g, m_glowColor.b, 0.25f), 1);
 
             // Ring 1 (rotates slowly clockwise)
-            _ring1 = CreateRing("Ring1", _radius * 1.2f, _radius * 1.4f,
-                new Color(_ringColor.r, _ringColor.g, _ringColor.b, 0.6f), 3);
+            m_ring1 = CreateRing("Ring1", m_radius * 1.2f, m_radius * 1.4f,
+                new Color(m_ringColor.r, m_ringColor.g, m_ringColor.b, 0.6f), 3);
 
             // Ring 2 (counter-rotates faster)
-            _ring2 = CreateRing("Ring2", _radius * 1.5f, _radius * 1.64f,
-                new Color(_ringColor.r, _ringColor.g, _ringColor.b, 0.5f), 2);
+            m_ring2 = CreateRing("Ring2", m_radius * 1.5f, m_radius * 1.64f,
+                new Color(m_ringColor.r, m_ringColor.g, m_ringColor.b, 0.5f), 2);
 
             // Main star shape
-            _star = CreateStar("Star", _radius, _radius * 0.5f, _starColor, 10);
+            m_star = CreateStar("Star", m_radius, m_radius * 0.5f, m_starColor, 10);
 
             // Inner glow circle
-            _innerGlow = CreateCircle("InnerGlow", _radius * 0.4f,
-                new Color(_glowColor.r, _glowColor.g, _glowColor.b, 0.9f), 12);
+            m_innerGlow = CreateCircle("InnerGlow", m_radius * 0.4f,
+                new Color(m_glowColor.r, m_glowColor.g, m_glowColor.b, 0.9f), 12);
 
             // Orbiting particles
             CreateParticles();
@@ -61,7 +61,7 @@ namespace NeuralBreak.Entities
 
         private void CreateParticles()
         {
-            _particles = new Transform[12];
+            m_particles = new Transform[12];
 
             for (int i = 0; i < 12; i++)
             {
@@ -70,104 +70,104 @@ namespace NeuralBreak.Entities
 
                 var sr = particle.AddComponent<SpriteRenderer>();
                 sr.sprite = CreateCircleSprite(8);
-                sr.color = new Color(_starColor.r, _starColor.g, _starColor.b, 0.7f);
+                sr.color = new Color(m_starColor.r, m_starColor.g, m_starColor.b, 0.7f);
                 sr.sortingOrder = 8;
 
                 particle.transform.localScale = Vector3.one * 0.08f;
-                _particles[i] = particle.transform;
+                m_particles[i] = particle.transform;
             }
         }
 
         private void Update()
         {
-            if (_star == null) return;
+            if (m_star == null) return;
 
-            _time += Time.deltaTime;
+            m_time += Time.deltaTime;
 
             // Star rotation (slow)
-            _star.Rotate(0, 0, Time.deltaTime * 115f); // ~2 rad/s
+            m_star.Rotate(0, 0, Time.deltaTime * 115f); // ~2 rad/s
 
             // Star pulsing scale
-            float starPulse = 1f + Mathf.Sin(_time * 4f) * 0.2f;
-            _star.localScale = Vector3.one * _radius * 2f * starPulse;
+            float starPulse = 1f + Mathf.Sin(m_time * 4f) * 0.2f;
+            m_star.localScale = Vector3.one * m_radius * 2f * starPulse;
 
             // Star opacity pulse
-            var starSr = _star.GetComponent<SpriteRenderer>();
+            var starSr = m_star.GetComponent<SpriteRenderer>();
             if (starSr != null)
             {
-                float starAlpha = 0.7f + Mathf.Sin(_time * 5f) * 0.2f;
-                starSr.color = new Color(_starColor.r, _starColor.g, _starColor.b, starAlpha);
+                float starAlpha = 0.7f + Mathf.Sin(m_time * 5f) * 0.2f;
+                starSr.color = new Color(m_starColor.r, m_starColor.g, m_starColor.b, starAlpha);
             }
 
             // Inner glow rapid pulse
-            if (_innerGlow != null)
+            if (m_innerGlow != null)
             {
-                float innerPulse = 1f + Mathf.Sin(_time * 8f) * 0.4f;
-                _innerGlow.localScale = Vector3.one * _radius * 0.8f * innerPulse;
+                float innerPulse = 1f + Mathf.Sin(m_time * 8f) * 0.4f;
+                m_innerGlow.localScale = Vector3.one * m_radius * 0.8f * innerPulse;
             }
 
             // Ring 1 rotation and opacity pulse
-            if (_ring1 != null)
+            if (m_ring1 != null)
             {
-                _ring1.Rotate(0, 0, Time.deltaTime * 86f); // ~1.5 rad/s
-                var sr = _ring1.GetComponent<SpriteRenderer>();
+                m_ring1.Rotate(0, 0, Time.deltaTime * 86f); // ~1.5 rad/s
+                var sr = m_ring1.GetComponent<SpriteRenderer>();
                 if (sr != null)
                 {
-                    float alpha = 0.4f + Mathf.Sin(_time * 4f) * 0.2f;
-                    sr.color = new Color(_ringColor.r, _ringColor.g, _ringColor.b, alpha);
+                    float alpha = 0.4f + Mathf.Sin(m_time * 4f) * 0.2f;
+                    sr.color = new Color(m_ringColor.r, m_ringColor.g, m_ringColor.b, alpha);
                 }
             }
 
             // Ring 2 counter-rotation and opacity pulse
-            if (_ring2 != null)
+            if (m_ring2 != null)
             {
-                _ring2.Rotate(0, 0, Time.deltaTime * -143f); // ~-2.5 rad/s
-                var sr = _ring2.GetComponent<SpriteRenderer>();
+                m_ring2.Rotate(0, 0, Time.deltaTime * -143f); // ~-2.5 rad/s
+                var sr = m_ring2.GetComponent<SpriteRenderer>();
                 if (sr != null)
                 {
-                    float alpha = 0.35f + Mathf.Sin(_time * 5f + 1f) * 0.15f;
-                    sr.color = new Color(_ringColor.r, _ringColor.g, _ringColor.b, alpha);
+                    float alpha = 0.35f + Mathf.Sin(m_time * 5f + 1f) * 0.15f;
+                    sr.color = new Color(m_ringColor.r, m_ringColor.g, m_ringColor.b, alpha);
                 }
             }
 
             // Outer halo breathing effect
-            if (_outerHalo != null)
+            if (m_outerHalo != null)
             {
-                float haloPulse = 1f + Mathf.Sin(_time * 2f) * 0.3f;
-                _outerHalo.localScale = Vector3.one * _radius * 4.8f * haloPulse;
-                var sr = _outerHalo.GetComponent<SpriteRenderer>();
+                float haloPulse = 1f + Mathf.Sin(m_time * 2f) * 0.3f;
+                m_outerHalo.localScale = Vector3.one * m_radius * 4.8f * haloPulse;
+                var sr = m_outerHalo.GetComponent<SpriteRenderer>();
                 if (sr != null)
                 {
-                    float alpha = 0.15f + Mathf.Sin(_time * 2.5f) * 0.1f;
-                    sr.color = new Color(_glowColor.r, _glowColor.g, _glowColor.b, alpha);
+                    float alpha = 0.15f + Mathf.Sin(m_time * 2.5f) * 0.1f;
+                    sr.color = new Color(m_glowColor.r, m_glowColor.g, m_glowColor.b, alpha);
                 }
             }
 
             // Floating motion (bob up/down)
-            float bob = Mathf.Sin(_time * 2f) * 0.15f;
+            float bob = Mathf.Sin(m_time * 2f) * 0.15f;
             transform.localPosition = new Vector3(transform.localPosition.x, bob, transform.localPosition.z);
 
             // Orbiting particles
-            if (_particles != null)
+            if (m_particles != null)
             {
-                for (int i = 0; i < _particles.Length; i++)
+                for (int i = 0; i < m_particles.Length; i++)
                 {
-                    if (_particles[i] == null) continue;
+                    if (m_particles[i] == null) continue;
 
-                    float angle = _time * 3f + (i / (float)_particles.Length) * Mathf.PI * 2f;
-                    float dist = _radius * 1.8f;
-                    _particles[i].localPosition = new Vector3(
+                    float angle = m_time * 3f + (i / (float)m_particles.Length) * Mathf.PI * 2f;
+                    float dist = m_radius * 1.8f;
+                    m_particles[i].localPosition = new Vector3(
                         Mathf.Cos(angle) * dist,
                         Mathf.Sin(angle) * dist,
                         0
                     );
 
                     // Particle opacity pulse
-                    float pAlpha = 0.5f + Mathf.Sin(_time * 6f + i * 0.5f) * 0.3f;
-                    var sr = _particles[i].GetComponent<SpriteRenderer>();
+                    float pAlpha = 0.5f + Mathf.Sin(m_time * 6f + i * 0.5f) * 0.3f;
+                    var sr = m_particles[i].GetComponent<SpriteRenderer>();
                     if (sr != null)
                     {
-                        sr.color = new Color(_starColor.r, _starColor.g, _starColor.b, pAlpha);
+                        sr.color = new Color(m_starColor.r, m_starColor.g, m_starColor.b, pAlpha);
                     }
                 }
             }

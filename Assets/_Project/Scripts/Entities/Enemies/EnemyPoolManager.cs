@@ -1,6 +1,7 @@
 using UnityEngine;
 using NeuralBreak.Config;
 using NeuralBreak.Core;
+using Z13.Core;
 
 namespace NeuralBreak.Entities
 {
@@ -11,27 +12,27 @@ namespace NeuralBreak.Entities
     public class EnemyPoolManager
     {
         // Enemy prefabs
-        private readonly DataMite _dataMitePrefab;
-        private readonly ScanDrone _scanDronePrefab;
-        private readonly Fizzer _fizzerPrefab;
-        private readonly UFO _ufoPrefab;
-        private readonly ChaosWorm _chaosWormPrefab;
-        private readonly VoidSphere _voidSpherePrefab;
-        private readonly CrystalShard _crystalShardPrefab;
-        private readonly Boss _bossPrefab;
+        private readonly DataMite m_dataMitePrefab;
+        private readonly ScanDrone m_scanDronePrefab;
+        private readonly Fizzer m_fizzerPrefab;
+        private readonly UFO m_ufoPrefab;
+        private readonly ChaosWorm m_chaosWormPrefab;
+        private readonly VoidSphere m_voidSpherePrefab;
+        private readonly CrystalShard m_crystalShardPrefab;
+        private readonly Boss m_bossPrefab;
 
         // Parent container
-        private readonly Transform _container;
+        private readonly Transform m_container;
 
         // Object pools
-        private ObjectPool<DataMite> _dataMitePool;
-        private ObjectPool<ScanDrone> _scanDronePool;
-        private ObjectPool<Fizzer> _fizzerPool;
-        private ObjectPool<UFO> _ufoPool;
-        private ObjectPool<ChaosWorm> _chaosWormPool;
-        private ObjectPool<VoidSphere> _voidSpherePool;
-        private ObjectPool<CrystalShard> _crystalShardPool;
-        private ObjectPool<Boss> _bossPool;
+        private ObjectPool<DataMite> m_dataMitePool;
+        private ObjectPool<ScanDrone> m_scanDronePool;
+        private ObjectPool<Fizzer> m_fizzerPool;
+        private ObjectPool<UFO> m_ufoPool;
+        private ObjectPool<ChaosWorm> m_chaosWormPool;
+        private ObjectPool<VoidSphere> m_voidSpherePool;
+        private ObjectPool<CrystalShard> m_crystalShardPool;
+        private ObjectPool<Boss> m_bossPool;
 
         // Config access
         private GameBalanceConfig Balance => ConfigProvider.Balance;
@@ -47,15 +48,15 @@ namespace NeuralBreak.Entities
             Boss bossPrefab,
             Transform container)
         {
-            _dataMitePrefab = dataMitePrefab;
-            _scanDronePrefab = scanDronePrefab;
-            _fizzerPrefab = fizzerPrefab;
-            _ufoPrefab = ufoPrefab;
-            _chaosWormPrefab = chaosWormPrefab;
-            _voidSpherePrefab = voidSpherePrefab;
-            _crystalShardPrefab = crystalShardPrefab;
-            _bossPrefab = bossPrefab;
-            _container = container;
+            m_dataMitePrefab = dataMitePrefab;
+            m_scanDronePrefab = scanDronePrefab;
+            m_fizzerPrefab = fizzerPrefab;
+            m_ufoPrefab = ufoPrefab;
+            m_chaosWormPrefab = chaosWormPrefab;
+            m_voidSpherePrefab = voidSpherePrefab;
+            m_crystalShardPrefab = crystalShardPrefab;
+            m_bossPrefab = bossPrefab;
+            m_container = container;
 
             InitializePools();
         }
@@ -63,51 +64,51 @@ namespace NeuralBreak.Entities
         private void InitializePools()
         {
             // Initialize all pools with config-driven pool sizes
-            if (_dataMitePrefab != null)
+            if (m_dataMitePrefab != null)
             {
-                _dataMitePool = new ObjectPool<DataMite>(_dataMitePrefab, _container,
+                m_dataMitePool = new ObjectPool<DataMite>(m_dataMitePrefab, m_container,
                     Balance.dataMite.poolSize, onReturn: e => e.OnReturnToPool());
             }
 
-            if (_scanDronePrefab != null)
+            if (m_scanDronePrefab != null)
             {
-                _scanDronePool = new ObjectPool<ScanDrone>(_scanDronePrefab, _container,
+                m_scanDronePool = new ObjectPool<ScanDrone>(m_scanDronePrefab, m_container,
                     Balance.scanDrone.poolSize, onReturn: e => e.OnReturnToPool());
             }
 
-            if (_fizzerPrefab != null)
+            if (m_fizzerPrefab != null)
             {
-                _fizzerPool = new ObjectPool<Fizzer>(_fizzerPrefab, _container,
+                m_fizzerPool = new ObjectPool<Fizzer>(m_fizzerPrefab, m_container,
                     Balance.fizzer.poolSize, onReturn: e => e.OnReturnToPool());
             }
 
-            if (_ufoPrefab != null)
+            if (m_ufoPrefab != null)
             {
-                _ufoPool = new ObjectPool<UFO>(_ufoPrefab, _container,
+                m_ufoPool = new ObjectPool<UFO>(m_ufoPrefab, m_container,
                     Balance.ufo.poolSize, onReturn: e => e.OnReturnToPool());
             }
 
-            if (_chaosWormPrefab != null)
+            if (m_chaosWormPrefab != null)
             {
-                _chaosWormPool = new ObjectPool<ChaosWorm>(_chaosWormPrefab, _container,
+                m_chaosWormPool = new ObjectPool<ChaosWorm>(m_chaosWormPrefab, m_container,
                     Balance.chaosWorm.poolSize, onReturn: e => e.OnReturnToPool());
             }
 
-            if (_voidSpherePrefab != null)
+            if (m_voidSpherePrefab != null)
             {
-                _voidSpherePool = new ObjectPool<VoidSphere>(_voidSpherePrefab, _container,
+                m_voidSpherePool = new ObjectPool<VoidSphere>(m_voidSpherePrefab, m_container,
                     Balance.voidSphere.poolSize, onReturn: e => e.OnReturnToPool());
             }
 
-            if (_crystalShardPrefab != null)
+            if (m_crystalShardPrefab != null)
             {
-                _crystalShardPool = new ObjectPool<CrystalShard>(_crystalShardPrefab, _container,
+                m_crystalShardPool = new ObjectPool<CrystalShard>(m_crystalShardPrefab, m_container,
                     Balance.crystalShard.poolSize, onReturn: e => e.OnReturnToPool());
             }
 
-            if (_bossPrefab != null)
+            if (m_bossPrefab != null)
             {
-                _bossPool = new ObjectPool<Boss>(_bossPrefab, _container,
+                m_bossPool = new ObjectPool<Boss>(m_bossPrefab, m_container,
                     Balance.boss.poolSize, onReturn: e => e.OnReturnToPool());
             }
         }
@@ -119,29 +120,29 @@ namespace NeuralBreak.Entities
         {
             switch (type)
             {
-                case EnemyType.DataMite when _dataMitePool != null:
-                    return _dataMitePool.Get(position, Quaternion.identity) as T;
+                case EnemyType.DataMite when m_dataMitePool != null:
+                    return m_dataMitePool.Get(position, Quaternion.identity) as T;
 
-                case EnemyType.ScanDrone when _scanDronePool != null:
-                    return _scanDronePool.Get(position, Quaternion.identity) as T;
+                case EnemyType.ScanDrone when m_scanDronePool != null:
+                    return m_scanDronePool.Get(position, Quaternion.identity) as T;
 
-                case EnemyType.Fizzer when _fizzerPool != null:
-                    return _fizzerPool.Get(position, Quaternion.identity) as T;
+                case EnemyType.Fizzer when m_fizzerPool != null:
+                    return m_fizzerPool.Get(position, Quaternion.identity) as T;
 
-                case EnemyType.UFO when _ufoPool != null:
-                    return _ufoPool.Get(position, Quaternion.identity) as T;
+                case EnemyType.UFO when m_ufoPool != null:
+                    return m_ufoPool.Get(position, Quaternion.identity) as T;
 
-                case EnemyType.ChaosWorm when _chaosWormPool != null:
-                    return _chaosWormPool.Get(position, Quaternion.identity) as T;
+                case EnemyType.ChaosWorm when m_chaosWormPool != null:
+                    return m_chaosWormPool.Get(position, Quaternion.identity) as T;
 
-                case EnemyType.VoidSphere when _voidSpherePool != null:
-                    return _voidSpherePool.Get(position, Quaternion.identity) as T;
+                case EnemyType.VoidSphere when m_voidSpherePool != null:
+                    return m_voidSpherePool.Get(position, Quaternion.identity) as T;
 
-                case EnemyType.CrystalShard when _crystalShardPool != null:
-                    return _crystalShardPool.Get(position, Quaternion.identity) as T;
+                case EnemyType.CrystalShard when m_crystalShardPool != null:
+                    return m_crystalShardPool.Get(position, Quaternion.identity) as T;
 
-                case EnemyType.Boss when _bossPool != null:
-                    return _bossPool.Get(position, Quaternion.identity) as T;
+                case EnemyType.Boss when m_bossPool != null:
+                    return m_bossPool.Get(position, Quaternion.identity) as T;
 
                 default:
                     Debug.LogWarning($"[EnemyPoolManager] Cannot get {type} - no pool available");
@@ -154,14 +155,14 @@ namespace NeuralBreak.Entities
         /// </summary>
         public ObjectPool<T> GetPool<T>() where T : EnemyBase
         {
-            if (typeof(T) == typeof(DataMite)) return _dataMitePool as ObjectPool<T>;
-            if (typeof(T) == typeof(ScanDrone)) return _scanDronePool as ObjectPool<T>;
-            if (typeof(T) == typeof(Fizzer)) return _fizzerPool as ObjectPool<T>;
-            if (typeof(T) == typeof(UFO)) return _ufoPool as ObjectPool<T>;
-            if (typeof(T) == typeof(ChaosWorm)) return _chaosWormPool as ObjectPool<T>;
-            if (typeof(T) == typeof(VoidSphere)) return _voidSpherePool as ObjectPool<T>;
-            if (typeof(T) == typeof(CrystalShard)) return _crystalShardPool as ObjectPool<T>;
-            if (typeof(T) == typeof(Boss)) return _bossPool as ObjectPool<T>;
+            if (typeof(T) == typeof(DataMite)) return m_dataMitePool as ObjectPool<T>;
+            if (typeof(T) == typeof(ScanDrone)) return m_scanDronePool as ObjectPool<T>;
+            if (typeof(T) == typeof(Fizzer)) return m_fizzerPool as ObjectPool<T>;
+            if (typeof(T) == typeof(UFO)) return m_ufoPool as ObjectPool<T>;
+            if (typeof(T) == typeof(ChaosWorm)) return m_chaosWormPool as ObjectPool<T>;
+            if (typeof(T) == typeof(VoidSphere)) return m_voidSpherePool as ObjectPool<T>;
+            if (typeof(T) == typeof(CrystalShard)) return m_crystalShardPool as ObjectPool<T>;
+            if (typeof(T) == typeof(Boss)) return m_bossPool as ObjectPool<T>;
             return null;
         }
 
@@ -172,14 +173,14 @@ namespace NeuralBreak.Entities
         {
             switch (enemy)
             {
-                case DataMite dm: _dataMitePool?.Return(dm); break;
-                case ScanDrone sd: _scanDronePool?.Return(sd); break;
-                case Fizzer f: _fizzerPool?.Return(f); break;
-                case UFO u: _ufoPool?.Return(u); break;
-                case ChaosWorm cw: _chaosWormPool?.Return(cw); break;
-                case VoidSphere vs: _voidSpherePool?.Return(vs); break;
-                case CrystalShard cs: _crystalShardPool?.Return(cs); break;
-                case Boss b: _bossPool?.Return(b); break;
+                case DataMite dm: m_dataMitePool?.Return(dm); break;
+                case ScanDrone sd: m_scanDronePool?.Return(sd); break;
+                case Fizzer f: m_fizzerPool?.Return(f); break;
+                case UFO u: m_ufoPool?.Return(u); break;
+                case ChaosWorm cw: m_chaosWormPool?.Return(cw); break;
+                case VoidSphere vs: m_voidSpherePool?.Return(vs); break;
+                case CrystalShard cs: m_crystalShardPool?.Return(cs); break;
+                case Boss b: m_bossPool?.Return(b); break;
             }
         }
 
@@ -190,14 +191,14 @@ namespace NeuralBreak.Entities
         {
             switch (type)
             {
-                case EnemyType.DataMite: return _dataMitePool != null;
-                case EnemyType.ScanDrone: return _scanDronePool != null;
-                case EnemyType.Fizzer: return _fizzerPool != null;
-                case EnemyType.UFO: return _ufoPool != null;
-                case EnemyType.ChaosWorm: return _chaosWormPool != null;
-                case EnemyType.VoidSphere: return _voidSpherePool != null;
-                case EnemyType.CrystalShard: return _crystalShardPool != null;
-                case EnemyType.Boss: return _bossPool != null;
+                case EnemyType.DataMite: return m_dataMitePool != null;
+                case EnemyType.ScanDrone: return m_scanDronePool != null;
+                case EnemyType.Fizzer: return m_fizzerPool != null;
+                case EnemyType.UFO: return m_ufoPool != null;
+                case EnemyType.ChaosWorm: return m_chaosWormPool != null;
+                case EnemyType.VoidSphere: return m_voidSpherePool != null;
+                case EnemyType.CrystalShard: return m_crystalShardPool != null;
+                case EnemyType.Boss: return m_bossPool != null;
                 default: return false;
             }
         }

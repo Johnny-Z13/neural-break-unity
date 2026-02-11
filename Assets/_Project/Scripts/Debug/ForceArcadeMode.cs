@@ -18,7 +18,7 @@ namespace NeuralBreak.Testing
             if (GameManager.Instance != null)
             {
                 var gmType = typeof(GameManager);
-                var currentModeField = gmType.GetField("_currentMode",
+                var currentModeField = gmType.GetField("m_currentMode",
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
                 if (currentModeField != null)
@@ -30,7 +30,7 @@ namespace NeuralBreak.Testing
                     Debug.Log($"[ForceArcadeMode] GameManager._currentMode NOW: Arcade");
                 }
 
-                var autoStartField = gmType.GetField("_autoStartOnPlay",
+                var autoStartField = gmType.GetField("m_autoStartOnPlay",
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
                 if (autoStartField != null)
@@ -50,7 +50,7 @@ namespace NeuralBreak.Testing
             if (gameSetup != null)
             {
                 var gsType = typeof(GameSetup);
-                var autoStartField = gsType.GetField("_autoStartGame",
+                var autoStartField = gsType.GetField("m_autoStartGame",
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
                 if (autoStartField != null)
@@ -70,13 +70,13 @@ namespace NeuralBreak.Testing
             if (debugTest != null)
             {
                 var dtType = typeof(DebugGameTest);
-                var testModeField = dtType.GetField("_testModeEnabled",
+                var testModeField = dtType.GetField("m_testModeEnabled",
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
                 if (testModeField != null)
                 {
                     bool testMode = (bool)testModeField.GetValue(debugTest);
-                    Debug.Log($"[ForceArcadeMode] DebugGameTest._testModeEnabled = {testMode}");
+                    Debug.Log($"[ForceArcadeMode] DebugGameTest.m_testModeEnabled = {testMode}");
 
                     if (testMode)
                     {

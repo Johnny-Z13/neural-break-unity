@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using NeuralBreak.Core;
 using NeuralBreak.Entities;
+using Z13.Core;
 
 namespace NeuralBreak.Audio
 {
@@ -22,39 +23,64 @@ namespace NeuralBreak.Audio
     /// <summary>
     /// Manages background music with multiple tracks.
     /// Handles cross-fading, intensity-based track selection, and boss music.
+    ///
+    /// TRUE SINGLETON - Lives in Boot scene, persists across all scenes.
     /// </summary>
-    public class MusicManager : MonoBehaviour
+    public class MusicManager : MonoBehaviour, IBootable
     {
+        public static MusicManager Instance { get; private set; }
+
+        /// <summary>
+        /// Called by BootManager for controlled initialization order.
+        /// </summary>
+        public void Initialize()
+        {
+            Instance = this;
+            SetupAudioSources();
+            CreateDefaultTracks();
+            Debug.Log("[MusicManager] Initialized via BootManager");
+        }
+
 
         [Header("Audio Sources")]
-        [SerializeField] private AudioSource _sourceA;
-        [SerializeField] private AudioSource _sourceB;
+        [SerializeField] private AudioSource m_sourceA;
+        [SerializeField] private AudioSource m_sourceB;
 
         [Header("Settings")]
-        [SerializeField] private float _crossfadeDuration = 2f;
-        [SerializeField] private float _masterVolume = 0.7f;
-        [SerializeField] private bool _autoSelectByIntensity = true;
-        [SerializeField] private float _intensityCheckInterval = 10f;
+        [SerializeField] private float m_crossfadeDuration = 2f;
+        [SerializeField] private float m_masterVolume = 0.7f;
+        [SerializeField] private bool m_autoSelectByIntensity = true;
+        [SerializeField] private float m_intensityCheckInterval = 10f;
 
         [Header("Tracks")]
-        [SerializeField] private List<MusicTrack> _tracks = new List<MusicTrack>();
+        [SerializeField] private List<MusicTrack> m_tracks = new List<MusicTrack>();
 
         // State
-        private AudioSource _currentSource;
-        private MusicTrack _currentTrack;
-        private Coroutine _fadeCoroutine;
-        private float _currentIntensity = 0f;
-        private bool _isBossFight = false;
+        private AudioSource m_currentSource;
+        private MusicTrack m_currentTrack;
+        private Coroutine m_fadeCoroutine;
+        private float m_currentIntensity = 0f;
+        private bool m_isBossFight = false;
 
-        public MusicTrack CurrentTrack => _currentTrack;
-        public float Volume => _masterVolume;
+        public MusicTrack CurrentTrack => m_currentTrack;
+        public float Volume => m_masterVolume;
 
         private void Awake()
         {
-            DontDestroyOnLoad(gameObject);
+            // If already initialized by BootManager, skip
+            if (Instance == this) return;
 
-            SetupAudioSources();
-            CreateDefaultTracks();
+            // Fallback for running main scene directly (development only)
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            // Development fallback - initialize directly
+            Initialize();
+            DontDestroyOnLoad(gameObject);
+            Debug.LogWarning("[MusicManager] Initialized via Awake fallback - should use Boot scene in production");
         }
 
         private void Start()
@@ -76,49 +102,48 @@ namespace NeuralBreak.Audio
             EventBus.Unsubscribe<BossSpawnedEvent>(OnBossSpawned);
             EventBus.Unsubscribe<BossDefeatedEvent>(OnBossDefeated);
             EventBus.Unsubscribe<LevelStartedEvent>(OnLevelStarted);
-
         }
 
         private void SetupAudioSources()
         {
-            if (_sourceA == null)
+            if (m_sourceA == null)
             {
                 var goA = new GameObject("MusicSourceA");
                 goA.transform.SetParent(transform);
-                _sourceA = goA.AddComponent<AudioSource>();
-                _sourceA.loop = true;
-                _sourceA.playOnAwake = false;
-                _sourceA.volume = 0;
+                m_sourceA = goA.AddComponent<AudioSource>();
+                m_sourceA.loop = true;
+                m_sourceA.playOnAwake = false;
+                m_sourceA.volume = 0;
             }
 
-            if (_sourceB == null)
+            if (m_sourceB == null)
             {
                 var goB = new GameObject("MusicSourceB");
                 goB.transform.SetParent(transform);
-                _sourceB = goB.AddComponent<AudioSource>();
-                _sourceB.loop = true;
-                _sourceB.playOnAwake = false;
-                _sourceB.volume = 0;
+                m_sourceB = goB.AddComponent<AudioSource>();
+                m_sourceB.loop = true;
+                m_sourceB.playOnAwake = false;
+                m_sourceB.volume = 0;
             }
 
-            _currentSource = _sourceA;
+            m_currentSource = m_sourceA;
         }
 
         private void CreateDefaultTracks()
         {
             // Create procedural music tracks if none assigned
-            if (_tracks.Count == 0)
+            if (m_tracks.Count == 0)
             {
-                _tracks.Add(new MusicTrack { name = "Menu", bpm = 90, intensity = 0f });
-                _tracks.Add(new MusicTrack { name = "Ambient", bpm = 100, intensity = 0.2f });
-                _tracks.Add(new MusicTrack { name = "Action", bpm = 128, intensity = 0.5f });
-                _tracks.Add(new MusicTrack { name = "Intense", bpm = 140, intensity = 0.8f });
-                _tracks.Add(new MusicTrack { name = "Boss", bpm = 150, intensity = 1f, isBossTrack = true });
-                _tracks.Add(new MusicTrack { name = "Victory", bpm = 120, intensity = 0.3f });
-                _tracks.Add(new MusicTrack { name = "GameOver", bpm = 80, intensity = 0.1f });
+                m_tracks.Add(new MusicTrack { name = "Menu", bpm = 90, intensity = 0f });
+                m_tracks.Add(new MusicTrack { name = "Ambient", bpm = 100, intensity = 0.2f });
+                m_tracks.Add(new MusicTrack { name = "Action", bpm = 128, intensity = 0.5f });
+                m_tracks.Add(new MusicTrack { name = "Intense", bpm = 140, intensity = 0.8f });
+                m_tracks.Add(new MusicTrack { name = "Boss", bpm = 150, intensity = 1f, isBossTrack = true });
+                m_tracks.Add(new MusicTrack { name = "Victory", bpm = 120, intensity = 0.3f });
+                m_tracks.Add(new MusicTrack { name = "GameOver", bpm = 80, intensity = 0.1f });
 
                 // Generate procedural audio for each track
-                foreach (var track in _tracks)
+                foreach (var track in m_tracks)
                 {
                     track.clip = GenerateProceduralTrack(track);
                 }
@@ -216,9 +241,9 @@ namespace NeuralBreak.Audio
 
         private void OnGameStarted(GameStartedEvent evt)
         {
-            _isBossFight = false;
-            _currentIntensity = 0.3f;
-            PlayTrackByIntensity(_currentIntensity);
+            m_isBossFight = false;
+            m_currentIntensity = 0.3f;
+            PlayTrackByIntensity(m_currentIntensity);
             StartCoroutine(IntensityMonitor());
         }
 
@@ -230,24 +255,24 @@ namespace NeuralBreak.Audio
 
         private void OnBossSpawned(BossSpawnedEvent evt)
         {
-            _isBossFight = true;
+            m_isBossFight = true;
             PlayBossMusic();
         }
 
         private void OnBossDefeated(BossDefeatedEvent evt)
         {
-            _isBossFight = false;
-            PlayTrackByIntensity(_currentIntensity);
+            m_isBossFight = false;
+            PlayTrackByIntensity(m_currentIntensity);
         }
 
         private void OnLevelStarted(LevelStartedEvent evt)
         {
             // Increase intensity with level
-            _currentIntensity = Mathf.Clamp01(evt.levelNumber / 50f);
+            m_currentIntensity = Mathf.Clamp01(evt.levelNumber / 50f);
 
-            if (!_isBossFight && _autoSelectByIntensity)
+            if (!m_isBossFight && m_autoSelectByIntensity)
             {
-                PlayTrackByIntensity(_currentIntensity);
+                PlayTrackByIntensity(m_currentIntensity);
             }
         }
 
@@ -260,7 +285,7 @@ namespace NeuralBreak.Audio
         /// </summary>
         public void PlayTrackByName(string trackName)
         {
-            var track = _tracks.Find(t => t.name == trackName);
+            var track = m_tracks.Find(t => t.name == trackName);
             if (track != null)
             {
                 PlayTrack(track);
@@ -279,7 +304,7 @@ namespace NeuralBreak.Audio
             MusicTrack bestTrack = null;
             float bestDiff = float.MaxValue;
 
-            foreach (var track in _tracks)
+            foreach (var track in m_tracks)
             {
                 if (track.isBossTrack) continue;
                 if (track.name == "Menu" || track.name == "Victory" || track.name == "GameOver") continue;
@@ -292,7 +317,7 @@ namespace NeuralBreak.Audio
                 }
             }
 
-            if (bestTrack != null && bestTrack != _currentTrack)
+            if (bestTrack != null && bestTrack != m_currentTrack)
             {
                 PlayTrack(bestTrack);
             }
@@ -303,7 +328,7 @@ namespace NeuralBreak.Audio
         /// </summary>
         public void PlayBossMusic()
         {
-            var bossTrack = _tracks.Find(t => t.isBossTrack);
+            var bossTrack = m_tracks.Find(t => t.isBossTrack);
             if (bossTrack != null)
             {
                 PlayTrack(bossTrack);
@@ -315,21 +340,21 @@ namespace NeuralBreak.Audio
         /// </summary>
         public void PlayTrack(MusicTrack track)
         {
-            if (track == _currentTrack) return;
+            if (track == m_currentTrack) return;
 
-            _currentTrack = track;
+            m_currentTrack = track;
 
-            if (_fadeCoroutine != null)
+            if (m_fadeCoroutine != null)
             {
-                StopCoroutine(_fadeCoroutine);
+                StopCoroutine(m_fadeCoroutine);
             }
-            _fadeCoroutine = StartCoroutine(CrossfadeToTrack(track));
+            m_fadeCoroutine = StartCoroutine(CrossfadeToTrack(track));
         }
 
         private IEnumerator CrossfadeToTrack(MusicTrack track)
         {
-            AudioSource fadeOut = _currentSource;
-            AudioSource fadeIn = (_currentSource == _sourceA) ? _sourceB : _sourceA;
+            AudioSource fadeOut = m_currentSource;
+            AudioSource fadeIn = (m_currentSource == m_sourceA) ? m_sourceB : m_sourceA;
 
             fadeIn.clip = track.clip;
             fadeIn.Play();
@@ -337,23 +362,23 @@ namespace NeuralBreak.Audio
             float elapsed = 0f;
             float startVolumeOut = fadeOut.volume;
 
-            while (elapsed < _crossfadeDuration)
+            while (elapsed < m_crossfadeDuration)
             {
                 elapsed += Time.unscaledDeltaTime;
-                float t = elapsed / _crossfadeDuration;
+                float t = elapsed / m_crossfadeDuration;
 
                 fadeOut.volume = Mathf.Lerp(startVolumeOut, 0, t);
-                fadeIn.volume = Mathf.Lerp(0, _masterVolume, t);
+                fadeIn.volume = Mathf.Lerp(0, m_masterVolume, t);
 
                 yield return null;
             }
 
             fadeOut.Stop();
             fadeOut.volume = 0;
-            fadeIn.volume = _masterVolume;
+            fadeIn.volume = m_masterVolume;
 
-            _currentSource = fadeIn;
-            _fadeCoroutine = null;
+            m_currentSource = fadeIn;
+            m_fadeCoroutine = null;
 
             Debug.Log($"[MusicManager] Now playing: {track.name}");
         }
@@ -362,9 +387,10 @@ namespace NeuralBreak.Audio
         {
             while (true)
             {
-                yield return new WaitForSeconds(_intensityCheckInterval);
+                yield return new WaitForSeconds(m_intensityCheckInterval);
 
-                if (!_isBossFight && _autoSelectByIntensity && GameManager.Instance != null && GameManager.Instance.IsPlaying)
+                // Use GameStateManager (guaranteed to exist from Boot scene)
+                if (!m_isBossFight && m_autoSelectByIntensity && GameStateManager.Instance != null && GameStateManager.Instance.IsPlaying)
                 {
                     // Calculate current game intensity based on enemy count
                     // Use GameObject.FindGameObjectsWithTag for better performance
@@ -377,10 +403,10 @@ namespace NeuralBreak.Audio
                     }
 
                     // Blend level-based and enemy-based intensity
-                    float targetIntensity = Mathf.Lerp(_currentIntensity, enemyIntensity, 0.5f);
-                    _currentIntensity = Mathf.MoveTowards(_currentIntensity, targetIntensity, 0.1f);
+                    float targetIntensity = Mathf.Lerp(m_currentIntensity, enemyIntensity, 0.5f);
+                    m_currentIntensity = Mathf.MoveTowards(m_currentIntensity, targetIntensity, 0.1f);
 
-                    PlayTrackByIntensity(_currentIntensity);
+                    PlayTrackByIntensity(m_currentIntensity);
                 }
             }
         }
@@ -390,10 +416,10 @@ namespace NeuralBreak.Audio
         /// </summary>
         public void SetVolume(float volume)
         {
-            _masterVolume = Mathf.Clamp01(volume);
-            if (_currentSource != null)
+            m_masterVolume = Mathf.Clamp01(volume);
+            if (m_currentSource != null)
             {
-                _currentSource.volume = _masterVolume;
+                m_currentSource.volume = m_masterVolume;
             }
         }
 
@@ -402,8 +428,8 @@ namespace NeuralBreak.Audio
         /// </summary>
         public void Pause()
         {
-            _sourceA.Pause();
-            _sourceB.Pause();
+            m_sourceA.Pause();
+            m_sourceB.Pause();
         }
 
         /// <summary>
@@ -411,9 +437,9 @@ namespace NeuralBreak.Audio
         /// </summary>
         public void Resume()
         {
-            if (_currentSource != null)
+            if (m_currentSource != null)
             {
-                _currentSource.UnPause();
+                m_currentSource.UnPause();
             }
         }
 
@@ -422,9 +448,9 @@ namespace NeuralBreak.Audio
         /// </summary>
         public void Stop()
         {
-            _sourceA.Stop();
-            _sourceB.Stop();
-            _currentTrack = null;
+            m_sourceA.Stop();
+            m_sourceB.Stop();
+            m_currentTrack = null;
         }
 
         #endregion
@@ -443,9 +469,9 @@ namespace NeuralBreak.Audio
         [ContextMenu("Debug: Next Track")]
         private void DebugNextTrack()
         {
-            int currentIndex = _tracks.IndexOf(_currentTrack);
-            int nextIndex = (currentIndex + 1) % _tracks.Count;
-            PlayTrack(_tracks[nextIndex]);
+            int currentIndex = m_tracks.IndexOf(m_currentTrack);
+            int nextIndex = (currentIndex + 1) % m_tracks.Count;
+            PlayTrack(m_tracks[nextIndex]);
         }
 
         #endregion

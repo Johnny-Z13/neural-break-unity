@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace NeuralBreak.Core
+namespace Z13.Core
 {
     /// <summary>
     /// Generic object pool for zero-allocation spawning.
@@ -10,15 +10,15 @@ namespace NeuralBreak.Core
     /// </summary>
     public class ObjectPool<T> where T : Component
     {
-        private readonly Queue<T> _pool = new Queue<T>();
-        private readonly T _prefab;
-        private readonly Transform _parent;
-        private readonly int _initialSize;
-        private readonly Action<T> _onGet;
-        private readonly Action<T> _onReturn;
+        private readonly Queue<T> m_pool = new Queue<T>();
+        private readonly T m_prefab;
+        private readonly Transform m_parent;
+        private readonly int m_initialSize;
+        private readonly Action<T> m_onGet;
+        private readonly Action<T> m_onReturn;
 
         public int CountActive { get; private set; }
-        public int CountInPool => _pool.Count;
+        public int CountInPool => m_pool.Count;
         public int CountTotal => CountActive + CountInPool;
 
         /// <summary>
@@ -44,11 +44,11 @@ namespace NeuralBreak.Core
                 initialSize = 10;
             }
 
-            _prefab = prefab;
-            _parent = parent;
-            _initialSize = initialSize;
-            _onGet = onGet;
-            _onReturn = onReturn;
+            m_prefab = prefab;
+            m_parent = parent;
+            m_initialSize = initialSize;
+            m_onGet = onGet;
+            m_onReturn = onReturn;
 
             Prewarm();
         }
@@ -58,19 +58,19 @@ namespace NeuralBreak.Core
         /// </summary>
         public void Prewarm()
         {
-            if (_prefab == null)
+            if (m_prefab == null)
             {
                 Debug.LogError("[ObjectPool] Cannot prewarm - prefab is null!");
                 return;
             }
 
-            for (int i = 0; i < _initialSize; i++)
+            for (int i = 0; i < m_initialSize; i++)
             {
                 T obj = CreateNew();
                 if (obj != null)
                 {
                     obj.gameObject.SetActive(false);
-                    _pool.Enqueue(obj);
+                    m_pool.Enqueue(obj);
                 }
             }
         }
@@ -80,7 +80,7 @@ namespace NeuralBreak.Core
         /// </summary>
         public T Get()
         {
-            if (_prefab == null)
+            if (m_prefab == null)
             {
                 Debug.LogError("[ObjectPool] Cannot get object - prefab is null!");
                 return null;
@@ -88,9 +88,9 @@ namespace NeuralBreak.Core
 
             T obj;
 
-            if (_pool.Count > 0)
+            if (m_pool.Count > 0)
             {
-                obj = _pool.Dequeue();
+                obj = m_pool.Dequeue();
             }
             else
             {
@@ -108,9 +108,9 @@ namespace NeuralBreak.Core
 
             try
             {
-                _onGet?.Invoke(obj);
+                m_onGet?.Invoke(obj);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 Debug.LogError($"[ObjectPool] Error in onGet callback: {ex.Message}");
             }
@@ -144,15 +144,15 @@ namespace NeuralBreak.Core
 
             try
             {
-                _onReturn?.Invoke(obj);
+                m_onReturn?.Invoke(obj);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 Debug.LogError($"[ObjectPool] Error in onReturn callback: {ex.Message}");
             }
 
             obj.gameObject.SetActive(false);
-            _pool.Enqueue(obj);
+            m_pool.Enqueue(obj);
             CountActive--;
         }
 
@@ -179,9 +179,9 @@ namespace NeuralBreak.Core
         /// </summary>
         public void Clear()
         {
-            while (_pool.Count > 0)
+            while (m_pool.Count > 0)
             {
-                T obj = _pool.Dequeue();
+                T obj = m_pool.Dequeue();
                 if (obj != null)
                 {
                     UnityEngine.Object.Destroy(obj.gameObject);
@@ -192,7 +192,7 @@ namespace NeuralBreak.Core
 
         private T CreateNew()
         {
-            T obj = UnityEngine.Object.Instantiate(_prefab, _parent);
+            T obj = UnityEngine.Object.Instantiate(m_prefab, m_parent);
             return obj;
         }
     }
@@ -202,33 +202,33 @@ namespace NeuralBreak.Core
     /// </summary>
     public class GameObjectPool : MonoBehaviour
     {
-        [SerializeField] private GameObject _prefab;
-        [SerializeField] private int _initialSize = 20;
+        [SerializeField] private GameObject m_prefab;
+        [SerializeField] private int m_initialSize = 20;
 
-        private ObjectPool<Transform> _pool;
+        private ObjectPool<Transform> m_pool;
 
         private void Awake()
         {
-            _pool = new ObjectPool<Transform>(
-                _prefab.transform,
+            m_pool = new ObjectPool<Transform>(
+                m_prefab.transform,
                 transform,
-                _initialSize
+                m_initialSize
             );
         }
 
         public GameObject Get()
         {
-            return _pool.Get().gameObject;
+            return m_pool.Get().gameObject;
         }
 
         public GameObject Get(Vector3 position, Quaternion rotation)
         {
-            return _pool.Get(position, rotation).gameObject;
+            return m_pool.Get(position, rotation).gameObject;
         }
 
         public void Return(GameObject obj)
         {
-            _pool.Return(obj.transform);
+            m_pool.Return(obj.transform);
         }
     }
 }

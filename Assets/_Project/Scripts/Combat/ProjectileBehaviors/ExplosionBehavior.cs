@@ -3,6 +3,7 @@ using NeuralBreak.Core;
 using NeuralBreak.Entities;
 using NeuralBreak.Graphics;
 using System.Collections.Generic;
+using Z13.Core;
 
 namespace NeuralBreak.Combat.ProjectileBehaviors
 {
@@ -11,13 +12,13 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
     /// </summary>
     public class ExplosionBehavior : ProjectileBehaviorBase
     {
-        private float _radius;
-        private float _damageMultiplier;
+        private float m_radius;
+        private float m_damageMultiplier;
 
         public ExplosionBehavior(float radius = 2f, float damageMultiplier = 0.7f)
         {
-            _radius = radius;
-            _damageMultiplier = damageMultiplier;
+            m_radius = radius;
+            m_damageMultiplier = damageMultiplier;
         }
 
         public override void Initialize(MonoBehaviour proj)
@@ -53,10 +54,10 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
         private void CreateExplosion(Vector2 center, int projectileDamage)
         {
             // Calculate explosion damage
-            int explosionDamage = Mathf.RoundToInt(projectileDamage * _damageMultiplier);
+            int explosionDamage = Mathf.RoundToInt(projectileDamage * m_damageMultiplier);
 
             // Find all enemies in radius
-            Collider2D[] colliders = Physics2D.OverlapCircleAll(center, _radius);
+            Collider2D[] colliders = Physics2D.OverlapCircleAll(center, m_radius);
             HashSet<EnemyBase> hitEnemies = new HashSet<EnemyBase>();
 
             foreach (var col in colliders)
@@ -79,7 +80,7 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
             EventBus.Publish(new ExplosionTriggeredEvent
             {
                 position = center,
-                radius = _radius
+                radius = m_radius
             });
         }
 
@@ -87,11 +88,11 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
         {
             // ParticleEffectFactory doesn't have CreateBurst - use CreateExplosion instead
             // Or just use Debug.DrawLine as placeholder
-            Debug.DrawLine(center, center + Vector2.up * _radius, new Color(1f, 0.6f, 0.1f), 0.5f);
+            Debug.DrawLine(center, center + Vector2.up * m_radius, new Color(1f, 0.6f, 0.1f), 0.5f);
             for (int i = 0; i < 8; i++)
             {
                 float angle = i * 45f * Mathf.Deg2Rad;
-                Vector2 dir = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * _radius;
+                Vector2 dir = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * m_radius;
                 Debug.DrawLine(center, center + dir, new Color(1f, 0.6f, 0.1f), 0.5f);
             }
         }

@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using NeuralBreak.Core;
 using NeuralBreak.Combat;
-using NeuralBreak.Utils;
+using Z13.Core;
 
 namespace NeuralBreak.Tools
 {
@@ -12,49 +12,49 @@ namespace NeuralBreak.Tools
     public class UpgradeSystemDebug : MonoBehaviour
     {
         [Header("References")]
-        [SerializeField] private PermanentUpgradeManager _upgradeManager;
-        [SerializeField] private UpgradePoolManager _poolManager;
+        [SerializeField] private PermanentUpgradeManager m_upgradeManager;
+        [SerializeField] private UpgradePoolManager m_poolManager;
 
         [Header("Debug Options")]
-        [SerializeField] private bool _showDebugUI = true;
-        [SerializeField] private Key _triggerUpgradeScreenKey = Key.U;
-        [SerializeField] private Key _addRandomUpgradeKey = Key.I;
-        [SerializeField] private Key _clearUpgradesKey = Key.O;
+        [SerializeField] private bool m_showDebugUI = true;
+        [SerializeField] private Key m_triggerUpgradeScreenKey = Key.U;
+        [SerializeField] private Key m_addRandomUpgradeKey = Key.I;
+        [SerializeField] private Key m_clearUpgradesKey = Key.O;
 
         private void Start()
         {
-            if (_upgradeManager == null)
+            if (m_upgradeManager == null)
             {
-                _upgradeManager = PermanentUpgradeManager.Instance;
+                m_upgradeManager = PermanentUpgradeManager.Instance;
             }
 
-            if (_poolManager == null)
+            if (m_poolManager == null)
             {
-                _poolManager = UpgradePoolManager.Instance;
+                m_poolManager = UpgradePoolManager.Instance;
             }
         }
 
         private void Update()
         {
-            if (!_showDebugUI) return;
+            if (!m_showDebugUI) return;
 
             var keyboard = Keyboard.current;
             if (keyboard == null) return;
 
             // Trigger upgrade selection screen
-            if (keyboard[_triggerUpgradeScreenKey].wasPressedThisFrame)
+            if (keyboard[m_triggerUpgradeScreenKey].wasPressedThisFrame)
             {
                 TriggerUpgradeScreen();
             }
 
             // Add random upgrade
-            if (keyboard[_addRandomUpgradeKey].wasPressedThisFrame)
+            if (keyboard[m_addRandomUpgradeKey].wasPressedThisFrame)
             {
                 AddRandomUpgrade();
             }
 
             // Clear all upgrades
-            if (keyboard[_clearUpgradesKey].wasPressedThisFrame)
+            if (keyboard[m_clearUpgradesKey].wasPressedThisFrame)
             {
                 ClearAllUpgrades();
             }
@@ -62,35 +62,35 @@ namespace NeuralBreak.Tools
 
         private void OnGUI()
         {
-            if (!_showDebugUI) return;
+            if (!m_showDebugUI) return;
 
             GUILayout.BeginArea(new Rect(10, Screen.height - 200, 350, 180));
             GUILayout.BeginVertical("box");
 
             GUILayout.Label("=== UPGRADE SYSTEM DEBUG ===", GUI.skin.box);
 
-            if (GUILayout.Button($"[{_triggerUpgradeScreenKey}] Show Upgrade Selection"))
+            if (GUILayout.Button($"[{m_triggerUpgradeScreenKey}] Show Upgrade Selection"))
             {
                 TriggerUpgradeScreen();
             }
 
-            if (GUILayout.Button($"[{_addRandomUpgradeKey}] Add Random Upgrade"))
+            if (GUILayout.Button($"[{m_addRandomUpgradeKey}] Add Random Upgrade"))
             {
                 AddRandomUpgrade();
             }
 
-            if (GUILayout.Button($"[{_clearUpgradesKey}] Clear All Upgrades"))
+            if (GUILayout.Button($"[{m_clearUpgradesKey}] Clear All Upgrades"))
             {
                 ClearAllUpgrades();
             }
 
             // Show active upgrades count
-            if (_upgradeManager != null)
+            if (m_upgradeManager != null)
             {
-                var activeCount = _upgradeManager.GetActiveUpgrades().Count;
+                var activeCount = m_upgradeManager.GetActiveUpgrades().Count;
                 GUILayout.Label($"Active Upgrades: {activeCount}");
 
-                var modifiers = _upgradeManager.GetCombinedModifiers();
+                var modifiers = m_upgradeManager.GetCombinedModifiers();
                 GUILayout.Label($"Fire Rate: {modifiers.fireRateMultiplier:F2}x");
                 GUILayout.Label($"Damage: {modifiers.damageMultiplier:F2}x");
             }
@@ -123,23 +123,23 @@ namespace NeuralBreak.Tools
         [ContextMenu("Add Random Upgrade")]
         public void AddRandomUpgrade()
         {
-            if (_poolManager == null)
+            if (m_poolManager == null)
             {
                 LogHelper.LogWarning("[UpgradeSystemDebug] UpgradePoolManager not found");
                 return;
             }
 
-            if (_upgradeManager == null)
+            if (m_upgradeManager == null)
             {
                 LogHelper.LogWarning("[UpgradeSystemDebug] PermanentUpgradeManager not found");
                 return;
             }
 
-            var selection = _poolManager.GenerateSelection();
+            var selection = m_poolManager.GenerateSelection();
             if (selection.Count > 0)
             {
                 var randomUpgrade = selection[Random.Range(0, selection.Count)];
-                _upgradeManager.AddUpgrade(randomUpgrade);
+                m_upgradeManager.AddUpgrade(randomUpgrade);
                 LogHelper.Log($"[UpgradeSystemDebug] Added upgrade: {randomUpgrade.displayName}");
             }
             else
@@ -151,33 +151,33 @@ namespace NeuralBreak.Tools
         [ContextMenu("Clear All Upgrades")]
         public void ClearAllUpgrades()
         {
-            if (_upgradeManager == null)
+            if (m_upgradeManager == null)
             {
                 LogHelper.LogWarning("[UpgradeSystemDebug] PermanentUpgradeManager not found");
                 return;
             }
 
-            _upgradeManager.ClearAllUpgrades();
+            m_upgradeManager.ClearAllUpgrades();
             LogHelper.Log("[UpgradeSystemDebug] Cleared all upgrades");
         }
 
         [ContextMenu("Print Active Upgrades")]
         public void PrintActiveUpgrades()
         {
-            if (_upgradeManager == null)
+            if (m_upgradeManager == null)
             {
                 LogHelper.LogWarning("[UpgradeSystemDebug] PermanentUpgradeManager not found");
                 return;
             }
 
-            var upgrades = _upgradeManager.GetActiveUpgrades();
+            var upgrades = m_upgradeManager.GetActiveUpgrades();
             LogHelper.Log($"[UpgradeSystemDebug] Active Upgrades ({upgrades.Count}):");
             foreach (var upgrade in upgrades)
             {
                 LogHelper.Log($"  - {upgrade.displayName} ({upgrade.tier})");
             }
 
-            var modifiers = _upgradeManager.GetCombinedModifiers();
+            var modifiers = m_upgradeManager.GetCombinedModifiers();
             LogHelper.Log("[UpgradeSystemDebug] Combined Modifiers:");
             LogHelper.Log($"  FireRate: {modifiers.fireRateMultiplier:F2}x");
             LogHelper.Log($"  Damage: {modifiers.damageMultiplier:F2}x");

@@ -15,40 +15,40 @@ namespace NeuralBreak.Entities
     public class ScanDroneVisuals : MonoBehaviour
     {
         [Header("Colors")]
-        [SerializeField] private Color _bodyColor = new Color(1f, 0.4f, 0f, 0.3f); // Orange
-        [SerializeField] private Color _wireframeColor = new Color(1f, 0.53f, 0f, 0.9f); // Brighter orange
-        [SerializeField] private Color _accentColor = new Color(0f, 1f, 1f, 0.8f); // Cyan
-        [SerializeField] private Color _alertColor = new Color(1f, 0f, 0f, 0.9f); // Red
-        [SerializeField] private Color _scanGridColor = new Color(1f, 0.27f, 0f, 0.4f); // Dark orange
+        [SerializeField] private Color m_bodyColor = new Color(1f, 0.4f, 0f, 0.3f); // Orange
+        [SerializeField] private Color m_wireframeColor = new Color(1f, 0.53f, 0f, 0.9f); // Brighter orange
+        [SerializeField] private Color m_accentColor = new Color(0f, 1f, 1f, 0.8f); // Cyan
+        [SerializeField] private Color m_alertColor = new Color(1f, 0f, 0f, 0.9f); // Red
+        [SerializeField] private Color m_scanGridColor = new Color(1f, 0.27f, 0f, 0.4f); // Dark orange
 
         [Header("Animation")]
-        [SerializeField] private float _radarRotationSpeed = 2f;
-        [SerializeField] private float _wireframeRotationSpeed = 1f;
-        [SerializeField] private float _outerRingRotationSpeed = 1f;
-        [SerializeField] private float _pulseSpeed = 4f;
-        [SerializeField] private float _alertPulseSpeed = 12f;
+        [SerializeField] private float m_radarRotationSpeed = 2f;
+        [SerializeField] private float m_wireframeRotationSpeed = 1f;
+        [SerializeField] private float m_outerRingRotationSpeed = 1f;
+        [SerializeField] private float m_pulseSpeed = 4f;
+        [SerializeField] private float m_alertPulseSpeed = 12f;
 
         [Header("Scale")]
-        [SerializeField] private float _scale = 1.2f; // 20% larger - matches collision
+        [SerializeField] private float m_scale = 1.2f; // 20% larger - matches collision
 
         // Visual components
-        private Transform _hexBody;
-        private Transform _hexWireframe;
-        private Transform _radarDish;
-        private Transform _scanGrid;
-        private Transform _scanBeam;
-        private Transform _outerRing;
-        private Transform _beacon;
-        private Transform[] _sensorEyes;
-        private SpriteRenderer[] _allRenderers;
+        private Transform m_hexBody;
+        private Transform m_hexWireframe;
+        private Transform m_radarDish;
+        private Transform m_scanGrid;
+        private Transform m_scanBeam;
+        private Transform m_outerRing;
+        private Transform m_beacon;
+        private Transform[] m_sensorEyes;
+        private SpriteRenderer[] m_allRenderers;
 
         // State
-        private bool _isAlerted;
-        private float _radarAngle;
-        private float _wireframeAngle;
-        private float _outerRingAngle;
-        private float _scanBeamY;
-        private float _time;
+        private bool m_isAlerted;
+        private float m_radarAngle;
+        private float m_wireframeAngle;
+        private float m_outerRingAngle;
+        private float m_scanBeamY;
+        private float m_time;
 
         private void Start()
         {
@@ -67,20 +67,20 @@ namespace NeuralBreak.Entities
             }
 
             // Create hexagonal body
-            _hexBody = CreateHexagon("HexBody", _scale * 0.35f, _bodyColor);
-            _hexBody.localPosition = Vector3.zero;
+            m_hexBody = CreateHexagon("HexBody", m_scale * 0.35f, m_bodyColor);
+            m_hexBody.localPosition = Vector3.zero;
 
             // Create wireframe outline (slightly larger)
-            _hexWireframe = CreateHexagonOutline("HexWireframe", _scale * 0.37f, _wireframeColor);
-            _hexWireframe.localPosition = Vector3.zero;
+            m_hexWireframe = CreateHexagonOutline("HexWireframe", m_scale * 0.37f, m_wireframeColor);
+            m_hexWireframe.localPosition = Vector3.zero;
 
             // Create radar dish group
-            _radarDish = CreateRadarDish();
-            _radarDish.localPosition = new Vector3(0, 0, -0.1f); // In front
+            m_radarDish = CreateRadarDish();
+            m_radarDish.localPosition = new Vector3(0, 0, -0.1f); // In front
 
             // Create scanning grid
-            _scanGrid = CreateScanningGrid();
-            _scanGrid.localPosition = new Vector3(0, 0, 0.1f); // Behind
+            m_scanGrid = CreateScanningGrid();
+            m_scanGrid.localPosition = new Vector3(0, 0, 0.1f); // Behind
 
             // Create sensor eyes
             CreateSensorEyes();
@@ -89,11 +89,11 @@ namespace NeuralBreak.Entities
             CreateAntenna();
 
             // Create outer detection ring
-            _outerRing = CreateOuterRing();
-            _outerRing.localPosition = Vector3.zero;
+            m_outerRing = CreateOuterRing();
+            m_outerRing.localPosition = Vector3.zero;
 
             // Gather all renderers for color manipulation
-            _allRenderers = GetComponentsInChildren<SpriteRenderer>();
+            m_allRenderers = GetComponentsInChildren<SpriteRenderer>();
         }
 
         private Transform CreateHexagon(string name, float radius, Color color)
@@ -189,24 +189,24 @@ namespace NeuralBreak.Entities
             var ring = new GameObject("DishRing");
             ring.transform.SetParent(group.transform, false);
             var ringSr = ring.AddComponent<SpriteRenderer>();
-            ringSr.sprite = CreateRingSprite(_scale * 0.12f, _scale * 0.18f);
-            ringSr.color = _accentColor;
+            ringSr.sprite = CreateRingSprite(m_scale * 0.12f, m_scale * 0.18f);
+            ringSr.color = m_accentColor;
             ringSr.sortingOrder = 15;
 
             // Sweep line
             var sweep = new GameObject("SweepLine");
             sweep.transform.SetParent(group.transform, false);
             var sweepSr = sweep.AddComponent<SpriteRenderer>();
-            sweepSr.sprite = CreateLineSprite(_scale * 0.4f, 0.02f);
+            sweepSr.sprite = CreateLineSprite(m_scale * 0.4f, 0.02f);
             sweepSr.color = new Color(0f, 1f, 0f, 0.9f); // Green
             sweepSr.sortingOrder = 16;
-            sweep.transform.localPosition = new Vector3(_scale * 0.2f, 0, 0);
+            sweep.transform.localPosition = new Vector3(m_scale * 0.2f, 0, 0);
 
             // Sweep cone
             var cone = new GameObject("SweepCone");
             cone.transform.SetParent(group.transform, false);
             var coneSr = cone.AddComponent<SpriteRenderer>();
-            coneSr.sprite = CreateConeSprite(_scale * 0.4f, 30f);
+            coneSr.sprite = CreateConeSprite(m_scale * 0.4f, 30f);
             coneSr.color = new Color(0f, 1f, 0f, 0.3f); // Transparent green
             coneSr.sortingOrder = 14;
 
@@ -218,7 +218,7 @@ namespace NeuralBreak.Entities
             var group = new GameObject("ScanGrid");
             group.transform.SetParent(transform, false);
 
-            float gridSize = _scale * 0.5f;
+            float gridSize = m_scale * 0.5f;
             int lineCount = 5;
 
             // Horizontal lines
@@ -244,7 +244,7 @@ namespace NeuralBreak.Entities
             beamSr.sprite = CreateRectSprite(gridSize * 2, 0.08f);
             beamSr.color = new Color(1f, 0f, 0f, 0.6f); // Red
             beamSr.sortingOrder = 8;
-            _scanBeam = beam.transform;
+            m_scanBeam = beam.transform;
 
             return group.transform;
         }
@@ -254,7 +254,7 @@ namespace NeuralBreak.Entities
             var go = new GameObject(name);
             var sr = go.AddComponent<SpriteRenderer>();
             sr.sprite = CreateRectSprite(width, height);
-            sr.color = _scanGridColor;
+            sr.color = m_scanGridColor;
             sr.sortingOrder = 5;
             go.transform.localPosition = pos;
             return go.transform;
@@ -262,8 +262,8 @@ namespace NeuralBreak.Entities
 
         private void CreateSensorEyes()
         {
-            _sensorEyes = new Transform[6];
-            float hexRadius = _scale * 0.35f;
+            m_sensorEyes = new Transform[6];
+            float hexRadius = m_scale * 0.35f;
 
             for (int i = 0; i < 6; i++)
             {
@@ -280,7 +280,7 @@ namespace NeuralBreak.Entities
                 ring.transform.localPosition = pos;
                 var ringSr = ring.AddComponent<SpriteRenderer>();
                 ringSr.sprite = CreateRingSprite(0.03f, 0.05f);
-                ringSr.color = _wireframeColor;
+                ringSr.color = m_wireframeColor;
                 ringSr.sortingOrder = 12;
 
                 // Sensor eye (inner)
@@ -289,10 +289,10 @@ namespace NeuralBreak.Entities
                 eye.transform.localPosition = pos + new Vector3(0, 0, -0.01f);
                 var eyeSr = eye.AddComponent<SpriteRenderer>();
                 eyeSr.sprite = CreateCircleSprite(0.025f);
-                eyeSr.color = _alertColor;
+                eyeSr.color = m_alertColor;
                 eyeSr.sortingOrder = 13;
 
-                _sensorEyes[i] = eye.transform;
+                m_sensorEyes[i] = eye.transform;
             }
         }
 
@@ -302,20 +302,20 @@ namespace NeuralBreak.Entities
             var stalk = new GameObject("AntennaStalk");
             stalk.transform.SetParent(transform, false);
             var stalkSr = stalk.AddComponent<SpriteRenderer>();
-            stalkSr.sprite = CreateRectSprite(0.02f, _scale * 0.3f);
-            stalkSr.color = _accentColor;
+            stalkSr.sprite = CreateRectSprite(0.02f, m_scale * 0.3f);
+            stalkSr.color = m_accentColor;
             stalkSr.sortingOrder = 9;
-            stalk.transform.localPosition = new Vector3(0, _scale * 0.15f, -0.02f);
+            stalk.transform.localPosition = new Vector3(0, m_scale * 0.15f, -0.02f);
 
             // Beacon (octahedron approximated as diamond)
             var beacon = new GameObject("Beacon");
             beacon.transform.SetParent(transform, false);
             var beaconSr = beacon.AddComponent<SpriteRenderer>();
             beaconSr.sprite = CreateDiamondSprite(0.06f);
-            beaconSr.color = _alertColor;
+            beaconSr.color = m_alertColor;
             beaconSr.sortingOrder = 20;
-            beacon.transform.localPosition = new Vector3(0, _scale * 0.3f + 0.03f, -0.02f);
-            _beacon = beacon.transform;
+            beacon.transform.localPosition = new Vector3(0, m_scale * 0.3f + 0.03f, -0.02f);
+            m_beacon = beacon.transform;
         }
 
         private Transform CreateOuterRing()
@@ -327,8 +327,8 @@ namespace NeuralBreak.Entities
             var ring = new GameObject("Ring");
             ring.transform.SetParent(group.transform, false);
             var ringSr = ring.AddComponent<SpriteRenderer>();
-            ringSr.sprite = CreateRingSprite(_scale * 0.55f, _scale * 0.58f);
-            ringSr.color = new Color(_wireframeColor.r, _wireframeColor.g, _wireframeColor.b, 0.5f);
+            ringSr.sprite = CreateRingSprite(m_scale * 0.55f, m_scale * 0.58f);
+            ringSr.color = new Color(m_wireframeColor.r, m_wireframeColor.g, m_wireframeColor.b, 0.5f);
             ringSr.sortingOrder = 2;
 
             // Detection markers (dashed effect)
@@ -339,10 +339,10 @@ namespace NeuralBreak.Entities
                 marker.transform.SetParent(group.transform, false);
                 var markerSr = marker.AddComponent<SpriteRenderer>();
                 markerSr.sprite = CreateRectSprite(0.02f, 0.05f);
-                markerSr.color = _scanGridColor;
+                markerSr.color = m_scanGridColor;
                 markerSr.sortingOrder = 3;
 
-                float dist = _scale * 0.6f;
+                float dist = m_scale * 0.6f;
                 marker.transform.localPosition = new Vector3(
                     Mathf.Cos(angle) * dist,
                     Mathf.Sin(angle) * dist,
@@ -512,62 +512,62 @@ namespace NeuralBreak.Entities
 
         private void Update()
         {
-            if (_radarDish == null) return;
+            if (m_radarDish == null) return;
 
-            _time += Time.deltaTime;
-            float pulseSpeed = _isAlerted ? _alertPulseSpeed : _pulseSpeed;
-            float pulse = 1f + Mathf.Sin(_time * pulseSpeed) * (_isAlerted ? 0.15f : 0.05f);
+            m_time += Time.deltaTime;
+            float pulseSpeed = m_isAlerted ? m_alertPulseSpeed : m_pulseSpeed;
+            float pulse = 1f + Mathf.Sin(m_time * pulseSpeed) * (m_isAlerted ? 0.15f : 0.05f);
 
-            // Overall scale pulse (incorporate _scale so it actually affects size)
-            transform.localScale = Vector3.one * _scale * pulse;
+            // Overall scale pulse (incorporate m_scale so it actually affects size)
+            transform.localScale = Vector3.one * m_scale * pulse;
 
             // Rotate radar dish
-            float radarSpeed = _isAlerted ? _radarRotationSpeed * 4f : _radarRotationSpeed;
-            _radarAngle += radarSpeed * Time.deltaTime * 360f;
-            _radarDish.localRotation = Quaternion.Euler(0, 0, _radarAngle);
+            float radarSpeed = m_isAlerted ? m_radarRotationSpeed * 4f : m_radarRotationSpeed;
+            m_radarAngle += radarSpeed * Time.deltaTime * 360f;
+            m_radarDish.localRotation = Quaternion.Euler(0, 0, m_radarAngle);
 
             // Rotate wireframe
-            float wireSpeed = _isAlerted ? _wireframeRotationSpeed * 4f : _wireframeRotationSpeed;
-            _wireframeAngle += wireSpeed * Time.deltaTime * 360f;
-            if (_hexWireframe != null)
-                _hexWireframe.localRotation = Quaternion.Euler(0, 0, _wireframeAngle);
+            float wireSpeed = m_isAlerted ? m_wireframeRotationSpeed * 4f : m_wireframeRotationSpeed;
+            m_wireframeAngle += wireSpeed * Time.deltaTime * 360f;
+            if (m_hexWireframe != null)
+                m_hexWireframe.localRotation = Quaternion.Euler(0, 0, m_wireframeAngle);
 
             // Rotate outer ring (opposite direction)
-            float outerSpeed = _isAlerted ? _outerRingRotationSpeed * 3f : _outerRingRotationSpeed;
-            _outerRingAngle -= outerSpeed * Time.deltaTime * 360f;
-            if (_outerRing != null)
-                _outerRing.localRotation = Quaternion.Euler(0, 0, _outerRingAngle);
+            float outerSpeed = m_isAlerted ? m_outerRingRotationSpeed * 3f : m_outerRingRotationSpeed;
+            m_outerRingAngle -= outerSpeed * Time.deltaTime * 360f;
+            if (m_outerRing != null)
+                m_outerRing.localRotation = Quaternion.Euler(0, 0, m_outerRingAngle);
 
             // Animate scan beam (up and down)
-            if (_scanBeam != null)
+            if (m_scanBeam != null)
             {
-                float beamSpeed = _isAlerted ? 6f : 2f;
-                _scanBeamY = Mathf.Sin(_time * beamSpeed) * _scale * 0.3f;
-                _scanBeam.localPosition = new Vector3(0, _scanBeamY, 0);
+                float beamSpeed = m_isAlerted ? 6f : 2f;
+                m_scanBeamY = Mathf.Sin(m_time * beamSpeed) * m_scale * 0.3f;
+                m_scanBeam.localPosition = new Vector3(0, m_scanBeamY, 0);
             }
 
             // Animate beacon
-            if (_beacon != null)
+            if (m_beacon != null)
             {
-                float strobeSpeed = _isAlerted ? 20f : 5f;
-                float beaconPulse = 1f + Mathf.Sin(_time * strobeSpeed) * 0.3f;
-                _beacon.localScale = Vector3.one * beaconPulse;
-                _beacon.Rotate(0, 0, Time.deltaTime * 300f);
+                float strobeSpeed = m_isAlerted ? 20f : 5f;
+                float beaconPulse = 1f + Mathf.Sin(m_time * strobeSpeed) * 0.3f;
+                m_beacon.localScale = Vector3.one * beaconPulse;
+                m_beacon.Rotate(0, 0, Time.deltaTime * 300f);
             }
 
             // Animate sensor eyes (blinking pattern)
-            if (_sensorEyes != null)
+            if (m_sensorEyes != null)
             {
-                float blinkSpeed = _isAlerted ? 8f : 3f;
-                for (int i = 0; i < _sensorEyes.Length; i++)
+                float blinkSpeed = m_isAlerted ? 8f : 3f;
+                for (int i = 0; i < m_sensorEyes.Length; i++)
                 {
-                    if (_sensorEyes[i] == null) continue;
+                    if (m_sensorEyes[i] == null) continue;
 
-                    float blinkPhase = (_time * blinkSpeed + i * 0.5f) % 1f;
+                    float blinkPhase = (m_time * blinkSpeed + i * 0.5f) % 1f;
                     float eyeScale = blinkPhase > 0.5f ? 1.3f : 0.8f;
-                    _sensorEyes[i].localScale = Vector3.one * eyeScale;
+                    m_sensorEyes[i].localScale = Vector3.one * eyeScale;
 
-                    var sr = _sensorEyes[i].GetComponent<SpriteRenderer>();
+                    var sr = m_sensorEyes[i].GetComponent<SpriteRenderer>();
                     if (sr != null)
                     {
                         float alpha = blinkPhase > 0.5f ? 1f : 0.3f;
@@ -579,33 +579,33 @@ namespace NeuralBreak.Entities
 
         public void SetAlerted(bool alerted)
         {
-            if (_isAlerted == alerted) return;
-            _isAlerted = alerted;
+            if (m_isAlerted == alerted) return;
+            m_isAlerted = alerted;
 
             // Change body color based on alert state
-            if (_hexBody != null)
+            if (m_hexBody != null)
             {
-                var sr = _hexBody.GetComponent<SpriteRenderer>();
+                var sr = m_hexBody.GetComponent<SpriteRenderer>();
                 if (sr != null)
                 {
-                    sr.color = _isAlerted ? new Color(1f, 0f, 0f, 0.5f) : _bodyColor;
+                    sr.color = m_isAlerted ? new Color(1f, 0f, 0f, 0.5f) : m_bodyColor;
                 }
             }
 
             // Change scan beam color
-            if (_scanBeam != null)
+            if (m_scanBeam != null)
             {
-                var sr = _scanBeam.GetComponent<SpriteRenderer>();
+                var sr = m_scanBeam.GetComponent<SpriteRenderer>();
                 if (sr != null)
                 {
-                    sr.color = _isAlerted ? new Color(1f, 0f, 0f, 0.8f) : new Color(1f, 0.27f, 0f, 0.6f);
+                    sr.color = m_isAlerted ? new Color(1f, 0f, 0f, 0.8f) : new Color(1f, 0.27f, 0f, 0.6f);
                 }
             }
         }
 
         public void SetSpawning(float alpha)
         {
-            foreach (var sr in _allRenderers)
+            foreach (var sr in m_allRenderers)
             {
                 if (sr != null)
                 {

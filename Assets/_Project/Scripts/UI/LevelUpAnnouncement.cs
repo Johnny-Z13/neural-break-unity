@@ -13,32 +13,32 @@ namespace NeuralBreak.UI
     public class LevelUpAnnouncement : MonoBehaviour
     {
         [Header("Settings")]
-        [SerializeField] private float _displayDuration = 1.5f;
-        [SerializeField] private float _scaleInDuration = 0.2f;
-        [SerializeField] private float _scaleOutDuration = 0.3f;
-        [SerializeField] private float _maxScale = 1.3f;
-        [SerializeField] private float _pulseFrequency = 8f;
-        [SerializeField] private float _pulseAmplitude = 0.05f;
+        [SerializeField] private float m_displayDuration = 1.5f;
+        [SerializeField] private float m_scaleInDuration = 0.2f;
+        [SerializeField] private float m_scaleOutDuration = 0.3f;
+        [SerializeField] private float m_maxScale = 1.3f;
+        [SerializeField] private float m_pulseFrequency = 8f;
+        [SerializeField] private float m_pulseAmplitude = 0.05f;
 
         [Header("Colors (Uses UITheme)")]
-        [SerializeField] private bool _useThemeColors = true;
+        [SerializeField] private bool m_useThemeColors = true;
 
-        private Color LevelUpColor => _useThemeColors ? UITheme.Good : _customLevelUpColor;
-        private Color GlowColor => _useThemeColors ? UITheme.GoodGlow : _customGlowColor;
+        private Color LevelUpColor => m_useThemeColors ? UITheme.Good : m_customLevelUpColor;
+        private Color GlowColor => m_useThemeColors ? UITheme.GoodGlow : m_customGlowColor;
 
-        [SerializeField] private Color _customLevelUpColor = new Color(1f, 0.9f, 0.3f);
-        [SerializeField] private Color _customGlowColor = new Color(1f, 0.8f, 0.2f, 0.5f);
+        [SerializeField] private Color m_customLevelUpColor = new Color(1f, 0.9f, 0.3f);
+        [SerializeField] private Color m_customGlowColor = new Color(1f, 0.8f, 0.2f, 0.5f);
 
         // UI Components
-        private Canvas _canvas;
-        private CanvasGroup _canvasGroup;
-        private TextMeshProUGUI _levelUpText;
-        private TextMeshProUGUI _levelNumberText;
-        private Image _glowImage;
-        private RectTransform _container;
+        private Canvas m_canvas;
+        private CanvasGroup m_canvasGroup;
+        private TextMeshProUGUI m_levelUpText;
+        private TextMeshProUGUI m_levelNumberText;
+        private Image m_glowImage;
+        private RectTransform m_container;
 
         // Animation
-        private Coroutine _announcementCoroutine;
+        private Coroutine m_announcementCoroutine;
 
         private void Start()
         {
@@ -63,9 +63,9 @@ namespace NeuralBreak.UI
             // Create canvas
             var canvasGO = new GameObject("LevelUpCanvas");
             canvasGO.transform.SetParent(transform);
-            _canvas = canvasGO.AddComponent<Canvas>();
-            _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            _canvas.sortingOrder = UITheme.SortOrder.LevelUp;
+            m_canvas = canvasGO.AddComponent<Canvas>();
+            m_canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            m_canvas.sortingOrder = UITheme.SortOrder.LevelUp;
 
             var scaler = canvasGO.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -73,37 +73,37 @@ namespace NeuralBreak.UI
 
             canvasGO.AddComponent<GraphicRaycaster>();
 
-            _canvasGroup = canvasGO.AddComponent<CanvasGroup>();
-            _canvasGroup.alpha = 0;
-            _canvasGroup.blocksRaycasts = false;
-            _canvasGroup.interactable = false;
+            m_canvasGroup = canvasGO.AddComponent<CanvasGroup>();
+            m_canvasGroup.alpha = 0;
+            m_canvasGroup.blocksRaycasts = false;
+            m_canvasGroup.interactable = false;
 
             // Container (positioned at bottom of top third - doesn't occlude player)
             var containerGO = new GameObject("Container");
             containerGO.transform.SetParent(canvasGO.transform);
-            _container = containerGO.AddComponent<RectTransform>();
-            _container.anchorMin = new Vector2(0.5f, 0.5f);
-            _container.anchorMax = new Vector2(0.5f, 0.5f);
-            _container.pivot = new Vector2(0.5f, 0.5f);
-            _container.anchoredPosition = new Vector2(0, 250); // Top third (was 50)
-            _container.sizeDelta = new Vector2(400, 150);
+            m_container = containerGO.AddComponent<RectTransform>();
+            m_container.anchorMin = new Vector2(0.5f, 0.5f);
+            m_container.anchorMax = new Vector2(0.5f, 0.5f);
+            m_container.pivot = new Vector2(0.5f, 0.5f);
+            m_container.anchoredPosition = new Vector2(0, 250); // Top third (was 50)
+            m_container.sizeDelta = new Vector2(400, 150);
 
             // Glow background
             var glowGO = new GameObject("Glow");
-            glowGO.transform.SetParent(_container);
+            glowGO.transform.SetParent(m_container);
             var glowRect = glowGO.AddComponent<RectTransform>();
             glowRect.anchorMin = Vector2.zero;
             glowRect.anchorMax = Vector2.one;
             glowRect.offsetMin = new Vector2(-100, -50);
             glowRect.offsetMax = new Vector2(100, 50);
 
-            _glowImage = glowGO.AddComponent<Image>();
-            _glowImage.color = GlowColor;
-            _glowImage.sprite = CreateGlowSprite();
+            m_glowImage = glowGO.AddComponent<Image>();
+            m_glowImage.color = GlowColor;
+            m_glowImage.sprite = CreateGlowSprite();
 
             // "LEVEL UP!" text
             var levelUpGO = new GameObject("LevelUpText");
-            levelUpGO.transform.SetParent(_container);
+            levelUpGO.transform.SetParent(m_container);
             var levelUpRect = levelUpGO.AddComponent<RectTransform>();
             levelUpRect.anchorMin = new Vector2(0.5f, 0.5f);
             levelUpRect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -111,13 +111,13 @@ namespace NeuralBreak.UI
             levelUpRect.anchoredPosition = new Vector2(0, 20);
             levelUpRect.sizeDelta = new Vector2(400, 60);
 
-            _levelUpText = levelUpGO.AddComponent<TextMeshProUGUI>();
-            _levelUpText.text = "POWER UP!";
-            _levelUpText.fontSize = 48;
-            _levelUpText.fontStyle = FontStyles.Bold;
-            _levelUpText.color = LevelUpColor;
-            _levelUpText.alignment = TextAlignmentOptions.Center;
-            _levelUpText.textWrappingMode = TMPro.TextWrappingModes.NoWrap;
+            m_levelUpText = levelUpGO.AddComponent<TextMeshProUGUI>();
+            m_levelUpText.text = "POWER UP!";
+            m_levelUpText.fontSize = 48;
+            m_levelUpText.fontStyle = FontStyles.Bold;
+            m_levelUpText.color = LevelUpColor;
+            m_levelUpText.alignment = TextAlignmentOptions.Center;
+            m_levelUpText.textWrappingMode = TMPro.TextWrappingModes.NoWrap;
 
             // Add outline
             var outline = levelUpGO.AddComponent<Outline>();
@@ -126,7 +126,7 @@ namespace NeuralBreak.UI
 
             // Power level number text
             var levelNumGO = new GameObject("LevelNumberText");
-            levelNumGO.transform.SetParent(_container);
+            levelNumGO.transform.SetParent(m_container);
             var levelNumRect = levelNumGO.AddComponent<RectTransform>();
             levelNumRect.anchorMin = new Vector2(0.5f, 0.5f);
             levelNumRect.anchorMax = new Vector2(0.5f, 0.5f);
@@ -134,12 +134,12 @@ namespace NeuralBreak.UI
             levelNumRect.anchoredPosition = new Vector2(0, -30);
             levelNumRect.sizeDelta = new Vector2(250, 50);
 
-            _levelNumberText = levelNumGO.AddComponent<TextMeshProUGUI>();
-            _levelNumberText.text = "POWER = 2";
-            _levelNumberText.fontSize = 32;
-            _levelNumberText.fontStyle = FontStyles.Bold;
-            _levelNumberText.color = Color.white;
-            _levelNumberText.alignment = TextAlignmentOptions.Center;
+            m_levelNumberText = levelNumGO.AddComponent<TextMeshProUGUI>();
+            m_levelNumberText.text = "POWER = 2";
+            m_levelNumberText.fontSize = 32;
+            m_levelNumberText.fontStyle = FontStyles.Bold;
+            m_levelNumberText.color = Color.white;
+            m_levelNumberText.alignment = TextAlignmentOptions.Center;
         }
 
         private Sprite CreateGlowSprite()
@@ -176,72 +176,72 @@ namespace NeuralBreak.UI
 
         public void ShowAnnouncement(int level)
         {
-            if (_announcementCoroutine != null)
+            if (m_announcementCoroutine != null)
             {
-                StopCoroutine(_announcementCoroutine);
+                StopCoroutine(m_announcementCoroutine);
             }
-            _announcementCoroutine = StartCoroutine(AnnouncementCoroutine(level));
+            m_announcementCoroutine = StartCoroutine(AnnouncementCoroutine(level));
         }
 
         private IEnumerator AnnouncementCoroutine(int level)
         {
-            _levelNumberText.text = $"POWER = {level}";
-            _container.localScale = Vector3.zero;
-            _canvasGroup.alpha = 0;
+            m_levelNumberText.text = $"POWER = {level}";
+            m_container.localScale = Vector3.zero;
+            m_canvasGroup.alpha = 0;
 
             // Scale in
             float elapsed = 0f;
-            while (elapsed < _scaleInDuration)
+            while (elapsed < m_scaleInDuration)
             {
                 elapsed += Time.unscaledDeltaTime;
-                float t = elapsed / _scaleInDuration;
+                float t = elapsed / m_scaleInDuration;
                 float easeT = 1f - Mathf.Pow(1f - t, 3f); // Ease out cubic
 
-                _container.localScale = Vector3.one * _maxScale * easeT;
-                _canvasGroup.alpha = easeT;
+                m_container.localScale = Vector3.one * m_maxScale * easeT;
+                m_canvasGroup.alpha = easeT;
 
                 yield return null;
             }
 
-            _container.localScale = Vector3.one * _maxScale;
-            _canvasGroup.alpha = 1f;
+            m_container.localScale = Vector3.one * m_maxScale;
+            m_canvasGroup.alpha = 1f;
 
             // Hold with pulse
             elapsed = 0f;
-            float holdDuration = _displayDuration - _scaleInDuration - _scaleOutDuration;
+            float holdDuration = m_displayDuration - m_scaleInDuration - m_scaleOutDuration;
             while (elapsed < holdDuration)
             {
                 elapsed += Time.unscaledDeltaTime;
 
                 // Pulse scale
-                float pulse = 1f + Mathf.Sin(elapsed * _pulseFrequency) * _pulseAmplitude;
-                _container.localScale = Vector3.one * _maxScale * pulse;
+                float pulse = 1f + Mathf.Sin(elapsed * m_pulseFrequency) * m_pulseAmplitude;
+                m_container.localScale = Vector3.one * m_maxScale * pulse;
 
                 // Glow pulse
                 Color glowC = GlowColor;
-                glowC.a = GlowColor.a * (0.7f + Mathf.Sin(elapsed * _pulseFrequency * 0.5f) * 0.3f);
-                _glowImage.color = glowC;
+                glowC.a = GlowColor.a * (0.7f + Mathf.Sin(elapsed * m_pulseFrequency * 0.5f) * 0.3f);
+                m_glowImage.color = glowC;
 
                 yield return null;
             }
 
             // Scale down and fade out
             elapsed = 0f;
-            Vector3 startScale = _container.localScale;
-            while (elapsed < _scaleOutDuration)
+            Vector3 startScale = m_container.localScale;
+            while (elapsed < m_scaleOutDuration)
             {
                 elapsed += Time.unscaledDeltaTime;
-                float t = elapsed / _scaleOutDuration;
+                float t = elapsed / m_scaleOutDuration;
                 float easeT = t * t * t; // Ease in cubic
 
-                _container.localScale = Vector3.Lerp(startScale, Vector3.one * 0.5f, easeT);
-                _canvasGroup.alpha = 1f - easeT;
+                m_container.localScale = Vector3.Lerp(startScale, Vector3.one * 0.5f, easeT);
+                m_canvasGroup.alpha = 1f - easeT;
 
                 yield return null;
             }
 
-            _canvasGroup.alpha = 0;
-            _announcementCoroutine = null;
+            m_canvasGroup.alpha = 0;
+            m_announcementCoroutine = null;
         }
 
         #region Debug

@@ -9,25 +9,25 @@ namespace NeuralBreak.Entities
     public class DataMiteVisuals : MonoBehaviour
     {
         [Header("Colors")]
-        [SerializeField] private Color _bodyColor = new Color(1f, 0.27f, 0f, 0.6f); // #FF4400
-        [SerializeField] private Color _wireframeColor = new Color(1f, 0.4f, 0f, 0.9f); // #FF6600
-        [SerializeField] private Color _glowColor = new Color(1f, 0.13f, 0f, 0.4f); // #FF2200
-        [SerializeField] private Color _coreColor = new Color(1f, 1f, 1f, 0.9f); // White
+        [SerializeField] private Color m_bodyColor = new Color(1f, 0.27f, 0f, 0.6f); // #FF4400
+        [SerializeField] private Color m_wireframeColor = new Color(1f, 0.4f, 0f, 0.9f); // #FF6600
+        [SerializeField] private Color m_glowColor = new Color(1f, 0.13f, 0f, 0.4f); // #FF2200
+        [SerializeField] private Color m_coreColor = new Color(1f, 1f, 1f, 0.9f); // White
 
         [Header("Scale")]
-        [SerializeField] private float _radius = 0.56f; // Visual component radius
-        [SerializeField] private float _scale = 0.75f; // Overall transform scale (25% smaller = 0.75)
+        [SerializeField] private float m_radius = 0.56f; // Visual component radius
+        [SerializeField] private float m_scale = 0.75f; // Overall transform scale (25% smaller = 0.75)
 
         // Visual components
-        private Transform _body;
-        private Transform _wireframe;
-        private Transform _glow;
-        private Transform _aura;
-        private Transform _core;
-        private Transform _spikesContainer;
-        private SpriteRenderer[] _allRenderers;
+        private Transform m_body;
+        private Transform m_wireframe;
+        private Transform m_glow;
+        private Transform m_aura;
+        private Transform m_core;
+        private Transform m_spikesContainer;
+        private SpriteRenderer[] m_allRenderers;
 
-        private float _time;
+        private float m_time;
 
         private void Start()
         {
@@ -39,36 +39,36 @@ namespace NeuralBreak.Entities
             ClearChildren();
 
             // Main body (filled circle)
-            _body = CreateCircle("Body", _radius, _bodyColor, 10);
+            m_body = CreateCircle("Body", m_radius, m_bodyColor, 10);
 
             // Wireframe outline
-            _wireframe = CreateRing("Wireframe", _radius * 0.95f, _radius, _wireframeColor, 11);
+            m_wireframe = CreateRing("Wireframe", m_radius * 0.95f, m_radius, m_wireframeColor, 11);
 
             // Outer glow
-            _glow = CreateCircle("Glow", _radius * 1.25f, _glowColor, 5);
+            m_glow = CreateCircle("Glow", m_radius * 1.25f, m_glowColor, 5);
 
             // Pulsing aura ring
-            _aura = CreateRing("Aura", _radius, _radius * 1.25f, new Color(_bodyColor.r, _bodyColor.g, _bodyColor.b, 0.3f), 6);
+            m_aura = CreateRing("Aura", m_radius, m_radius * 1.25f, new Color(m_bodyColor.r, m_bodyColor.g, m_bodyColor.b, 0.3f), 6);
 
             // Inner core
-            _core = CreateCircle("Core", _radius * 0.3f, _coreColor, 15);
+            m_core = CreateCircle("Core", m_radius * 0.3f, m_coreColor, 15);
 
             // Rotating spikes
             CreateSpikes();
 
-            _allRenderers = GetComponentsInChildren<SpriteRenderer>();
+            m_allRenderers = GetComponentsInChildren<SpriteRenderer>();
         }
 
         private void CreateSpikes()
         {
-            _spikesContainer = new GameObject("Spikes").transform;
-            _spikesContainer.SetParent(transform, false);
+            m_spikesContainer = new GameObject("Spikes").transform;
+            m_spikesContainer.SetParent(transform, false);
 
             for (int i = 0; i < 8; i++)
             {
                 float angle = (i / 8f) * Mathf.PI * 2f;
                 var spike = CreateSpike($"Spike{i}", angle);
-                spike.SetParent(_spikesContainer, false);
+                spike.SetParent(m_spikesContainer, false);
             }
         }
 
@@ -77,10 +77,10 @@ namespace NeuralBreak.Entities
             var go = new GameObject(name);
             var sr = go.AddComponent<SpriteRenderer>();
             sr.sprite = CreateTriangleSprite();
-            sr.color = _wireframeColor;
+            sr.color = m_wireframeColor;
             sr.sortingOrder = 12;
 
-            float dist = _radius * 0.8f;
+            float dist = m_radius * 0.8f;
             go.transform.localPosition = new Vector3(
                 Mathf.Cos(angle) * dist,
                 Mathf.Sin(angle) * dist,
@@ -94,49 +94,49 @@ namespace NeuralBreak.Entities
 
         private void Update()
         {
-            if (_body == null) return;
+            if (m_body == null) return;
 
-            _time += Time.deltaTime;
+            m_time += Time.deltaTime;
 
-            // Pulse scale (incorporate _scale so it actually affects size)
-            float pulse = 1f + Mathf.Sin(_time * 4f) * 0.08f;
-            transform.localScale = Vector3.one * _scale * pulse;
+            // Pulse scale (incorporate m_scale so it actually affects size)
+            float pulse = 1f + Mathf.Sin(m_time * 4f) * 0.08f;
+            transform.localScale = Vector3.one * m_scale * pulse;
 
             // Rotate wireframe
-            if (_wireframe != null)
+            if (m_wireframe != null)
             {
-                _wireframe.Rotate(0, 0, Time.deltaTime * 90f);
+                m_wireframe.Rotate(0, 0, Time.deltaTime * 90f);
             }
 
             // Pulse glow opacity
-            if (_glow != null)
+            if (m_glow != null)
             {
-                var sr = _glow.GetComponent<SpriteRenderer>();
+                var sr = m_glow.GetComponent<SpriteRenderer>();
                 if (sr != null)
                 {
-                    float alpha = 0.3f + Mathf.Sin(_time * 3f) * 0.15f;
-                    sr.color = new Color(_glowColor.r, _glowColor.g, _glowColor.b, alpha);
+                    float alpha = 0.3f + Mathf.Sin(m_time * 3f) * 0.15f;
+                    sr.color = new Color(m_glowColor.r, m_glowColor.g, m_glowColor.b, alpha);
                 }
             }
 
             // Pulse aura
-            if (_aura != null)
+            if (m_aura != null)
             {
-                float auraScale = 1f + Mathf.Sin(_time * 5f) * 0.1f;
-                _aura.localScale = Vector3.one * auraScale;
+                float auraScale = 1f + Mathf.Sin(m_time * 5f) * 0.1f;
+                m_aura.localScale = Vector3.one * auraScale;
             }
 
             // Pulse core
-            if (_core != null)
+            if (m_core != null)
             {
-                float coreScale = 1f + Mathf.Sin(_time * 6f) * 0.15f;
-                _core.localScale = Vector3.one * coreScale;
+                float coreScale = 1f + Mathf.Sin(m_time * 6f) * 0.15f;
+                m_core.localScale = Vector3.one * coreScale;
             }
 
             // Rotate spikes
-            if (_spikesContainer != null)
+            if (m_spikesContainer != null)
             {
-                _spikesContainer.Rotate(0, 0, Time.deltaTime * 120f);
+                m_spikesContainer.Rotate(0, 0, Time.deltaTime * 120f);
             }
         }
 

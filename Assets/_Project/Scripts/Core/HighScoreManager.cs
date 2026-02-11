@@ -1,14 +1,19 @@
 using UnityEngine;
 using System;
+using Z13.Core;
 
 namespace NeuralBreak.Core
 {
     /// <summary>
     /// Manages high score persistence using PlayerPrefs.
     /// Tracks high score, best level reached, longest survival, and more.
+    ///
+    /// TRUE SINGLETON - Lives in Boot scene, persists across all scenes.
     /// </summary>
-    public class HighScoreManager : MonoBehaviour
+    public class HighScoreManager : MonoBehaviour, IBootable
     {
+        public static HighScoreManager Instance { get; private set; }
+
 
         private const string PREF_HIGH_SCORE = "NeuralBreak_HighScore";
         private const string PREF_BEST_LEVEL = "NeuralBreak_BestLevel";
@@ -35,10 +40,33 @@ namespace NeuralBreak.Core
         public event Action<HighScoreType, int> OnNewHighScore;
         public event Action<HighScoreType, float> OnNewHighScoreFloat;
 
+        /// <summary>
+        /// Called by BootManager for controlled initialization order.
+        /// </summary>
+        public void Initialize()
+        {
+            Instance = this;
+            LoadHighScores();
+            Debug.Log("[HighScoreManager] Initialized via BootManager");
+        }
+
         private void Awake()
         {
+            // If already initialized by BootManager, skip
+            if (Instance == this) return;
+
+            // Fallback for running main scene directly (development only)
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            // Development fallback - initialize directly
+            Instance = this;
             DontDestroyOnLoad(gameObject);
             LoadHighScores();
+            Debug.LogWarning("[HighScoreManager] Initialized via Awake fallback - should use Boot scene in production");
         }
 
         private void Start()

@@ -8,9 +8,9 @@ namespace NeuralBreak.Graphics
     /// </summary>
     public class ScanlineEffect
     {
-        private readonly GameObject _scanlineObject;
-        private readonly Material _scanlineMaterial;
-        private readonly float _scanlineIntensity;
+        private readonly GameObject m_scanlineObject;
+        private readonly Material m_scanlineMaterial;
+        private readonly float m_scanlineIntensity;
 
         private const int TEXTURE_WIDTH = 1;
         private const int TEXTURE_HEIGHT = 4;
@@ -22,26 +22,26 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public ScanlineEffect(Transform parent, float scanlineIntensity)
         {
-            _scanlineIntensity = scanlineIntensity;
+            m_scanlineIntensity = scanlineIntensity;
 
             // Create overlay quad with scanline effect
-            _scanlineObject = new GameObject("Scanlines");
-            _scanlineObject.transform.SetParent(parent);
+            m_scanlineObject = new GameObject("Scanlines");
+            m_scanlineObject.transform.SetParent(parent);
 
             // Position in front of camera
             var cam = Camera.main;
             if (cam != null)
             {
-                _scanlineObject.transform.position = cam.transform.position + cam.transform.forward * CAMERA_DISTANCE;
-                _scanlineObject.transform.rotation = cam.transform.rotation;
+                m_scanlineObject.transform.position = cam.transform.position + cam.transform.forward * CAMERA_DISTANCE;
+                m_scanlineObject.transform.rotation = cam.transform.rotation;
             }
 
             // Create a simple scanline texture
             Texture2D scanlineTex = CreateScanlineTexture();
 
-            _scanlineMaterial = new Material(Shader.Find("Sprites/Default"));
-            _scanlineMaterial.mainTexture = scanlineTex;
-            _scanlineMaterial.mainTextureScale = new Vector2(1, TEXTURE_SCALE_Y);
+            m_scanlineMaterial = new Material(Shader.Find("Sprites/Default"));
+            m_scanlineMaterial.mainTexture = scanlineTex;
+            m_scanlineMaterial.mainTextureScale = new Vector2(1, TEXTURE_SCALE_Y);
 
             // Note: Full implementation would need a screen-space quad or post-process effect
             // This creates the material but doesn't render it without additional setup
@@ -57,7 +57,7 @@ namespace NeuralBreak.Graphics
             scanlineTex.wrapMode = TextureWrapMode.Repeat;
 
             // Create alternating scanline pattern
-            Color darkLine = new Color(0, 0, 0, _scanlineIntensity);
+            Color darkLine = new Color(0, 0, 0, m_scanlineIntensity);
             Color clearLine = new Color(0, 0, 0, 0);
 
             scanlineTex.SetPixel(0, 0, darkLine);
@@ -83,9 +83,9 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void SetVisible(bool visible)
         {
-            if (_scanlineObject != null)
+            if (m_scanlineObject != null)
             {
-                _scanlineObject.SetActive(visible);
+                m_scanlineObject.SetActive(visible);
             }
         }
 
@@ -103,15 +103,15 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void Destroy()
         {
-            if (_scanlineObject != null)
+            if (m_scanlineObject != null)
             {
-                Object.Destroy(_scanlineObject);
+                Object.Destroy(m_scanlineObject);
             }
 
-            if (_scanlineMaterial != null)
+            if (m_scanlineMaterial != null)
             {
-                Object.Destroy(_scanlineMaterial.mainTexture);
-                Object.Destroy(_scanlineMaterial);
+                Object.Destroy(m_scanlineMaterial.mainTexture);
+                Object.Destroy(m_scanlineMaterial);
             }
         }
     }

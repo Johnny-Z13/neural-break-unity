@@ -9,29 +9,29 @@ namespace NeuralBreak.Entities
     public class UFOVisuals : MonoBehaviour
     {
         [Header("Colors")]
-        [SerializeField] private Color _bodyColor = new Color(0.27f, 0.33f, 0.4f, 0.9f); // Gray-blue
-        [SerializeField] private Color _wireframeColor = new Color(0f, 1f, 1f, 0.7f); // Cyan
-        [SerializeField] private Color _domeColor = new Color(0.53f, 0.67f, 1f, 0.7f); // Light blue
-        [SerializeField] private Color _bottomGlowColor = new Color(0f, 1f, 0.53f, 0.5f); // Green
-        [SerializeField] private Color _laserColor = new Color(1f, 0f, 0f, 0.8f); // Red
+        [SerializeField] private Color m_bodyColor = new Color(0.27f, 0.33f, 0.4f, 0.9f); // Gray-blue
+        [SerializeField] private Color m_wireframeColor = new Color(0f, 1f, 1f, 0.7f); // Cyan
+        [SerializeField] private Color m_domeColor = new Color(0.53f, 0.67f, 1f, 0.7f); // Light blue
+        [SerializeField] private Color m_bottomGlowColor = new Color(0f, 1f, 0.53f, 0.5f); // Green
+        [SerializeField] private Color m_laserColor = new Color(1f, 0f, 0f, 0.8f); // Red
 
         [Header("Scale")]
-        [SerializeField] private float _saucerRadius = 0.55f;
+        [SerializeField] private float m_saucerRadius = 0.55f;
 
         // Components
-        private Transform _saucer;
-        private Transform _wireframe;
-        private Transform _dome;
-        private Transform _domeWireframe;
-        private Transform _bottomGlow;
-        private Transform[] _runningLights;
-        private Transform _laser;
-        private SpriteRenderer _laserRenderer;
+        private Transform m_saucer;
+        private Transform m_wireframe;
+        private Transform m_dome;
+        private Transform m_domeWireframe;
+        private Transform m_bottomGlow;
+        private Transform[] m_runningLights;
+        private Transform m_laser;
+        private SpriteRenderer m_laserRenderer;
 
-        private float _time;
-        private int _currentLight = 0;
-        private float _lightTimer = 0f;
-        private bool _laserActive = false;
+        private float m_time;
+        private int m_currentLight = 0;
+        private float m_lightTimer = 0f;
+        private bool m_laserActive = false;
 
         private void Start()
         {
@@ -43,22 +43,22 @@ namespace NeuralBreak.Entities
             ClearChildren();
 
             // Main saucer body (ellipse)
-            _saucer = CreateEllipse("Saucer", _saucerRadius, _saucerRadius * 0.3f, _bodyColor, 10);
+            m_saucer = CreateEllipse("Saucer", m_saucerRadius, m_saucerRadius * 0.3f, m_bodyColor, 10);
 
             // Wireframe outline
-            _wireframe = CreateEllipseOutline("Wireframe", _saucerRadius * 1.05f, _saucerRadius * 0.35f, _wireframeColor, 11);
+            m_wireframe = CreateEllipseOutline("Wireframe", m_saucerRadius * 1.05f, m_saucerRadius * 0.35f, m_wireframeColor, 11);
 
             // Top dome
-            _dome = CreateDome("Dome", _saucerRadius * 0.5f, _domeColor, 15);
-            _dome.localPosition = new Vector3(0, _saucerRadius * 0.15f, 0);
+            m_dome = CreateDome("Dome", m_saucerRadius * 0.5f, m_domeColor, 15);
+            m_dome.localPosition = new Vector3(0, m_saucerRadius * 0.15f, 0);
 
             // Dome wireframe
-            _domeWireframe = CreateDomeOutline("DomeWireframe", _saucerRadius * 0.52f, _wireframeColor * 0.7f, 16);
-            _domeWireframe.localPosition = new Vector3(0, _saucerRadius * 0.15f, 0);
+            m_domeWireframe = CreateDomeOutline("DomeWireframe", m_saucerRadius * 0.52f, m_wireframeColor * 0.7f, 16);
+            m_domeWireframe.localPosition = new Vector3(0, m_saucerRadius * 0.15f, 0);
 
             // Bottom glow (tractor beam area)
-            _bottomGlow = CreateCircle("BottomGlow", _saucerRadius * 0.6f, _bottomGlowColor, 5);
-            _bottomGlow.localPosition = new Vector3(0, -_saucerRadius * 0.1f, 0);
+            m_bottomGlow = CreateCircle("BottomGlow", m_saucerRadius * 0.6f, m_bottomGlowColor, 5);
+            m_bottomGlow.localPosition = new Vector3(0, -m_saucerRadius * 0.1f, 0);
 
             // Running lights around edge
             CreateRunningLights();
@@ -69,7 +69,7 @@ namespace NeuralBreak.Entities
 
         private void CreateRunningLights()
         {
-            _runningLights = new Transform[12];
+            m_runningLights = new Transform[12];
             Color[] lightColors = new Color[]
             {
                 Color.red, Color.red, Color.red, Color.red,
@@ -90,13 +90,13 @@ namespace NeuralBreak.Entities
                 sr.sortingOrder = 12;
 
                 light.transform.localPosition = new Vector3(
-                    Mathf.Cos(angle) * _saucerRadius * 0.85f,
-                    Mathf.Sin(angle) * _saucerRadius * 0.15f,
+                    Mathf.Cos(angle) * m_saucerRadius * 0.85f,
+                    Mathf.Sin(angle) * m_saucerRadius * 0.15f,
                     0
                 );
                 light.transform.localScale = Vector3.one * 0.08f;
 
-                _runningLights[i] = light.transform;
+                m_runningLights[i] = light.transform;
             }
         }
 
@@ -105,95 +105,95 @@ namespace NeuralBreak.Entities
             var laser = new GameObject("Laser");
             laser.transform.SetParent(transform, false);
 
-            _laserRenderer = laser.AddComponent<SpriteRenderer>();
-            _laserRenderer.sprite = CreateLaserSprite();
-            _laserRenderer.color = _laserColor;
-            _laserRenderer.sortingOrder = 3;
+            m_laserRenderer = laser.AddComponent<SpriteRenderer>();
+            m_laserRenderer.sprite = CreateLaserSprite();
+            m_laserRenderer.color = m_laserColor;
+            m_laserRenderer.sortingOrder = 3;
 
-            laser.transform.localPosition = new Vector3(0, -_saucerRadius * 0.5f, 0);
+            laser.transform.localPosition = new Vector3(0, -m_saucerRadius * 0.5f, 0);
             laser.transform.localScale = new Vector3(0.15f, 0f, 1f); // Start with no height
 
-            _laser = laser.transform;
+            m_laser = laser.transform;
         }
 
         private void Update()
         {
-            if (_saucer == null) return;
+            if (m_saucer == null) return;
 
-            _time += Time.deltaTime;
+            m_time += Time.deltaTime;
 
             // Gentle hover motion
-            float hover = Mathf.Sin(_time * 2f) * 0.05f;
+            float hover = Mathf.Sin(m_time * 2f) * 0.05f;
             transform.localPosition = new Vector3(transform.localPosition.x, hover, transform.localPosition.z);
 
             // Dome opacity pulse
-            if (_dome != null)
+            if (m_dome != null)
             {
-                var sr = _dome.GetComponent<SpriteRenderer>();
+                var sr = m_dome.GetComponent<SpriteRenderer>();
                 if (sr != null)
                 {
-                    float alpha = 0.5f + Mathf.Sin(_time * 3f) * 0.2f;
-                    sr.color = new Color(_domeColor.r, _domeColor.g, _domeColor.b, alpha);
+                    float alpha = 0.5f + Mathf.Sin(m_time * 3f) * 0.2f;
+                    sr.color = new Color(m_domeColor.r, m_domeColor.g, m_domeColor.b, alpha);
                 }
             }
 
             // Bottom glow pulse
-            if (_bottomGlow != null)
+            if (m_bottomGlow != null)
             {
-                float glowPulse = 1f + Mathf.Sin(_time * 4f) * 0.2f;
-                _bottomGlow.localScale = Vector3.one * _saucerRadius * 1.2f * glowPulse;
+                float glowPulse = 1f + Mathf.Sin(m_time * 4f) * 0.2f;
+                m_bottomGlow.localScale = Vector3.one * m_saucerRadius * 1.2f * glowPulse;
             }
 
             // Running lights sequence
             AnimateRunningLights();
 
             // Animate laser if active
-            if (_laserActive && _laser != null)
+            if (m_laserActive && m_laser != null)
             {
-                float laserLength = 2f + Mathf.Sin(_time * 10f) * 0.3f;
-                _laser.localScale = new Vector3(0.15f + Mathf.Sin(_time * 15f) * 0.03f, laserLength, 1f);
+                float laserLength = 2f + Mathf.Sin(m_time * 10f) * 0.3f;
+                m_laser.localScale = new Vector3(0.15f + Mathf.Sin(m_time * 15f) * 0.03f, laserLength, 1f);
 
                 // Laser flicker
-                if (_laserRenderer != null)
+                if (m_laserRenderer != null)
                 {
-                    float alpha = 0.6f + Mathf.Sin(_time * 20f) * 0.3f;
-                    _laserRenderer.color = new Color(_laserColor.r, _laserColor.g, _laserColor.b, alpha);
+                    float alpha = 0.6f + Mathf.Sin(m_time * 20f) * 0.3f;
+                    m_laserRenderer.color = new Color(m_laserColor.r, m_laserColor.g, m_laserColor.b, alpha);
                 }
             }
         }
 
         private void AnimateRunningLights()
         {
-            _lightTimer += Time.deltaTime;
-            if (_lightTimer > 0.1f)
+            m_lightTimer += Time.deltaTime;
+            if (m_lightTimer > 0.1f)
             {
-                _lightTimer = 0f;
-                _currentLight = (_currentLight + 1) % 12;
+                m_lightTimer = 0f;
+                m_currentLight = (m_currentLight + 1) % 12;
             }
 
-            for (int i = 0; i < _runningLights.Length; i++)
+            for (int i = 0; i < m_runningLights.Length; i++)
             {
-                if (_runningLights[i] == null) continue;
-                var sr = _runningLights[i].GetComponent<SpriteRenderer>();
+                if (m_runningLights[i] == null) continue;
+                var sr = m_runningLights[i].GetComponent<SpriteRenderer>();
                 if (sr == null) continue;
 
                 // Brighten current light, dim others
-                float brightness = (i == _currentLight) ? 1f : 0.3f;
+                float brightness = (i == m_currentLight) ? 1f : 0.3f;
                 Color c = sr.color;
                 sr.color = new Color(c.r, c.g, c.b, brightness);
 
                 // Scale pulse for current light
-                float scale = (i == _currentLight) ? 0.12f : 0.08f;
-                _runningLights[i].localScale = Vector3.one * scale;
+                float scale = (i == m_currentLight) ? 0.12f : 0.08f;
+                m_runningLights[i].localScale = Vector3.one * scale;
             }
         }
 
         public void SetLaserActive(bool active)
         {
-            _laserActive = active;
-            if (_laser != null)
+            m_laserActive = active;
+            if (m_laser != null)
             {
-                _laser.gameObject.SetActive(active);
+                m_laser.gameObject.SetActive(active);
             }
         }
 

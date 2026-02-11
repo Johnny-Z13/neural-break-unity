@@ -12,35 +12,35 @@ namespace NeuralBreak.UI
     public abstract class ScreenBase : MonoBehaviour
     {
         [Header("Screen Settings")]
-        [SerializeField] protected GameObject _screenRoot;
-        [SerializeField] protected Selectable _firstSelected;
-        [SerializeField] protected bool _allowCancelToClose = false;
+        [SerializeField] protected GameObject m_screenRoot;
+        [SerializeField] protected Selectable m_firstSelected;
+        [SerializeField] protected bool m_allowCancelToClose = false;
 
         [Header("Animation")]
-        [SerializeField] protected float _fadeTime = 0.15f;
-        [SerializeField] protected bool _useAnimation = false;
+        [SerializeField] protected float m_fadeTime = 0.15f;
+        [SerializeField] protected bool m_useAnimation = false;
 
         // State
-        protected bool _isVisible;
-        protected CanvasGroup _canvasGroup;
+        protected bool m_isVisible;
+        protected CanvasGroup m_canvasGroup;
 
-        public bool IsVisible => _isVisible;
+        public bool IsVisible => m_isVisible;
 
         protected virtual void Awake()
         {
-            // If _screenRoot is not assigned, use this gameObject as fallback
-            if (_screenRoot == null)
+            // If m_screenRoot is not assigned, use this gameObject as fallback
+            if (m_screenRoot == null)
             {
-                _screenRoot = gameObject;
+                m_screenRoot = gameObject;
             }
 
             // Get or add canvas group for fade effects
-            if (_screenRoot != null)
+            if (m_screenRoot != null)
             {
-                _canvasGroup = _screenRoot.GetComponent<CanvasGroup>();
-                if (_canvasGroup == null && _useAnimation)
+                m_canvasGroup = m_screenRoot.GetComponent<CanvasGroup>();
+                if (m_canvasGroup == null && m_useAnimation)
                 {
-                    _canvasGroup = _screenRoot.AddComponent<CanvasGroup>();
+                    m_canvasGroup = m_screenRoot.AddComponent<CanvasGroup>();
                 }
             }
         }
@@ -48,7 +48,7 @@ namespace NeuralBreak.UI
         protected virtual void Update()
         {
             // Handle cancel input (B button / Escape) to close screen
-            if (_isVisible && _allowCancelToClose)
+            if (m_isVisible && m_allowCancelToClose)
             {
                 if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
                 {
@@ -74,12 +74,12 @@ namespace NeuralBreak.UI
         /// </summary>
         public virtual void Show()
         {
-            _isVisible = true;
+            m_isVisible = true;
 
-            // Ensure _screenRoot is set (in case Show is called before Awake)
-            if (_screenRoot == null) _screenRoot = gameObject;
+            // Ensure m_screenRoot is set (in case Show is called before Awake)
+            if (m_screenRoot == null) m_screenRoot = gameObject;
 
-            _screenRoot.SetActive(true);
+            m_screenRoot.SetActive(true);
 
             // Select first button for keyboard/gamepad navigation
             SelectFirstElement();
@@ -92,11 +92,11 @@ namespace NeuralBreak.UI
         /// </summary>
         protected void SelectFirstElement()
         {
-            if (_firstSelected != null && EventSystem.current != null)
+            if (m_firstSelected != null && EventSystem.current != null)
             {
                 // Clear selection first to ensure fresh selection
                 EventSystem.current.SetSelectedGameObject(null);
-                EventSystem.current.SetSelectedGameObject(_firstSelected.gameObject);
+                EventSystem.current.SetSelectedGameObject(m_firstSelected.gameObject);
             }
         }
 
@@ -105,12 +105,13 @@ namespace NeuralBreak.UI
         /// </summary>
         public virtual void Hide()
         {
-            _isVisible = false;
+            m_isVisible = false;
 
-            // Ensure _screenRoot is set (in case Hide is called before Awake)
-            if (_screenRoot == null) _screenRoot = gameObject;
+            // Ensure m_screenRoot is set (in case Hide is called before Awake)
+            if (m_screenRoot == null) m_screenRoot = gameObject;
 
-            _screenRoot.SetActive(false);
+            Debug.Log($"[ScreenBase.Hide] {GetType().Name} - Setting {m_screenRoot.name} inactive");
+            m_screenRoot.SetActive(false);
 
             OnHide();
         }
@@ -120,7 +121,7 @@ namespace NeuralBreak.UI
         /// </summary>
         public void Toggle()
         {
-            if (_isVisible)
+            if (m_isVisible)
                 Hide();
             else
                 Show();

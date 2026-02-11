@@ -8,21 +8,21 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
     /// </summary>
     public class RicochetBehavior : ProjectileBehaviorBase
     {
-        private int _maxBounces;
-        private int _currentBounces;
-        private float _damageRetention;
+        private int m_maxBounces;
+        private int m_currentBounces;
+        private float m_damageRetention;
 
         public RicochetBehavior(int maxBounces = 3, float damageRetention = 0.8f)
         {
-            _maxBounces = maxBounces;
-            _damageRetention = damageRetention;
-            _currentBounces = 0;
+            m_maxBounces = maxBounces;
+            m_damageRetention = damageRetention;
+            m_currentBounces = 0;
         }
 
         public override void Initialize(MonoBehaviour proj)
         {
             base.Initialize(proj);
-            _currentBounces = 0;
+            m_currentBounces = 0;
         }
 
         public override void Update(float deltaTime)
@@ -33,7 +33,7 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
 
         public override bool OnHitEnemy(EnemyBase enemy)
         {
-            _currentBounces++;
+            m_currentBounces++;
 
             // Reduce damage on each bounce (try both projectile types)
             var enhancedProj = GetAsEnhancedProjectile();
@@ -41,7 +41,7 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
 
             int currentDamage = enhancedProj != null ? enhancedProj.GetDamage() :
                                (basicProj != null ? basicProj.GetDamage() : 0);
-            int newDamage = Mathf.RoundToInt(currentDamage * _damageRetention);
+            int newDamage = Mathf.RoundToInt(currentDamage * m_damageRetention);
 
             if (enhancedProj != null)
             {
@@ -70,7 +70,7 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
             transform.rotation = Quaternion.Euler(0, 0, angle - 90f);
 
             // Destroy if max bounces reached
-            return _currentBounces >= _maxBounces;
+            return m_currentBounces >= m_maxBounces;
         }
 
         private void CheckWallBounce()
@@ -106,7 +106,7 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
 
             if (bounced)
             {
-                _currentBounces++;
+                m_currentBounces++;
 
                 // Set new direction
                 if (enhancedProj != null)
@@ -123,7 +123,7 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
                 transform.rotation = Quaternion.Euler(0, 0, angle - 90f);
 
                 // Deactivate if max bounces reached
-                if (_currentBounces >= _maxBounces)
+                if (m_currentBounces >= m_maxBounces)
                 {
                     if (enhancedProj != null)
                     {

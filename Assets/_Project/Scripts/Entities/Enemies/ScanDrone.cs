@@ -17,88 +17,88 @@ namespace NeuralBreak.Entities
         public override EnemyType EnemyType => EnemyType.ScanDrone;
 
         [Header("ScanDrone Settings")]
-        [SerializeField] private float _detectionRange = 15f;
-        [SerializeField] private float _fireRange = 12f;
+        [SerializeField] private float m_detectionRange = 15f;
+        [SerializeField] private float m_fireRange = 12f;
 
         [Header("Patrol Settings")]
-        [SerializeField] private float _patrolRadius = 10f;
-        [SerializeField] private float _patrolSpeed = 0.8f;
-        [SerializeField] private float _chaseSpeedMultiplier = 1.5f;
+        [SerializeField] private float m_patrolRadius = 10f;
+        [SerializeField] private float m_patrolSpeed = 0.8f;
+        [SerializeField] private float m_chaseSpeedMultiplier = 1.5f;
 
         // Config-driven shooting values
-        private float _fireRate => EnemyConfig?.fireRate ?? 2f;
-        private float _projectileSpeed => EnemyConfig?.projectileSpeed ?? 7f;
-        private int _projectileDamage => EnemyConfig?.projectileDamage ?? 15;
+        private float m_fireRate => EnemyConfig?.fireRate ?? 2f;
+        private float m_projectileSpeed => EnemyConfig?.projectileSpeed ?? 7f;
+        private int m_projectileDamage => EnemyConfig?.projectileDamage ?? 15;
 
         [Header("Visual")]
-        [SerializeField] private SpriteRenderer _spriteRenderer;
-        [SerializeField] private ScanDroneVisuals _visuals;
+        [SerializeField] private SpriteRenderer m_spriteRenderer;
+        [SerializeField] private ScanDroneVisuals m_visuals;
 #pragma warning disable CS0414 // Reserved for rotation animation feature
-        [SerializeField] private float _rotationSpeed = 90f; // degrees per second
+        [SerializeField] private float m_rotationSpeed = 90f; // degrees per second
 #pragma warning restore CS0414
 
         // Note: MMFeedbacks removed
 
         // State
         private enum DroneState { Patrolling, Alerted, Attacking }
-        private DroneState _droneState = DroneState.Patrolling;
+        private DroneState m_droneState = DroneState.Patrolling;
 
-        private Vector2 _patrolTarget;
-        private float _fireTimer;
-        private float _currentRotation;
-        private bool _wasPlayerInRange;
-        private bool _visualsGenerated;
+        private Vector2 m_patrolTarget;
+        private float m_fireTimer;
+        private float m_currentRotation;
+        private bool m_wasPlayerInRange;
+        private bool m_visualsGenerated;
 
         protected override void OnInitialize()
         {
             base.OnInitialize();
-            _droneState = DroneState.Patrolling;
-            _patrolTarget = GetNewPatrolTarget();
-            _fireTimer = _fireRate * 0.5f; // Start partially ready
-            _currentRotation = Random.Range(0f, 360f);
-            _wasPlayerInRange = false;
+            m_droneState = DroneState.Patrolling;
+            m_patrolTarget = GetNewPatrolTarget();
+            m_fireTimer = m_fireRate * 0.5f; // Start partially ready
+            m_currentRotation = Random.Range(0f, 360f);
+            m_wasPlayerInRange = false;
 
             // Generate procedural visuals if not yet done
-            if (!_visualsGenerated)
+            if (!m_visualsGenerated)
             {
                 EnsureVisuals();
-                _visualsGenerated = true;
+                m_visualsGenerated = true;
             }
         }
 
         private void EnsureVisuals()
         {
             // Add ScanDroneVisuals component if not present
-            if (_visuals == null)
+            if (m_visuals == null)
             {
-                _visuals = GetComponentInChildren<ScanDroneVisuals>();
+                m_visuals = GetComponentInChildren<ScanDroneVisuals>();
             }
 
-            if (_visuals == null)
+            if (m_visuals == null)
             {
                 var visualsGO = new GameObject("Visuals");
                 visualsGO.transform.SetParent(transform, false);
                 visualsGO.transform.localPosition = Vector3.zero;
-                _visuals = visualsGO.AddComponent<ScanDroneVisuals>();
+                m_visuals = visualsGO.AddComponent<ScanDroneVisuals>();
             }
         }
 
         protected override void UpdateAI()
         {
             float distanceToPlayer = GetDistanceToPlayer();
-            bool playerInRange = distanceToPlayer < _detectionRange;
+            bool playerInRange = distanceToPlayer < m_detectionRange;
 
             // State transitions
-            switch (_droneState)
+            switch (m_droneState)
             {
                 case DroneState.Patrolling:
                     if (playerInRange)
                     {
-                        _droneState = DroneState.Alerted;
+                        m_droneState = DroneState.Alerted;
                         // Feedback (Feel removed)
-                        _visuals?.SetAlerted(true);
+                        m_visuals?.SetAlerted(true);
 
-                        if (!_wasPlayerInRange)
+                        if (!m_wasPlayerInRange)
                         {
                             Debug.Log("[ScanDrone] Player detected!");
                         }
@@ -108,34 +108,34 @@ namespace NeuralBreak.Entities
                 case DroneState.Alerted:
                     if (!playerInRange)
                     {
-                        _droneState = DroneState.Patrolling;
-                        _patrolTarget = GetNewPatrolTarget();
-                        _visuals?.SetAlerted(false);
+                        m_droneState = DroneState.Patrolling;
+                        m_patrolTarget = GetNewPatrolTarget();
+                        m_visuals?.SetAlerted(false);
                     }
-                    else if (distanceToPlayer < _fireRange)
+                    else if (distanceToPlayer < m_fireRange)
                     {
-                        _droneState = DroneState.Attacking;
+                        m_droneState = DroneState.Attacking;
                     }
                     break;
 
                 case DroneState.Attacking:
                     if (!playerInRange)
                     {
-                        _droneState = DroneState.Patrolling;
-                        _patrolTarget = GetNewPatrolTarget();
-                        _visuals?.SetAlerted(false);
+                        m_droneState = DroneState.Patrolling;
+                        m_patrolTarget = GetNewPatrolTarget();
+                        m_visuals?.SetAlerted(false);
                     }
-                    else if (distanceToPlayer > _fireRange)
+                    else if (distanceToPlayer > m_fireRange)
                     {
-                        _droneState = DroneState.Alerted;
+                        m_droneState = DroneState.Alerted;
                     }
                     break;
             }
 
-            _wasPlayerInRange = playerInRange;
+            m_wasPlayerInRange = playerInRange;
 
             // Behavior based on state
-            switch (_droneState)
+            switch (m_droneState)
             {
                 case DroneState.Patrolling:
                     UpdatePatrol();
@@ -156,14 +156,14 @@ namespace NeuralBreak.Entities
         {
             // Move toward patrol target
             Vector2 currentPos = transform.position;
-            Vector2 direction = (_patrolTarget - currentPos).normalized;
+            Vector2 direction = (m_patrolTarget - currentPos).normalized;
 
-            transform.position = currentPos + direction * _patrolSpeed * Time.deltaTime;
+            transform.position = currentPos + direction * m_patrolSpeed * Time.deltaTime;
 
             // Check if reached patrol target
-            if (Vector2.Distance(currentPos, _patrolTarget) < 0.5f)
+            if (Vector2.Distance(currentPos, m_patrolTarget) < 0.5f)
             {
-                _patrolTarget = GetNewPatrolTarget();
+                m_patrolTarget = GetNewPatrolTarget();
             }
         }
 
@@ -171,7 +171,7 @@ namespace NeuralBreak.Entities
         {
             // Move toward player
             Vector2 direction = GetDirectionToPlayer();
-            float chaseSpeed = _speed * _chaseSpeedMultiplier;
+            float chaseSpeed = m_speed * m_chaseSpeedMultiplier;
 
             transform.position = (Vector2)transform.position + direction * chaseSpeed * Time.deltaTime;
         }
@@ -180,14 +180,14 @@ namespace NeuralBreak.Entities
         {
             // Slow movement while attacking
             Vector2 direction = GetDirectionToPlayer();
-            transform.position = (Vector2)transform.position + direction * _speed * 0.3f * Time.deltaTime;
+            transform.position = (Vector2)transform.position + direction * m_speed * 0.3f * Time.deltaTime;
 
             // Fire at player
-            _fireTimer += Time.deltaTime;
-            if (_fireTimer >= _fireRate)
+            m_fireTimer += Time.deltaTime;
+            if (m_fireTimer >= m_fireRate)
             {
                 FireAtPlayer();
-                _fireTimer = 0f;
+                m_fireTimer = 0f;
             }
         }
 
@@ -201,8 +201,8 @@ namespace NeuralBreak.Entities
             EnemyProjectilePool.Instance.Fire(
                 firePos,
                 direction,
-                _projectileSpeed,
-                _projectileDamage,
+                m_projectileSpeed,
+                m_projectileDamage,
                 new Color(1f, 0.5f, 0f) // Orange
             );
 
@@ -212,7 +212,7 @@ namespace NeuralBreak.Entities
         private Vector2 GetNewPatrolTarget()
         {
             // Random point within patrol radius of spawn position
-            Vector2 offset = Random.insideUnitCircle * _patrolRadius;
+            Vector2 offset = Random.insideUnitCircle * m_patrolRadius;
             return (Vector2)transform.position + offset;
         }
 
@@ -220,18 +220,18 @@ namespace NeuralBreak.Entities
         {
             base.OnStateChanged(newState);
 
-            if (_spriteRenderer == null) return;
+            if (m_spriteRenderer == null) return;
 
             switch (newState)
             {
                 case EnemyState.Spawning:
-                    _spriteRenderer.color = new Color(0.5f, 0.8f, 1f, 0.5f); // Light blue, transparent
+                    m_spriteRenderer.color = new Color(0.5f, 0.8f, 1f, 0.5f); // Light blue, transparent
                     break;
                 case EnemyState.Alive:
-                    _spriteRenderer.color = new Color(0.3f, 0.7f, 1f, 1f); // Cyan-blue
+                    m_spriteRenderer.color = new Color(0.3f, 0.7f, 1f, 1f); // Cyan-blue
                     break;
                 case EnemyState.Dying:
-                    _spriteRenderer.color = Color.white;
+                    m_spriteRenderer.color = Color.white;
                     break;
             }
         }
@@ -242,18 +242,18 @@ namespace NeuralBreak.Entities
 
             // Detection range
             Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(transform.position, _detectionRange);
+            Gizmos.DrawWireSphere(transform.position, m_detectionRange);
 
             // Fire range
             Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(transform.position, _fireRange);
+            Gizmos.DrawWireSphere(transform.position, m_fireRange);
 
             // Patrol target
             if (Application.isPlaying)
             {
                 Gizmos.color = Color.green;
-                Gizmos.DrawLine(transform.position, _patrolTarget);
-                Gizmos.DrawWireSphere(_patrolTarget, 0.3f);
+                Gizmos.DrawLine(transform.position, m_patrolTarget);
+                Gizmos.DrawWireSphere(m_patrolTarget, 0.3f);
             }
         }
     }

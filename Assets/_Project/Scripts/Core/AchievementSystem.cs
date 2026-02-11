@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using Z13.Core;
 
 namespace NeuralBreak.Core
 {
@@ -78,22 +79,22 @@ namespace NeuralBreak.Core
     {
 
         [Header("Settings")]
-        [SerializeField] private bool _saveToPrefs = true;
-        [SerializeField] private string _prefsKey = "NeuralBreak_Achievements";
+        [SerializeField] private bool m_saveToPrefs = true;
+        [SerializeField] private string m_prefsKey = "NeuralBreak_Achievements";
 
         // Achievement definitions
-        private Dictionary<AchievementType, Achievement> _achievements = new Dictionary<AchievementType, Achievement>();
+        private Dictionary<AchievementType, Achievement> m_achievements = new Dictionary<AchievementType, Achievement>();
 
         // Tracking stats for current session
-        private int _sessionKills;
-        private int _sessionBossKills;
-        private int _sessionHighestCombo;
-        private float _sessionSurvivalTime;
-        private int _sessionDamageTaken;
-        private int _sessionPickupsCollected;
-        private int _sessionUpgradesUsed;
+        private int m_sessionKills;
+        private int m_sessionBossKills;
+        private int m_sessionHighestCombo;
+        private float m_sessionSurvivalTime;
+        private int m_sessionDamageTaken;
+        private int m_sessionPickupsCollected;
+        private int m_sessionUpgradesUsed;
 
-        public IReadOnlyDictionary<AchievementType, Achievement> Achievements => _achievements;
+        public IReadOnlyDictionary<AchievementType, Achievement> Achievements => m_achievements;
 
         private void Awake()
         {
@@ -156,7 +157,7 @@ namespace NeuralBreak.Core
 
         private void AddAchievement(AchievementType type, string name, string description)
         {
-            _achievements[type] = new Achievement
+            m_achievements[type] = new Achievement
             {
                 type = type,
                 name = name,
@@ -195,12 +196,12 @@ namespace NeuralBreak.Core
         {
             if (GameManager.Instance != null && GameManager.Instance.IsPlaying)
             {
-                _sessionSurvivalTime += Time.deltaTime;
+                m_sessionSurvivalTime += Time.deltaTime;
 
                 // Check survival achievements
-                if (_sessionSurvivalTime >= 60f) TryUnlock(AchievementType.Survive1Min);
-                if (_sessionSurvivalTime >= 300f) TryUnlock(AchievementType.Survive5Min);
-                if (_sessionSurvivalTime >= 600f) TryUnlock(AchievementType.Survive10Min);
+                if (m_sessionSurvivalTime >= 60f) TryUnlock(AchievementType.Survive1Min);
+                if (m_sessionSurvivalTime >= 300f) TryUnlock(AchievementType.Survive5Min);
+                if (m_sessionSurvivalTime >= 600f) TryUnlock(AchievementType.Survive10Min);
             }
         }
 
@@ -211,44 +212,44 @@ namespace NeuralBreak.Core
 
         private void ResetSessionStats()
         {
-            _sessionKills = 0;
-            _sessionBossKills = 0;
-            _sessionHighestCombo = 0;
-            _sessionSurvivalTime = 0f;
-            _sessionDamageTaken = 0;
-            _sessionPickupsCollected = 0;
-            _sessionUpgradesUsed = 0;
+            m_sessionKills = 0;
+            m_sessionBossKills = 0;
+            m_sessionHighestCombo = 0;
+            m_sessionSurvivalTime = 0f;
+            m_sessionDamageTaken = 0;
+            m_sessionPickupsCollected = 0;
+            m_sessionUpgradesUsed = 0;
         }
 
         private void OnEnemyKilled(EnemyKilledEvent evt)
         {
-            _sessionKills++;
+            m_sessionKills++;
 
             // First Blood
-            if (_sessionKills == 1)
+            if (m_sessionKills == 1)
             {
                 TryUnlock(AchievementType.FirstBlood);
             }
 
             // Kill milestones
-            if (_sessionKills >= 100) TryUnlock(AchievementType.Slayer100);
-            if (_sessionKills >= 500) TryUnlock(AchievementType.Slayer500);
-            if (_sessionKills >= 1000) TryUnlock(AchievementType.Slayer1000);
+            if (m_sessionKills >= 100) TryUnlock(AchievementType.Slayer100);
+            if (m_sessionKills >= 500) TryUnlock(AchievementType.Slayer500);
+            if (m_sessionKills >= 1000) TryUnlock(AchievementType.Slayer1000);
 
             // Boss kills
             if (evt.enemyType == EnemyType.Boss)
             {
-                _sessionBossKills++;
+                m_sessionBossKills++;
                 TryUnlock(AchievementType.BossKiller);
-                if (_sessionBossKills >= 5) TryUnlock(AchievementType.BossSlayer5);
+                if (m_sessionBossKills >= 5) TryUnlock(AchievementType.BossSlayer5);
             }
         }
 
         private void OnComboChanged(ComboChangedEvent evt)
         {
-            if (evt.comboCount > _sessionHighestCombo)
+            if (evt.comboCount > m_sessionHighestCombo)
             {
-                _sessionHighestCombo = evt.comboCount;
+                m_sessionHighestCombo = evt.comboCount;
             }
 
             if (evt.comboCount >= 10) TryUnlock(AchievementType.Combo10);
@@ -259,7 +260,7 @@ namespace NeuralBreak.Core
 
         private void OnPlayerDamaged(PlayerDamagedEvent evt)
         {
-            _sessionDamageTaken += evt.damage;
+            m_sessionDamageTaken += evt.damage;
         }
 
         private void OnLevelCompleted(LevelCompletedEvent evt)
@@ -271,7 +272,7 @@ namespace NeuralBreak.Core
             if (evt.levelNumber >= 99) TryUnlock(AchievementType.Level99);
 
             // Speed runner (level 10 in under 5 min)
-            if (evt.levelNumber == 10 && _sessionSurvivalTime < 300f)
+            if (evt.levelNumber == 10 && m_sessionSurvivalTime < 300f)
             {
                 TryUnlock(AchievementType.SpeedRunner);
             }
@@ -287,9 +288,9 @@ namespace NeuralBreak.Core
 
         private void OnPickupCollected(PickupCollectedEvent evt)
         {
-            _sessionPickupsCollected++;
+            m_sessionPickupsCollected++;
 
-            if (_sessionPickupsCollected >= 50)
+            if (m_sessionPickupsCollected >= 50)
             {
                 TryUnlock(AchievementType.Collector);
             }
@@ -297,7 +298,7 @@ namespace NeuralBreak.Core
 
         private void OnUpgradeActivated(WeaponUpgradeActivatedEvent evt)
         {
-            _sessionUpgradesUsed++;
+            m_sessionUpgradesUsed++;
 
             // Check if 3 upgrades active at once
             var upgradeManager = FindFirstObjectByType<Combat.WeaponUpgradeManager>();
@@ -326,7 +327,7 @@ namespace NeuralBreak.Core
         /// </summary>
         public bool TryUnlock(AchievementType type)
         {
-            if (!_achievements.TryGetValue(type, out var achievement)) return false;
+            if (!m_achievements.TryGetValue(type, out var achievement)) return false;
             if (achievement.isUnlocked) return false;
 
             achievement.isUnlocked = true;
@@ -343,7 +344,7 @@ namespace NeuralBreak.Core
             });
 
             // Save progress
-            if (_saveToPrefs)
+            if (m_saveToPrefs)
             {
                 SaveProgress();
             }
@@ -356,7 +357,7 @@ namespace NeuralBreak.Core
         /// </summary>
         public bool IsUnlocked(AchievementType type)
         {
-            return _achievements.TryGetValue(type, out var achievement) && achievement.isUnlocked;
+            return m_achievements.TryGetValue(type, out var achievement) && achievement.isUnlocked;
         }
 
         /// <summary>
@@ -364,7 +365,7 @@ namespace NeuralBreak.Core
         /// </summary>
         public Achievement GetAchievement(AchievementType type)
         {
-            return _achievements.TryGetValue(type, out var achievement) ? achievement : null;
+            return m_achievements.TryGetValue(type, out var achievement) ? achievement : null;
         }
 
         /// <summary>
@@ -373,7 +374,7 @@ namespace NeuralBreak.Core
         public int GetUnlockedCount()
         {
             int count = 0;
-            foreach (var a in _achievements.Values)
+            foreach (var a in m_achievements.Values)
             {
                 if (a.isUnlocked) count++;
             }
@@ -383,7 +384,7 @@ namespace NeuralBreak.Core
         /// <summary>
         /// Get total achievement count
         /// </summary>
-        public int GetTotalCount() => _achievements.Count;
+        public int GetTotalCount() => m_achievements.Count;
 
         /// <summary>
         /// Get list of unlocked achievement IDs for save system
@@ -391,7 +392,7 @@ namespace NeuralBreak.Core
         public List<string> GetUnlockedAchievementIds()
         {
             var ids = new List<string>();
-            foreach (var kvp in _achievements)
+            foreach (var kvp in m_achievements)
             {
                 if (kvp.Value.isUnlocked)
                 {
@@ -406,7 +407,7 @@ namespace NeuralBreak.Core
         private void SaveProgress()
         {
             var data = new AchievementSaveData();
-            foreach (var kvp in _achievements)
+            foreach (var kvp in m_achievements)
             {
                 if (kvp.Value.isUnlocked)
                 {
@@ -415,15 +416,15 @@ namespace NeuralBreak.Core
             }
 
             string json = JsonUtility.ToJson(data);
-            PlayerPrefs.SetString(_prefsKey, json);
+            PlayerPrefs.SetString(m_prefsKey, json);
             PlayerPrefs.Save();
         }
 
         private void LoadProgress()
         {
-            if (!PlayerPrefs.HasKey(_prefsKey)) return;
+            if (!PlayerPrefs.HasKey(m_prefsKey)) return;
 
-            string json = PlayerPrefs.GetString(_prefsKey);
+            string json = PlayerPrefs.GetString(m_prefsKey);
             var data = JsonUtility.FromJson<AchievementSaveData>(json);
 
             if (data?.unlockedAchievements != null)
@@ -432,7 +433,7 @@ namespace NeuralBreak.Core
                 {
                     if (System.Enum.TryParse<AchievementType>(typeStr, out var type))
                     {
-                        if (_achievements.TryGetValue(type, out var achievement))
+                        if (m_achievements.TryGetValue(type, out var achievement))
                         {
                             achievement.isUnlocked = true;
                         }
@@ -456,18 +457,18 @@ namespace NeuralBreak.Core
         [ContextMenu("Debug: Reset All Achievements")]
         private void DebugResetAll()
         {
-            foreach (var a in _achievements.Values)
+            foreach (var a in m_achievements.Values)
             {
                 a.isUnlocked = false;
             }
-            PlayerPrefs.DeleteKey(_prefsKey);
+            PlayerPrefs.DeleteKey(m_prefsKey);
             Debug.Log("[Achievement] All achievements reset");
         }
 
         [ContextMenu("Debug: Unlock Random")]
         private void DebugUnlockRandom()
         {
-            var types = new List<AchievementType>(_achievements.Keys);
+            var types = new List<AchievementType>(m_achievements.Keys);
             var randomType = types[Random.Range(0, types.Count)];
             TryUnlock(randomType);
         }

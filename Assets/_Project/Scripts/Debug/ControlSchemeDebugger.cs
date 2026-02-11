@@ -11,9 +11,9 @@ namespace NeuralBreak.Tools
     public class ControlSchemeDebugger : MonoBehaviour
     {
         [Header("Settings")]
-        [SerializeField] private bool _showUI = true;
+        [SerializeField] private bool m_showUI = true;
 
-        private Rect _windowRect = new Rect(10, 10, 300, 200);
+        private Rect m_windowRect = new Rect(10, 10, 300, 200);
 
         private void Update()
         {
@@ -23,7 +23,7 @@ namespace NeuralBreak.Tools
             // Toggle UI visibility
             if (keyboard.f12Key.wasPressedThisFrame)
             {
-                _showUI = !_showUI;
+                m_showUI = !m_showUI;
             }
 
             // Quick hotkeys
@@ -47,9 +47,9 @@ namespace NeuralBreak.Tools
 
         private void OnGUI()
         {
-            if (!_showUI) return;
+            if (!m_showUI) return;
 
-            _windowRect = GUI.Window(0, _windowRect, DrawWindow, "Control Scheme Debugger");
+            m_windowRect = GUI.Window(0, m_windowRect, DrawWindow, "Control Scheme Debugger");
         }
 
         private void DrawWindow(int windowID)

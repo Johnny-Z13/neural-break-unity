@@ -10,26 +10,26 @@ namespace NeuralBreak.Graphics
     public class HitFlashEffect : MonoBehaviour
     {
         [Header("Settings")]
-        [SerializeField] private float _flashDuration = 0.08f;
-        [SerializeField] private Color _flashColor = Color.white;
-        [SerializeField] private bool _useUnscaledTime = true;
+        [SerializeField] private float m_flashDuration = 0.08f;
+        [SerializeField] private Color m_flashColor = Color.white;
+        [SerializeField] private bool m_useUnscaledTime = true;
 
-        private SpriteRenderer _spriteRenderer;
-        private Color _originalColor;
-        private Coroutine _flashCoroutine;
-        private Material _flashMaterial;
-        private Material _originalMaterial;
+        private SpriteRenderer m_spriteRenderer;
+        private Color m_originalColor;
+        private Coroutine m_flashCoroutine;
+        private Material m_flashMaterial;
+        private Material m_originalMaterial;
 
         private static readonly int FlashColorProperty = Shader.PropertyToID("_FlashColor");
         private static readonly int FlashAmountProperty = Shader.PropertyToID("_FlashAmount");
 
         private void Awake()
         {
-            _spriteRenderer = GetComponent<SpriteRenderer>();
-            if (_spriteRenderer != null)
+            m_spriteRenderer = GetComponent<SpriteRenderer>();
+            if (m_spriteRenderer != null)
             {
-                _originalColor = _spriteRenderer.color;
-                _originalMaterial = _spriteRenderer.material;
+                m_originalColor = m_spriteRenderer.color;
+                m_originalMaterial = m_spriteRenderer.material;
             }
         }
 
@@ -38,13 +38,13 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void Flash()
         {
-            if (_spriteRenderer == null) return;
+            if (m_spriteRenderer == null) return;
 
-            if (_flashCoroutine != null)
+            if (m_flashCoroutine != null)
             {
-                StopCoroutine(_flashCoroutine);
+                StopCoroutine(m_flashCoroutine);
             }
-            _flashCoroutine = StartCoroutine(FlashCoroutine());
+            m_flashCoroutine = StartCoroutine(FlashCoroutine());
         }
 
         /// <summary>
@@ -52,41 +52,41 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void Flash(Color color)
         {
-            if (_spriteRenderer == null) return;
+            if (m_spriteRenderer == null) return;
 
-            if (_flashCoroutine != null)
+            if (m_flashCoroutine != null)
             {
-                StopCoroutine(_flashCoroutine);
+                StopCoroutine(m_flashCoroutine);
             }
-            _flashCoroutine = StartCoroutine(FlashCoroutine(color));
+            m_flashCoroutine = StartCoroutine(FlashCoroutine(color));
         }
 
         private IEnumerator FlashCoroutine()
         {
-            yield return FlashCoroutine(_flashColor);
+            yield return FlashCoroutine(m_flashColor);
         }
 
         private IEnumerator FlashCoroutine(Color color)
         {
             // Store original color
-            Color original = _spriteRenderer.color;
+            Color original = m_spriteRenderer.color;
 
             // Flash white
-            _spriteRenderer.color = color;
+            m_spriteRenderer.color = color;
 
             // Wait
-            if (_useUnscaledTime)
+            if (m_useUnscaledTime)
             {
-                yield return new WaitForSecondsRealtime(_flashDuration);
+                yield return new WaitForSecondsRealtime(m_flashDuration);
             }
             else
             {
-                yield return new WaitForSeconds(_flashDuration);
+                yield return new WaitForSeconds(m_flashDuration);
             }
 
             // Restore
-            _spriteRenderer.color = original;
-            _flashCoroutine = null;
+            m_spriteRenderer.color = original;
+            m_flashCoroutine = null;
         }
 
         /// <summary>
@@ -94,15 +94,15 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void ResetColor()
         {
-            if (_flashCoroutine != null)
+            if (m_flashCoroutine != null)
             {
-                StopCoroutine(_flashCoroutine);
-                _flashCoroutine = null;
+                StopCoroutine(m_flashCoroutine);
+                m_flashCoroutine = null;
             }
 
-            if (_spriteRenderer != null)
+            if (m_spriteRenderer != null)
             {
-                _spriteRenderer.color = _originalColor;
+                m_spriteRenderer.color = m_originalColor;
             }
         }
 
@@ -111,7 +111,7 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void SetOriginalColor(Color color)
         {
-            _originalColor = color;
+            m_originalColor = color;
         }
     }
 }

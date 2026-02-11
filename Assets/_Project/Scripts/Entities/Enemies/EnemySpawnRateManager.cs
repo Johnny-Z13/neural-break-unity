@@ -10,36 +10,36 @@ namespace NeuralBreak.Entities
     public class EnemySpawnRateManager
     {
         // Spawn rates (time between spawns in seconds)
-        private float _dataMiteRate;
-        private float _scanDroneRate;
-        private float _fizzerRate;
-        private float _ufoRate;
-        private float _chaosWormRate;
-        private float _voidSphereRate;
-        private float _crystalShardRate;
-        private float _bossRate;
+        private float m_dataMiteRate;
+        private float m_scanDroneRate;
+        private float m_fizzerRate;
+        private float m_ufoRate;
+        private float m_chaosWormRate;
+        private float m_voidSphereRate;
+        private float m_crystalShardRate;
+        private float m_bossRate;
 
         // Spawn timers
-        private float _dataMiteTimer;
-        private float _scanDroneTimer;
-        private float _fizzerTimer;
-        private float _ufoTimer;
-        private float _chaosWormTimer;
-        private float _voidSphereTimer;
-        private float _crystalShardTimer;
-        private float _bossTimer;
+        private float m_dataMiteTimer;
+        private float m_scanDroneTimer;
+        private float m_fizzerTimer;
+        private float m_ufoTimer;
+        private float m_chaosWormTimer;
+        private float m_voidSphereTimer;
+        private float m_crystalShardTimer;
+        private float m_bossTimer;
 
         public EnemySpawnRateManager()
         {
             // Initialize spawn rates to disabled - LevelManager will set proper rates when game starts
-            _dataMiteRate = float.PositiveInfinity;
-            _scanDroneRate = float.PositiveInfinity;
-            _fizzerRate = float.PositiveInfinity;
-            _ufoRate = float.PositiveInfinity;
-            _chaosWormRate = float.PositiveInfinity;
-            _voidSphereRate = float.PositiveInfinity;
-            _crystalShardRate = float.PositiveInfinity;
-            _bossRate = float.PositiveInfinity;
+            m_dataMiteRate = float.PositiveInfinity;
+            m_scanDroneRate = float.PositiveInfinity;
+            m_fizzerRate = float.PositiveInfinity;
+            m_ufoRate = float.PositiveInfinity;
+            m_chaosWormRate = float.PositiveInfinity;
+            m_voidSphereRate = float.PositiveInfinity;
+            m_crystalShardRate = float.PositiveInfinity;
+            m_bossRate = float.PositiveInfinity;
         }
 
         /// <summary>
@@ -48,14 +48,14 @@ namespace NeuralBreak.Entities
         public void SetSpawnRates(float dataMite, float scanDrone, float fizzer, float ufo,
             float chaosWorm, float voidSphere, float crystalShard, float boss)
         {
-            _dataMiteRate = dataMite;
-            _scanDroneRate = scanDrone;
-            _fizzerRate = fizzer;
-            _ufoRate = ufo;
-            _chaosWormRate = chaosWorm;
-            _voidSphereRate = voidSphere;
-            _crystalShardRate = crystalShard;
-            _bossRate = boss;
+            m_dataMiteRate = dataMite;
+            m_scanDroneRate = scanDrone;
+            m_fizzerRate = fizzer;
+            m_ufoRate = ufo;
+            m_chaosWormRate = chaosWorm;
+            m_voidSphereRate = voidSphere;
+            m_crystalShardRate = crystalShard;
+            m_bossRate = boss;
 
             Debug.Log($"[EnemySpawnRateManager] SetSpawnRates called:");
             Debug.Log($"  DataMite={dataMite}, ScanDrone={scanDrone}, Fizzer={fizzer}, UFO={ufo}");
@@ -69,14 +69,14 @@ namespace NeuralBreak.Entities
         {
             switch (type)
             {
-                case EnemyType.DataMite: _dataMiteRate = rate; break;
-                case EnemyType.ScanDrone: _scanDroneRate = rate; break;
-                case EnemyType.Fizzer: _fizzerRate = rate; break;
-                case EnemyType.UFO: _ufoRate = rate; break;
-                case EnemyType.ChaosWorm: _chaosWormRate = rate; break;
-                case EnemyType.VoidSphere: _voidSphereRate = rate; break;
-                case EnemyType.CrystalShard: _crystalShardRate = rate; break;
-                case EnemyType.Boss: _bossRate = rate; break;
+                case EnemyType.DataMite: m_dataMiteRate = rate; break;
+                case EnemyType.ScanDrone: m_scanDroneRate = rate; break;
+                case EnemyType.Fizzer: m_fizzerRate = rate; break;
+                case EnemyType.UFO: m_ufoRate = rate; break;
+                case EnemyType.ChaosWorm: m_chaosWormRate = rate; break;
+                case EnemyType.VoidSphere: m_voidSphereRate = rate; break;
+                case EnemyType.CrystalShard: m_crystalShardRate = rate; break;
+                case EnemyType.Boss: m_bossRate = rate; break;
             }
         }
 
@@ -85,12 +85,12 @@ namespace NeuralBreak.Entities
         /// </summary>
         public void MultiplySpawnRates(float multiplier)
         {
-            _dataMiteRate *= multiplier;
-            _scanDroneRate *= multiplier;
-            _chaosWormRate *= multiplier;
-            _voidSphereRate *= multiplier;
-            _crystalShardRate *= multiplier;
-            _ufoRate *= multiplier;
+            m_dataMiteRate *= multiplier;
+            m_scanDroneRate *= multiplier;
+            m_chaosWormRate *= multiplier;
+            m_voidSphereRate *= multiplier;
+            m_crystalShardRate *= multiplier;
+            m_ufoRate *= multiplier;
         }
 
         /// <summary>
@@ -98,14 +98,14 @@ namespace NeuralBreak.Entities
         /// </summary>
         public void ResetTimers()
         {
-            _dataMiteTimer = 0f;
-            _scanDroneTimer = 0f;
-            _fizzerTimer = 0f;
-            _ufoTimer = 0f;
-            _chaosWormTimer = 0f;
-            _voidSphereTimer = 0f;
-            _crystalShardTimer = 0f;
-            _bossTimer = 0f;
+            m_dataMiteTimer = 0f;
+            m_scanDroneTimer = 0f;
+            m_fizzerTimer = 0f;
+            m_ufoTimer = 0f;
+            m_chaosWormTimer = 0f;
+            m_voidSphereTimer = 0f;
+            m_crystalShardTimer = 0f;
+            m_bossTimer = 0f;
         }
 
         /// <summary>
@@ -117,72 +117,72 @@ namespace NeuralBreak.Entities
             var readySpawns = new System.Collections.Generic.List<EnemySpawnRequest>();
 
             // DataMite
-            _dataMiteTimer += deltaTime;
-            if (_dataMiteTimer >= _dataMiteRate)
+            m_dataMiteTimer += deltaTime;
+            if (m_dataMiteTimer >= m_dataMiteRate)
             {
                 readySpawns.Add(new EnemySpawnRequest(EnemyType.DataMite));
-                _dataMiteTimer = 0f;
+                m_dataMiteTimer = 0f;
             }
 
             // ScanDrone
-            _scanDroneTimer += deltaTime;
-            if (_scanDroneTimer >= _scanDroneRate)
+            m_scanDroneTimer += deltaTime;
+            if (m_scanDroneTimer >= m_scanDroneRate)
             {
                 readySpawns.Add(new EnemySpawnRequest(EnemyType.ScanDrone));
-                _scanDroneTimer = 0f;
+                m_scanDroneTimer = 0f;
             }
 
             // Fizzer (conditional - only when enabled)
-            if (_fizzerRate < float.PositiveInfinity)
+            if (m_fizzerRate < float.PositiveInfinity)
             {
-                _fizzerTimer += deltaTime;
-                if (_fizzerTimer >= _fizzerRate)
+                m_fizzerTimer += deltaTime;
+                if (m_fizzerTimer >= m_fizzerRate)
                 {
                     readySpawns.Add(new EnemySpawnRequest(EnemyType.Fizzer));
-                    _fizzerTimer = 0f;
+                    m_fizzerTimer = 0f;
                 }
             }
 
             // UFO
-            _ufoTimer += deltaTime;
-            if (_ufoTimer >= _ufoRate)
+            m_ufoTimer += deltaTime;
+            if (m_ufoTimer >= m_ufoRate)
             {
                 readySpawns.Add(new EnemySpawnRequest(EnemyType.UFO));
-                _ufoTimer = 0f;
+                m_ufoTimer = 0f;
             }
 
             // ChaosWorm
-            _chaosWormTimer += deltaTime;
-            if (_chaosWormTimer >= _chaosWormRate)
+            m_chaosWormTimer += deltaTime;
+            if (m_chaosWormTimer >= m_chaosWormRate)
             {
                 readySpawns.Add(new EnemySpawnRequest(EnemyType.ChaosWorm));
-                _chaosWormTimer = 0f;
+                m_chaosWormTimer = 0f;
             }
 
             // VoidSphere
-            _voidSphereTimer += deltaTime;
-            if (_voidSphereTimer >= _voidSphereRate)
+            m_voidSphereTimer += deltaTime;
+            if (m_voidSphereTimer >= m_voidSphereRate)
             {
                 readySpawns.Add(new EnemySpawnRequest(EnemyType.VoidSphere));
-                _voidSphereTimer = 0f;
+                m_voidSphereTimer = 0f;
             }
 
             // CrystalShard
-            _crystalShardTimer += deltaTime;
-            if (_crystalShardTimer >= _crystalShardRate)
+            m_crystalShardTimer += deltaTime;
+            if (m_crystalShardTimer >= m_crystalShardRate)
             {
                 readySpawns.Add(new EnemySpawnRequest(EnemyType.CrystalShard));
-                _crystalShardTimer = 0f;
+                m_crystalShardTimer = 0f;
             }
 
             // Boss (level-based)
-            if (_bossRate < float.PositiveInfinity)
+            if (m_bossRate < float.PositiveInfinity)
             {
-                _bossTimer += deltaTime;
-                if (_bossTimer >= _bossRate)
+                m_bossTimer += deltaTime;
+                if (m_bossTimer >= m_bossRate)
                 {
                     readySpawns.Add(new EnemySpawnRequest(EnemyType.Boss, useEdgeSpawn: true));
-                    _bossTimer = 0f;
+                    m_bossTimer = 0f;
                 }
             }
 

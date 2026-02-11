@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using NeuralBreak.Core;
 using NeuralBreak.Graphics.VFX;
+using Z13.Core;
 
 namespace NeuralBreak.Graphics
 {
@@ -14,15 +15,15 @@ namespace NeuralBreak.Graphics
     {
 
         [Header("Settings")]
-        [SerializeField] private bool _enabled = true;
-        [SerializeField] private int _maxVFXPerFrame = 5;
+        [SerializeField] private bool m_enabled = true;
+        [SerializeField] private int m_maxVFXPerFrame = 5;
 
         [Header("Particle Settings")]
-        [SerializeField] private float _emissionIntensity = 3f;
+        [SerializeField] private float m_emissionIntensity = 3f;
 
-        private int _vfxThisFrame;
-        private Material _particleMaterial;
-        private Dictionary<EnemyType, IEnemyVFXGenerator> _vfxGenerators;
+        private int m_vfxThisFrame;
+        private Material m_particleMaterial;
+        private Dictionary<EnemyType, IEnemyVFXGenerator> m_vfxGenerators;
 
         private void Awake()
         {
@@ -39,15 +40,15 @@ namespace NeuralBreak.Graphics
         {
             EventBus.Unsubscribe<EnemyKilledEvent>(OnEnemyKilled);
 
-            if (_particleMaterial != null)
+            if (m_particleMaterial != null)
             {
-                Destroy(_particleMaterial);
+                Destroy(m_particleMaterial);
             }
         }
 
         private void LateUpdate()
         {
-            _vfxThisFrame = 0;
+            m_vfxThisFrame = 0;
         }
 
         /// <summary>
@@ -55,7 +56,7 @@ namespace NeuralBreak.Graphics
         /// </summary>
         private void InitializeVFXGenerators()
         {
-            _vfxGenerators = new Dictionary<EnemyType, IEnemyVFXGenerator>
+            m_vfxGenerators = new Dictionary<EnemyType, IEnemyVFXGenerator>
             {
                 { EnemyType.DataMite, new DataMiteVFX() },
                 { EnemyType.ScanDrone, new ScanDroneVFX() },
@@ -85,38 +86,38 @@ namespace NeuralBreak.Graphics
 
             if (shader != null)
             {
-                _particleMaterial = new Material(shader);
+                m_particleMaterial = new Material(shader);
 
                 // Assign soft particle texture to avoid quad rendering
                 var softTexture = VFXHelpers.GetSoftParticleTexture();
-                if (_particleMaterial.HasProperty("_BaseMap"))
-                    _particleMaterial.SetTexture("_BaseMap", softTexture);
-                if (_particleMaterial.HasProperty("_MainTex"))
-                    _particleMaterial.SetTexture("_MainTex", softTexture);
+                if (m_particleMaterial.HasProperty("_BaseMap"))
+                    m_particleMaterial.SetTexture("_BaseMap", softTexture);
+                if (m_particleMaterial.HasProperty("_MainTex"))
+                    m_particleMaterial.SetTexture("_MainTex", softTexture);
 
-                _particleMaterial.SetColor("_BaseColor", Color.white);
-                _particleMaterial.SetColor("_Color", Color.white);
-                _particleMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-                _particleMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.One);
-                _particleMaterial.SetInt("_ZWrite", 0);
-                _particleMaterial.renderQueue = 3000;
-                _particleMaterial.EnableKeyword("_EMISSION");
+                m_particleMaterial.SetColor("_BaseColor", Color.white);
+                m_particleMaterial.SetColor("_Color", Color.white);
+                m_particleMaterial.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                m_particleMaterial.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.One);
+                m_particleMaterial.SetInt("_ZWrite", 0);
+                m_particleMaterial.renderQueue = 3000;
+                m_particleMaterial.EnableKeyword("_EMISSION");
 
-                if (_particleMaterial.HasProperty("_Surface"))
+                if (m_particleMaterial.HasProperty("_Surface"))
                 {
-                    _particleMaterial.SetFloat("_Surface", 1);
-                    _particleMaterial.SetFloat("_Blend", 1);
+                    m_particleMaterial.SetFloat("_Surface", 1);
+                    m_particleMaterial.SetFloat("_Blend", 1);
                 }
             }
         }
 
         private void OnEnemyKilled(EnemyKilledEvent evt)
         {
-            if (!_enabled) return;
-            if (_vfxThisFrame >= _maxVFXPerFrame) return;
+            if (!m_enabled) return;
+            if (m_vfxThisFrame >= m_maxVFXPerFrame) return;
 
             SpawnDeathEffect(evt.position, evt.enemyType);
-            _vfxThisFrame++;
+            m_vfxThisFrame++;
         }
 
         /// <summary>
@@ -124,13 +125,13 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void SpawnDeathEffect(Vector3 position, EnemyType enemyType)
         {
-            if (!_enabled) return;
-            if (_particleMaterial == null) return;
+            if (!m_enabled) return;
+            if (m_particleMaterial == null) return;
 
             // Get the appropriate VFX generator
-            if (_vfxGenerators.TryGetValue(enemyType, out IEnemyVFXGenerator generator))
+            if (m_vfxGenerators.TryGetValue(enemyType, out IEnemyVFXGenerator generator))
             {
-                GameObject vfxGO = generator.GenerateDeathEffect(position, _particleMaterial, _emissionIntensity);
+                GameObject vfxGO = generator.GenerateDeathEffect(position, m_particleMaterial, m_emissionIntensity);
                 float lifetime = generator.GetEffectLifetime();
                 Destroy(vfxGO, lifetime);
             }
@@ -142,7 +143,7 @@ namespace NeuralBreak.Graphics
 
         public void SetEnabled(bool enabled)
         {
-            _enabled = enabled;
+            m_enabled = enabled;
         }
     }
 }

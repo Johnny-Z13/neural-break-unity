@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using NeuralBreak.Core;
+using Z13.Core;
 
 namespace NeuralBreak.UI
 {
@@ -11,31 +12,31 @@ namespace NeuralBreak.UI
     public class LowHealthVignette : MonoBehaviour
     {
         [Header("Vignette Settings")]
-        [SerializeField] private float _lowHealthThreshold = 0.3f;  // Show below 30% health
-        [SerializeField] private float _criticalHealthThreshold = 0.15f; // More intense below 15%
-        [SerializeField] private float _pulseSpeed = 2f;
-        [SerializeField] private float _criticalPulseSpeed = 4f;
-        [SerializeField] private float _minAlpha = 0.1f;
-        [SerializeField] private float _maxAlpha = 0.4f;
-        [SerializeField] private float _criticalMaxAlpha = 0.6f;
-        [SerializeField] private float _fadeSpeed = 3f;
+        [SerializeField] private float m_lowHealthThreshold = 0.3f;  // Show below 30% health
+        [SerializeField] private float m_criticalHealthThreshold = 0.15f; // More intense below 15%
+        [SerializeField] private float m_pulseSpeed = 2f;
+        [SerializeField] private float m_criticalPulseSpeed = 4f;
+        [SerializeField] private float m_minAlpha = 0.1f;
+        [SerializeField] private float m_maxAlpha = 0.4f;
+        [SerializeField] private float m_criticalMaxAlpha = 0.6f;
+        [SerializeField] private float m_fadeSpeed = 3f;
 
         [Header("Colors")]
-        [SerializeField] private Color _lowHealthColor = new Color(0.8f, 0f, 0f, 1f);
-        [SerializeField] private Color _criticalHealthColor = new Color(1f, 0f, 0f, 1f);
+        [SerializeField] private Color m_lowHealthColor = new Color(0.8f, 0f, 0f, 1f);
+        [SerializeField] private Color m_criticalHealthColor = new Color(1f, 0f, 0f, 1f);
 
         [Header("References")]
-        [SerializeField] private RawImage _vignetteImage;
-        [SerializeField] private CanvasGroup _canvasGroup;
+        [SerializeField] private RawImage m_vignetteImage;
+        [SerializeField] private CanvasGroup m_canvasGroup;
 
         // State
-        private float _currentHealthPercent = 1f;
-        private float _targetAlpha;
-        private float _currentAlpha;
-        private bool _isLowHealth;
-        private bool _isCriticalHealth;
-        private float _pulseTime;
-        private Texture2D _vignetteTexture;
+        private float m_currentHealthPercent = 1f;
+        private float m_targetAlpha;
+        private float m_currentAlpha;
+        private bool m_isLowHealth;
+        private bool m_isCriticalHealth;
+        private float m_pulseTime;
+        private Texture2D m_vignetteTexture;
 
         private void Start()
         {
@@ -47,9 +48,9 @@ namespace NeuralBreak.UI
         {
             UnsubscribeFromEvents();
 
-            if (_vignetteTexture != null)
+            if (m_vignetteTexture != null)
             {
-                Destroy(_vignetteTexture);
+                Destroy(m_vignetteTexture);
             }
         }
 
@@ -84,7 +85,7 @@ namespace NeuralBreak.UI
             }
 
             // Create vignette image
-            if (_vignetteImage == null)
+            if (m_vignetteImage == null)
             {
                 var imageGO = new GameObject("VignetteImage");
                 imageGO.transform.SetParent(transform);
@@ -95,30 +96,30 @@ namespace NeuralBreak.UI
                 rectTransform.offsetMin = Vector2.zero;
                 rectTransform.offsetMax = Vector2.zero;
 
-                _vignetteImage = imageGO.AddComponent<RawImage>();
-                _vignetteImage.raycastTarget = false;
+                m_vignetteImage = imageGO.AddComponent<RawImage>();
+                m_vignetteImage.raycastTarget = false;
             }
 
             // Create canvas group for easy alpha control
-            if (_canvasGroup == null)
+            if (m_canvasGroup == null)
             {
-                _canvasGroup = _vignetteImage.gameObject.GetComponent<CanvasGroup>();
-                if (_canvasGroup == null)
+                m_canvasGroup = m_vignetteImage.gameObject.GetComponent<CanvasGroup>();
+                if (m_canvasGroup == null)
                 {
-                    _canvasGroup = _vignetteImage.gameObject.AddComponent<CanvasGroup>();
+                    m_canvasGroup = m_vignetteImage.gameObject.AddComponent<CanvasGroup>();
                 }
-                _canvasGroup.blocksRaycasts = false;
-                _canvasGroup.interactable = false;
+                m_canvasGroup.blocksRaycasts = false;
+                m_canvasGroup.interactable = false;
             }
 
             // Generate vignette texture
-            _vignetteTexture = CreateVignetteTexture(256);
-            _vignetteImage.texture = _vignetteTexture;
-            _vignetteImage.color = _lowHealthColor;
+            m_vignetteTexture = CreateVignetteTexture(256);
+            m_vignetteImage.texture = m_vignetteTexture;
+            m_vignetteImage.color = m_lowHealthColor;
 
             // Start hidden
-            _canvasGroup.alpha = 0f;
-            _currentAlpha = 0f;
+            m_canvasGroup.alpha = 0f;
+            m_currentAlpha = 0f;
         }
 
         private Texture2D CreateVignetteTexture(int size)
@@ -158,40 +159,40 @@ namespace NeuralBreak.UI
 
         private void Update()
         {
-            if (!_isLowHealth)
+            if (!m_isLowHealth)
             {
                 // Fade out when not low health
-                _currentAlpha = Mathf.MoveTowards(_currentAlpha, 0f, Time.unscaledDeltaTime * _fadeSpeed);
+                m_currentAlpha = Mathf.MoveTowards(m_currentAlpha, 0f, Time.unscaledDeltaTime * m_fadeSpeed);
             }
             else
             {
                 // Pulse when low health
-                float pulseSpeed = _isCriticalHealth ? _criticalPulseSpeed : _pulseSpeed;
-                _pulseTime += Time.unscaledDeltaTime * pulseSpeed;
+                float pulseSpeed = m_isCriticalHealth ? m_criticalPulseSpeed : m_pulseSpeed;
+                m_pulseTime += Time.unscaledDeltaTime * pulseSpeed;
 
-                float minA = _minAlpha;
-                float maxA = _isCriticalHealth ? _criticalMaxAlpha : _maxAlpha;
+                float minA = m_minAlpha;
+                float maxA = m_isCriticalHealth ? m_criticalMaxAlpha : m_maxAlpha;
 
                 // Heartbeat-style pulse (quick up, slow down)
-                float pulse = Mathf.Sin(_pulseTime * Mathf.PI);
+                float pulse = Mathf.Sin(m_pulseTime * Mathf.PI);
                 pulse = Mathf.Abs(pulse);
                 pulse = Mathf.Pow(pulse, 0.5f);
 
-                _targetAlpha = Mathf.Lerp(minA, maxA, pulse);
+                m_targetAlpha = Mathf.Lerp(minA, maxA, pulse);
 
                 // Smoothly approach target
-                _currentAlpha = Mathf.MoveTowards(_currentAlpha, _targetAlpha,
-                    Time.unscaledDeltaTime * _fadeSpeed * 2f);
+                m_currentAlpha = Mathf.MoveTowards(m_currentAlpha, m_targetAlpha,
+                    Time.unscaledDeltaTime * m_fadeSpeed * 2f);
 
                 // Update color based on health level
-                Color targetColor = _isCriticalHealth ? _criticalHealthColor : _lowHealthColor;
-                _vignetteImage.color = Color.Lerp(_vignetteImage.color, targetColor,
+                Color targetColor = m_isCriticalHealth ? m_criticalHealthColor : m_lowHealthColor;
+                m_vignetteImage.color = Color.Lerp(m_vignetteImage.color, targetColor,
                     Time.unscaledDeltaTime * 5f);
             }
 
-            if (_canvasGroup != null)
+            if (m_canvasGroup != null)
             {
-                _canvasGroup.alpha = _currentAlpha;
+                m_canvasGroup.alpha = m_currentAlpha;
             }
         }
 
@@ -199,14 +200,14 @@ namespace NeuralBreak.UI
         {
             if (max <= 0) return;
 
-            _currentHealthPercent = (float)current / max;
-            _isLowHealth = _currentHealthPercent <= _lowHealthThreshold;
-            _isCriticalHealth = _currentHealthPercent <= _criticalHealthThreshold;
+            m_currentHealthPercent = (float)current / max;
+            m_isLowHealth = m_currentHealthPercent <= m_lowHealthThreshold;
+            m_isCriticalHealth = m_currentHealthPercent <= m_criticalHealthThreshold;
 
             // Reset pulse time when transitioning to critical for dramatic effect
-            if (_isCriticalHealth && _currentHealthPercent > 0)
+            if (m_isCriticalHealth && m_currentHealthPercent > 0)
             {
-                _pulseTime = 0f;
+                m_pulseTime = 0f;
             }
         }
 
@@ -215,9 +216,9 @@ namespace NeuralBreak.UI
             UpdateHealthState(evt.currentHealth, evt.maxHealth);
 
             // Flash on damage
-            if (_isLowHealth)
+            if (m_isLowHealth)
             {
-                _currentAlpha = Mathf.Max(_currentAlpha, _maxAlpha);
+                m_currentAlpha = Mathf.Max(m_currentAlpha, m_maxAlpha);
             }
         }
 
@@ -228,26 +229,26 @@ namespace NeuralBreak.UI
 
         private void OnGameStarted(GameStartedEvent evt)
         {
-            _currentHealthPercent = 1f;
-            _isLowHealth = false;
-            _isCriticalHealth = false;
-            _currentAlpha = 0f;
-            _pulseTime = 0f;
+            m_currentHealthPercent = 1f;
+            m_isLowHealth = false;
+            m_isCriticalHealth = false;
+            m_currentAlpha = 0f;
+            m_pulseTime = 0f;
         }
 
         private void OnGameOver(GameOverEvent evt)
         {
             // Full red on death
-            _currentAlpha = _criticalMaxAlpha;
-            _isLowHealth = false; // Stop pulsing
+            m_currentAlpha = m_criticalMaxAlpha;
+            m_isLowHealth = false; // Stop pulsing
         }
 
         public void SetEnabled(bool enabled)
         {
             this.enabled = enabled;
-            if (!enabled && _canvasGroup != null)
+            if (!enabled && m_canvasGroup != null)
             {
-                _canvasGroup.alpha = 0f;
+                m_canvasGroup.alpha = 0f;
             }
         }
     }

@@ -9,8 +9,8 @@ namespace NeuralBreak.Config
     /// </summary>
     public static class ConfigProvider
     {
-        private static GameBalanceConfig _balance;
-        private static bool _initialized;
+        private static GameBalanceConfig s_balance;
+        private static bool s_initialized;
 
         /// <summary>
         /// The master game balance configuration.
@@ -20,11 +20,11 @@ namespace NeuralBreak.Config
         {
             get
             {
-                if (!_initialized)
+                if (!s_initialized)
                 {
                     Initialize();
                 }
-                return _balance;
+                return s_balance;
             }
         }
 
@@ -127,33 +127,33 @@ namespace NeuralBreak.Config
         /// </summary>
         public static void Initialize()
         {
-            if (_initialized) return;
+            if (s_initialized) return;
 
             try
             {
-                _balance = Resources.Load<GameBalanceConfig>("Config/GameBalanceConfig");
+                s_balance = Resources.Load<GameBalanceConfig>("Config/GameBalanceConfig");
 
-                if (_balance == null)
+                if (s_balance == null)
                 {
                     Debug.LogWarning("[ConfigProvider] GameBalanceConfig not found in Resources/Config/. Using defaults.");
-                    _balance = ScriptableObject.CreateInstance<GameBalanceConfig>();
+                    s_balance = ScriptableObject.CreateInstance<GameBalanceConfig>();
 
-                    if (_balance == null)
+                    if (s_balance == null)
                     {
                         Debug.LogError("[ConfigProvider] Failed to create default config instance!");
                         return;
                     }
 
-                    SetDefaults(_balance);
+                    SetDefaults(s_balance);
                 }
 
-                _initialized = true;
+                s_initialized = true;
                 Debug.Log("[ConfigProvider] Configuration loaded successfully.");
             }
             catch (System.Exception ex)
             {
                 Debug.LogError($"[ConfigProvider] Failed to initialize config: {ex.Message}");
-                _initialized = false;
+                s_initialized = false;
             }
         }
 
@@ -162,8 +162,8 @@ namespace NeuralBreak.Config
         /// </summary>
         public static void Reload()
         {
-            _initialized = false;
-            _balance = null;
+            s_initialized = false;
+            s_balance = null;
             Initialize();
         }
 

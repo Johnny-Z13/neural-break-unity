@@ -1,0 +1,18 @@
+{
+    "name": "com.z13labs.core",
+    "version": "1.0.0",
+    "displayName": "Z13 Core",
+    "description": "Core utilities for Z13 Labs Unity projects. Includes EventBus, ObjectPool, SaveSystem, and LogHelper.",
+    "unity": "6000.0",
+    "author": {
+        "name": "Z13 Labs",
+        "email": "johnny@z13labs.com",
+        "url": "https://z13labs.com"
+    },
+    "keywords": [
+        "utilities",
+        "eventbus",
+        "object-pool",
+        "save-system"
+    ]
+}

@@ -11,24 +11,24 @@ namespace NeuralBreak.Entities
     public class PowerUpVisuals : MonoBehaviour
     {
         [Header("Colors")]
-        [SerializeField] private Color _primaryColor = new Color(0f, 0.67f, 0.27f, 0.9f); // Deep Emerald #00AA44
-        [SerializeField] private Color _secondaryColor = new Color(0f, 0.87f, 0.33f, 0.8f); // Jade #00DD55
-        [SerializeField] private Color _tertiaryColor = new Color(0f, 0.6f, 0.2f, 0.7f); // Forest #009933
-        [SerializeField] private Color _letterColor = Color.white;
+        [SerializeField] private Color m_primaryColor = new Color(0f, 0.67f, 0.27f, 0.9f); // Deep Emerald #00AA44
+        [SerializeField] private Color m_secondaryColor = new Color(0f, 0.87f, 0.33f, 0.8f); // Jade #00DD55
+        [SerializeField] private Color m_tertiaryColor = new Color(0f, 0.6f, 0.2f, 0.7f); // Forest #009933
+        [SerializeField] private Color m_letterColor = Color.white;
 
         [Header("Settings")]
-        [SerializeField] private float _radius = 0.56f;
-        [SerializeField] private char _letter = 'P';
-        [SerializeField] private float _rotationSpeed = 200f; // degrees per second (3.5 rad/s)
+        [SerializeField] private float m_radius = 0.56f;
+        [SerializeField] private char m_letter = 'P';
+        [SerializeField] private float m_rotationSpeed = 200f; // degrees per second (3.5 rad/s)
 
         // Components
-        private Transform _mainGlow;
-        private Transform _outerRing;
-        private Transform _innerRing;
-        private Transform _letterObject;
-        private Transform[] _particles;
+        private Transform m_mainGlow;
+        private Transform m_outerRing;
+        private Transform m_innerRing;
+        private Transform m_letterObject;
+        private Transform[] m_particles;
 
-        private float _time;
+        private float m_time;
 
         private void Start()
         {
@@ -37,19 +37,19 @@ namespace NeuralBreak.Entities
 
         public void SetLetter(char letter)
         {
-            _letter = letter;
-            if (_letterObject != null)
+            m_letter = letter;
+            if (m_letterObject != null)
             {
-                var tm = _letterObject.GetComponent<TextMesh>();
+                var tm = m_letterObject.GetComponent<TextMesh>();
                 if (tm != null) tm.text = letter.ToString();
             }
         }
 
         public void SetColors(Color primary, Color secondary, Color tertiary)
         {
-            _primaryColor = primary;
-            _secondaryColor = secondary;
-            _tertiaryColor = tertiary;
+            m_primaryColor = primary;
+            m_secondaryColor = secondary;
+            m_tertiaryColor = tertiary;
             // Regenerate visuals with new colors
             GenerateVisuals();
         }
@@ -59,13 +59,13 @@ namespace NeuralBreak.Entities
             ClearChildren();
 
             // Main glow circle - Deep Emerald
-            _mainGlow = CreateCircle("MainGlow", _radius, _primaryColor, 5);
+            m_mainGlow = CreateCircle("MainGlow", m_radius, m_primaryColor, 5);
 
             // Outer ring - Forest Green
-            _outerRing = CreateRing("OuterRing", _radius * 1.1f, _radius * 1.45f, _tertiaryColor, 3);
+            m_outerRing = CreateRing("OuterRing", m_radius * 1.1f, m_radius * 1.45f, m_tertiaryColor, 3);
 
             // Inner ring - Jade Green
-            _innerRing = CreateRing("InnerRing", _radius * 0.78f, _radius * 0.94f, _secondaryColor, 7);
+            m_innerRing = CreateRing("InnerRing", m_radius * 0.78f, m_radius * 0.94f, m_secondaryColor, 7);
 
             // Letter (using TextMesh for simplicity, or sprite)
             CreateLetter();
@@ -82,17 +82,17 @@ namespace NeuralBreak.Entities
             // Use a simple sprite circle as a placeholder for the letter
             // In a full implementation, you'd use TextMeshPro or a font sprite
             var sr = letterGO.AddComponent<SpriteRenderer>();
-            sr.sprite = CreateLetterSprite(_letter);
-            sr.color = _letterColor;
+            sr.sprite = CreateLetterSprite(m_letter);
+            sr.color = m_letterColor;
             sr.sortingOrder = 12;
 
             letterGO.transform.localScale = Vector3.one * 0.4f;
-            _letterObject = letterGO.transform;
+            m_letterObject = letterGO.transform;
         }
 
         private void CreateParticles()
         {
-            _particles = new Transform[12];
+            m_particles = new Transform[12];
 
             for (int i = 0; i < 12; i++)
             {
@@ -102,71 +102,71 @@ namespace NeuralBreak.Entities
                 var sr = particle.AddComponent<SpriteRenderer>();
                 sr.sprite = CreateCircleSprite(8);
                 // Alternate between emerald and jade
-                sr.color = (i % 2 == 0) ? _primaryColor : _secondaryColor;
+                sr.color = (i % 2 == 0) ? m_primaryColor : m_secondaryColor;
                 sr.sortingOrder = 15;
 
                 particle.transform.localScale = Vector3.one * 0.05f;
-                _particles[i] = particle.transform;
+                m_particles[i] = particle.transform;
             }
         }
 
         private void Update()
         {
-            if (_mainGlow == null) return;
+            if (m_mainGlow == null) return;
 
-            _time += Time.deltaTime;
+            m_time += Time.deltaTime;
 
             // Fast rotation
-            transform.Rotate(0, 0, Time.deltaTime * _rotationSpeed);
+            transform.Rotate(0, 0, Time.deltaTime * m_rotationSpeed);
 
             // Dramatic pulsing
-            float pulse = 1f + Mathf.Sin(_time * 8f) * 0.15f;
-            _mainGlow.localScale = Vector3.one * _radius * 2f * pulse;
+            float pulse = 1f + Mathf.Sin(m_time * 8f) * 0.15f;
+            m_mainGlow.localScale = Vector3.one * m_radius * 2f * pulse;
 
             // Outer ring pulse
-            if (_outerRing != null)
+            if (m_outerRing != null)
             {
-                float outerPulse = 1f + Mathf.Sin(_time * 6f) * 0.1f;
-                _outerRing.localScale = Vector3.one * _radius * 2.9f * outerPulse;
-                var sr = _outerRing.GetComponent<SpriteRenderer>();
+                float outerPulse = 1f + Mathf.Sin(m_time * 6f) * 0.1f;
+                m_outerRing.localScale = Vector3.one * m_radius * 2.9f * outerPulse;
+                var sr = m_outerRing.GetComponent<SpriteRenderer>();
                 if (sr != null)
                 {
-                    float alpha = 0.5f + Mathf.Sin(_time * 7f) * 0.2f;
-                    sr.color = new Color(_tertiaryColor.r, _tertiaryColor.g, _tertiaryColor.b, alpha);
+                    float alpha = 0.5f + Mathf.Sin(m_time * 7f) * 0.2f;
+                    sr.color = new Color(m_tertiaryColor.r, m_tertiaryColor.g, m_tertiaryColor.b, alpha);
                 }
             }
 
             // Inner ring pulse
-            if (_innerRing != null)
+            if (m_innerRing != null)
             {
-                float innerPulse = 1f + Mathf.Sin(_time * 7f + 0.5f) * 0.12f;
-                _innerRing.localScale = Vector3.one * _radius * 1.88f * innerPulse;
+                float innerPulse = 1f + Mathf.Sin(m_time * 7f + 0.5f) * 0.12f;
+                m_innerRing.localScale = Vector3.one * m_radius * 1.88f * innerPulse;
             }
 
             // Letter counter-rotation (stay readable)
-            if (_letterObject != null)
+            if (m_letterObject != null)
             {
-                _letterObject.rotation = Quaternion.identity;
+                m_letterObject.rotation = Quaternion.identity;
             }
 
             // Orbiting particles
-            if (_particles != null)
+            if (m_particles != null)
             {
-                for (int i = 0; i < _particles.Length; i++)
+                for (int i = 0; i < m_particles.Length; i++)
                 {
-                    if (_particles[i] == null) continue;
+                    if (m_particles[i] == null) continue;
 
-                    float angle = _time * 3f + (i / (float)_particles.Length) * Mathf.PI * 2f;
-                    float dist = _radius * 1.6f;
-                    _particles[i].localPosition = new Vector3(
+                    float angle = m_time * 3f + (i / (float)m_particles.Length) * Mathf.PI * 2f;
+                    float dist = m_radius * 1.6f;
+                    m_particles[i].localPosition = new Vector3(
                         Mathf.Cos(angle) * dist,
                         Mathf.Sin(angle) * dist,
                         0
                     );
 
                     // Particle pulse
-                    float pScale = 0.04f + Mathf.Sin(_time * 10f + i * 0.5f) * 0.02f;
-                    _particles[i].localScale = Vector3.one * pScale;
+                    float pScale = 0.04f + Mathf.Sin(m_time * 10f + i * 0.5f) * 0.02f;
+                    m_particles[i].localScale = Vector3.one * pScale;
                 }
             }
         }

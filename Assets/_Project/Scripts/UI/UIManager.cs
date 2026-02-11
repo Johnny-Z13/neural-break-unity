@@ -1,33 +1,33 @@
 using UnityEngine;
 using NeuralBreak.Core;
 using NeuralBreak.Input;
+using Z13.Core;
 
 namespace NeuralBreak.UI
 {
     /// <summary>
     /// Manages UI screen visibility based on game state.
-    /// Singleton pattern for easy access.
+    ///
+    /// SCENE-SPECIFIC - Lives in the main scene, not a singleton.
+    /// Uses GameStateManager (true singleton) for state queries.
     /// </summary>
     public class UIManager : MonoBehaviour
     {
-
         [Header("Screen References")]
-        [SerializeField] private ScreenBase _startScreen;
-        [SerializeField] private ScreenBase _pauseScreen;
-        [SerializeField] private ScreenBase _gameOverScreen;
-        [SerializeField] private UpgradeSelectionScreen _upgradeSelectionScreen;
-        [SerializeField] private GameObject _hudRoot;
+        [SerializeField] private ScreenBase m_startScreen;
+        [SerializeField] private ScreenBase m_pauseScreen;
+        [SerializeField] private ScreenBase m_gameOverScreen;
+        [SerializeField] private UpgradeSelectionScreen m_upgradeSelectionScreen;
+        [SerializeField] private GameObject m_hudRoot;
 
         [Header("Settings")]
-        [SerializeField] private bool _showHUDDuringPause = true;
+        [SerializeField] private bool m_showHUDDuringPause = true;
 
         // Current active screen
-        private ScreenBase _currentScreen;
+        private ScreenBase m_currentScreen;
 
         private void Awake()
         {
-            // Singleton setup
-
             // Subscribe to events
             EventBus.Subscribe<GameStateChangedEvent>(OnGameStateChanged);
         }
@@ -36,60 +36,40 @@ namespace NeuralBreak.UI
         {
             EventBus.Unsubscribe<GameStateChangedEvent>(OnGameStateChanged);
 
+            // Unsubscribe from input
+            if (InputManager.Instance != null)
+            {
+                InputManager.Instance.OnPausePressed -= OnPausePressed;
+            }
         }
 
         private void Start()
         {
-            // Subscribe to pause input
+            // Subscribe to pause input - InputManager is guaranteed to exist (Boot scene)
             if (InputManager.Instance != null)
             {
                 InputManager.Instance.OnPausePressed += OnPausePressed;
             }
 
-            // Delay initialization to let UIBuilder wire references
-            StartCoroutine(DelayedInit());
-        }
-
-        private System.Collections.IEnumerator DelayedInit()
-        {
-            Debug.Log("[UIManager] DelayedInit starting...");
-
-            // Wait for GameManager.Instance with timeout protection
-            float timeout = 5f;
-            float elapsed = 0f;
-
-            while (GameManager.Instance == null && elapsed < timeout)
-            {
-                yield return null;
-                elapsed += Time.unscaledDeltaTime;
-            }
-
-            if (GameManager.Instance == null)
-            {
-                Debug.LogError($"[UIManager] GameManager.Instance not found after {timeout}s timeout! UI may not initialize correctly.");
-                // Try to show start screen anyway as fallback
-                ShowScreen(_startScreen);
-                SetHUDVisible(false);
-                yield break;
-            }
-
-            Debug.Log($"[UIManager] GameManager found after {elapsed:F2}s. Initializing with state: {GameManager.Instance.CurrentState}");
-            UpdateUIForState(GameManager.Instance.CurrentState);
+            // Initialize UI state - GameStateManager is guaranteed to exist (Boot scene)
+            // No more timeout loops needed!
+            var currentState = GameStateManager.Instance?.CurrentState ?? GameStateType.StartScreen;
+            Debug.Log($"[UIManager] Initializing with state: {currentState}");
+            UpdateUIForState(currentState);
         }
 
         private void OnPausePressed()
         {
-            if (GameManager.Instance == null) return;
-
-            var state = GameManager.Instance.CurrentState;
+            // GameStateManager is guaranteed to exist (Boot scene)
+            var state = GameStateManager.Instance.CurrentState;
 
             if (state == GameStateType.Playing)
             {
-                GameManager.Instance.PauseGame();
+                GameStateManager.Instance.PauseGame();
             }
             else if (state == GameStateType.Paused)
             {
-                GameManager.Instance.ResumeGame();
+                GameStateManager.Instance.ResumeGame();
             }
         }
 
@@ -106,7 +86,7 @@ namespace NeuralBreak.UI
             switch (state)
             {
                 case GameStateType.StartScreen:
-                    ShowScreen(_startScreen);
+                    ShowScreen(m_startScreen);
                     SetHUDVisible(false);
                     break;
 
@@ -115,18 +95,17 @@ namespace NeuralBreak.UI
                     break;
 
                 case GameStateType.Paused:
-                    ShowScreen(_pauseScreen);
-                    SetHUDVisible(_showHUDDuringPause);
+                    ShowScreen(m_pauseScreen);
+                    SetHUDVisible(m_showHUDDuringPause);
                     break;
 
                 case GameStateType.RogueChoice:
-                    ShowScreen(_upgradeSelectionScreen);
+                    ShowScreen(m_upgradeSelectionScreen);
                     SetHUDVisible(false);
                     break;
 
                 case GameStateType.GameOver:
                     // StatisticsScreen handles its own visibility via GameOverEvent
-                    // Don't show _gameOverScreen to avoid duplicate "GAME OVER" text
                     SetHUDVisible(false);
                     break;
 
@@ -141,36 +120,36 @@ namespace NeuralBreak.UI
         {
             if (screen == null) return;
 
-            _currentScreen = screen;
+            m_currentScreen = screen;
             screen.Show();
         }
 
         private void HideAllScreens()
         {
-            _startScreen?.Hide();
-            _pauseScreen?.Hide();
-            _gameOverScreen?.Hide();
-            _upgradeSelectionScreen?.Hide();
-            _currentScreen = null;
+            m_startScreen?.Hide();
+            m_pauseScreen?.Hide();
+            m_gameOverScreen?.Hide();
+            m_upgradeSelectionScreen?.Hide();
+            m_currentScreen = null;
         }
 
         private void SetHUDVisible(bool visible)
         {
-            if (_hudRoot != null)
+            if (m_hudRoot != null)
             {
-                _hudRoot.SetActive(visible);
+                m_hudRoot.SetActive(visible);
             }
         }
 
         /// <summary>
         /// Get the currently active screen
         /// </summary>
-        public ScreenBase GetCurrentScreen() => _currentScreen;
+        public ScreenBase GetCurrentScreen() => m_currentScreen;
 
         /// <summary>
         /// Check if any menu screen is open
         /// </summary>
-        public bool IsMenuOpen() => _currentScreen != null && _currentScreen.IsVisible;
+        public bool IsMenuOpen() => m_currentScreen != null && m_currentScreen.IsVisible;
 
         #region Debug
 

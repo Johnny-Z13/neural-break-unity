@@ -1,86 +1,61 @@
 using UnityEngine;
-using NeuralBreak.Entities;
-using NeuralBreak.Utils;
-using NeuralBreak.Config;
 using System.Collections;
+using Z13.Core;
+using NeuralBreak.Entities;
+using NeuralBreak.Config;
 
 namespace NeuralBreak.Core
 {
     /// <summary>
-    /// Central game coordinator - manages game state, systems, and flow.
-    /// Singleton pattern for easy access from other systems.
+    /// Scene-specific gameplay manager - handles scoring, combo, enemies, and level transitions.
+    /// Global state (GameStateType, GameMode, pause/resume) is handled by GameStateManager.
     /// </summary>
     public class GameManager : MonoBehaviour
     {
-        // Trigger Recompile
         public static GameManager Instance { get; private set; }
 
-        [Header("Game State")]
-        [SerializeField] private GameStateType _currentState = GameStateType.StartScreen;
-        [SerializeField] private GameMode _currentMode = GameMode.Arcade;
-        [SerializeField] private bool _isPaused;
-        [SerializeField] private bool _autoStartOnPlay = false; // DISABLED - let user choose mode via UI
-
         [Header("References")]
-        [SerializeField] private PlayerController _player;
-        [SerializeField] private EnemySpawner _enemySpawner;
-        [SerializeField] private LevelManager _levelManager;
+        [SerializeField] private PlayerController m_player;
+        [SerializeField] private EnemySpawner m_enemySpawner;
+        [SerializeField] private LevelManager m_levelManager;
 
-        // Note: MMFeedbacks removed - using native Unity feedback system
-        // Feel package can be re-added later if desired
+        [Header("Settings")]
+        [SerializeField] private bool m_autoStartOnPlay = false;
 
-        // Game stats
         public GameStats Stats { get; private set; } = new GameStats();
 
-        // Public accessors
-        public GameStateType CurrentState => _currentState;
-        public GameMode CurrentMode => _currentMode;
-        public bool IsPaused => _isPaused;
-        public bool IsPlaying => _currentState == GameStateType.Playing && !_isPaused;
+        public GameStateType CurrentState => GameStateManager.Instance?.CurrentState ?? GameStateType.StartScreen;
+        public GameMode CurrentMode => GameStateManager.Instance?.CurrentMode ?? GameMode.Arcade;
+        public bool IsPaused => GameStateManager.Instance?.IsPaused ?? false;
+        public bool IsPlaying => GameStateManager.Instance?.IsPlaying ?? false;
 
-        // Combo/Multiplier system
-        private int _currentCombo;
-        private float _currentMultiplier = 1f;
-        private float _comboTimer;
+        private int m_currentCombo;
+        private float m_currentMultiplier = 1f;
+        private float m_comboTimer;
 
-        // Config-driven combo settings (read from GameBalanceConfig)
         private float ComboDecayTime => ConfigProvider.Combo?.comboDecayTime ?? 3f;
-        private float ComboWindow => ConfigProvider.Combo?.comboWindow ?? 1.5f;
         private float MultiplierPerKill => ConfigProvider.Combo?.multiplierPerKill ?? 0.1f;
         private float MaxMultiplier => ConfigProvider.Combo?.maxMultiplier ?? 10f;
         private float MultiplierDecayRate => ConfigProvider.Combo?.multiplierDecayRate ?? 2f;
         private float BossKillMultiplier => ConfigProvider.Combo?.bossKillMultiplier ?? 2f;
 
-        // Upgrade selection state
-        private bool _upgradeSelected;
-
-        // Level transition tracking
-        private Coroutine _levelTransitionCoroutine;
-        private bool _isPlayerDead;
+        private bool m_upgradeSelected;
+        private Coroutine m_levelTransitionCoroutine;
+        private bool m_isPlayerDead;
 
         private void Awake()
         {
-            Debug.Log($"[GameManager] Awake START at {Time.realtimeSinceStartup:F3}s");
-
-            // Singleton setup
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
             Instance = this;
 
-            // Subscribe to events
+            // Ensure GameStateManager exists (creates one if not present)
+            EnsureGameStateManager();
+
             EventBus.Subscribe<EnemyKilledEvent>(OnEnemyKilled);
             EventBus.Subscribe<PlayerDiedEvent>(OnPlayerDied);
             EventBus.Subscribe<LevelCompletedEvent>(OnLevelCompleted);
             EventBus.Subscribe<UpgradeSelectedEvent>(OnUpgradeSelected);
-
-            // Feedback setup disabled - Feel package not installed
-
-            Debug.Log($"[GameManager] Awake DONE at {Time.realtimeSinceStartup:F3}s");
+            EventBus.Subscribe<GameStartedEvent>(OnGameStarted);
         }
-
 
         private void OnDestroy()
         {
@@ -88,6 +63,7 @@ namespace NeuralBreak.Core
             EventBus.Unsubscribe<PlayerDiedEvent>(OnPlayerDied);
             EventBus.Unsubscribe<LevelCompletedEvent>(OnLevelCompleted);
             EventBus.Unsubscribe<UpgradeSelectedEvent>(OnUpgradeSelected);
+            EventBus.Unsubscribe<GameStartedEvent>(OnGameStarted);
 
             if (Instance == this)
             {
@@ -97,9 +73,9 @@ namespace NeuralBreak.Core
 
         private void Start()
         {
-            if (_autoStartOnPlay && _currentState == GameStateType.StartScreen)
+            if (m_autoStartOnPlay && CurrentState == GameStateType.StartScreen)
             {
-                StartGame(_currentMode);
+                StartGame(CurrentMode);
             }
         }
 
@@ -107,124 +83,47 @@ namespace NeuralBreak.Core
         {
             if (!IsPlaying) return;
 
-            // Update survived time
             Stats.survivedTime += Time.deltaTime;
-
-            // Combo decay
             UpdateComboDecay();
         }
 
-        #region Game State Management
-
-        public void SetState(GameStateType newState)
-        {
-            if (_currentState == newState)
-            {
-                Debug.LogWarning($"[GameManager] Already in state {newState}!");
-                return;
-            }
-
-            // Validate state transitions
-            if (_currentState == GameStateType.GameOver && newState == GameStateType.Playing)
-            {
-                Debug.LogWarning("[GameManager] Cannot transition from GameOver to Playing directly. Use StartGame() instead.");
-                return;
-            }
-
-            GameStateType previousState = _currentState;
-            _currentState = newState;
-
-            EventBus.Publish(new GameStateChangedEvent
-            {
-                previousState = previousState,
-                newState = newState
-            });
-
-            LogHelper.Log($"[GameManager] State changed: {previousState} -> {newState}");
-        }
+        #region Game Control
 
         public void StartGame(GameMode mode)
         {
-            LogHelper.Log($"[GameManager] ========================================");
             LogHelper.Log($"[GameManager] STARTING GAME IN {mode} MODE");
-            LogHelper.Log($"[GameManager] ========================================");
 
-            _currentMode = mode;
             Stats.Reset();
-            _currentCombo = 0;
-            _currentMultiplier = 1f;
-            _isPlayerDead = false;
-            _levelTransitionCoroutine = null;
+            m_currentCombo = 0;
+            m_currentMultiplier = 1f;
+            m_isPlayerDead = false;
+            m_levelTransitionCoroutine = null;
 
-            SetState(GameStateType.Playing);
-
-            // Game start feedback (Feel package removed)
-
-            // StartScreen will hide itself when it receives GameStartedEvent
-            LogHelper.Log($"[GameManager] Publishing GameStartedEvent with mode: {mode}");
-            EventBus.Publish(new GameStartedEvent { mode = mode });
-            LogHelper.Log($"[GameManager] GameStartedEvent published successfully");
+            GameStateManager.Instance.StartGame(mode);
         }
 
-        public void PauseGame()
+        private void OnGameStarted(GameStartedEvent evt)
         {
-            if (_currentState != GameStateType.Playing)
-            {
-                Debug.LogWarning($"[GameManager] Cannot pause - not in Playing state (current: {_currentState})!");
-                return;
-            }
-
-            _isPaused = true;
-            Time.timeScale = 0f;
-
-            SetState(GameStateType.Paused);
-            EventBus.Publish(new GamePausedEvent { isPaused = true });
+            Stats.Reset();
+            m_currentCombo = 0;
+            m_currentMultiplier = 1f;
+            m_isPlayerDead = false;
+            m_levelTransitionCoroutine = null;
         }
 
-        public void ResumeGame()
-        {
-            if (_currentState != GameStateType.Paused)
-            {
-                Debug.LogWarning($"[GameManager] Cannot resume - not in Paused state (current: {_currentState})!");
-                return;
-            }
-
-            _isPaused = false;
-            Time.timeScale = 1f;
-
-            SetState(GameStateType.Playing);
-            EventBus.Publish(new GamePausedEvent { isPaused = false });
-        }
+        public void SetState(GameStateType newState) => GameStateManager.Instance.SetState(newState);
+        public void PauseGame() => GameStateManager.Instance.PauseGame();
+        public void ResumeGame() => GameStateManager.Instance.ResumeGame();
+        public void ReturnToMenu() => GameStateManager.Instance.ReturnToMenu();
 
         public void GameOver()
         {
-            SetState(GameStateType.GameOver);
-            Time.timeScale = 1f;
-
-            // Game over feedback (Feel package removed)
-
-            EventBus.Publish(new GameOverEvent { finalStats = Stats });
-
-            LogHelper.Log($"[GameManager] Game Over! Score: {Stats.score}, Level: {Stats.level}");
+            GameStateManager.Instance.GameOver(Stats);
         }
 
         public void Victory()
         {
-            Stats.gameCompleted = true;
-            SetState(GameStateType.Victory);
-
-            // Victory feedback (Feel package removed)
-
-            EventBus.Publish(new VictoryEvent { finalStats = Stats });
-
-            LogHelper.Log("[GameManager] VICTORY! All 99 levels completed!");
-        }
-
-        public void ReturnToMenu()
-        {
-            Time.timeScale = 1f;
-            _isPaused = false;
-            SetState(GameStateType.StartScreen);
+            GameStateManager.Instance.Victory(Stats);
         }
 
         #endregion
@@ -233,59 +132,42 @@ namespace NeuralBreak.Core
 
         private void OnEnemyKilled(EnemyKilledEvent evt)
         {
-            if (evt.scoreValue < 0)
-            {
-                Debug.LogError($"[GameManager] Invalid score value from {evt.enemyType}: {evt.scoreValue}");
-                return;
-            }
+            if (evt.scoreValue < 0 || evt.xpValue < 0) return;
 
-            if (evt.xpValue < 0)
-            {
-                Debug.LogError($"[GameManager] Invalid XP value from {evt.enemyType}: {evt.xpValue}");
-                return;
-            }
-
-            // Update kill counts
             Stats.enemiesKilled++;
             UpdateKillCount(evt.enemyType);
 
-            // Update combo (config-driven)
-            _currentCombo++;
-            _comboTimer = ComboDecayTime;
+            m_currentCombo++;
+            m_comboTimer = ComboDecayTime;
 
-            if (_currentCombo > Stats.highestCombo)
+            if (m_currentCombo > Stats.highestCombo)
             {
-                Stats.highestCombo = _currentCombo;
+                Stats.highestCombo = m_currentCombo;
             }
 
-            // Update multiplier (increases with quick kills, config-driven)
-            if (_comboTimer > 0)
+            if (m_comboTimer > 0)
             {
-                _currentMultiplier = Mathf.Min(_currentMultiplier + MultiplierPerKill, MaxMultiplier);
-                if (_currentMultiplier > Stats.highestMultiplier)
+                m_currentMultiplier = Mathf.Min(m_currentMultiplier + MultiplierPerKill, MaxMultiplier);
+                if (m_currentMultiplier > Stats.highestMultiplier)
                 {
-                    Stats.highestMultiplier = _currentMultiplier;
+                    Stats.highestMultiplier = m_currentMultiplier;
                 }
             }
 
-            // Calculate score with multiplier (apply boss multiplier if applicable)
             int baseScore = evt.scoreValue;
-            float scoreMultiplier = _currentMultiplier;
+            float scoreMultiplier = m_currentMultiplier;
             if (evt.enemyType == EnemyType.Boss)
             {
                 scoreMultiplier *= BossKillMultiplier;
             }
             int finalScore = Mathf.RoundToInt(baseScore * scoreMultiplier);
             Stats.score += finalScore;
-
-            // Add XP
             Stats.totalXP += evt.xpValue;
 
-            // Publish events
             EventBus.Publish(new ComboChangedEvent
             {
-                comboCount = _currentCombo,
-                multiplier = _currentMultiplier
+                comboCount = m_currentCombo,
+                multiplier = m_currentMultiplier
             });
 
             EventBus.Publish(new ScoreChangedEvent
@@ -313,35 +195,34 @@ namespace NeuralBreak.Core
 
         private void UpdateComboDecay()
         {
-            if (_currentCombo > 0)
+            if (m_currentCombo > 0)
             {
-                _comboTimer -= Time.deltaTime;
-                if (_comboTimer <= 0)
+                m_comboTimer -= Time.deltaTime;
+                if (m_comboTimer <= 0)
                 {
-                    _currentCombo = 0;
+                    m_currentCombo = 0;
                     EventBus.Publish(new ComboChangedEvent
                     {
                         comboCount = 0,
-                        multiplier = _currentMultiplier
+                        multiplier = m_currentMultiplier
                     });
                 }
             }
 
-            // Multiplier decays more slowly (config-driven decay rate)
-            if (_currentMultiplier > 1f && _comboTimer <= 0)
+            if (m_currentMultiplier > 1f && m_comboTimer <= 0)
             {
                 float decayRate = MultiplierDecayRate > 0 ? 1f / MultiplierDecayRate : 0.5f;
-                _currentMultiplier = Mathf.Max(1f, _currentMultiplier - Time.deltaTime * decayRate);
+                m_currentMultiplier = Mathf.Max(1f, m_currentMultiplier - Time.deltaTime * decayRate);
             }
         }
 
         public void ResetCombo()
         {
-            _currentCombo = 0;
+            m_currentCombo = 0;
             EventBus.Publish(new ComboChangedEvent
             {
                 comboCount = 0,
-                multiplier = _currentMultiplier
+                multiplier = m_currentMultiplier
             });
         }
 
@@ -351,16 +232,14 @@ namespace NeuralBreak.Core
 
         private void OnPlayerDied(PlayerDiedEvent evt)
         {
-            _isPlayerDead = true;
+            m_isPlayerDead = true;
 
-            // Cancel any ongoing level transition to prevent upgrade screen showing
-            if (_levelTransitionCoroutine != null)
+            if (m_levelTransitionCoroutine != null)
             {
-                StopCoroutine(_levelTransitionCoroutine);
-                _levelTransitionCoroutine = null;
+                StopCoroutine(m_levelTransitionCoroutine);
+                m_levelTransitionCoroutine = null;
             }
 
-            // Small delay to let death explosion play, then show game over
             StartCoroutine(DelayedGameOver(1.5f));
         }
 
@@ -372,22 +251,17 @@ namespace NeuralBreak.Core
 
         private void OnLevelCompleted(LevelCompletedEvent evt)
         {
-            // Don't process level completion if player is dead
-            if (_isPlayerDead) return;
+            if (m_isPlayerDead) return;
 
             Stats.level = evt.levelNumber + 1;
 
-            // Level complete feedback (Feel package removed)
-
-            // Check for victory
             if (evt.levelNumber >= 99)
             {
                 Victory();
             }
             else
             {
-                // Start transition to next level (track coroutine so we can cancel if player dies)
-                _levelTransitionCoroutine = StartCoroutine(LevelTransition());
+                m_levelTransitionCoroutine = StartCoroutine(LevelTransition());
             }
         }
 
@@ -395,100 +269,66 @@ namespace NeuralBreak.Core
         {
             LogHelper.Log("[GameManager] Level completed - transitioning...");
 
-            // Abort if player died during transition
-            if (_isPlayerDead)
+            if (m_isPlayerDead)
             {
-                _levelTransitionCoroutine = null;
+                m_levelTransitionCoroutine = null;
                 yield break;
             }
 
-            // Clear remaining enemies
-            if (_enemySpawner != null)
+            if (m_enemySpawner != null)
             {
-                _enemySpawner.ClearAllEnemies();
-            }
-            else
-            {
-                Debug.LogWarning("[GameManager] EnemySpawner reference is null during level transition!");
+                m_enemySpawner.ClearAllEnemies();
             }
 
-            // Check if we should show upgrade selection (every level in Rogue mode, every 5 levels in Arcade)
             bool showUpgradeSelection = ShouldShowUpgradeSelection();
 
-            // Don't show upgrade selection if player is dead
-            if (showUpgradeSelection && !_isPlayerDead)
+            if (showUpgradeSelection && !m_isPlayerDead)
             {
-                // Pause game for upgrade selection
-                SetState(GameStateType.RogueChoice);
+                GameStateManager.Instance.EnterRogueChoice();
 
-                // Show upgrade selection screen via UI manager
-                var uiManager = FindFirstObjectByType<UI.UIManager>();
-                if (uiManager != null)
+                EventBus.Publish(new UpgradeSelectionStartedEvent
                 {
-                    // UIManager will show upgrade selection screen
-                    // For now, just publish event to trigger it
-                    EventBus.Publish(new UpgradeSelectionStartedEvent
-                    {
-                        options = new System.Collections.Generic.List<Combat.UpgradeDefinition>()
-                    });
-                }
+                    options = new System.Collections.Generic.List<Combat.UpgradeDefinition>()
+                });
 
-                // Wait for player to select upgrade (with timeout protection)
-                _upgradeSelected = false;
-                float upgradeTimeout = 60f; // Max 60 seconds to select
+                m_upgradeSelected = false;
+                float upgradeTimeout = 60f;
                 float upgradeWaitTime = 0f;
 
-                while (!_upgradeSelected && upgradeWaitTime < upgradeTimeout)
+                while (!m_upgradeSelected && upgradeWaitTime < upgradeTimeout)
                 {
                     yield return null;
                     upgradeWaitTime += Time.unscaledDeltaTime;
                 }
-
-                if (!_upgradeSelected)
-                {
-                    Debug.LogWarning($"[GameManager] Upgrade selection timed out after {upgradeTimeout}s, continuing to next level...");
-                }
             }
             else
             {
-                // Brief pause before next level (no upgrade selection)
                 yield return new WaitForSeconds(2f);
             }
 
-            // Advance to next level
-            if (_levelManager != null)
+            if (m_levelManager != null)
             {
-                _levelManager.AdvanceLevel();
-            }
-            else if (LevelManager.Instance != null)
-            {
-                LevelManager.Instance.AdvanceLevel();
-            }
-            else
-            {
-                Debug.LogError("[GameManager] No LevelManager available for level transition!");
+                m_levelManager.AdvanceLevel();
             }
 
-            // Resume game
-            SetState(GameStateType.Playing);
+            GameStateManager.Instance.ExitRogueChoice();
 
-            // Resume spawning
-            if (_enemySpawner != null)
+            if (m_enemySpawner != null)
             {
-                _enemySpawner.StartSpawning();
+                m_enemySpawner.StartSpawning();
             }
+
+            m_levelTransitionCoroutine = null;
         }
 
         private bool ShouldShowUpgradeSelection()
         {
-            // Always show in Rogue mode
-            if (_currentMode == GameMode.Rogue)
+            if (CurrentMode == GameMode.Rogue)
             {
                 return true;
             }
 
-            // In Arcade mode, use config setting (default: every 1 level for testing)
-            if (_currentMode == GameMode.Arcade)
+            if (CurrentMode == GameMode.Arcade)
             {
                 int interval = ConfigProvider.Balance?.upgradeSystem?.showUpgradeEveryNLevels ?? 5;
                 return Stats.level % interval == 0;
@@ -499,15 +339,34 @@ namespace NeuralBreak.Core
 
         private void OnUpgradeSelected(UpgradeSelectedEvent evt)
         {
-            if (evt.selected != null)
+            m_upgradeSelected = true;
+        }
+
+        #endregion
+
+        #region Initialization Helpers
+
+        /// <summary>
+        /// Ensures GameStateManager exists. Creates one if not present in scene.
+        /// This allows the main scene to run directly without the Boot scene.
+        /// </summary>
+        private void EnsureGameStateManager()
+        {
+            if (GameStateManager.Instance != null) return;
+
+            // Try to find existing in scene
+            var existing = FindFirstObjectByType<GameStateManager>();
+            if (existing != null)
             {
-                LogHelper.Log($"[GameManager] Upgrade selected: {evt.selected.displayName}");
+                existing.Initialize();
+                return;
             }
-            else
-            {
-                LogHelper.LogWarning("[GameManager] No upgrade selected (no upgrades available)");
-            }
-            _upgradeSelected = true;
+
+            // Create one if none exists
+            var go = new GameObject("GameStateManager (Auto-Created)");
+            var gsm = go.AddComponent<GameStateManager>();
+            gsm.Initialize();
+            Debug.Log("[GameManager] Created GameStateManager automatically - add it to scene for production");
         }
 
         #endregion

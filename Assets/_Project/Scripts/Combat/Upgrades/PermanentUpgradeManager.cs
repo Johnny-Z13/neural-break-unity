@@ -1,25 +1,24 @@
 using UnityEngine;
-using NeuralBreak.Core;
-using NeuralBreak.Utils;
 using System.Collections.Generic;
+using NeuralBreak.Core;
+using Z13.Core;
 
 namespace NeuralBreak.Combat
 {
     /// <summary>
     /// Manages permanently selected upgrades during a run.
     /// Tracks active upgrades and calculates combined modifiers.
-    /// Singleton pattern for global access.
     /// </summary>
     public class PermanentUpgradeManager : MonoBehaviour
     {
         public static PermanentUpgradeManager Instance { get; private set; }
 
         // Active upgrades during this run
-        private List<UpgradeDefinition> _activeUpgrades = new List<UpgradeDefinition>();
-        private Dictionary<string, int> _upgradeStacks = new Dictionary<string, int>();
+        private List<UpgradeDefinition> m_activeUpgrades = new List<UpgradeDefinition>();
+        private Dictionary<string, int> m_upgradeStacks = new Dictionary<string, int>();
 
         // Cached combined modifiers (recalculated when upgrades change)
-        private WeaponModifiers _combinedModifiers = WeaponModifiers.Identity;
+        private WeaponModifiers m_combinedModifiers = WeaponModifiers.Identity;
 
         // Events
         public event System.Action<UpgradeDefinition> OnUpgradeAdded;
@@ -29,17 +28,11 @@ namespace NeuralBreak.Combat
 
         private void Awake()
         {
-            Debug.Log($"[PermanentUpgradeManager] Awake called. Current Instance: {(Instance != null ? Instance.gameObject.name : "null")}");
-
             if (Instance != null && Instance != this)
             {
-                Debug.LogWarning($"[PermanentUpgradeManager] Duplicate instance detected, destroying self");
-                Destroy(gameObject);
-                return;
+                Debug.LogWarning("[PermanentUpgradeManager] Multiple instances detected");
             }
             Instance = this;
-
-            Debug.Log($"[PermanentUpgradeManager] Singleton Instance set to: {gameObject.name}");
 
             // Subscribe to game events
             EventBus.Subscribe<GameStartedEvent>(OnGameStarted);
@@ -72,23 +65,23 @@ namespace NeuralBreak.Combat
                 return;
             }
 
-            _activeUpgrades.Add(upgrade);
+            m_activeUpgrades.Add(upgrade);
 
             // Update stack count
-            if (_upgradeStacks.ContainsKey(upgrade.upgradeId))
+            if (m_upgradeStacks.ContainsKey(upgrade.upgradeId))
             {
-                _upgradeStacks[upgrade.upgradeId]++;
+                m_upgradeStacks[upgrade.upgradeId]++;
             }
             else
             {
-                _upgradeStacks[upgrade.upgradeId] = 1;
+                m_upgradeStacks[upgrade.upgradeId] = 1;
             }
 
             RecalculateModifiers();
 
             OnUpgradeAdded?.Invoke(upgrade);
 
-            LogHelper.Log($"[PermanentUpgradeManager] Added upgrade: {upgrade.displayName} (Stack: {_upgradeStacks[upgrade.upgradeId]})");
+            LogHelper.Log($"[PermanentUpgradeManager] Added upgrade: {upgrade.displayName} (Stack: {m_upgradeStacks[upgrade.upgradeId]})");
 
             // Publish event
             EventBus.Publish(new PermanentUpgradeAddedEvent
@@ -102,20 +95,20 @@ namespace NeuralBreak.Combat
         /// </summary>
         public void RemoveUpgrade(string upgradeId)
         {
-            for (int i = _activeUpgrades.Count - 1; i >= 0; i--)
+            for (int i = m_activeUpgrades.Count - 1; i >= 0; i--)
             {
-                if (_activeUpgrades[i].upgradeId == upgradeId)
+                if (m_activeUpgrades[i].upgradeId == upgradeId)
                 {
-                    var upgrade = _activeUpgrades[i];
-                    _activeUpgrades.RemoveAt(i);
+                    var upgrade = m_activeUpgrades[i];
+                    m_activeUpgrades.RemoveAt(i);
 
                     // Update stack count
-                    if (_upgradeStacks.ContainsKey(upgradeId))
+                    if (m_upgradeStacks.ContainsKey(upgradeId))
                     {
-                        _upgradeStacks[upgradeId]--;
-                        if (_upgradeStacks[upgradeId] <= 0)
+                        m_upgradeStacks[upgradeId]--;
+                        if (m_upgradeStacks[upgradeId] <= 0)
                         {
-                            _upgradeStacks.Remove(upgradeId);
+                            m_upgradeStacks.Remove(upgradeId);
                         }
                     }
 
@@ -138,7 +131,7 @@ namespace NeuralBreak.Combat
         /// </summary>
         public bool HasUpgrade(string upgradeId)
         {
-            return _upgradeStacks.ContainsKey(upgradeId);
+            return m_upgradeStacks.ContainsKey(upgradeId);
         }
 
         /// <summary>
@@ -146,7 +139,7 @@ namespace NeuralBreak.Combat
         /// </summary>
         public int GetUpgradeStacks(string upgradeId)
         {
-            return _upgradeStacks.ContainsKey(upgradeId) ? _upgradeStacks[upgradeId] : 0;
+            return m_upgradeStacks.ContainsKey(upgradeId) ? m_upgradeStacks[upgradeId] : 0;
         }
 
         /// <summary>
@@ -154,7 +147,7 @@ namespace NeuralBreak.Combat
         /// </summary>
         public WeaponModifiers GetCombinedModifiers()
         {
-            return _combinedModifiers;
+            return m_combinedModifiers;
         }
 
         /// <summary>
@@ -162,7 +155,7 @@ namespace NeuralBreak.Combat
         /// </summary>
         public List<UpgradeDefinition> GetActiveUpgrades()
         {
-            return new List<UpgradeDefinition>(_activeUpgrades);
+            return new List<UpgradeDefinition>(m_activeUpgrades);
         }
 
         /// <summary>
@@ -170,8 +163,8 @@ namespace NeuralBreak.Combat
         /// </summary>
         public void ClearAllUpgrades()
         {
-            _activeUpgrades.Clear();
-            _upgradeStacks.Clear();
+            m_activeUpgrades.Clear();
+            m_upgradeStacks.Clear();
             RecalculateModifiers();
 
             LogHelper.Log("[PermanentUpgradeManager] All upgrades cleared");
@@ -186,22 +179,22 @@ namespace NeuralBreak.Combat
         /// </summary>
         private void RecalculateModifiers()
         {
-            _combinedModifiers = WeaponModifiers.Identity;
+            m_combinedModifiers = WeaponModifiers.Identity;
 
-            foreach (var upgrade in _activeUpgrades)
+            foreach (var upgrade in m_activeUpgrades)
             {
-                _combinedModifiers = WeaponModifiers.Combine(_combinedModifiers, upgrade.modifiers);
+                m_combinedModifiers = WeaponModifiers.Combine(m_combinedModifiers, upgrade.modifiers);
             }
 
-            OnModifiersChanged?.Invoke(_combinedModifiers);
+            OnModifiersChanged?.Invoke(m_combinedModifiers);
 
             // Publish event
             EventBus.Publish(new WeaponModifiersChangedEvent
             {
-                modifiers = _combinedModifiers
+                modifiers = m_combinedModifiers
             });
 
-            LogHelper.Log($"[PermanentUpgradeManager] Modifiers recalculated: FireRate={_combinedModifiers.fireRateMultiplier:F2}x, Damage={_combinedModifiers.damageMultiplier:F2}x");
+            LogHelper.Log($"[PermanentUpgradeManager] Modifiers recalculated: FireRate={m_combinedModifiers.fireRateMultiplier:F2}x, Damage={m_combinedModifiers.damageMultiplier:F2}x");
         }
 
         #endregion
@@ -226,17 +219,17 @@ namespace NeuralBreak.Combat
         [ContextMenu("Debug: Log Active Upgrades")]
         private void DebugLogActiveUpgrades()
         {
-            LogHelper.Log($"[PermanentUpgradeManager] Active Upgrades: {_activeUpgrades.Count}");
-            foreach (var upgrade in _activeUpgrades)
+            LogHelper.Log($"[PermanentUpgradeManager] Active Upgrades: {m_activeUpgrades.Count}");
+            foreach (var upgrade in m_activeUpgrades)
             {
-                LogHelper.Log($"  - {upgrade.displayName} (Stacks: {_upgradeStacks[upgrade.upgradeId]})");
+                LogHelper.Log($"  - {upgrade.displayName} (Stacks: {m_upgradeStacks[upgrade.upgradeId]})");
             }
         }
 
         [ContextMenu("Debug: Log Combined Modifiers")]
         private void DebugLogModifiers()
         {
-            var m = _combinedModifiers;
+            var m = m_combinedModifiers;
             LogHelper.Log($"[PermanentUpgradeManager] Combined Modifiers:");
             LogHelper.Log($"  FireRate: {m.fireRateMultiplier:F2}x");
             LogHelper.Log($"  Damage: {m.damageMultiplier:F2}x");

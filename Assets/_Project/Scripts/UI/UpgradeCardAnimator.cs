@@ -12,149 +12,149 @@ namespace NeuralBreak.UI
     public class UpgradeCardAnimator : MonoBehaviour
     {
         [Header("Animation Settings")]
-        [SerializeField] private float _entranceDelay = 0f;
-        [SerializeField] private float _entranceDuration = 0.4f;
-        [SerializeField] private float _hoverScale = 1.08f;
-        [SerializeField] private float _hoverSpeed = 12f;
-        [SerializeField] private float _selectPunchScale = 1.2f;
-        [SerializeField] private float _selectDuration = 0.25f;
+        [SerializeField] private float m_entranceDelay = 0f;
+        [SerializeField] private float m_entranceDuration = 0.4f;
+        [SerializeField] private float m_hoverScale = 1.08f;
+        [SerializeField] private float m_hoverSpeed = 12f;
+        [SerializeField] private float m_selectPunchScale = 1.2f;
+        [SerializeField] private float m_selectDuration = 0.25f;
 
         [Header("Glow Settings")]
-        [SerializeField] private float _glowPulseSpeed = 3f;
-        [SerializeField] private float _glowIntensityMin = 0.4f;
-        [SerializeField] private float _glowIntensityMax = 0.9f;
+        [SerializeField] private float m_glowPulseSpeed = 3f;
+        [SerializeField] private float m_glowIntensityMin = 0.4f;
+        [SerializeField] private float m_glowIntensityMax = 0.9f;
 
         [Header("References")]
-        [SerializeField] private Image _background;
-        [SerializeField] private CanvasGroup _canvasGroup;
+        [SerializeField] private Image m_background;
+        [SerializeField] private CanvasGroup m_canvasGroup;
 
         // Selection glow components
-        private Transform _selectionGlow;
-        private Image _glowImage;
-        private Outline[] _glowOutlines;
+        private Transform m_selectionGlow;
+        private Image m_glowImage;
+        private Outline[] m_glowOutlines;
 
-        private UpgradeCard _card;
-        private Vector3 _originalScale;
-        private float _currentScale = 1f;
-        private bool _isHovered = false;
-        private bool _isAnimatingEntrance = false;
-        private float _entranceTimer = 0f;
-        private bool _isAnimatingSelect = false;
-        private float _selectTimer = 0f;
-        private float _glowTime = 0f;
+        private UpgradeCard m_card;
+        private Vector3 m_originalScale;
+        private float m_currentScale = 1f;
+        private bool m_isHovered = false;
+        private bool m_isAnimatingEntrance = false;
+        private float m_entranceTimer = 0f;
+        private bool m_isAnimatingSelect = false;
+        private float m_selectTimer = 0f;
+        private float m_glowTime = 0f;
 
         // Audio
-        private AudioSource _audioSource;
+        private AudioSource m_audioSource;
 
         private void Awake()
         {
-            _card = GetComponent<UpgradeCard>();
+            m_card = GetComponent<UpgradeCard>();
             EnsureCanvasGroup();
             FindSelectionGlow();
             EnsureAudioSource();
 
-            _originalScale = transform.localScale;
-            if (_originalScale == Vector3.zero)
+            m_originalScale = transform.localScale;
+            if (m_originalScale == Vector3.zero)
             {
-                _originalScale = Vector3.one;
+                m_originalScale = Vector3.one;
             }
         }
 
         private void EnsureCanvasGroup()
         {
-            if (_canvasGroup == null)
+            if (m_canvasGroup == null)
             {
-                _canvasGroup = GetComponent<CanvasGroup>();
+                m_canvasGroup = GetComponent<CanvasGroup>();
             }
-            if (_canvasGroup == null)
+            if (m_canvasGroup == null)
             {
-                _canvasGroup = gameObject.AddComponent<CanvasGroup>();
+                m_canvasGroup = gameObject.AddComponent<CanvasGroup>();
             }
         }
 
         private void FindSelectionGlow()
         {
-            _selectionGlow = transform.Find("SelectionGlow");
-            if (_selectionGlow != null)
+            m_selectionGlow = transform.Find("SelectionGlow");
+            if (m_selectionGlow != null)
             {
-                _glowImage = _selectionGlow.GetComponent<Image>();
-                _glowOutlines = _selectionGlow.GetComponents<Outline>();
+                m_glowImage = m_selectionGlow.GetComponent<Image>();
+                m_glowOutlines = m_selectionGlow.GetComponents<Outline>();
             }
         }
 
         private void EnsureAudioSource()
         {
-            _audioSource = GetComponent<AudioSource>();
-            if (_audioSource == null)
+            m_audioSource = GetComponent<AudioSource>();
+            if (m_audioSource == null)
             {
-                _audioSource = gameObject.AddComponent<AudioSource>();
+                m_audioSource = gameObject.AddComponent<AudioSource>();
             }
-            _audioSource.playOnAwake = false;
-            _audioSource.spatialBlend = 0f;
-            _audioSource.volume = 0.5f;
+            m_audioSource.playOnAwake = false;
+            m_audioSource.spatialBlend = 0f;
+            m_audioSource.volume = 0.5f;
         }
 
         private void Update()
         {
             // Entrance animation
-            if (_isAnimatingEntrance)
+            if (m_isAnimatingEntrance)
             {
-                _entranceTimer += Time.unscaledDeltaTime;
-                float t = Mathf.Clamp01(_entranceTimer / _entranceDuration);
+                m_entranceTimer += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(m_entranceTimer / m_entranceDuration);
 
                 // Ease out back for bouncy feel
                 t = 1f - Mathf.Pow(1f - t, 3f);
 
-                if (_canvasGroup != null) _canvasGroup.alpha = t;
-                _currentScale = Mathf.Lerp(0.7f, 1f, t);
+                if (m_canvasGroup != null) m_canvasGroup.alpha = t;
+                m_currentScale = Mathf.Lerp(0.7f, 1f, t);
 
-                if (_entranceTimer >= _entranceDuration)
+                if (m_entranceTimer >= m_entranceDuration)
                 {
-                    _isAnimatingEntrance = false;
-                    if (_canvasGroup != null) _canvasGroup.alpha = 1f;
-                    _currentScale = 1f;
+                    m_isAnimatingEntrance = false;
+                    if (m_canvasGroup != null) m_canvasGroup.alpha = 1f;
+                    m_currentScale = 1f;
                 }
             }
 
             // Selection punch animation
-            if (_isAnimatingSelect)
+            if (m_isAnimatingSelect)
             {
-                _selectTimer += Time.unscaledDeltaTime;
-                float t = _selectTimer / _selectDuration;
+                m_selectTimer += Time.unscaledDeltaTime;
+                float t = m_selectTimer / m_selectDuration;
 
                 if (t <= 0.4f)
                 {
                     // Punch out fast
                     float punchT = t / 0.4f;
                     punchT = 1f - Mathf.Pow(1f - punchT, 2f); // Ease out
-                    _currentScale = Mathf.Lerp(1f, _selectPunchScale, punchT);
+                    m_currentScale = Mathf.Lerp(1f, m_selectPunchScale, punchT);
                 }
                 else
                 {
                     // Settle back
                     float punchT = (t - 0.4f) / 0.6f;
-                    _currentScale = Mathf.Lerp(_selectPunchScale, 1f, punchT);
+                    m_currentScale = Mathf.Lerp(m_selectPunchScale, 1f, punchT);
                 }
 
                 if (t >= 1f)
                 {
-                    _isAnimatingSelect = false;
-                    _currentScale = 1f;
+                    m_isAnimatingSelect = false;
+                    m_currentScale = 1f;
                 }
             }
 
             // Hover scale
-            if (!_isAnimatingSelect && !_isAnimatingEntrance)
+            if (!m_isAnimatingSelect && !m_isAnimatingEntrance)
             {
-                float targetScale = _isHovered ? _hoverScale : 1f;
-                _currentScale = Mathf.Lerp(_currentScale, targetScale, _hoverSpeed * Time.unscaledDeltaTime);
+                float targetScale = m_isHovered ? m_hoverScale : 1f;
+                m_currentScale = Mathf.Lerp(m_currentScale, targetScale, m_hoverSpeed * Time.unscaledDeltaTime);
             }
 
             // Apply scale
-            transform.localScale = _originalScale * _currentScale;
+            transform.localScale = m_originalScale * m_currentScale;
 
             // Update selection glow pulse
-            if (_isHovered && _selectionGlow != null)
+            if (m_isHovered && m_selectionGlow != null)
             {
                 UpdateSelectionGlow();
             }
@@ -162,17 +162,17 @@ namespace NeuralBreak.UI
 
         private void UpdateSelectionGlow()
         {
-            _glowTime += Time.unscaledDeltaTime * _glowPulseSpeed;
-            float pulse = (Mathf.Sin(_glowTime * Mathf.PI * 2f) * 0.5f + 0.5f);
-            float intensity = Mathf.Lerp(_glowIntensityMin, _glowIntensityMax, pulse);
+            m_glowTime += Time.unscaledDeltaTime * m_glowPulseSpeed;
+            float pulse = (Mathf.Sin(m_glowTime * Mathf.PI * 2f) * 0.5f + 0.5f);
+            float intensity = Mathf.Lerp(m_glowIntensityMin, m_glowIntensityMax, pulse);
 
             // Cyan/magenta color shift
             Color glowColor = Color.Lerp(UITheme.Primary, UITheme.Accent, pulse * 0.3f);
             glowColor.a = intensity;
 
-            if (_glowOutlines != null)
+            if (m_glowOutlines != null)
             {
-                foreach (var outline in _glowOutlines)
+                foreach (var outline in m_glowOutlines)
                 {
                     if (outline != null)
                     {
@@ -187,7 +187,7 @@ namespace NeuralBreak.UI
         /// </summary>
         public void PlayEntranceAnimation(float delay = 0f)
         {
-            _entranceDelay = delay;
+            m_entranceDelay = delay;
             StartCoroutine(EntranceCoroutine());
         }
 
@@ -196,32 +196,32 @@ namespace NeuralBreak.UI
             EnsureCanvasGroup();
             FindSelectionGlow();
 
-            if (_originalScale == Vector3.zero)
+            if (m_originalScale == Vector3.zero)
             {
-                _originalScale = transform.localScale;
-                if (_originalScale == Vector3.zero)
+                m_originalScale = transform.localScale;
+                if (m_originalScale == Vector3.zero)
                 {
-                    _originalScale = Vector3.one;
+                    m_originalScale = Vector3.one;
                 }
             }
 
             // Start invisible and small
-            if (_canvasGroup != null)
+            if (m_canvasGroup != null)
             {
-                _canvasGroup.alpha = 0f;
+                m_canvasGroup.alpha = 0f;
             }
-            transform.localScale = _originalScale * 0.7f;
+            transform.localScale = m_originalScale * 0.7f;
 
             // Hide glow initially
             SetGlowVisible(false);
 
-            if (_entranceDelay > 0f)
+            if (m_entranceDelay > 0f)
             {
-                yield return new WaitForSecondsRealtime(_entranceDelay);
+                yield return new WaitForSecondsRealtime(m_entranceDelay);
             }
 
-            _isAnimatingEntrance = true;
-            _entranceTimer = 0f;
+            m_isAnimatingEntrance = true;
+            m_entranceTimer = 0f;
 
             // Play entrance sound
             PlayEntranceSound();
@@ -232,8 +232,8 @@ namespace NeuralBreak.UI
         /// </summary>
         public void PlayHoverEffect()
         {
-            _isHovered = true;
-            _glowTime = 0f;
+            m_isHovered = true;
+            m_glowTime = 0f;
             SetGlowVisible(true);
             PlayHoverSound();
         }
@@ -243,7 +243,7 @@ namespace NeuralBreak.UI
         /// </summary>
         public void StopHoverEffect()
         {
-            _isHovered = false;
+            m_isHovered = false;
             SetGlowVisible(false);
         }
 
@@ -252,17 +252,17 @@ namespace NeuralBreak.UI
         /// </summary>
         public void PlaySelectEffect()
         {
-            _isAnimatingSelect = true;
-            _selectTimer = 0f;
+            m_isAnimatingSelect = true;
+            m_selectTimer = 0f;
 
             // Flash background
-            if (_background != null)
+            if (m_background != null)
             {
                 StartCoroutine(FlashBackground());
             }
 
             // Flash glow bright
-            if (_selectionGlow != null)
+            if (m_selectionGlow != null)
             {
                 StartCoroutine(FlashGlow());
             }
@@ -272,14 +272,14 @@ namespace NeuralBreak.UI
 
         private void SetGlowVisible(bool visible)
         {
-            if (_glowOutlines == null) return;
+            if (m_glowOutlines == null) return;
 
-            foreach (var outline in _glowOutlines)
+            foreach (var outline in m_glowOutlines)
             {
                 if (outline != null)
                 {
                     outline.effectColor = visible
-                        ? UITheme.Primary.WithAlpha(_glowIntensityMin)
+                        ? UITheme.Primary.WithAlpha(m_glowIntensityMin)
                         : Color.clear;
                 }
             }
@@ -287,7 +287,7 @@ namespace NeuralBreak.UI
 
         private System.Collections.IEnumerator FlashBackground()
         {
-            Color originalColor = _background.color;
+            Color originalColor = m_background.color;
             Color flashColor = UITheme.Primary.WithAlpha(0.6f);
 
             float duration = 0.15f;
@@ -298,7 +298,7 @@ namespace NeuralBreak.UI
             {
                 timer += Time.unscaledDeltaTime;
                 float t = timer / (duration * 0.3f);
-                _background.color = Color.Lerp(originalColor, flashColor, t);
+                m_background.color = Color.Lerp(originalColor, flashColor, t);
                 yield return null;
             }
 
@@ -308,16 +308,16 @@ namespace NeuralBreak.UI
             {
                 timer += Time.unscaledDeltaTime;
                 float t = timer / (duration * 0.7f);
-                _background.color = Color.Lerp(flashColor, originalColor, t);
+                m_background.color = Color.Lerp(flashColor, originalColor, t);
                 yield return null;
             }
 
-            _background.color = originalColor;
+            m_background.color = originalColor;
         }
 
         private System.Collections.IEnumerator FlashGlow()
         {
-            if (_glowOutlines == null) yield break;
+            if (m_glowOutlines == null) yield break;
 
             Color flashColor = Color.white;
             float duration = 0.2f;
@@ -328,9 +328,9 @@ namespace NeuralBreak.UI
                 timer += Time.unscaledDeltaTime;
                 float t = timer / duration;
                 Color currentColor = Color.Lerp(flashColor, UITheme.Primary, t);
-                currentColor.a = Mathf.Lerp(1f, _glowIntensityMax, t);
+                currentColor.a = Mathf.Lerp(1f, m_glowIntensityMax, t);
 
-                foreach (var outline in _glowOutlines)
+                foreach (var outline in m_glowOutlines)
                 {
                     if (outline != null)
                     {
@@ -370,7 +370,7 @@ namespace NeuralBreak.UI
 
         private void PlayProceduralSound(float duration, float startFreq, float endFreq, float volume)
         {
-            if (_audioSource == null) return;
+            if (m_audioSource == null) return;
 
             int sampleRate = 44100;
             int sampleCount = Mathf.RoundToInt(sampleRate * duration);
@@ -396,7 +396,7 @@ namespace NeuralBreak.UI
             AudioClip clip = AudioClip.Create("ProceduralUI", sampleCount, 1, sampleRate, false);
             clip.SetData(samples, 0);
 
-            _audioSource.PlayOneShot(clip, 1f);
+            m_audioSource.PlayOneShot(clip, 1f);
         }
 
         #endregion

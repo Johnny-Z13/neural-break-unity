@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using NeuralBreak.Core;
-using NeuralBreak.Utils;
+using Z13.Core;
 
 namespace NeuralBreak.Combat
 {
@@ -12,31 +11,31 @@ namespace NeuralBreak.Combat
     public class WeaponSystemDebug : MonoBehaviour
     {
         [Header("References")]
-        [SerializeField] private WeaponSystem _weaponSystem;
-        [SerializeField] private PermanentUpgradeManager _permanentUpgrades;
+        [SerializeField] private WeaponSystem m_weaponSystem;
+        [SerializeField] private PermanentUpgradeManager m_permanentUpgrades;
 
         [Header("Debug UI")]
-        [SerializeField] private bool _showDebugUI = true;
-        [SerializeField] private int _fontSize = 16;
+        [SerializeField] private bool m_showDebugUI = true;
+        [SerializeField] private int m_fontSize = 16;
 
-        private bool _showHelp = false;
+        private bool m_showHelp = false;
 
         private void Awake()
         {
-            if (_weaponSystem == null)
+            if (m_weaponSystem == null)
             {
-                _weaponSystem = FindFirstObjectByType<WeaponSystem>();
+                m_weaponSystem = FindFirstObjectByType<WeaponSystem>();
             }
 
-            if (_permanentUpgrades == null)
+            if (m_permanentUpgrades == null)
             {
-                _permanentUpgrades = PermanentUpgradeManager.Instance;
+                m_permanentUpgrades = PermanentUpgradeManager.Instance;
             }
         }
 
         private void Update()
         {
-            if (!_showDebugUI) return;
+            if (!m_showDebugUI) return;
 
             var keyboard = Keyboard.current;
             if (keyboard == null) return;
@@ -44,7 +43,7 @@ namespace NeuralBreak.Combat
             // Toggle help
             if (keyboard.hKey.wasPressedThisFrame)
             {
-                _showHelp = !_showHelp;
+                m_showHelp = !m_showHelp;
             }
 
             // Quick test upgrades (numpad keys)
@@ -84,17 +83,17 @@ namespace NeuralBreak.Combat
 
         private void OnGUI()
         {
-            if (!_showDebugUI) return;
+            if (!m_showDebugUI) return;
 
             GUIStyle labelStyle = new GUIStyle(GUI.skin.label)
             {
-                fontSize = _fontSize,
+                fontSize = m_fontSize,
                 normal = { textColor = Color.white }
             };
 
             GUIStyle headerStyle = new GUIStyle(GUI.skin.label)
             {
-                fontSize = _fontSize + 4,
+                fontSize = m_fontSize + 4,
                 fontStyle = FontStyle.Bold,
                 normal = { textColor = Color.cyan }
             };
@@ -105,21 +104,21 @@ namespace NeuralBreak.Combat
             GUILayout.Space(10);
 
             // Current state
-            if (_weaponSystem != null)
+            if (m_weaponSystem != null)
             {
-                GUILayout.Label($"Power Level: {_weaponSystem.PowerLevel}/{_weaponSystem.MaxPowerLevel}", labelStyle);
-                GUILayout.Label($"Pattern: {_weaponSystem.CurrentPattern}", labelStyle);
-                GUILayout.Label($"Heat: {_weaponSystem.HeatPercent:P0}", labelStyle);
-                GUILayout.Label($"Overheated: {_weaponSystem.IsOverheated}", labelStyle);
+                GUILayout.Label($"Power Level: {m_weaponSystem.PowerLevel}/{m_weaponSystem.MaxPowerLevel}", labelStyle);
+                GUILayout.Label($"Pattern: {m_weaponSystem.CurrentPattern}", labelStyle);
+                GUILayout.Label($"Heat: {m_weaponSystem.HeatPercent:P0}", labelStyle);
+                GUILayout.Label($"Overheated: {m_weaponSystem.IsOverheated}", labelStyle);
             }
 
             GUILayout.Space(10);
 
             // Active upgrades
-            if (_permanentUpgrades != null)
+            if (m_permanentUpgrades != null)
             {
-                var modifiers = _permanentUpgrades.GetCombinedModifiers();
-                var activeUpgrades = _permanentUpgrades.GetActiveUpgrades();
+                var modifiers = m_permanentUpgrades.GetCombinedModifiers();
+                var activeUpgrades = m_permanentUpgrades.GetActiveUpgrades();
 
                 GUILayout.Label($"Active Upgrades: {activeUpgrades.Count}", headerStyle);
 
@@ -142,7 +141,7 @@ namespace NeuralBreak.Combat
             // Help text
             GUILayout.Label("Press [H] for controls", labelStyle);
 
-            if (_showHelp)
+            if (m_showHelp)
             {
                 GUILayout.Space(5);
                 GUILayout.Label("=== CONTROLS ===", headerStyle);
@@ -168,7 +167,7 @@ namespace NeuralBreak.Combat
             upgrade.modifiers = WeaponModifiers.Identity;
             upgrade.modifiers.enableHoming = true;
             upgrade.modifiers.homingStrength = 5f;
-            _permanentUpgrades?.AddUpgrade(upgrade);
+            m_permanentUpgrades?.AddUpgrade(upgrade);
         }
 
         private void TestPiercing()
@@ -177,7 +176,7 @@ namespace NeuralBreak.Combat
             var upgrade = CreateTestUpgrade("test_piercing", "Test Piercing", "Pierce 3 enemies");
             upgrade.modifiers = WeaponModifiers.Identity;
             upgrade.modifiers.piercingCount = 3;
-            _permanentUpgrades?.AddUpgrade(upgrade);
+            m_permanentUpgrades?.AddUpgrade(upgrade);
         }
 
         private void TestExplosion()
@@ -187,7 +186,7 @@ namespace NeuralBreak.Combat
             upgrade.modifiers = WeaponModifiers.Identity;
             upgrade.modifiers.enableExplosion = true;
             upgrade.modifiers.explosionRadius = 2f;
-            _permanentUpgrades?.AddUpgrade(upgrade);
+            m_permanentUpgrades?.AddUpgrade(upgrade);
         }
 
         private void TestChainLightning()
@@ -197,7 +196,7 @@ namespace NeuralBreak.Combat
             upgrade.modifiers = WeaponModifiers.Identity;
             upgrade.modifiers.enableChainLightning = true;
             upgrade.modifiers.chainLightningTargets = 4;
-            _permanentUpgrades?.AddUpgrade(upgrade);
+            m_permanentUpgrades?.AddUpgrade(upgrade);
         }
 
         private void TestRicochet()
@@ -207,7 +206,7 @@ namespace NeuralBreak.Combat
             upgrade.modifiers = WeaponModifiers.Identity;
             upgrade.modifiers.enableRicochet = true;
             upgrade.modifiers.ricochetCount = 3;
-            _permanentUpgrades?.AddUpgrade(upgrade);
+            m_permanentUpgrades?.AddUpgrade(upgrade);
         }
 
         private void TestBeam()
@@ -217,7 +216,7 @@ namespace NeuralBreak.Combat
             upgrade.modifiers = WeaponModifiers.Identity;
             upgrade.modifiers.enableBeamWeapon = true;
             upgrade.modifiers.beamDuration = 0.5f;
-            _permanentUpgrades?.AddUpgrade(upgrade);
+            m_permanentUpgrades?.AddUpgrade(upgrade);
         }
 
         private void TestCombo()
@@ -236,13 +235,13 @@ namespace NeuralBreak.Combat
             upgrade.modifiers.ricochetCount = 3;
             upgrade.modifiers.fireRateMultiplier = 2f;
             upgrade.modifiers.damageMultiplier = 1.5f;
-            _permanentUpgrades?.AddUpgrade(upgrade);
+            m_permanentUpgrades?.AddUpgrade(upgrade);
         }
 
         private void ClearAllUpgrades()
         {
             LogHelper.Log("[WeaponSystemDebug] Clearing all upgrades...");
-            _permanentUpgrades?.ClearAllUpgrades();
+            m_permanentUpgrades?.ClearAllUpgrades();
         }
 
         private UpgradeDefinition CreateTestUpgrade(string id, string name, string desc)

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using NeuralBreak.Core;
+using Z13.Core;
 
 namespace NeuralBreak.Graphics
 {
@@ -13,35 +14,35 @@ namespace NeuralBreak.Graphics
     {
 
         [Header("Explosion Effects")]
-        [SerializeField] private ParticleSystem _smallExplosionPrefab;
-        [SerializeField] private ParticleSystem _mediumExplosionPrefab;
-        [SerializeField] private ParticleSystem _largeExplosionPrefab;
-        [SerializeField] private ParticleSystem _bossExplosionPrefab;
+        [SerializeField] private ParticleSystem m_smallExplosionPrefab;
+        [SerializeField] private ParticleSystem m_mediumExplosionPrefab;
+        [SerializeField] private ParticleSystem m_largeExplosionPrefab;
+        [SerializeField] private ParticleSystem m_bossExplosionPrefab;
 
         [Header("Hit Effects")]
-        [SerializeField] private ParticleSystem _bulletHitPrefab;
-        [SerializeField] private ParticleSystem _playerHitPrefab;
-        [SerializeField] private ParticleSystem _shieldHitPrefab;
+        [SerializeField] private ParticleSystem m_bulletHitPrefab;
+        [SerializeField] private ParticleSystem m_playerHitPrefab;
+        [SerializeField] private ParticleSystem m_shieldHitPrefab;
 
         [Header("Pickup Effects")]
-        [SerializeField] private ParticleSystem _pickupCollectPrefab;
-        [SerializeField] private ParticleSystem _powerUpPrefab;
-        [SerializeField] private ParticleSystem _healPrefab;
+        [SerializeField] private ParticleSystem m_pickupCollectPrefab;
+        [SerializeField] private ParticleSystem m_powerUpPrefab;
+        [SerializeField] private ParticleSystem m_healPrefab;
 
         [Header("Special Effects")]
-        [SerializeField] private ParticleSystem _invulnerabilityPrefab;
-        [SerializeField] private ParticleSystem _comboEffectPrefab;
-        [SerializeField] private ParticleSystem _levelUpPrefab;
+        [SerializeField] private ParticleSystem m_invulnerabilityPrefab;
+        [SerializeField] private ParticleSystem m_comboEffectPrefab;
+        [SerializeField] private ParticleSystem m_levelUpPrefab;
 
         [Header("Pool Settings")]
-        [SerializeField] private int _poolSizePerEffect = 20;
-        [SerializeField] private Transform _effectContainer;
+        [SerializeField] private int m_poolSizePerEffect = 20;
+        [SerializeField] private Transform m_effectContainer;
 
         // Particle pools
-        private Dictionary<ParticleSystem, Queue<ParticleSystem>> _particlePools = new Dictionary<ParticleSystem, Queue<ParticleSystem>>();
+        private Dictionary<ParticleSystem, Queue<ParticleSystem>> m_particlePools = new Dictionary<ParticleSystem, Queue<ParticleSystem>>();
 
         // Cached references
-        private Transform _playerTransform;
+        private Transform m_playerTransform;
 
         private void Awake()
         {
@@ -80,9 +81,9 @@ namespace NeuralBreak.Graphics
             // First, try to find player if not cached
             CachePlayerTransform();
 
-            if (_playerTransform != null)
+            if (m_playerTransform != null)
             {
-                var spriteRenderer = _playerTransform.GetComponent<SpriteRenderer>();
+                var spriteRenderer = m_playerTransform.GetComponent<SpriteRenderer>();
                 if (spriteRenderer != null)
                 {
                     spriteRenderer.enabled = true;
@@ -114,15 +115,15 @@ namespace NeuralBreak.Graphics
             // Choose explosion size based on enemy type
             ParticleSystem prefab = evt.enemyType switch
             {
-                EnemyType.DataMite => _smallExplosionPrefab,
-                EnemyType.Fizzer => _smallExplosionPrefab,
-                EnemyType.ScanDrone => _mediumExplosionPrefab,
-                EnemyType.UFO => _mediumExplosionPrefab,
-                EnemyType.ChaosWorm => _largeExplosionPrefab,
-                EnemyType.VoidSphere => _largeExplosionPrefab,
-                EnemyType.CrystalShard => _mediumExplosionPrefab,
-                EnemyType.Boss => _bossExplosionPrefab,
-                _ => _smallExplosionPrefab
+                EnemyType.DataMite => m_smallExplosionPrefab,
+                EnemyType.Fizzer => m_smallExplosionPrefab,
+                EnemyType.ScanDrone => m_mediumExplosionPrefab,
+                EnemyType.UFO => m_mediumExplosionPrefab,
+                EnemyType.ChaosWorm => m_largeExplosionPrefab,
+                EnemyType.VoidSphere => m_largeExplosionPrefab,
+                EnemyType.CrystalShard => m_mediumExplosionPrefab,
+                EnemyType.Boss => m_bossExplosionPrefab,
+                _ => m_smallExplosionPrefab
             };
 
             // Get color based on enemy type
@@ -134,12 +135,12 @@ namespace NeuralBreak.Graphics
         private void OnEnemyDamaged(EnemyDamagedEvent evt)
         {
             // Small hit effect
-            PlayEffect(_bulletHitPrefab, evt.position, Color.white);
+            PlayEffect(m_bulletHitPrefab, evt.position, Color.white);
         }
 
         private void OnPlayerDamaged(PlayerDamagedEvent evt)
         {
-            PlayEffect(_playerHitPrefab, evt.damageSource, Color.red);
+            PlayEffect(m_playerHitPrefab, evt.damageSource, Color.red);
         }
 
         private void OnPlayerDied(PlayerDiedEvent evt)
@@ -149,9 +150,9 @@ namespace NeuralBreak.Graphics
 
             // Hide player ship
             CachePlayerTransform();
-            if (_playerTransform != null)
+            if (m_playerTransform != null)
             {
-                var spriteRenderer = _playerTransform.GetComponent<SpriteRenderer>();
+                var spriteRenderer = m_playerTransform.GetComponent<SpriteRenderer>();
                 if (spriteRenderer != null)
                 {
                     spriteRenderer.enabled = false;
@@ -162,18 +163,18 @@ namespace NeuralBreak.Graphics
         private void OnPlayerHealed(PlayerHealedEvent evt)
         {
             CachePlayerTransform();
-            if (_playerTransform != null)
+            if (m_playerTransform != null)
             {
-                PlayEffect(_healPrefab, _playerTransform.position, Color.green);
+                PlayEffect(m_healPrefab, m_playerTransform.position, Color.green);
             }
         }
 
         private void OnShieldChanged(ShieldChangedEvent evt)
         {
             CachePlayerTransform();
-            if (_playerTransform != null)
+            if (m_playerTransform != null)
             {
-                PlayEffect(_shieldHitPrefab, _playerTransform.position, Color.cyan);
+                PlayEffect(m_shieldHitPrefab, m_playerTransform.position, Color.cyan);
             }
         }
 
@@ -189,15 +190,15 @@ namespace NeuralBreak.Graphics
                 _ => Color.white
             };
 
-            PlayEffect(_pickupCollectPrefab, evt.position, pickupColor);
+            PlayEffect(m_pickupCollectPrefab, evt.position, pickupColor);
 
             // Special effect for invulnerable
             if (evt.pickupType == PickupType.Invulnerable)
             {
                 CachePlayerTransform();
-                if (_playerTransform != null)
+                if (m_playerTransform != null)
                 {
-                    PlayEffect(_invulnerabilityPrefab, _playerTransform.position, Color.yellow);
+                    PlayEffect(m_invulnerabilityPrefab, m_playerTransform.position, Color.yellow);
                 }
             }
         }
@@ -208,9 +209,9 @@ namespace NeuralBreak.Graphics
             if (evt.comboCount > 0 && evt.comboCount % 10 == 0)
             {
                 CachePlayerTransform();
-                if (_playerTransform != null)
+                if (m_playerTransform != null)
                 {
-                    PlayEffect(_comboEffectPrefab, _playerTransform.position, Color.magenta);
+                    PlayEffect(m_comboEffectPrefab, m_playerTransform.position, Color.magenta);
                 }
             }
         }
@@ -218,20 +219,20 @@ namespace NeuralBreak.Graphics
         private void OnPowerUpChanged(PowerUpChangedEvent evt)
         {
             CachePlayerTransform();
-            if (_playerTransform != null)
+            if (m_playerTransform != null)
             {
-                PlayEffect(_powerUpPrefab, _playerTransform.position, new Color(1f, 0.8f, 0f));
+                PlayEffect(m_powerUpPrefab, m_playerTransform.position, new Color(1f, 0.8f, 0f));
             }
         }
 
         private void CachePlayerTransform()
         {
-            if (_playerTransform == null)
+            if (m_playerTransform == null)
             {
                 var playerGO = GameObject.FindGameObjectWithTag("Player");
                 if (playerGO != null)
                 {
-                    _playerTransform = playerGO.transform;
+                    m_playerTransform = playerGO.transform;
                 }
             }
         }
@@ -247,11 +248,11 @@ namespace NeuralBreak.Graphics
         {
             ParticleSystem prefab = size switch
             {
-                ExplosionSize.Small => _smallExplosionPrefab,
-                ExplosionSize.Medium => _mediumExplosionPrefab,
-                ExplosionSize.Large => _largeExplosionPrefab,
-                ExplosionSize.Boss => _bossExplosionPrefab,
-                _ => _smallExplosionPrefab
+                ExplosionSize.Small => m_smallExplosionPrefab,
+                ExplosionSize.Medium => m_mediumExplosionPrefab,
+                ExplosionSize.Large => m_largeExplosionPrefab,
+                ExplosionSize.Boss => m_bossExplosionPrefab,
+                _ => m_smallExplosionPrefab
             };
 
             PlayEffect(prefab, position, color ?? Color.white);
@@ -262,7 +263,7 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void PlayHitEffect(Vector3 position, Color? color = null)
         {
-            PlayEffect(_bulletHitPrefab, position, color ?? Color.white);
+            PlayEffect(m_bulletHitPrefab, position, color ?? Color.white);
         }
 
         /// <summary>
@@ -309,29 +310,29 @@ namespace NeuralBreak.Graphics
 
         private void InitializePools()
         {
-            if (_effectContainer == null)
+            if (m_effectContainer == null)
             {
-                _effectContainer = new GameObject("VFX_Pool").transform;
-                _effectContainer.SetParent(transform);
+                m_effectContainer = new GameObject("VFX_Pool").transform;
+                m_effectContainer.SetParent(transform);
             }
 
             // Create default effects if not assigned
             CreateDefaultEffectsIfNeeded();
 
             // Initialize pools for each prefab
-            InitializePool(_smallExplosionPrefab);
-            InitializePool(_mediumExplosionPrefab);
-            InitializePool(_largeExplosionPrefab);
-            InitializePool(_bossExplosionPrefab);
-            InitializePool(_bulletHitPrefab);
-            InitializePool(_playerHitPrefab);
-            InitializePool(_shieldHitPrefab);
-            InitializePool(_pickupCollectPrefab);
-            InitializePool(_powerUpPrefab);
-            InitializePool(_healPrefab);
-            InitializePool(_invulnerabilityPrefab);
-            InitializePool(_comboEffectPrefab);
-            InitializePool(_levelUpPrefab);
+            InitializePool(m_smallExplosionPrefab);
+            InitializePool(m_mediumExplosionPrefab);
+            InitializePool(m_largeExplosionPrefab);
+            InitializePool(m_bossExplosionPrefab);
+            InitializePool(m_bulletHitPrefab);
+            InitializePool(m_playerHitPrefab);
+            InitializePool(m_shieldHitPrefab);
+            InitializePool(m_pickupCollectPrefab);
+            InitializePool(m_powerUpPrefab);
+            InitializePool(m_healPrefab);
+            InitializePool(m_invulnerabilityPrefab);
+            InitializePool(m_comboEffectPrefab);
+            InitializePool(m_levelUpPrefab);
         }
 
         private void CreateDefaultEffectsIfNeeded()
@@ -339,44 +340,44 @@ namespace NeuralBreak.Graphics
             // Create simple particle effects if prefabs not assigned
             // This allows the game to run without designer-created effects
 
-            if (_smallExplosionPrefab == null)
-                _smallExplosionPrefab = ParticleEffectFactory.CreateExplosion(_effectContainer, "SmallExplosion", 0.5f, 15, Color.white);
+            if (m_smallExplosionPrefab == null)
+                m_smallExplosionPrefab = ParticleEffectFactory.CreateExplosion(m_effectContainer, "SmallExplosion", 0.5f, 15, Color.white);
 
-            if (_mediumExplosionPrefab == null)
-                _mediumExplosionPrefab = ParticleEffectFactory.CreateExplosion(_effectContainer, "MediumExplosion", 1f, 25, Color.white);
+            if (m_mediumExplosionPrefab == null)
+                m_mediumExplosionPrefab = ParticleEffectFactory.CreateExplosion(m_effectContainer, "MediumExplosion", 1f, 25, Color.white);
 
-            if (_largeExplosionPrefab == null)
-                _largeExplosionPrefab = ParticleEffectFactory.CreateExplosion(_effectContainer, "LargeExplosion", 2f, 40, Color.white);
+            if (m_largeExplosionPrefab == null)
+                m_largeExplosionPrefab = ParticleEffectFactory.CreateExplosion(m_effectContainer, "LargeExplosion", 2f, 40, Color.white);
 
-            if (_bossExplosionPrefab == null)
-                _bossExplosionPrefab = ParticleEffectFactory.CreateExplosion(_effectContainer, "BossExplosion", 4f, 80, Color.red);
+            if (m_bossExplosionPrefab == null)
+                m_bossExplosionPrefab = ParticleEffectFactory.CreateExplosion(m_effectContainer, "BossExplosion", 4f, 80, Color.red);
 
-            if (_bulletHitPrefab == null)
-                _bulletHitPrefab = ParticleEffectFactory.CreateHitSpark(_effectContainer, "BulletHit", Color.yellow);
+            if (m_bulletHitPrefab == null)
+                m_bulletHitPrefab = ParticleEffectFactory.CreateHitSpark(m_effectContainer, "BulletHit", Color.yellow);
 
-            if (_playerHitPrefab == null)
-                _playerHitPrefab = ParticleEffectFactory.CreateHitSpark(_effectContainer, "PlayerHit", Color.red);
+            if (m_playerHitPrefab == null)
+                m_playerHitPrefab = ParticleEffectFactory.CreateHitSpark(m_effectContainer, "PlayerHit", Color.red);
 
-            if (_shieldHitPrefab == null)
-                _shieldHitPrefab = ParticleEffectFactory.CreateHitSpark(_effectContainer, "ShieldHit", Color.cyan);
+            if (m_shieldHitPrefab == null)
+                m_shieldHitPrefab = ParticleEffectFactory.CreateHitSpark(m_effectContainer, "ShieldHit", Color.cyan);
 
-            if (_pickupCollectPrefab == null)
-                _pickupCollectPrefab = ParticleEffectFactory.CreatePickupEffect(_effectContainer, "PickupCollect", Color.white);
+            if (m_pickupCollectPrefab == null)
+                m_pickupCollectPrefab = ParticleEffectFactory.CreatePickupEffect(m_effectContainer, "PickupCollect", Color.white);
 
-            if (_powerUpPrefab == null)
-                _powerUpPrefab = ParticleEffectFactory.CreatePickupEffect(_effectContainer, "PowerUp", new Color(1f, 0.8f, 0f));
+            if (m_powerUpPrefab == null)
+                m_powerUpPrefab = ParticleEffectFactory.CreatePickupEffect(m_effectContainer, "PowerUp", new Color(1f, 0.8f, 0f));
 
-            if (_healPrefab == null)
-                _healPrefab = ParticleEffectFactory.CreatePickupEffect(_effectContainer, "Heal", Color.green);
+            if (m_healPrefab == null)
+                m_healPrefab = ParticleEffectFactory.CreatePickupEffect(m_effectContainer, "Heal", Color.green);
 
-            if (_invulnerabilityPrefab == null)
-                _invulnerabilityPrefab = ParticleEffectFactory.CreatePickupEffect(_effectContainer, "Invulnerability", Color.yellow);
+            if (m_invulnerabilityPrefab == null)
+                m_invulnerabilityPrefab = ParticleEffectFactory.CreatePickupEffect(m_effectContainer, "Invulnerability", Color.yellow);
 
-            if (_comboEffectPrefab == null)
-                _comboEffectPrefab = ParticleEffectFactory.CreateExplosion(_effectContainer, "ComboEffect", 1.5f, 30, Color.magenta);
+            if (m_comboEffectPrefab == null)
+                m_comboEffectPrefab = ParticleEffectFactory.CreateExplosion(m_effectContainer, "ComboEffect", 1.5f, 30, Color.magenta);
 
-            if (_levelUpPrefab == null)
-                _levelUpPrefab = ParticleEffectFactory.CreateExplosion(_effectContainer, "LevelUp", 2f, 50, Color.cyan);
+            if (m_levelUpPrefab == null)
+                m_levelUpPrefab = ParticleEffectFactory.CreateExplosion(m_effectContainer, "LevelUp", 2f, 50, Color.cyan);
         }
 
         private void InitializePool(ParticleSystem prefab)
@@ -385,25 +386,25 @@ namespace NeuralBreak.Graphics
 
             var pool = new Queue<ParticleSystem>();
 
-            for (int i = 0; i < _poolSizePerEffect; i++)
+            for (int i = 0; i < m_poolSizePerEffect; i++)
             {
-                ParticleSystem instance = Instantiate(prefab, _effectContainer);
+                ParticleSystem instance = Instantiate(prefab, m_effectContainer);
                 instance.gameObject.SetActive(false);
                 pool.Enqueue(instance);
             }
 
-            _particlePools[prefab] = pool;
+            m_particlePools[prefab] = pool;
         }
 
         private ParticleSystem GetFromPool(ParticleSystem prefab)
         {
             if (prefab == null) return null;
 
-            if (!_particlePools.TryGetValue(prefab, out var pool))
+            if (!m_particlePools.TryGetValue(prefab, out var pool))
             {
                 // Create pool on demand
                 InitializePool(prefab);
-                pool = _particlePools[prefab];
+                pool = m_particlePools[prefab];
             }
 
             if (pool.Count > 0)
@@ -412,7 +413,7 @@ namespace NeuralBreak.Graphics
             }
 
             // Pool exhausted, create new instance
-            ParticleSystem newInstance = Instantiate(prefab, _effectContainer);
+            ParticleSystem newInstance = Instantiate(prefab, m_effectContainer);
             return newInstance;
         }
 
@@ -421,7 +422,7 @@ namespace NeuralBreak.Graphics
             effect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             effect.gameObject.SetActive(false);
 
-            if (_particlePools.TryGetValue(prefab, out var pool))
+            if (m_particlePools.TryGetValue(prefab, out var pool))
             {
                 pool.Enqueue(effect);
             }

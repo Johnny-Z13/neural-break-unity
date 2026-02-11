@@ -2,6 +2,7 @@ using UnityEngine;
 using NeuralBreak.Core;
 using NeuralBreak.Entities;
 using NeuralBreak.Config;
+using Z13.Core;
 
 namespace NeuralBreak.Graphics
 {
@@ -19,96 +20,96 @@ namespace NeuralBreak.Graphics
     public class CameraController : MonoBehaviour
     {
         [Header("Target")]
-        [SerializeField] private Transform _target;
-        [SerializeField] private Vector3 _offset = new Vector3(0, 0, -10);
+        [SerializeField] private Transform m_target;
+        [SerializeField] private Vector3 m_offset = new Vector3(0, 0, -10);
 
         [Header("Follow Settings")]
-        [SerializeField] private float _followSpeed = 5f;
-        [SerializeField] private float _deadZone = 0.5f;
+        [SerializeField] private float m_followSpeed = 5f;
+        [SerializeField] private float m_deadZone = 0.5f;
 
         [Header("Dynamic Zoom")]
-        [SerializeField] private bool _enableDynamicZoom = true;
+        [SerializeField] private bool m_enableDynamicZoom = true;
         [Tooltip("Minimum zoom - zoomed IN, tight view")]
-        [SerializeField] private float _minZoom = 5f;
+        [SerializeField] private float m_minZoom = 5f;
         [Tooltip("Maximum zoom - zoomed OUT for many enemies")]
-        [SerializeField] private float _maxZoom = 18f;
+        [SerializeField] private float m_maxZoom = 18f;
         [Tooltip("Base/default camera size - starts here with 0 enemies")]
-        [SerializeField] private float _baseSize = 8f;
+        [SerializeField] private float m_baseSize = 8f;
         [Tooltip("How fast zoom changes")]
-        [SerializeField] private float _zoomSpeed = 4f;
+        [SerializeField] private float m_zoomSpeed = 4f;
         [Tooltip("Enemy count for max intensity")]
-        [SerializeField] private int _maxEnemiesForZoom = 15;
+        [SerializeField] private int m_maxEnemiesForZoom = 15;
         [Tooltip("Combo count for max intensity")]
-        [SerializeField] private int _maxComboForZoom = 10;
+        [SerializeField] private int m_maxComboForZoom = 10;
 
         [Header("Screen Shake")]
-        [SerializeField] private float _shakeDecay = 0.85f;
-        [SerializeField] private float _maxShakeOffset = 1.5f;
-        [SerializeField] private float _shakeMultiplier = 1.5f;
-        [SerializeField] private bool _shakeEnabled = true;
+        [SerializeField] private float m_shakeDecay = 0.85f;
+        [SerializeField] private float m_maxShakeOffset = 1.5f;
+        [SerializeField] private float m_shakeMultiplier = 1.5f;
+        [SerializeField] private bool m_shakeEnabled = true;
 
         // Note: MMFeedbacks removed
 
         // Components
-        private Camera _camera;
+        private Camera m_camera;
 
         // Shake state
-        private float _shakeIntensity;
-        private float _shakeDuration;
-        private float _shakeTimer;
-        private Vector3 _shakeOffset;
+        private float m_shakeIntensity;
+        private float m_shakeDuration;
+        private float m_shakeTimer;
+        private Vector3 m_shakeOffset;
 
         // Cached for zero-allocation updates
-        private Vector3 _cachedShakeOffset;
+        private Vector3 m_cachedShakeOffset;
 
         // Dynamic zoom state (from TypeScript)
-        private float _targetSize;
-        private float _currentSize;
-        private float _gameplayIntensity;
-        private int _enemyCount;
-        private int _comboCount;
+        private float m_targetSize;
+        private float m_currentSize;
+        private float m_gameplayIntensity;
+        private int m_enemyCount;
+        private int m_comboCount;
 
         // Throttle timer for zoom calculations (TS: 50ms interval)
-        private float _zoomThrottleTimer;
+        private float m_zoomThrottleTimer;
         private const float ZOOM_THROTTLE_INTERVAL = 0.05f;
 
         // Public accessors
-        public Camera Camera => _camera;
-        public float CurrentSize => _camera != null ? _camera.orthographicSize : _baseSize;
-        public float GameplayIntensity => _gameplayIntensity;
+        public Camera Camera => m_camera;
+        public float CurrentSize => m_camera != null ? m_camera.orthographicSize : m_baseSize;
+        public float GameplayIntensity => m_gameplayIntensity;
 
         private void Awake()
         {
-            _camera = GetComponent<Camera>();
-            if (_camera == null)
+            m_camera = GetComponent<Camera>();
+            if (m_camera == null)
             {
-                _camera = Camera.main;
+                m_camera = Camera.main;
             }
 
             // Initialize at base size (comfortable starting view)
-            _targetSize = _baseSize;
-            _currentSize = _baseSize;
-            _enemyCount = 0;
-            _comboCount = 0;
-            _gameplayIntensity = 0f;
+            m_targetSize = m_baseSize;
+            m_currentSize = m_baseSize;
+            m_enemyCount = 0;
+            m_comboCount = 0;
+            m_gameplayIntensity = 0f;
 
-            if (_camera != null)
+            if (m_camera != null)
             {
-                _camera.orthographic = true;
-                _camera.orthographicSize = _baseSize;
-                Debug.Log($"[CameraController] Initialized at base size: {_baseSize}");
+                m_camera.orthographic = true;
+                m_camera.orthographicSize = m_baseSize;
+                Debug.Log($"[CameraController] Initialized at base size: {m_baseSize}");
             }
         }
 
         private void Start()
         {
             // Auto-find player target if not assigned
-            if (_target == null)
+            if (m_target == null)
             {
                 var player = FindFirstObjectByType<PlayerController>();
                 if (player != null)
                 {
-                    _target = player.transform;
+                    m_target = player.transform;
                     Debug.Log("[CameraController] Auto-found player target");
                 }
             }
@@ -120,7 +121,7 @@ namespace NeuralBreak.Graphics
             EventBus.Subscribe<ComboChangedEvent>(OnComboChanged);
 
             // Load shake setting from PlayerPrefs
-            _shakeEnabled = PlayerPrefs.GetInt("NeuralBreak_ScreenShake", 1) == 1;
+            m_shakeEnabled = PlayerPrefs.GetInt("NeuralBreak_ScreenShake", 1) == 1;
 
             // Load config values if available
             LoadConfigValues();
@@ -131,20 +132,20 @@ namespace NeuralBreak.Graphics
             var feedback = ConfigProvider.Balance?.feedback;
             if (feedback != null)
             {
-                _minZoom = feedback.minZoom;
-                _maxZoom = feedback.maxZoom;
-                _zoomSpeed = feedback.zoomSpeed;
-                _baseSize = feedback.baseZoom;
-                
+                m_minZoom = feedback.minZoom;
+                m_maxZoom = feedback.maxZoom;
+                m_zoomSpeed = feedback.zoomSpeed;
+                m_baseSize = feedback.baseZoom;
+
                 // Also update current values to match
-                _targetSize = _baseSize;
-                _currentSize = _baseSize;
-                if (_camera != null)
+                m_targetSize = m_baseSize;
+                m_currentSize = m_baseSize;
+                if (m_camera != null)
                 {
-                    _camera.orthographicSize = _baseSize;
+                    m_camera.orthographicSize = m_baseSize;
                 }
-                
-                Debug.Log($"[CameraController] Loaded config: base={_baseSize}, min={_minZoom}, max={_maxZoom}");
+
+                Debug.Log($"[CameraController] Loaded config: base={m_baseSize}, min={m_minZoom}, max={m_maxZoom}");
             }
         }
 
@@ -167,25 +168,25 @@ namespace NeuralBreak.Graphics
 
         private void UpdateFollow()
         {
-            if (_target == null) return;
+            if (m_target == null) return;
 
-            Vector3 targetPos = _target.position + _offset;
+            Vector3 targetPos = m_target.position + m_offset;
 
             // Apply dead zone
             Vector3 diff = targetPos - transform.position;
             diff.z = 0; // Keep z offset constant
 
-            if (diff.magnitude > _deadZone)
+            if (diff.magnitude > m_deadZone)
             {
                 // Smooth follow
                 Vector3 newPos = Vector3.Lerp(
                     transform.position,
                     targetPos,
-                    _followSpeed * Time.deltaTime
+                    m_followSpeed * Time.deltaTime
                 );
 
                 // Apply shake offset
-                transform.position = newPos + _shakeOffset;
+                transform.position = newPos + m_shakeOffset;
             }
         }
 
@@ -194,7 +195,7 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void SetTarget(Transform target)
         {
-            _target = target;
+            m_target = target;
         }
 
         /// <summary>
@@ -202,9 +203,9 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void SnapToTarget()
         {
-            if (_target != null)
+            if (m_target != null)
             {
-                transform.position = _target.position + _offset;
+                transform.position = m_target.position + m_offset;
             }
         }
 
@@ -222,43 +223,43 @@ namespace NeuralBreak.Graphics
         /// </summary>
         private void UpdateDynamicZoom()
         {
-            if (!_enableDynamicZoom || _camera == null) return;
+            if (!m_enableDynamicZoom || m_camera == null) return;
 
             // Throttle intensity calculations (TS: every 50ms)
-            _zoomThrottleTimer += Time.deltaTime;
+            m_zoomThrottleTimer += Time.deltaTime;
 
-            if (_zoomThrottleTimer >= ZOOM_THROTTLE_INTERVAL)
+            if (m_zoomThrottleTimer >= ZOOM_THROTTLE_INTERVAL)
             {
-                _zoomThrottleTimer = 0f;
+                m_zoomThrottleTimer = 0f;
 
                 // Calculate gameplay intensity (0-1)
                 // Based on: enemy count, combo count
-                float enemyIntensity = Mathf.Min((float)_enemyCount / _maxEnemiesForZoom, 1f);
-                float comboIntensity = Mathf.Min((float)_comboCount / _maxComboForZoom, 1f);
+                float enemyIntensity = Mathf.Min((float)m_enemyCount / m_maxEnemiesForZoom, 1f);
+                float comboIntensity = Mathf.Min((float)m_comboCount / m_maxComboForZoom, 1f);
 
                 // Combined intensity - higher = more zoomed out
                 // TS: Math.max(audioIntensity, enemyIntensity, comboIntensity * 0.7)
-                _gameplayIntensity = Mathf.Max(enemyIntensity, comboIntensity * 0.7f);
+                m_gameplayIntensity = Mathf.Max(enemyIntensity, comboIntensity * 0.7f);
 
                 // Calculate target zoom:
-                // - At 0 intensity: _baseSize (22)
-                // - At 1 intensity: _maxZoom (38.5)
+                // - At 0 intensity: m_baseSize (22)
+                // - At 1 intensity: m_maxZoom (38.5)
                 // This zooms OUT as more enemies appear
-                float zoomRange = _maxZoom - _baseSize;
-                _targetSize = _baseSize + (_gameplayIntensity * zoomRange);
-                
+                float zoomRange = m_maxZoom - m_baseSize;
+                m_targetSize = m_baseSize + (m_gameplayIntensity * zoomRange);
+
                 // Clamp to valid range
-                _targetSize = Mathf.Clamp(_targetSize, _minZoom, _maxZoom);
+                m_targetSize = Mathf.Clamp(m_targetSize, m_minZoom, m_maxZoom);
             }
 
             // Always lerp to target for smooth animation
-            float previousSize = _currentSize;
-            _currentSize = Mathf.Lerp(_currentSize, _targetSize, _zoomSpeed * Time.deltaTime);
+            float previousSize = m_currentSize;
+            m_currentSize = Mathf.Lerp(m_currentSize, m_targetSize, m_zoomSpeed * Time.deltaTime);
 
             // Only update camera if zoom actually changed
-            if (Mathf.Abs(_currentSize - previousSize) > 0.001f)
+            if (Mathf.Abs(m_currentSize - previousSize) > 0.001f)
             {
-                _camera.orthographicSize = _currentSize;
+                m_camera.orthographicSize = m_currentSize;
             }
         }
 
@@ -267,8 +268,8 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void SetGameplayData(int enemyCount, int comboCount)
         {
-            _enemyCount = enemyCount;
-            _comboCount = comboCount;
+            m_enemyCount = enemyCount;
+            m_comboCount = comboCount;
         }
 
         /// <summary>
@@ -276,12 +277,12 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void SetZoom(float size, bool instant = false)
         {
-            _targetSize = Mathf.Clamp(size, _minZoom, _maxZoom);
+            m_targetSize = Mathf.Clamp(size, m_minZoom, m_maxZoom);
 
-            if (instant && _camera != null)
+            if (instant && m_camera != null)
             {
-                _currentSize = _targetSize;
-                _camera.orthographicSize = _targetSize;
+                m_currentSize = m_targetSize;
+                m_camera.orthographicSize = m_targetSize;
             }
         }
 
@@ -290,10 +291,10 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void ResetZoom()
         {
-            _targetSize = _baseSize;
-            _enemyCount = 0;
-            _comboCount = 0;
-            _gameplayIntensity = 0f;
+            m_targetSize = m_baseSize;
+            m_enemyCount = 0;
+            m_comboCount = 0;
+            m_gameplayIntensity = 0f;
         }
 
         #endregion
@@ -305,63 +306,63 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void SetShakeEnabled(bool enabled)
         {
-            _shakeEnabled = enabled;
+            m_shakeEnabled = enabled;
             PlayerPrefs.SetInt("NeuralBreak_ScreenShake", enabled ? 1 : 0);
-            
+
             if (!enabled)
             {
                 // Clear any active shake
-                _shakeOffset = Vector3.zero;
-                _shakeIntensity = 0f;
-                _shakeTimer = 0f;
+                m_shakeOffset = Vector3.zero;
+                m_shakeIntensity = 0f;
+                m_shakeTimer = 0f;
             }
         }
 
         /// <summary>
         /// Check if screen shake is enabled
         /// </summary>
-        public bool IsShakeEnabled => _shakeEnabled;
+        public bool IsShakeEnabled => m_shakeEnabled;
 
         /// <summary>
         /// Trigger screen shake
         /// </summary>
         public void Shake(float intensity, float duration)
         {
-            if (!_shakeEnabled) return;
+            if (!m_shakeEnabled) return;
 
             // Apply shake multiplier for punchier feel
-            float boostedIntensity = intensity * _shakeMultiplier;
+            float boostedIntensity = intensity * m_shakeMultiplier;
 
             // Manual shake - accumulate intensity
-            _shakeIntensity = Mathf.Max(_shakeIntensity, boostedIntensity);
-            _shakeDuration = Mathf.Max(_shakeDuration, duration);
-            _shakeTimer = _shakeDuration;
+            m_shakeIntensity = Mathf.Max(m_shakeIntensity, boostedIntensity);
+            m_shakeDuration = Mathf.Max(m_shakeDuration, duration);
+            m_shakeTimer = m_shakeDuration;
         }
 
         private void UpdateShake()
         {
-            if (_shakeTimer > 0)
+            if (m_shakeTimer > 0)
             {
-                _shakeTimer -= Time.deltaTime;
+                m_shakeTimer -= Time.deltaTime;
 
                 // Calculate shake offset using Perlin noise for smooth shake
                 float x = (Mathf.PerlinNoise(Time.time * 25f, 0f) - 0.5f) * 2f;
                 float y = (Mathf.PerlinNoise(0f, Time.time * 25f) - 0.5f) * 2f;
 
-                float currentIntensity = _shakeIntensity * (_shakeTimer / _shakeDuration);
+                float currentIntensity = m_shakeIntensity * (m_shakeTimer / m_shakeDuration);
 
                 // Zero-allocation: use cached Vector3 and Set() method
-                float offsetMagnitude = currentIntensity * _maxShakeOffset;
-                _cachedShakeOffset.Set(x * offsetMagnitude, y * offsetMagnitude, 0f);
-                _shakeOffset = _cachedShakeOffset;
+                float offsetMagnitude = currentIntensity * m_maxShakeOffset;
+                m_cachedShakeOffset.Set(x * offsetMagnitude, y * offsetMagnitude, 0f);
+                m_shakeOffset = m_cachedShakeOffset;
 
                 // Decay (TS: SHAKE_DECAY = 0.9)
-                _shakeIntensity *= _shakeDecay;
+                m_shakeIntensity *= m_shakeDecay;
             }
             else
             {
-                _shakeOffset = Vector3.zero;
-                _shakeIntensity = 0f;
+                m_shakeOffset = Vector3.zero;
+                m_shakeIntensity = 0f;
             }
         }
 
@@ -378,7 +379,7 @@ namespace NeuralBreak.Graphics
         private void OnEnemyKilled(EnemyKilledEvent evt)
         {
             // Decrement enemy count
-            _enemyCount = Mathf.Max(0, _enemyCount - 1);
+            m_enemyCount = Mathf.Max(0, m_enemyCount - 1);
 
             // Shake intensity varies by enemy type (from TS CollisionSystem)
             float intensity;
@@ -420,12 +421,12 @@ namespace NeuralBreak.Graphics
         private void OnEnemySpawned(EnemySpawnedEvent evt)
         {
             // Increment enemy count for zoom calculation
-            _enemyCount++;
+            m_enemyCount++;
         }
 
         private void OnComboChanged(ComboChangedEvent evt)
         {
-            _comboCount = evt.comboCount;
+            m_comboCount = evt.comboCount;
         }
 
         #endregion
@@ -444,14 +445,14 @@ namespace NeuralBreak.Graphics
         [ContextMenu("Simulate 20 Enemies")]
         private void SimulateMaxEnemies()
         {
-            _enemyCount = 20;
-            Debug.Log($"[CameraController] Simulating {_enemyCount} enemies - intensity should increase");
+            m_enemyCount = 20;
+            Debug.Log($"[CameraController] Simulating {m_enemyCount} enemies - intensity should increase");
         }
 
         [ContextMenu("Reset Enemy Count")]
         private void ResetEnemyCount()
         {
-            _enemyCount = 0;
+            m_enemyCount = 0;
             Debug.Log("[CameraController] Enemy count reset");
         }
 
@@ -461,13 +462,13 @@ namespace NeuralBreak.Graphics
             Gizmos.color = Color.cyan;
             Vector3 pos = transform.position;
             pos.z = 0;
-            
+
             // Min zoom circle
-            Gizmos.DrawWireSphere(pos, _minZoom);
-            
+            Gizmos.DrawWireSphere(pos, m_minZoom);
+
             // Max zoom circle
             Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(pos, _maxZoom);
+            Gizmos.DrawWireSphere(pos, m_maxZoom);
         }
 
         #endregion

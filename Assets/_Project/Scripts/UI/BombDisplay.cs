@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using NeuralBreak.Core;
+using Z13.Core;
 
 namespace NeuralBreak.UI
 {
@@ -11,14 +12,14 @@ namespace NeuralBreak.UI
     public class BombDisplay : MonoBehaviour
     {
         [Header("Colors")]
-        [SerializeField] private Color _activeBombColor = new Color(1f, 0.8f, 0.2f);
-        [SerializeField] private Color _inactiveBombColor = new Color(0.25f, 0.2f, 0.15f, 0.6f);
+        [SerializeField] private Color m_activeBombColor = new Color(1f, 0.8f, 0.2f);
+        [SerializeField] private Color m_inactiveBombColor = new Color(0.25f, 0.2f, 0.15f, 0.6f);
 
         // Wired by HUDBuilderArcade
-        [SerializeField] private Image[] _bombIcons;
+        [SerializeField] private Image[] m_bombIcons;
 
-        private int _currentBombs;
-        private int _maxBombs;
+        private int m_currentBombs;
+        private int m_maxBombs;
 
         private void Awake()
         {
@@ -34,8 +35,8 @@ namespace NeuralBreak.UI
 
         private void OnBombCountChanged(SmartBombCountChangedEvent evt)
         {
-            _currentBombs = evt.count;
-            _maxBombs = evt.maxCount;
+            m_currentBombs = evt.count;
+            m_maxBombs = evt.maxCount;
             UpdateIcons();
         }
 
@@ -46,24 +47,24 @@ namespace NeuralBreak.UI
 
         private void UpdateIcons()
         {
-            if (_bombIcons == null) return;
+            if (m_bombIcons == null) return;
 
-            for (int i = 0; i < _bombIcons.Length; i++)
+            for (int i = 0; i < m_bombIcons.Length; i++)
             {
-                if (_bombIcons[i] == null) continue;
+                if (m_bombIcons[i] == null) continue;
 
-                bool isActive = i < _currentBombs;
-                _bombIcons[i].color = isActive ? _activeBombColor : _inactiveBombColor;
-                _bombIcons[i].gameObject.SetActive(i < _maxBombs);
+                bool isActive = i < m_currentBombs;
+                m_bombIcons[i].color = isActive ? m_activeBombColor : m_inactiveBombColor;
+                m_bombIcons[i].gameObject.SetActive(i < m_maxBombs);
             }
         }
 
         private System.Collections.IEnumerator FlashEffect()
         {
             // Brief white flash on activation
-            if (_bombIcons != null)
+            if (m_bombIcons != null)
             {
-                foreach (var icon in _bombIcons)
+                foreach (var icon in m_bombIcons)
                 {
                     if (icon != null && icon.gameObject.activeSelf)
                     {
@@ -82,7 +83,7 @@ namespace NeuralBreak.UI
         /// </summary>
         public void SetIcons(Image[] icons)
         {
-            _bombIcons = icons;
+            m_bombIcons = icons;
         }
     }
 }

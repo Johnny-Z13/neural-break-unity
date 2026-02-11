@@ -63,17 +63,17 @@ namespace NeuralBreak.UI.Builders
             var menuBtn = CreateButton("MainMenuButton", container, "MAIN MENU", new Vector2(0, -185), new Vector2(180, 50));
 
             // Wire GameOverScreen fields
-            SetPrivateField(gameOverScreen, "_screenRoot", screen.gameObject);
-            SetPrivateField(gameOverScreen, "_titleText", titleText);
-            SetPrivateField(gameOverScreen, "_finalScoreText", scoreText);
-            SetPrivateField(gameOverScreen, "_timeSurvivedText", timeText);
-            SetPrivateField(gameOverScreen, "_enemiesKilledText", killsText);
-            SetPrivateField(gameOverScreen, "_levelReachedText", levelText);
-            SetPrivateField(gameOverScreen, "_highestComboText", comboText);
-            SetPrivateField(gameOverScreen, "_highestMultiplierText", multText);
-            SetPrivateField(gameOverScreen, "_restartButton", restartBtn);
-            SetPrivateField(gameOverScreen, "_mainMenuButton", menuBtn);
-            SetPrivateField(gameOverScreen, "_firstSelected", restartBtn);
+            SetPrivateField(gameOverScreen, "m_screenRoot", screen.gameObject);
+            SetPrivateField(gameOverScreen, "m_titleText", titleText);
+            SetPrivateField(gameOverScreen, "m_finalScoreText", scoreText);
+            SetPrivateField(gameOverScreen, "m_timeSurvivedText", timeText);
+            SetPrivateField(gameOverScreen, "m_enemiesKilledText", killsText);
+            SetPrivateField(gameOverScreen, "m_levelReachedText", levelText);
+            SetPrivateField(gameOverScreen, "m_highestComboText", comboText);
+            SetPrivateField(gameOverScreen, "m_highestMultiplierText", multText);
+            SetPrivateField(gameOverScreen, "m_restartButton", restartBtn);
+            SetPrivateField(gameOverScreen, "m_mainMenuButton", menuBtn);
+            SetPrivateField(gameOverScreen, "m_firstSelected", restartBtn);
 
             screen.gameObject.SetActive(false);
             return screen.gameObject;

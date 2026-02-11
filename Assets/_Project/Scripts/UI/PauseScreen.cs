@@ -14,26 +14,26 @@ namespace NeuralBreak.UI
     public class PauseScreen : ScreenBase
     {
         [Header("Buttons")]
-        [SerializeField] private Button _resumeButton;
-        [SerializeField] private Button _restartButton;
-        [SerializeField] private Button _controlsButton;
-        [SerializeField] private Button _quitButton;
+        [SerializeField] private Button m_resumeButton;
+        [SerializeField] private Button m_restartButton;
+        [SerializeField] private Button m_controlsButton;
+        [SerializeField] private Button m_quitButton;
 
         [Header("Volume Sliders")]
-        [SerializeField] private Slider _masterVolumeSlider;
-        [SerializeField] private Slider _sfxVolumeSlider;
-        [SerializeField] private Slider _musicVolumeSlider;
-        [SerializeField] private TextMeshProUGUI _masterVolumeLabel;
-        [SerializeField] private TextMeshProUGUI _sfxVolumeLabel;
-        [SerializeField] private TextMeshProUGUI _musicVolumeLabel;
+        [SerializeField] private Slider m_masterVolumeSlider;
+        [SerializeField] private Slider m_sfxVolumeSlider;
+        [SerializeField] private Slider m_musicVolumeSlider;
+        [SerializeField] private TextMeshProUGUI m_masterVolumeLabel;
+        [SerializeField] private TextMeshProUGUI m_sfxVolumeLabel;
+        [SerializeField] private TextMeshProUGUI m_musicVolumeLabel;
 
         [Header("Toggles")]
-        [SerializeField] private Toggle _screenShakeToggle;
-        [SerializeField] private Toggle _spawnWarningsToggle;
+        [SerializeField] private Toggle m_screenShakeToggle;
+        [SerializeField] private Toggle m_spawnWarningsToggle;
 
         // Cached references
-        private CameraController _cameraController;
-        private Graphics.SpawnWarningIndicator _warningIndicator;
+        private CameraController m_cameraController;
+        private Graphics.SpawnWarningIndicator m_warningIndicator;
 
         // PlayerPrefs keys
         private const string PREF_MASTER_VOL = "NeuralBreak_MasterVolume";
@@ -45,53 +45,53 @@ namespace NeuralBreak.UI
         protected override void Awake()
         {
             // Allow B/Escape to resume game
-            _allowCancelToClose = true;
+            m_allowCancelToClose = true;
 
             base.Awake();
 
             // Wire up button events
-            if (_resumeButton != null)
+            if (m_resumeButton != null)
             {
-                _resumeButton.onClick.AddListener(OnResumeClicked);
+                m_resumeButton.onClick.AddListener(OnResumeClicked);
             }
 
-            if (_restartButton != null)
+            if (m_restartButton != null)
             {
-                _restartButton.onClick.AddListener(OnRestartClicked);
+                m_restartButton.onClick.AddListener(OnRestartClicked);
             }
 
-            if (_controlsButton != null)
+            if (m_controlsButton != null)
             {
-                _controlsButton.onClick.AddListener(OnControlsClicked);
+                m_controlsButton.onClick.AddListener(OnControlsClicked);
             }
 
-            if (_quitButton != null)
+            if (m_quitButton != null)
             {
-                _quitButton.onClick.AddListener(OnQuitClicked);
+                m_quitButton.onClick.AddListener(OnQuitClicked);
             }
 
             // Wire up slider events
-            if (_masterVolumeSlider != null)
+            if (m_masterVolumeSlider != null)
             {
-                _masterVolumeSlider.onValueChanged.AddListener(OnMasterVolumeChanged);
+                m_masterVolumeSlider.onValueChanged.AddListener(OnMasterVolumeChanged);
             }
-            if (_sfxVolumeSlider != null)
+            if (m_sfxVolumeSlider != null)
             {
-                _sfxVolumeSlider.onValueChanged.AddListener(OnSFXVolumeChanged);
+                m_sfxVolumeSlider.onValueChanged.AddListener(OnSFXVolumeChanged);
             }
-            if (_musicVolumeSlider != null)
+            if (m_musicVolumeSlider != null)
             {
-                _musicVolumeSlider.onValueChanged.AddListener(OnMusicVolumeChanged);
+                m_musicVolumeSlider.onValueChanged.AddListener(OnMusicVolumeChanged);
             }
 
             // Wire up toggles
-            if (_screenShakeToggle != null)
+            if (m_screenShakeToggle != null)
             {
-                _screenShakeToggle.onValueChanged.AddListener(OnScreenShakeToggled);
+                m_screenShakeToggle.onValueChanged.AddListener(OnScreenShakeToggled);
             }
-            if (_spawnWarningsToggle != null)
+            if (m_spawnWarningsToggle != null)
             {
-                _spawnWarningsToggle.onValueChanged.AddListener(OnSpawnWarningsToggled);
+                m_spawnWarningsToggle.onValueChanged.AddListener(OnSpawnWarningsToggled);
             }
 
             LoadSettings();
@@ -100,9 +100,9 @@ namespace NeuralBreak.UI
         protected override void OnShow()
         {
             // Ensure first button is selected for keyboard/gamepad
-            if (_firstSelected == null && _resumeButton != null)
+            if (m_firstSelected == null && m_resumeButton != null)
             {
-                _firstSelected = _resumeButton;
+                m_firstSelected = m_resumeButton;
             }
 
             // Refresh UI from current settings
@@ -125,25 +125,25 @@ namespace NeuralBreak.UI
             bool screenShake = PlayerPrefs.GetInt(PREF_SCREEN_SHAKE, 1) == 1;
             bool spawnWarnings = PlayerPrefs.GetInt(PREF_SPAWN_WARNINGS, 1) == 1;
 
-            if (_masterVolumeSlider != null)
+            if (m_masterVolumeSlider != null)
             {
-                _masterVolumeSlider.value = masterVol;
+                m_masterVolumeSlider.value = masterVol;
             }
-            if (_sfxVolumeSlider != null)
+            if (m_sfxVolumeSlider != null)
             {
-                _sfxVolumeSlider.value = sfxVol;
+                m_sfxVolumeSlider.value = sfxVol;
             }
-            if (_musicVolumeSlider != null)
+            if (m_musicVolumeSlider != null)
             {
-                _musicVolumeSlider.value = musicVol;
+                m_musicVolumeSlider.value = musicVol;
             }
-            if (_screenShakeToggle != null)
+            if (m_screenShakeToggle != null)
             {
-                _screenShakeToggle.isOn = screenShake;
+                m_screenShakeToggle.isOn = screenShake;
             }
-            if (_spawnWarningsToggle != null)
+            if (m_spawnWarningsToggle != null)
             {
-                _spawnWarningsToggle.isOn = spawnWarnings;
+                m_spawnWarningsToggle.isOn = spawnWarnings;
             }
 
             UpdateVolumeLabels();
@@ -156,17 +156,17 @@ namespace NeuralBreak.UI
 
         private void UpdateVolumeLabels()
         {
-            if (_masterVolumeLabel != null && _masterVolumeSlider != null)
+            if (m_masterVolumeLabel != null && m_masterVolumeSlider != null)
             {
-                _masterVolumeLabel.text = $"{Mathf.RoundToInt(_masterVolumeSlider.value * 100)}%";
+                m_masterVolumeLabel.text = $"{Mathf.RoundToInt(m_masterVolumeSlider.value * 100)}%";
             }
-            if (_sfxVolumeLabel != null && _sfxVolumeSlider != null)
+            if (m_sfxVolumeLabel != null && m_sfxVolumeSlider != null)
             {
-                _sfxVolumeLabel.text = $"{Mathf.RoundToInt(_sfxVolumeSlider.value * 100)}%";
+                m_sfxVolumeLabel.text = $"{Mathf.RoundToInt(m_sfxVolumeSlider.value * 100)}%";
             }
-            if (_musicVolumeLabel != null && _musicVolumeSlider != null)
+            if (m_musicVolumeLabel != null && m_musicVolumeSlider != null)
             {
-                _musicVolumeLabel.text = $"{Mathf.RoundToInt(_musicVolumeSlider.value * 100)}%";
+                m_musicVolumeLabel.text = $"{Mathf.RoundToInt(m_musicVolumeSlider.value * 100)}%";
             }
         }
 
@@ -208,18 +208,18 @@ namespace NeuralBreak.UI
             PlayerPrefs.SetInt(PREF_SCREEN_SHAKE, enabled ? 1 : 0);
 
             // Cache reference on first use
-            if (_cameraController == null)
+            if (m_cameraController == null)
             {
                 var camGO = GameObject.Find("MainCamera");
                 if (camGO != null)
                 {
-                    _cameraController = camGO.GetComponent<CameraController>();
+                    m_cameraController = camGO.GetComponent<CameraController>();
                 }
             }
 
-            if (_cameraController != null)
+            if (m_cameraController != null)
             {
-                _cameraController.SetShakeEnabled(enabled);
+                m_cameraController.SetShakeEnabled(enabled);
             }
             SaveSettings();
         }
@@ -229,39 +229,41 @@ namespace NeuralBreak.UI
             PlayerPrefs.SetInt(PREF_SPAWN_WARNINGS, enabled ? 1 : 0);
 
             // Cache reference on first use
-            if (_warningIndicator == null)
+            if (m_warningIndicator == null)
             {
                 var warningGO = GameObject.Find("SpawnWarningIndicator");
                 if (warningGO != null)
                 {
-                    _warningIndicator = warningGO.GetComponent<Graphics.SpawnWarningIndicator>();
+                    m_warningIndicator = warningGO.GetComponent<Graphics.SpawnWarningIndicator>();
                 }
             }
 
-            if (_warningIndicator != null)
+            if (m_warningIndicator != null)
             {
-                _warningIndicator.SetWarningsEnabled(enabled);
+                m_warningIndicator.SetWarningsEnabled(enabled);
             }
             SaveSettings();
         }
 
         private void OnResumeClicked()
         {
-            if (GameManager.Instance != null)
-            {
-                GameManager.Instance.ResumeGame();
-            }
+            // Use GameStateManager (guaranteed to exist from Boot scene)
+            GameStateManager.Instance.ResumeGame();
         }
 
         private void OnRestartClicked()
         {
+            // Resume time first
+            Time.timeScale = 1f;
+
+            // Use GameManager if available (handles stats reset), otherwise GameStateManager
             if (GameManager.Instance != null)
             {
-                // Resume time first
-                Time.timeScale = 1f;
-
-                // Start new game
-                GameManager.Instance.StartGame(GameManager.Instance.CurrentMode);
+                GameManager.Instance.StartGame(GameStateManager.Instance.CurrentMode);
+            }
+            else
+            {
+                GameStateManager.Instance.StartGame(GameStateManager.Instance.CurrentMode);
             }
         }
 
@@ -276,10 +278,8 @@ namespace NeuralBreak.UI
 
         private void OnQuitClicked()
         {
-            if (GameManager.Instance != null)
-            {
-                GameManager.Instance.ReturnToMenu();
-            }
+            // Use GameStateManager (guaranteed to exist from Boot scene)
+            GameStateManager.Instance.ReturnToMenu();
         }
     }
 }

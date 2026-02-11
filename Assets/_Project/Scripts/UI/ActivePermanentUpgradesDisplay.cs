@@ -4,6 +4,7 @@ using TMPro;
 using NeuralBreak.Core;
 using NeuralBreak.Combat;
 using System.Collections.Generic;
+using Z13.Core;
 
 namespace NeuralBreak.UI
 {
@@ -14,22 +15,22 @@ namespace NeuralBreak.UI
     public class ActivePermanentUpgradesDisplay : MonoBehaviour
     {
         [Header("References")]
-        [SerializeField] private Transform _upgradeContainer;
-        [SerializeField] private GameObject _upgradeIconPrefab;
+        [SerializeField] private Transform m_upgradeContainer;
+        [SerializeField] private GameObject m_upgradeIconPrefab;
 
         [Header("Settings")]
-        [SerializeField] private int _maxDisplayed = 10;
-        [SerializeField] private float _iconSize = 32f;
+        [SerializeField] private int m_maxDisplayed = 10;
+        [SerializeField] private float m_iconSize = 32f;
 
-        private PermanentUpgradeManager _upgradeManager;
-        private List<GameObject> _activeIcons = new List<GameObject>();
+        private PermanentUpgradeManager m_upgradeManager;
+        private List<GameObject> m_activeIcons = new List<GameObject>();
 
         private void Start()
         {
-            _upgradeManager = PermanentUpgradeManager.Instance;
-            if (_upgradeManager != null)
+            m_upgradeManager = PermanentUpgradeManager.Instance;
+            if (m_upgradeManager != null)
             {
-                _upgradeManager.OnUpgradeAdded += OnUpgradeAdded;
+                m_upgradeManager.OnUpgradeAdded += OnUpgradeAdded;
             }
 
             // Subscribe to events
@@ -39,9 +40,9 @@ namespace NeuralBreak.UI
 
         private void OnDestroy()
         {
-            if (_upgradeManager != null)
+            if (m_upgradeManager != null)
             {
-                _upgradeManager.OnUpgradeAdded -= OnUpgradeAdded;
+                m_upgradeManager.OnUpgradeAdded -= OnUpgradeAdded;
             }
 
             EventBus.Unsubscribe<PermanentUpgradeAddedEvent>(OnPermanentUpgradeAdded);
@@ -65,23 +66,23 @@ namespace NeuralBreak.UI
 
         private void AddUpgradeIcon(UpgradeDefinition upgrade)
         {
-            if (_upgradeContainer == null) return;
-            if (_activeIcons.Count >= _maxDisplayed) return;
+            if (m_upgradeContainer == null) return;
+            if (m_activeIcons.Count >= m_maxDisplayed) return;
 
             GameObject iconGO;
 
-            if (_upgradeIconPrefab != null)
+            if (m_upgradeIconPrefab != null)
             {
-                iconGO = Instantiate(_upgradeIconPrefab, _upgradeContainer);
+                iconGO = Instantiate(m_upgradeIconPrefab, m_upgradeContainer);
             }
             else
             {
                 // Create simple icon
                 iconGO = new GameObject($"Icon_{upgrade.upgradeId}", typeof(RectTransform));
-                iconGO.transform.SetParent(_upgradeContainer, false);
+                iconGO.transform.SetParent(m_upgradeContainer, false);
 
                 var rect = iconGO.GetComponent<RectTransform>();
-                rect.sizeDelta = new Vector2(_iconSize, _iconSize);
+                rect.sizeDelta = new Vector2(m_iconSize, m_iconSize);
 
                 var img = iconGO.AddComponent<Image>();
                 img.sprite = upgrade.icon;
@@ -93,19 +94,19 @@ namespace NeuralBreak.UI
                 tooltip.text = upgrade.displayName;
             }
 
-            _activeIcons.Add(iconGO);
+            m_activeIcons.Add(iconGO);
         }
 
         private void ClearIcons()
         {
-            foreach (var icon in _activeIcons)
+            foreach (var icon in m_activeIcons)
             {
                 if (icon != null)
                 {
                     Destroy(icon);
                 }
             }
-            _activeIcons.Clear();
+            m_activeIcons.Clear();
         }
 
         /// <summary>

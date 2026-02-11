@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using UnityEngine;
 
-namespace NeuralBreak.Utils
+namespace Z13.Core
 {
     /// <summary>
     /// Performance-optimized logging helper that strips debug logs from production builds.
@@ -62,6 +62,24 @@ namespace NeuralBreak.Utils
         public static void LogError(string message, Object context)
         {
             UnityEngine.Debug.LogError(message, context);
+        }
+
+        /// <summary>
+        /// Logs a message with a specific tag prefix. Only included in editor builds.
+        /// </summary>
+        [Conditional("UNITY_EDITOR")]
+        public static void LogWithTag(string tag, string message)
+        {
+            UnityEngine.Debug.Log($"[{tag}] {message}");
+        }
+
+        /// <summary>
+        /// Logs an assertion. Always included in debug builds.
+        /// </summary>
+        [Conditional("UNITY_ASSERTIONS")]
+        public static void Assert(bool condition, string message)
+        {
+            UnityEngine.Debug.Assert(condition, message);
         }
     }
 }

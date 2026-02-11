@@ -1,6 +1,7 @@
 using UnityEngine;
 using NeuralBreak.Core;
 using NeuralBreak.Combat;
+using Z13.Core;
 
 namespace NeuralBreak.Entities
 {
@@ -17,40 +18,40 @@ namespace NeuralBreak.Entities
         public override PickupType PickupType => PickupType.SpreadShot;
 
         [Header("Spread Shot Settings")]
-        [SerializeField] private float _duration = 10f;
-        [SerializeField] private Color _pickupColor = new Color(0f, 0.87f, 0.33f, 0.9f); // Jade #00DD55
+        [SerializeField] private float m_duration = 10f;
+        [SerializeField] private Color m_pickupColor = new Color(0f, 0.87f, 0.33f, 0.9f); // Jade #00DD55
 
         [Header("Visual")]
-        [SerializeField] private PowerUpVisuals _visuals;
-        private bool _visualsGenerated;
+        [SerializeField] private PowerUpVisuals m_visuals;
+        private bool m_visualsGenerated;
 
-        protected override Color GetPickupColor() => _pickupColor;
+        protected override Color GetPickupColor() => m_pickupColor;
 
         public override void Initialize(Vector2 position, Transform playerTarget, System.Action<PickupBase> returnCallback)
         {
             base.Initialize(position, playerTarget, returnCallback);
 
-            if (!_visualsGenerated)
+            if (!m_visualsGenerated)
             {
                 EnsureVisuals();
-                _visualsGenerated = true;
+                m_visualsGenerated = true;
             }
         }
 
         private void EnsureVisuals()
         {
-            if (_visuals == null)
+            if (m_visuals == null)
             {
-                _visuals = GetComponentInChildren<PowerUpVisuals>();
+                m_visuals = GetComponentInChildren<PowerUpVisuals>();
             }
 
-            if (_visuals == null)
+            if (m_visuals == null)
             {
                 var visualsGO = new GameObject("Visuals");
                 visualsGO.transform.SetParent(transform, false);
                 visualsGO.transform.localPosition = Vector3.zero;
-                _visuals = visualsGO.AddComponent<PowerUpVisuals>();
-                _visuals.SetLetter('S'); // S for Spread
+                m_visuals = visualsGO.AddComponent<PowerUpVisuals>();
+                m_visuals.SetLetter('S'); // S for Spread
             }
         }
 
@@ -60,9 +61,9 @@ namespace NeuralBreak.Entities
             EventBus.Publish(new WeaponUpgradeActivatedEvent
             {
                 upgradeType = PickupType.SpreadShot,
-                duration = _duration
+                duration = m_duration
             });
-            Debug.Log($"[SpreadShot] Activated for {_duration} seconds!");
+            Debug.Log($"[SpreadShot] Activated for {m_duration} seconds!");
         }
     }
 }

@@ -1,5 +1,6 @@
 using UnityEngine;
 using NeuralBreak.Core;
+using Z13.Core;
 
 namespace NeuralBreak.Entities
 {
@@ -15,43 +16,43 @@ namespace NeuralBreak.Entities
         public override PickupType PickupType => PickupType.SpeedUp;
 
         [Header("SpeedUp Settings")]
-        [SerializeField] private float _speedBonus = 0.05f; // 5% per pickup
-        [SerializeField] private Color _pickupColor = new Color(0f, 0.67f, 0.27f, 0.9f); // Deep Emerald #00AA44
+        [SerializeField] private float m_speedBonus = 0.05f; // 5% per pickup
+        [SerializeField] private Color m_pickupColor = new Color(0f, 0.67f, 0.27f, 0.9f); // Deep Emerald #00AA44
 
         [Header("Visual")]
-        [SerializeField] private SpeedUpVisuals _visuals;
-        private bool _visualsGenerated;
+        [SerializeField] private SpeedUpVisuals m_visuals;
+        private bool m_visualsGenerated;
 
         // Track current speed level for events
-        private static int _currentSpeedLevel = 0;
+        private static int s_currentSpeedLevel = 0;
         private const int MAX_SPEED_LEVEL = 20;
 
-        protected override Color GetPickupColor() => _pickupColor;
+        protected override Color GetPickupColor() => m_pickupColor;
 
         public override void Initialize(Vector2 position, Transform playerTarget, System.Action<PickupBase> returnCallback)
         {
             base.Initialize(position, playerTarget, returnCallback);
 
-            if (!_visualsGenerated)
+            if (!m_visualsGenerated)
             {
                 EnsureVisuals();
-                _visualsGenerated = true;
+                m_visualsGenerated = true;
             }
         }
 
         private void EnsureVisuals()
         {
-            if (_visuals == null)
+            if (m_visuals == null)
             {
-                _visuals = GetComponentInChildren<SpeedUpVisuals>();
+                m_visuals = GetComponentInChildren<SpeedUpVisuals>();
             }
 
-            if (_visuals == null)
+            if (m_visuals == null)
             {
                 var visualsGO = new GameObject("Visuals");
                 visualsGO.transform.SetParent(transform, false);
                 visualsGO.transform.localPosition = Vector3.zero;
-                _visuals = visualsGO.AddComponent<SpeedUpVisuals>();
+                m_visuals = visualsGO.AddComponent<SpeedUpVisuals>();
             }
         }
 
@@ -60,17 +61,17 @@ namespace NeuralBreak.Entities
             PlayerController controller = player.GetComponent<PlayerController>();
             if (controller != null)
             {
-                if (_currentSpeedLevel < MAX_SPEED_LEVEL)
+                if (s_currentSpeedLevel < MAX_SPEED_LEVEL)
                 {
-                    _currentSpeedLevel++;
-                    controller.AddSpeedBonus(_speedBonus);
+                    s_currentSpeedLevel++;
+                    controller.AddSpeedBonus(m_speedBonus);
 
                     EventBus.Publish(new SpeedUpChangedEvent
                     {
-                        newLevel = _currentSpeedLevel
+                        newLevel = s_currentSpeedLevel
                     });
 
-                    Debug.Log($"[SpeedUp] Speed level: {_currentSpeedLevel}/{MAX_SPEED_LEVEL} (+{_speedBonus * 100}%)");
+                    Debug.Log($"[SpeedUp] Speed level: {s_currentSpeedLevel}/{MAX_SPEED_LEVEL} (+{m_speedBonus * 100}%)");
                 }
                 else
                 {
@@ -88,9 +89,9 @@ namespace NeuralBreak.Entities
         /// </summary>
         public static void ResetSpeedLevel()
         {
-            _currentSpeedLevel = 0;
+            s_currentSpeedLevel = 0;
         }
 
-        public static int CurrentSpeedLevel => _currentSpeedLevel;
+        public static int CurrentSpeedLevel => s_currentSpeedLevel;
     }
 }

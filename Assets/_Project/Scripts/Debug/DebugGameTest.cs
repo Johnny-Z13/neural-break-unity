@@ -2,7 +2,6 @@ using UnityEngine;
 using NeuralBreak.Entities;
 using NeuralBreak.Core;
 using NeuralBreak.Combat;
-using NeuralBreak.Utils;
 
 namespace NeuralBreak.Testing
 {
@@ -12,19 +11,19 @@ namespace NeuralBreak.Testing
     public class DebugGameTest : MonoBehaviour
     {
         [Header("Test Settings")]
-        [SerializeField] private bool _spawnTestEnemy = false; // Disabled - enemies spawn naturally
-        [SerializeField] private float _spawnDelay = 3f; // Increased delay
+        [SerializeField] private bool m_spawnTestEnemy = false; // Disabled - enemies spawn naturally
+        [SerializeField] private float m_spawnDelay = 3f; // Increased delay
 
         [Header("Test Mode - Spawn All Enemy Types")]
-        [SerializeField] private bool _testModeEnabled = false; // DISABLED - use GameMode.Test instead
-        [SerializeField] private float _testModeSpawnInterval = 0.5f;
-        [SerializeField] private bool _testModeSpawnAllOnStart = false; // DISABLED - use GameMode.Test instead
+        [SerializeField] private bool m_testModeEnabled = false; // DISABLED - use GameMode.Test instead
+        [SerializeField] private float m_testModeSpawnInterval = 0.5f;
+        [SerializeField] private bool m_testModeSpawnAllOnStart = false; // DISABLED - use GameMode.Test instead
 
-        private bool _hasSpawned = false;
-        private float _timer = 0f;
-        private bool _testModeSpawned = false;
-        private float _testModeTimer = 0f;
-        private int _testModeEnemyIndex = 0;
+        private bool m_hasSpawned = false;
+        private float m_timer = 0f;
+        private bool m_testModeSpawned = false;
+        private float m_testModeTimer = 0f;
+        private int m_testModeEnemyIndex = 0;
 
         private void Awake()
         {
@@ -39,21 +38,21 @@ namespace NeuralBreak.Testing
         private void Update()
         {
             // Test mode: spawn all enemy types quickly
-            if (_testModeEnabled && !_testModeSpawned)
+            if (m_testModeEnabled && !m_testModeSpawned)
             {
                 UpdateTestMode();
             }
 
             // Legacy single enemy spawn
-            if (!_spawnTestEnemy || _hasSpawned) return;
+            if (!m_spawnTestEnemy || m_hasSpawned) return;
 
-            _timer += Time.deltaTime;
+            m_timer += Time.deltaTime;
 
-            if (_timer >= _spawnDelay)
+            if (m_timer >= m_spawnDelay)
             {
                 UnityEngine.Debug.Log($"[DebugGameTest] Timer reached! Spawning test enemy. Time.deltaTime: {Time.deltaTime}");
                 SpawnTestEnemy();
-                _hasSpawned = true;
+                m_hasSpawned = true;
             }
         }
 
@@ -65,18 +64,18 @@ namespace NeuralBreak.Testing
             if (spawner == null) return;
 
             // Spawn all at once on start
-            if (_testModeSpawnAllOnStart && _testModeEnemyIndex == 0)
+            if (m_testModeSpawnAllOnStart && m_testModeEnemyIndex == 0)
             {
                 SpawnAllEnemyTypes(spawner);
-                _testModeSpawned = true;
+                m_testModeSpawned = true;
                 return;
             }
 
             // Or spawn one by one with interval
-            _testModeTimer += Time.deltaTime;
-            if (_testModeTimer >= _testModeSpawnInterval)
+            m_testModeTimer += Time.deltaTime;
+            if (m_testModeTimer >= m_testModeSpawnInterval)
             {
-                _testModeTimer = 0f;
+                m_testModeTimer = 0f;
                 SpawnNextEnemyType(spawner);
             }
         }
@@ -127,20 +126,20 @@ namespace NeuralBreak.Testing
                 EnemyType.CrystalShard
             };
 
-            if (_testModeEnemyIndex >= allTypes.Length)
+            if (m_testModeEnemyIndex >= allTypes.Length)
             {
-                _testModeSpawned = true;
+                m_testModeSpawned = true;
                 return;
             }
 
-            float angle = (_testModeEnemyIndex / (float)allTypes.Length) * Mathf.PI * 2f;
+            float angle = (m_testModeEnemyIndex / (float)allTypes.Length) * Mathf.PI * 2f;
             Vector2 pos = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * 6f;
 
-            var type = allTypes[_testModeEnemyIndex];
+            var type = allTypes[m_testModeEnemyIndex];
             var enemy = spawner.SpawnEnemyOfType(type, pos);
             UnityEngine.Debug.Log($"[DebugGameTest] TEST MODE: Spawned {type}");
 
-            _testModeEnemyIndex++;
+            m_testModeEnemyIndex++;
         }
 
         private void SpawnTestEnemy()
@@ -179,8 +178,8 @@ namespace NeuralBreak.Testing
         private void OnGUI()
         {
             // Show debug info on screen
-            GUI.Label(new Rect(10, 10, 400, 20), $"GameTime: {Time.time:F2} | Timer: {_timer:F2}");
-            GUI.Label(new Rect(10, 30, 400, 20), $"HasSpawned: {_hasSpawned} | deltaTime: {Time.deltaTime:F4}");
+            GUI.Label(new Rect(10, 10, 400, 20), $"GameTime: {Time.time:F2} | Timer: {m_timer:F2}");
+            GUI.Label(new Rect(10, 30, 400, 20), $"HasSpawned: {m_hasSpawned} | deltaTime: {Time.deltaTime:F4}");
 
             if (GameManager.Instance != null)
             {
@@ -206,7 +205,7 @@ namespace NeuralBreak.Testing
             var weapon = FindFirstObjectByType<WeaponSystem>();
             if (weapon != null)
             {
-                bool hasPrefab = typeof(WeaponSystem).GetField("_projectilePrefab",
+                bool hasPrefab = typeof(WeaponSystem).GetField("m_projectilePrefab",
                     System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.GetValue(weapon) != null;
                 GUI.Label(new Rect(10, 130, 400, 20), $"Weapon: Heat={weapon.Heat:F0} | HasPrefab: {hasPrefab}");
             }

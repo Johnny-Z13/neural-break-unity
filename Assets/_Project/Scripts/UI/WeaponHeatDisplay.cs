@@ -10,37 +10,37 @@ namespace NeuralBreak.UI
     public class WeaponHeatDisplay : MonoBehaviour
     {
         [Header("Heat Bar")]
-        [SerializeField] private Image _heatFill;
-        [SerializeField] private Image _heatBackground;
-        [SerializeField] private Gradient _heatGradient;
+        [SerializeField] private Image m_heatFill;
+        [SerializeField] private Image m_heatBackground;
+        [SerializeField] private Gradient m_heatGradient;
 
         [Header("Power Level")]
-        [SerializeField] private TextMeshProUGUI _powerLevelText;
-        [SerializeField] private Image[] _powerLevelPips;
-        [SerializeField] private Color _pipActiveColor = new Color(1f, 0.8f, 0f);
-        [SerializeField] private Color _pipInactiveColor = new Color(0.3f, 0.3f, 0.3f, 0.5f);
+        [SerializeField] private TextMeshProUGUI m_powerLevelText;
+        [SerializeField] private Image[] m_powerLevelPips;
+        [SerializeField] private Color m_pipActiveColor = new Color(1f, 0.8f, 0f);
+        [SerializeField] private Color m_pipInactiveColor = new Color(0.3f, 0.3f, 0.3f, 0.5f);
 
         [Header("Overheat Warning")]
-        [SerializeField] private TextMeshProUGUI _overheatText;
-        [SerializeField] private GameObject _warningContainer;
-        [SerializeField] private float _warningBlinkRate = 4f;
+        [SerializeField] private TextMeshProUGUI m_overheatText;
+        [SerializeField] private GameObject m_warningContainer;
+        [SerializeField] private float m_warningBlinkRate = 4f;
 
         [Header("Animation")]
-        [SerializeField] private float _smoothSpeed = 15f;
-        [SerializeField] private bool _animateChanges = true;
+        [SerializeField] private float m_smoothSpeed = 15f;
+        [SerializeField] private bool m_animateChanges = true;
 
         // State
-        private float _targetFillAmount;
-        private float _currentFillAmount;
-        private bool _isOverheated;
-        private float _blinkTimer;
+        private float m_targetFillAmount;
+        private float m_currentFillAmount;
+        private bool m_isOverheated;
+        private float m_blinkTimer;
 
         private void Awake()
         {
             // Initialize default gradient if not set
-            if (_heatGradient == null)
+            if (m_heatGradient == null)
             {
-                _heatGradient = new Gradient();
+                m_heatGradient = new Gradient();
                 var colorKeys = new GradientColorKey[]
                 {
                     new GradientColorKey(Color.cyan, 0f),
@@ -54,33 +54,33 @@ namespace NeuralBreak.UI
                     new GradientAlphaKey(1f, 0.5f),
                     new GradientAlphaKey(1f, 1f)
                 };
-                _heatGradient.SetKeys(colorKeys, alphaKeys);
+                m_heatGradient.SetKeys(colorKeys, alphaKeys);
             }
 
-            _currentFillAmount = 0f;
-            _targetFillAmount = 0f;
+            m_currentFillAmount = 0f;
+            m_targetFillAmount = 0f;
 
-            if (_warningContainer != null)
+            if (m_warningContainer != null)
             {
-                _warningContainer.SetActive(false);
+                m_warningContainer.SetActive(false);
             }
         }
 
         private void Update()
         {
             // Smooth heat bar animation
-            if (_animateChanges && Mathf.Abs(_currentFillAmount - _targetFillAmount) > 0.001f)
+            if (m_animateChanges && Mathf.Abs(m_currentFillAmount - m_targetFillAmount) > 0.001f)
             {
-                _currentFillAmount = Mathf.Lerp(_currentFillAmount, _targetFillAmount, Time.unscaledDeltaTime * _smoothSpeed);
-                ApplyFillAmount(_currentFillAmount);
+                m_currentFillAmount = Mathf.Lerp(m_currentFillAmount, m_targetFillAmount, Time.unscaledDeltaTime * m_smoothSpeed);
+                ApplyFillAmount(m_currentFillAmount);
             }
 
             // Blink warning when overheated
-            if (_isOverheated && _warningContainer != null)
+            if (m_isOverheated && m_warningContainer != null)
             {
-                _blinkTimer += Time.unscaledDeltaTime * _warningBlinkRate;
-                bool visible = Mathf.Sin(_blinkTimer * Mathf.PI * 2f) > 0f;
-                _warningContainer.SetActive(visible);
+                m_blinkTimer += Time.unscaledDeltaTime * m_warningBlinkRate;
+                bool visible = Mathf.Sin(m_blinkTimer * Mathf.PI * 2f) > 0f;
+                m_warningContainer.SetActive(visible);
             }
         }
 
@@ -90,25 +90,25 @@ namespace NeuralBreak.UI
         public void UpdateHeat(float heat, float maxHeat, bool isOverheated)
         {
             float percent = maxHeat > 0 ? heat / maxHeat : 0f;
-            _targetFillAmount = percent;
-            _isOverheated = isOverheated;
+            m_targetFillAmount = percent;
+            m_isOverheated = isOverheated;
 
-            if (!_animateChanges)
+            if (!m_animateChanges)
             {
-                _currentFillAmount = percent;
+                m_currentFillAmount = percent;
                 ApplyFillAmount(percent);
             }
 
             // Show/hide overheat warning
-            if (_overheatText != null)
+            if (m_overheatText != null)
             {
-                _overheatText.gameObject.SetActive(isOverheated);
+                m_overheatText.gameObject.SetActive(isOverheated);
             }
 
-            if (!isOverheated && _warningContainer != null)
+            if (!isOverheated && m_warningContainer != null)
             {
-                _warningContainer.SetActive(false);
-                _blinkTimer = 0f;
+                m_warningContainer.SetActive(false);
+                m_blinkTimer = 0f;
             }
         }
 
@@ -117,20 +117,20 @@ namespace NeuralBreak.UI
         /// </summary>
         public void UpdatePowerLevel(int currentLevel, int maxLevel)
         {
-            if (_powerLevelText != null)
+            if (m_powerLevelText != null)
             {
-                _powerLevelText.text = $"PWR {currentLevel}";
+                m_powerLevelText.text = $"PWR {currentLevel}";
             }
 
-            if (_powerLevelPips != null)
+            if (m_powerLevelPips != null)
             {
-                for (int i = 0; i < _powerLevelPips.Length; i++)
+                for (int i = 0; i < m_powerLevelPips.Length; i++)
                 {
-                    if (_powerLevelPips[i] != null)
+                    if (m_powerLevelPips[i] != null)
                     {
                         bool isActive = i < currentLevel;
-                        _powerLevelPips[i].color = isActive ? _pipActiveColor : _pipInactiveColor;
-                        _powerLevelPips[i].gameObject.SetActive(i < maxLevel);
+                        m_powerLevelPips[i].color = isActive ? m_pipActiveColor : m_pipInactiveColor;
+                        m_powerLevelPips[i].gameObject.SetActive(i < maxLevel);
                     }
                 }
             }
@@ -141,21 +141,21 @@ namespace NeuralBreak.UI
         /// </summary>
         public void ResetDisplay()
         {
-            _currentFillAmount = 0f;
-            _targetFillAmount = 0f;
-            _isOverheated = false;
-            _blinkTimer = 0f;
+            m_currentFillAmount = 0f;
+            m_targetFillAmount = 0f;
+            m_isOverheated = false;
+            m_blinkTimer = 0f;
 
             ApplyFillAmount(0f);
 
-            if (_warningContainer != null)
+            if (m_warningContainer != null)
             {
-                _warningContainer.SetActive(false);
+                m_warningContainer.SetActive(false);
             }
 
-            if (_overheatText != null)
+            if (m_overheatText != null)
             {
-                _overheatText.gameObject.SetActive(false);
+                m_overheatText.gameObject.SetActive(false);
             }
 
             // Reset power level
@@ -164,14 +164,14 @@ namespace NeuralBreak.UI
 
         private void ApplyFillAmount(float amount)
         {
-            if (_heatFill != null)
+            if (m_heatFill != null)
             {
-                _heatFill.fillAmount = amount;
+                m_heatFill.fillAmount = amount;
 
                 // Apply color from gradient
-                if (_heatGradient != null)
+                if (m_heatGradient != null)
                 {
-                    _heatFill.color = _heatGradient.Evaluate(amount);
+                    m_heatFill.color = m_heatGradient.Evaluate(amount);
                 }
             }
         }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using NeuralBreak.Core;
 using NeuralBreak.Config;
-using NeuralBreak.Utils;
+using Z13.Core;
 
 namespace NeuralBreak.Entities
 {
@@ -21,67 +21,67 @@ namespace NeuralBreak.Entities
     public class EnemySpawner : MonoBehaviour
     {
         [Header("References")]
-        [SerializeField] private Transform _playerTarget;
-        [SerializeField] private Transform _enemyContainer;
+        [SerializeField] private Transform m_playerTarget;
+        [SerializeField] private Transform m_enemyContainer;
 
         [Header("Enemy Prefabs")]
-        [SerializeField] private DataMite _dataMitePrefab;
-        [SerializeField] private ScanDrone _scanDronePrefab;
-        [SerializeField] private Fizzer _fizzerPrefab;
-        [SerializeField] private UFO _ufoPrefab;
-        [SerializeField] private ChaosWorm _chaosWormPrefab;
-        [SerializeField] private VoidSphere _voidSpherePrefab;
-        [SerializeField] private CrystalShard _crystalShardPrefab;
-        [SerializeField] private Boss _bossPrefab;
+        [SerializeField] private DataMite m_dataMitePrefab;
+        [SerializeField] private ScanDrone m_scanDronePrefab;
+        [SerializeField] private Fizzer m_fizzerPrefab;
+        [SerializeField] private UFO m_ufoPrefab;
+        [SerializeField] private ChaosWorm m_chaosWormPrefab;
+        [SerializeField] private VoidSphere m_voidSpherePrefab;
+        [SerializeField] private CrystalShard m_crystalShardPrefab;
+        [SerializeField] private Boss m_bossPrefab;
 
         [Header("Spawn Control")]
-        [SerializeField] private bool _spawningEnabled = true;
+        [SerializeField] private bool m_spawningEnabled = true;
 
         [Header("Spawn Warnings")]
-        [SerializeField] private bool _enableWarnings = true;
-        [SerializeField] private float _warningDuration = 0.6f;
-        [SerializeField] private float _bossWarningDuration = 1.5f;
+        [SerializeField] private bool m_enableWarnings = true;
+        [SerializeField] private float m_warningDuration = 0.6f;
+        [SerializeField] private float m_bossWarningDuration = 1.5f;
 
         [Header("Spawn Spacing")]
-        [SerializeField] private float _minEnemySpacing = 2.0f;
-        [SerializeField] private int _maxSpawnAttempts = 10;
+        [SerializeField] private float m_minEnemySpacing = 2.0f;
+        [SerializeField] private int m_maxSpawnAttempts = 10;
 
         // Helper classes
-        private EnemyPoolManager _poolManager;
-        private EnemySpawnPositionCalculator _positionCalculator;
-        private EnemySpawnRateManager _rateManager;
+        private EnemyPoolManager m_poolManager;
+        private EnemySpawnPositionCalculator m_positionCalculator;
+        private EnemySpawnRateManager m_rateManager;
 
         // Config-driven properties
         private SpawnConfig SpawnConfig => ConfigProvider.Spawning;
         private int MaxActiveEnemies => SpawnConfig.maxActiveEnemies;
 
         // Active enemies tracking
-        private List<EnemyBase> _activeEnemies = new List<EnemyBase>();
+        private List<EnemyBase> m_activeEnemies = new List<EnemyBase>();
 
         // Public accessors
-        public int ActiveEnemyCount => _activeEnemies.Count;
-        public IReadOnlyList<EnemyBase> ActiveEnemies => _activeEnemies;
-        public Transform PlayerTarget => _playerTarget;
-        public bool SpawningEnabled { get => _spawningEnabled; set => _spawningEnabled = value; }
+        public int ActiveEnemyCount => m_activeEnemies.Count;
+        public IReadOnlyList<EnemyBase> ActiveEnemies => m_activeEnemies;
+        public Transform PlayerTarget => m_playerTarget;
+        public bool SpawningEnabled { get => m_spawningEnabled; set => m_spawningEnabled = value; }
 
         private void Awake()
         {
-            if (_enemyContainer == null)
+            if (m_enemyContainer == null)
             {
-                _enemyContainer = new GameObject("Enemies").transform;
-                _enemyContainer.SetParent(transform);
+                m_enemyContainer = new GameObject("Enemies").transform;
+                m_enemyContainer.SetParent(transform);
             }
 
             // Initialize helper classes
-            _poolManager = new EnemyPoolManager(
-                _dataMitePrefab, _scanDronePrefab, _fizzerPrefab, _ufoPrefab,
-                _chaosWormPrefab, _voidSpherePrefab, _crystalShardPrefab, _bossPrefab,
-                _enemyContainer);
+            m_poolManager = new EnemyPoolManager(
+                m_dataMitePrefab, m_scanDronePrefab, m_fizzerPrefab, m_ufoPrefab,
+                m_chaosWormPrefab, m_voidSpherePrefab, m_crystalShardPrefab, m_bossPrefab,
+                m_enemyContainer);
 
-            _positionCalculator = new EnemySpawnPositionCalculator(
-                _playerTarget, _minEnemySpacing, _maxSpawnAttempts);
+            m_positionCalculator = new EnemySpawnPositionCalculator(
+                m_playerTarget, m_minEnemySpacing, m_maxSpawnAttempts);
 
-            _rateManager = new EnemySpawnRateManager();
+            m_rateManager = new EnemySpawnRateManager();
         }
 
         private void Start()
@@ -99,7 +99,7 @@ namespace NeuralBreak.Entities
         private void Update()
         {
             if (GameManager.Instance == null || !GameManager.Instance.IsPlaying) return;
-            if (!_spawningEnabled) return;
+            if (!m_spawningEnabled) return;
 
             UpdateSpawnTimers();
             CleanupDeadEnemies();
@@ -110,15 +110,15 @@ namespace NeuralBreak.Entities
         private void UpdateSpawnTimers()
         {
             // Check max enemies
-            if (_activeEnemies.Count >= MaxActiveEnemies) return;
+            if (m_activeEnemies.Count >= MaxActiveEnemies) return;
 
             // Get ready spawns from rate manager
-            EnemySpawnRequest[] readySpawns = _rateManager.UpdateAndGetReadySpawns(Time.deltaTime);
+            EnemySpawnRequest[] readySpawns = m_rateManager.UpdateAndGetReadySpawns(Time.deltaTime);
 
             // Process each spawn request
             foreach (var request in readySpawns)
             {
-                if (!_poolManager.HasPool(request.EnemyType))
+                if (!m_poolManager.HasPool(request.EnemyType))
                 {
                     LogHelper.LogWarning($"[EnemySpawner] {request.EnemyType} pool is NULL!");
                     continue;
@@ -127,8 +127,8 @@ namespace NeuralBreak.Entities
                 LogHelper.Log($"[EnemySpawner] Spawning {request.EnemyType}!");
 
                 Vector2 spawnPos = request.UseEdgeSpawn
-                    ? _positionCalculator.GetEdgeSpawnPosition()
-                    : _positionCalculator.GetSpawnPosition(_activeEnemies);
+                    ? m_positionCalculator.GetEdgeSpawnPosition()
+                    : m_positionCalculator.GetSpawnPosition(m_activeEnemies);
 
                 SpawnEnemyAtPosition(request.EnemyType, spawnPos);
             }
@@ -136,9 +136,9 @@ namespace NeuralBreak.Entities
 
         private void SpawnEnemyAtPosition(EnemyType enemyType, Vector2 spawnPos)
         {
-            if (_enableWarnings)
+            if (m_enableWarnings)
             {
-                float duration = enemyType == EnemyType.Boss ? _bossWarningDuration : _warningDuration;
+                float duration = enemyType == EnemyType.Boss ? m_bossWarningDuration : m_warningDuration;
                 StartCoroutine(SpawnWithWarning(enemyType, spawnPos, duration));
             }
             else
@@ -161,7 +161,7 @@ namespace NeuralBreak.Entities
             yield return new WaitForSeconds(warningDuration);
 
             // Check if still spawning (game might have ended)
-            if (!_spawningEnabled || GameManager.Instance == null || !GameManager.Instance.IsPlaying)
+            if (!m_spawningEnabled || GameManager.Instance == null || !GameManager.Instance.IsPlaying)
                 yield break;
 
             // Spawn the enemy
@@ -177,7 +177,7 @@ namespace NeuralBreak.Entities
 
         private void DoSpawn(EnemyType enemyType, Vector2 spawnPos)
         {
-            EnemyBase enemy = _poolManager.GetEnemy<EnemyBase>(enemyType, spawnPos);
+            EnemyBase enemy = m_poolManager.GetEnemy<EnemyBase>(enemyType, spawnPos);
             if (enemy == null) return;
 
             // Ensure enemy tag is set (required for collision detection)
@@ -186,14 +186,14 @@ namespace NeuralBreak.Entities
                 enemy.gameObject.tag = "Enemy";
             }
 
-            enemy.Initialize(spawnPos, _playerTarget, ReturnEnemyToPool);
-            _activeEnemies.Add(enemy);
+            enemy.Initialize(spawnPos, m_playerTarget, ReturnEnemyToPool);
+            m_activeEnemies.Add(enemy);
         }
 
         private void ReturnEnemyToPool(EnemyBase enemy)
         {
-            _activeEnemies.Remove(enemy);
-            _poolManager.ReturnEnemy(enemy);
+            m_activeEnemies.Remove(enemy);
+            m_poolManager.ReturnEnemy(enemy);
         }
 
         #endregion
@@ -205,15 +205,15 @@ namespace NeuralBreak.Entities
         /// </summary>
         public EnemyBase SpawnEnemyOfType(EnemyType type, Vector2? position = null)
         {
-            Vector2 spawnPos = position ?? _positionCalculator.GetSpawnPosition(_activeEnemies);
+            Vector2 spawnPos = position ?? m_positionCalculator.GetSpawnPosition(m_activeEnemies);
 
-            if (!_poolManager.HasPool(type))
+            if (!m_poolManager.HasPool(type))
             {
                 Debug.LogWarning($"[EnemySpawner] Cannot spawn {type} - no pool available");
                 return null;
             }
 
-            EnemyBase enemy = _poolManager.GetEnemy<EnemyBase>(type, spawnPos);
+            EnemyBase enemy = m_poolManager.GetEnemy<EnemyBase>(type, spawnPos);
             if (enemy == null) return null;
 
             // Ensure enemy tag is set
@@ -222,8 +222,8 @@ namespace NeuralBreak.Entities
                 enemy.gameObject.tag = "Enemy";
             }
 
-            enemy.Initialize(spawnPos, _playerTarget, ReturnEnemyToPool);
-            _activeEnemies.Add(enemy);
+            enemy.Initialize(spawnPos, m_playerTarget, ReturnEnemyToPool);
+            m_activeEnemies.Add(enemy);
             return enemy;
         }
 
@@ -244,7 +244,7 @@ namespace NeuralBreak.Entities
         /// </summary>
         public void SetEnemySpawnRate(EnemyType type, float rate)
         {
-            _rateManager.SetEnemySpawnRate(type, rate);
+            m_rateManager.SetEnemySpawnRate(type, rate);
         }
 
         #endregion
@@ -254,13 +254,13 @@ namespace NeuralBreak.Entities
         public void SetSpawnRates(float dataMite, float scanDrone, float fizzer, float ufo,
             float chaosWorm, float voidSphere, float crystalShard, float boss)
         {
-            _rateManager.SetSpawnRates(dataMite, scanDrone, fizzer, ufo,
+            m_rateManager.SetSpawnRates(dataMite, scanDrone, fizzer, ufo,
                 chaosWorm, voidSphere, crystalShard, boss);
         }
 
         public void MultiplySpawnRates(float multiplier)
         {
-            _rateManager.MultiplySpawnRates(multiplier);
+            m_rateManager.MultiplySpawnRates(multiplier);
         }
 
         /// <summary>
@@ -268,7 +268,7 @@ namespace NeuralBreak.Entities
         /// </summary>
         public void StopSpawning()
         {
-            _spawningEnabled = false;
+            m_spawningEnabled = false;
             LogHelper.Log("[EnemySpawner] Spawning stopped");
         }
 
@@ -277,14 +277,14 @@ namespace NeuralBreak.Entities
         /// </summary>
         public void StartSpawning()
         {
-            _spawningEnabled = true;
+            m_spawningEnabled = true;
             LogHelper.Log("[EnemySpawner] Spawning started");
         }
 
         /// <summary>
         /// Check if spawning is enabled
         /// </summary>
-        public bool IsSpawning => _spawningEnabled;
+        public bool IsSpawning => m_spawningEnabled;
 
         #endregion
 
@@ -293,11 +293,11 @@ namespace NeuralBreak.Entities
         private void CleanupDeadEnemies()
         {
             // Use backward iteration instead of RemoveAll to avoid delegate allocation
-            for (int i = _activeEnemies.Count - 1; i >= 0; i--)
+            for (int i = m_activeEnemies.Count - 1; i >= 0; i--)
             {
-                if (_activeEnemies[i] == null || _activeEnemies[i].State == EnemyState.Dead)
+                if (m_activeEnemies[i] == null || m_activeEnemies[i].State == EnemyState.Dead)
                 {
-                    _activeEnemies.RemoveAt(i);
+                    m_activeEnemies.RemoveAt(i);
                 }
             }
         }
@@ -305,24 +305,24 @@ namespace NeuralBreak.Entities
         public void ClearAllEnemies()
         {
             // Use backward iteration instead of ToArray() allocation
-            for (int i = _activeEnemies.Count - 1; i >= 0; i--)
+            for (int i = m_activeEnemies.Count - 1; i >= 0; i--)
             {
-                var enemy = _activeEnemies[i];
+                var enemy = m_activeEnemies[i];
                 if (enemy != null)
                 {
                     enemy.KillInstant();
                 }
             }
-            _activeEnemies.Clear();
+            m_activeEnemies.Clear();
             LogHelper.Log("[EnemySpawner] All enemies cleared");
         }
 
         public void KillAllEnemies()
         {
             // Use backward iteration instead of ToArray() allocation
-            for (int i = _activeEnemies.Count - 1; i >= 0; i--)
+            for (int i = m_activeEnemies.Count - 1; i >= 0; i--)
             {
-                var enemy = _activeEnemies[i];
+                var enemy = m_activeEnemies[i];
                 if (enemy != null && enemy.IsAlive)
                 {
                     enemy.Kill();
@@ -333,7 +333,7 @@ namespace NeuralBreak.Entities
 
         public void ResetTimers()
         {
-            _rateManager.ResetTimers();
+            m_rateManager.ResetTimers();
         }
 
         /// <summary>
@@ -342,7 +342,7 @@ namespace NeuralBreak.Entities
         public int GetActiveCountOfType(EnemyType type)
         {
             int count = 0;
-            foreach (var enemy in _activeEnemies)
+            foreach (var enemy in m_activeEnemies)
             {
                 if (enemy != null && enemy.EnemyType == type && enemy.IsActive)
                 {
@@ -362,7 +362,7 @@ namespace NeuralBreak.Entities
             ClearAllEnemies();
             ResetTimers();
             // DON'T reset spawn rates here - LevelManager will set them via SetSpawnRates()
-            _spawningEnabled = true;
+            m_spawningEnabled = true;
             LogHelper.Log("[EnemySpawner] Spawning enabled, waiting for LevelManager to configure rates");
         }
 
@@ -401,7 +401,7 @@ namespace NeuralBreak.Entities
 
         private void OnDrawGizmosSelected()
         {
-            _positionCalculator?.DrawGizmos();
+            m_positionCalculator?.DrawGizmos();
         }
 
         #endregion

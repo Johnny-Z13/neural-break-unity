@@ -9,24 +9,24 @@ namespace NeuralBreak.Entities
     public class VoidSphereVisuals : MonoBehaviour
     {
         [Header("Colors")]
-        [SerializeField] private Color _coreColor = new Color(0f, 0f, 0f, 0.98f); // Black
-        [SerializeField] private Color _innerColor = new Color(0.07f, 0f, 0.13f, 0.9f); // Dark purple
-        [SerializeField] private Color _ringColor = new Color(0.4f, 0f, 0.53f, 0.7f); // Purple
-        [SerializeField] private Color _tendrilColor = new Color(0.5f, 0f, 1f, 0.6f); // Bright purple
-        [SerializeField] private Color _particleColor = new Color(1f, 0f, 1f, 0.8f); // Magenta
+        [SerializeField] private Color m_coreColor = new Color(0f, 0f, 0f, 0.98f); // Black
+        [SerializeField] private Color m_innerColor = new Color(0.07f, 0f, 0.13f, 0.9f); // Dark purple
+        [SerializeField] private Color m_ringColor = new Color(0.4f, 0f, 0.53f, 0.7f); // Purple
+        [SerializeField] private Color m_tendrilColor = new Color(0.5f, 0f, 1f, 0.6f); // Bright purple
+        [SerializeField] private Color m_particleColor = new Color(1f, 0f, 1f, 0.8f); // Magenta
 
         [Header("Scale")]
-        [SerializeField] private float _coreRadius = 2.4f; // Extra Large!
+        [SerializeField] private float m_coreRadius = 2.4f; // Extra Large!
 
         // Components
-        private Transform _core;
-        private Transform _inner;
-        private Transform _distortion;
-        private Transform[] _rings;
-        private Transform[] _tendrils;
-        private Transform[] _particles;
+        private Transform m_core;
+        private Transform m_inner;
+        private Transform m_distortion;
+        private Transform[] m_rings;
+        private Transform[] m_tendrils;
+        private Transform[] m_particles;
 
-        private float _time;
+        private float m_time;
 
         private void Start()
         {
@@ -38,14 +38,14 @@ namespace NeuralBreak.Entities
             ClearChildren();
 
             // Outer distortion field
-            _distortion = CreateCircle("Distortion", _coreRadius * 2.5f,
-                new Color(_ringColor.r, _ringColor.g, _ringColor.b, 0.2f), 1);
+            m_distortion = CreateCircle("Distortion", m_coreRadius * 2.5f,
+                new Color(m_ringColor.r, m_ringColor.g, m_ringColor.b, 0.2f), 1);
 
             // Main void core (black)
-            _core = CreateCircle("Core", _coreRadius, _coreColor, 10);
+            m_core = CreateCircle("Core", m_coreRadius, m_coreColor, 10);
 
             // Inner purple glow
-            _inner = CreateCircle("Inner", _coreRadius * 0.75f, _innerColor, 11);
+            m_inner = CreateCircle("Inner", m_coreRadius * 0.75f, m_innerColor, 11);
 
             // Energy rings
             CreateRings();
@@ -59,22 +59,22 @@ namespace NeuralBreak.Entities
 
         private void CreateRings()
         {
-            _rings = new Transform[7];
+            m_rings = new Transform[7];
             for (int i = 0; i < 7; i++)
             {
-                float ringRadius = _coreRadius * (1.3f + i * 0.3f);
+                float ringRadius = m_coreRadius * (1.3f + i * 0.3f);
                 float hue = 0.8f + i * 0.03f;
                 Color ringCol = Color.HSVToRGB(hue, 0.8f, 0.6f);
                 ringCol.a = 0.5f - i * 0.05f;
 
                 var ring = CreateRing($"Ring{i}", ringRadius * 0.9f, ringRadius, ringCol, 5 + i);
-                _rings[i] = ring;
+                m_rings[i] = ring;
             }
         }
 
         private void CreateTendrils()
         {
-            _tendrils = new Transform[6];
+            m_tendrils = new Transform[6];
             for (int i = 0; i < 6; i++)
             {
                 float angle = (i / 6f) * Mathf.PI * 2f;
@@ -84,24 +84,24 @@ namespace NeuralBreak.Entities
 
                 var sr = tendril.AddComponent<SpriteRenderer>();
                 sr.sprite = CreateTendrilSprite();
-                sr.color = _tendrilColor;
+                sr.color = m_tendrilColor;
                 sr.sortingOrder = 8;
 
                 tendril.transform.localPosition = new Vector3(
-                    Mathf.Cos(angle) * _coreRadius * 1.5f,
-                    Mathf.Sin(angle) * _coreRadius * 1.5f,
+                    Mathf.Cos(angle) * m_coreRadius * 1.5f,
+                    Mathf.Sin(angle) * m_coreRadius * 1.5f,
                     0
                 );
                 tendril.transform.localRotation = Quaternion.Euler(0, 0, angle * Mathf.Rad2Deg + 90);
                 tendril.transform.localScale = new Vector3(0.15f, 1f, 1f);
 
-                _tendrils[i] = tendril.transform;
+                m_tendrils[i] = tendril.transform;
             }
         }
 
         private void CreateParticles()
         {
-            _particles = new Transform[30];
+            m_particles = new Transform[30];
             for (int i = 0; i < 30; i++)
             {
                 var particle = new GameObject($"Particle{i}");
@@ -119,7 +119,7 @@ namespace NeuralBreak.Entities
 
                 // Random orbital position
                 float angle = Random.Range(0f, Mathf.PI * 2f);
-                float dist = Random.Range(_coreRadius * 1.5f, _coreRadius * 4f);
+                float dist = Random.Range(m_coreRadius * 1.5f, m_coreRadius * 4f);
                 particle.transform.localPosition = new Vector3(
                     Mathf.Cos(angle) * dist,
                     Mathf.Sin(angle) * dist,
@@ -127,49 +127,49 @@ namespace NeuralBreak.Entities
                 );
                 particle.transform.localScale = Vector3.one * Random.Range(0.05f, 0.15f);
 
-                _particles[i] = particle.transform;
+                m_particles[i] = particle.transform;
             }
         }
 
         private void Update()
         {
-            if (_core == null) return;
+            if (m_core == null) return;
 
-            _time += Time.deltaTime;
+            m_time += Time.deltaTime;
 
             // Core breathing
-            float corePulse = 1f + Mathf.Sin(_time * 2f) * 0.05f;
-            _core.localScale = Vector3.one * _coreRadius * 2f * corePulse;
+            float corePulse = 1f + Mathf.Sin(m_time * 2f) * 0.05f;
+            m_core.localScale = Vector3.one * m_coreRadius * 2f * corePulse;
 
             // Inner pulse
-            if (_inner != null)
+            if (m_inner != null)
             {
-                float innerPulse = 1f + Mathf.Sin(_time * 3f) * 0.1f;
-                _inner.localScale = Vector3.one * _coreRadius * 1.5f * innerPulse;
+                float innerPulse = 1f + Mathf.Sin(m_time * 3f) * 0.1f;
+                m_inner.localScale = Vector3.one * m_coreRadius * 1.5f * innerPulse;
             }
 
             // Distortion breathing
-            if (_distortion != null)
+            if (m_distortion != null)
             {
-                float distPulse = 1f + Mathf.Sin(_time * 1.5f) * 0.15f;
-                _distortion.localScale = Vector3.one * _coreRadius * 5f * distPulse;
+                float distPulse = 1f + Mathf.Sin(m_time * 1.5f) * 0.15f;
+                m_distortion.localScale = Vector3.one * m_coreRadius * 5f * distPulse;
             }
 
             // Rotate rings
-            if (_rings != null)
+            if (m_rings != null)
             {
-                for (int i = 0; i < _rings.Length; i++)
+                for (int i = 0; i < m_rings.Length; i++)
                 {
-                    if (_rings[i] == null) continue;
+                    if (m_rings[i] == null) continue;
                     float speed = 30f + i * 10f;
                     float direction = (i % 2 == 0) ? 1f : -1f;
-                    _rings[i].Rotate(0, 0, Time.deltaTime * speed * direction);
+                    m_rings[i].Rotate(0, 0, Time.deltaTime * speed * direction);
 
                     // Ring opacity pulse
-                    var sr = _rings[i].GetComponent<SpriteRenderer>();
+                    var sr = m_rings[i].GetComponent<SpriteRenderer>();
                     if (sr != null)
                     {
-                        float alpha = 0.3f + Mathf.Sin(_time * 2f + i * 0.5f) * 0.2f;
+                        float alpha = 0.3f + Mathf.Sin(m_time * 2f + i * 0.5f) * 0.2f;
                         Color c = sr.color;
                         c.a = alpha;
                         sr.color = c;
@@ -178,35 +178,35 @@ namespace NeuralBreak.Entities
             }
 
             // Animate tendrils
-            if (_tendrils != null)
+            if (m_tendrils != null)
             {
-                for (int i = 0; i < _tendrils.Length; i++)
+                for (int i = 0; i < m_tendrils.Length; i++)
                 {
-                    if (_tendrils[i] == null) continue;
-                    float angle = (i / 6f) * Mathf.PI * 2f + _time * 0.5f;
-                    float dist = _coreRadius * (1.5f + Mathf.Sin(_time * 2f + i) * 0.3f);
+                    if (m_tendrils[i] == null) continue;
+                    float angle = (i / 6f) * Mathf.PI * 2f + m_time * 0.5f;
+                    float dist = m_coreRadius * (1.5f + Mathf.Sin(m_time * 2f + i) * 0.3f);
 
-                    _tendrils[i].localPosition = new Vector3(
+                    m_tendrils[i].localPosition = new Vector3(
                         Mathf.Cos(angle) * dist,
                         Mathf.Sin(angle) * dist,
                         0
                     );
-                    _tendrils[i].localRotation = Quaternion.Euler(0, 0, angle * Mathf.Rad2Deg + 90);
+                    m_tendrils[i].localRotation = Quaternion.Euler(0, 0, angle * Mathf.Rad2Deg + 90);
 
                     // Tendril length pulse
-                    float length = 0.8f + Mathf.Sin(_time * 3f + i * 0.5f) * 0.3f;
-                    _tendrils[i].localScale = new Vector3(0.15f, length, 1f);
+                    float length = 0.8f + Mathf.Sin(m_time * 3f + i * 0.5f) * 0.3f;
+                    m_tendrils[i].localScale = new Vector3(0.15f, length, 1f);
                 }
             }
 
             // Spiral particles inward
-            if (_particles != null)
+            if (m_particles != null)
             {
-                for (int i = 0; i < _particles.Length; i++)
+                for (int i = 0; i < m_particles.Length; i++)
                 {
-                    if (_particles[i] == null) continue;
+                    if (m_particles[i] == null) continue;
 
-                    Vector3 pos = _particles[i].localPosition;
+                    Vector3 pos = m_particles[i].localPosition;
                     float dist = pos.magnitude;
                     float angle = Mathf.Atan2(pos.y, pos.x);
 
@@ -215,13 +215,13 @@ namespace NeuralBreak.Entities
                     dist -= Time.deltaTime * 0.5f;
 
                     // Reset if too close
-                    if (dist < _coreRadius * 0.5f)
+                    if (dist < m_coreRadius * 0.5f)
                     {
-                        dist = _coreRadius * 4f;
+                        dist = m_coreRadius * 4f;
                         angle = Random.Range(0f, Mathf.PI * 2f);
                     }
 
-                    _particles[i].localPosition = new Vector3(
+                    m_particles[i].localPosition = new Vector3(
                         Mathf.Cos(angle) * dist,
                         Mathf.Sin(angle) * dist,
                         0

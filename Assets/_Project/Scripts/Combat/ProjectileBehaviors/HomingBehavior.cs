@@ -9,13 +9,13 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
     /// </summary>
     public class HomingBehavior : ProjectileBehaviorBase
     {
-        private float _strength;
-        private float _range;
-        private Vector2 _direction;
-        private Vector2 _initialDirection; // The direction player was aiming
-        private Transform _lockedTarget;   // Locked target (sticky)
-        private float _reacquireDelay = 0.2f;
-        private float _reacquireTimer;
+        private float m_strength;
+        private float m_range;
+        private Vector2 m_direction;
+        private Vector2 m_initialDirection; // The direction player was aiming
+        private Transform m_lockedTarget;   // Locked target (sticky)
+        private float m_reacquireDelay = 0.2f;
+        private float m_reacquireTimer;
 
         // Cone angle for prioritizing targets in aim direction (degrees)
         private const float AIM_CONE_ANGLE = 45f;
@@ -23,17 +23,17 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
 
         public HomingBehavior(float strength = 5f, float range = 10f)
         {
-            _strength = strength;
-            _range = range;
+            m_strength = strength;
+            m_range = range;
         }
 
         public override void Initialize(MonoBehaviour proj)
         {
             base.Initialize(proj);
-            _direction = proj.transform.up.normalized;
-            _initialDirection = _direction;
-            _lockedTarget = null;
-            _reacquireTimer = 0f;
+            m_direction = proj.transform.up.normalized;
+            m_initialDirection = m_direction;
+            m_lockedTarget = null;
+            m_reacquireTimer = 0f;
 
             // Acquire initial target immediately
             AcquireTarget();
@@ -42,40 +42,40 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
         public override void Update(float deltaTime)
         {
             // Check if we need to reacquire target
-            if (_lockedTarget == null || !IsTargetValid(_lockedTarget))
+            if (m_lockedTarget == null || !IsTargetValid(m_lockedTarget))
             {
-                _reacquireTimer -= deltaTime;
-                if (_reacquireTimer <= 0f)
+                m_reacquireTimer -= deltaTime;
+                if (m_reacquireTimer <= 0f)
                 {
                     AcquireTarget();
-                    _reacquireTimer = _reacquireDelay;
+                    m_reacquireTimer = m_reacquireDelay;
                 }
             }
 
             // If we have a valid target, home toward it
-            if (_lockedTarget != null && IsTargetValid(_lockedTarget))
+            if (m_lockedTarget != null && IsTargetValid(m_lockedTarget))
             {
-                Vector2 toTarget = ((Vector2)_lockedTarget.position - (Vector2)transform.position).normalized;
-                _direction = Vector2.Lerp(_direction, toTarget, _strength * deltaTime).normalized;
+                Vector2 toTarget = ((Vector2)m_lockedTarget.position - (Vector2)transform.position).normalized;
+                m_direction = Vector2.Lerp(m_direction, toTarget, m_strength * deltaTime).normalized;
             }
             // else: maintain current direction (fly straight)
 
             // Update projectile rotation to face direction
-            float angle = Mathf.Atan2(_direction.y, _direction.x) * Mathf.Rad2Deg;
+            float angle = Mathf.Atan2(m_direction.y, m_direction.x) * Mathf.Rad2Deg;
             transform.rotation = Quaternion.Euler(0, 0, angle - 90f);
 
             // Update velocity
             var enhancedProj = GetAsEnhancedProjectile();
             if (enhancedProj != null)
             {
-                enhancedProj.SetDirection(_direction);
+                enhancedProj.SetDirection(m_direction);
             }
             else
             {
                 var basicProj = GetAsProjectile();
                 if (basicProj != null)
                 {
-                    basicProj.SetDirection(_direction);
+                    basicProj.SetDirection(m_direction);
                 }
             }
         }
@@ -83,16 +83,16 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
         public override bool OnHitEnemy(EnemyBase enemy)
         {
             // If we hit our locked target, clear it so we can acquire a new one
-            if (_lockedTarget != null && enemy.transform == _lockedTarget)
+            if (m_lockedTarget != null && enemy.transform == m_lockedTarget)
             {
-                _lockedTarget = null;
+                m_lockedTarget = null;
             }
             return true;
         }
 
         private void AcquireTarget()
         {
-            _lockedTarget = FindBestTarget();
+            m_lockedTarget = FindBestTarget();
         }
 
         private bool IsTargetValid(Transform target)
@@ -101,7 +101,7 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
 
             // Check if still in range
             float dist = Vector2.Distance(transform.position, target.position);
-            if (dist > _range * 1.5f) return false; // Allow some buffer
+            if (dist > m_range * 1.5f) return false; // Allow some buffer
 
             // Check if enemy is still alive
             var enemy = target.GetComponent<EnemyBase>();
@@ -118,7 +118,7 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
             Transform bestTarget = null;
             float bestScore = float.MaxValue;
 
-            Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, _range);
+            Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, m_range);
 
             foreach (var col in colliders)
             {
@@ -134,7 +134,7 @@ namespace NeuralBreak.Combat.ProjectileBehaviors
 
                 // Calculate angle between aim direction and enemy direction
                 Vector2 toEnemyDir = toEnemy.normalized;
-                float dot = Vector2.Dot(_initialDirection, toEnemyDir);
+                float dot = Vector2.Dot(m_initialDirection, toEnemyDir);
                 float angleDeg = Mathf.Acos(Mathf.Clamp(dot, -1f, 1f)) * Mathf.Rad2Deg;
 
                 // Score = distance, with bonus for enemies in aim cone

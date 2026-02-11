@@ -9,21 +9,21 @@ namespace NeuralBreak.Entities
     [RequireComponent(typeof(CircleCollider2D))]
     public class WormSegment : MonoBehaviour
     {
-        private ChaosWorm _parentWorm;
-        private CircleCollider2D _collider;
+        private ChaosWorm m_parentWorm;
+        private CircleCollider2D m_collider;
 
         public void Initialize(ChaosWorm parent)
         {
-            _parentWorm = parent;
+            m_parentWorm = parent;
 
             // Ensure collider is set up as trigger
-            _collider = GetComponent<CircleCollider2D>();
-            if (_collider == null)
+            m_collider = GetComponent<CircleCollider2D>();
+            if (m_collider == null)
             {
-                _collider = gameObject.AddComponent<CircleCollider2D>();
+                m_collider = gameObject.AddComponent<CircleCollider2D>();
             }
-            _collider.isTrigger = true;
-            _collider.radius = 0.4f;
+            m_collider.isTrigger = true;
+            m_collider.radius = 0.4f;
 
             // Tag as enemy for projectile detection
             gameObject.tag = "Enemy";
@@ -35,9 +35,9 @@ namespace NeuralBreak.Entities
         /// </summary>
         public void TakeDamage(int damage, Vector2 hitPosition)
         {
-            if (_parentWorm != null && _parentWorm.IsAlive)
+            if (m_parentWorm != null && m_parentWorm.IsAlive)
             {
-                _parentWorm.TakeDamage(damage, hitPosition);
+                m_parentWorm.TakeDamage(damage, hitPosition);
             }
         }
     }

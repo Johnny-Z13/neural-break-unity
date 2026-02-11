@@ -27,7 +27,7 @@ namespace NeuralBreak.Editor
 
             // Use reflection to set the private field
             var type = typeof(NeuralBreak.Input.InputManager);
-            var field = type.GetField("_inputActionsAsset", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var field = type.GetField("m_inputActionsAsset", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             if (field != null)
             {
                 Undo.RecordObject(inputManager, "Assign Input Actions");

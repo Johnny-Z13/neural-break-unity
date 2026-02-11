@@ -11,22 +11,22 @@ namespace NeuralBreak.Entities
     public class SpeedUpVisuals : MonoBehaviour
     {
         [Header("Colors")]
-        [SerializeField] private Color _primaryColor = new Color(0f, 0.67f, 0.27f, 0.9f); // Deep Emerald
-        [SerializeField] private Color _speedLineColor = new Color(0f, 0.87f, 0.33f, 0.6f); // Jade
-        [SerializeField] private Color _tertiaryColor = new Color(0f, 0.6f, 0.2f, 0.7f); // Forest
+        [SerializeField] private Color m_primaryColor = new Color(0f, 0.67f, 0.27f, 0.9f); // Deep Emerald
+        [SerializeField] private Color m_speedLineColor = new Color(0f, 0.87f, 0.33f, 0.6f); // Jade
+        [SerializeField] private Color m_tertiaryColor = new Color(0f, 0.6f, 0.2f, 0.7f); // Forest
 
         [Header("Scale")]
-        [SerializeField] private float _radius = 0.56f;
+        [SerializeField] private float m_radius = 0.56f;
 
         // Components
-        private Transform _mainGlow;
-        private Transform _outerRing;
-        private Transform _innerRing;
-        private Transform _letter;
-        private Transform[] _speedLines;
-        private Transform[] _particles;
+        private Transform m_mainGlow;
+        private Transform m_outerRing;
+        private Transform m_innerRing;
+        private Transform m_letter;
+        private Transform[] m_speedLines;
+        private Transform[] m_particles;
 
-        private float _time;
+        private float m_time;
 
         private void Start()
         {
@@ -38,13 +38,13 @@ namespace NeuralBreak.Entities
             ClearChildren();
 
             // Main glow circle
-            _mainGlow = CreateCircle("MainGlow", _radius, _primaryColor, 5);
+            m_mainGlow = CreateCircle("MainGlow", m_radius, m_primaryColor, 5);
 
             // Outer ring
-            _outerRing = CreateRing("OuterRing", _radius * 1.1f, _radius * 1.45f, _tertiaryColor, 3);
+            m_outerRing = CreateRing("OuterRing", m_radius * 1.1f, m_radius * 1.45f, m_tertiaryColor, 3);
 
             // Inner ring
-            _innerRing = CreateRing("InnerRing", _radius * 0.78f, _radius * 0.94f, _speedLineColor, 7);
+            m_innerRing = CreateRing("InnerRing", m_radius * 0.78f, m_radius * 0.94f, m_speedLineColor, 7);
 
             // Letter 'S'
             CreateLetter();
@@ -67,12 +67,12 @@ namespace NeuralBreak.Entities
             sr.sortingOrder = 12;
 
             letterGO.transform.localScale = Vector3.one * 0.4f;
-            _letter = letterGO.transform;
+            m_letter = letterGO.transform;
         }
 
         private void CreateSpeedLines()
         {
-            _speedLines = new Transform[6];
+            m_speedLines = new Transform[6];
             float[] lengths = { 0.375f, 0.315f, 0.255f };
 
             for (int i = 0; i < 6; i++)
@@ -82,7 +82,7 @@ namespace NeuralBreak.Entities
 
                 var sr = line.AddComponent<SpriteRenderer>();
                 sr.sprite = CreateSpeedLineSprite();
-                sr.color = new Color(_speedLineColor.r, _speedLineColor.g, _speedLineColor.b,
+                sr.color = new Color(m_speedLineColor.r, m_speedLineColor.g, m_speedLineColor.b,
                     0.4f + (i % 3) * 0.1f);
                 sr.sortingOrder = 2;
 
@@ -90,18 +90,18 @@ namespace NeuralBreak.Entities
                 int pair = i / 2;
                 bool isTop = (i % 2 == 0);
                 float yOffset = isTop ? 0.15f + pair * 0.12f : -0.15f - pair * 0.12f;
-                float xOffset = -_radius * 1.2f - pair * 0.1f;
+                float xOffset = -m_radius * 1.2f - pair * 0.1f;
 
                 line.transform.localPosition = new Vector3(xOffset, yOffset, 0);
                 line.transform.localScale = new Vector3(lengths[pair], 0.05f, 1f);
 
-                _speedLines[i] = line.transform;
+                m_speedLines[i] = line.transform;
             }
         }
 
         private void CreateParticles()
         {
-            _particles = new Transform[15];
+            m_particles = new Transform[15];
 
             for (int i = 0; i < 15; i++)
             {
@@ -110,90 +110,90 @@ namespace NeuralBreak.Entities
 
                 var sr = particle.AddComponent<SpriteRenderer>();
                 sr.sprite = CreateCircleSprite(8);
-                sr.color = (i % 2 == 0) ? _primaryColor : _speedLineColor;
+                sr.color = (i % 2 == 0) ? m_primaryColor : m_speedLineColor;
                 sr.sortingOrder = 15;
 
                 particle.transform.localScale = Vector3.one * 0.04f;
-                _particles[i] = particle.transform;
+                m_particles[i] = particle.transform;
             }
         }
 
         private void Update()
         {
-            if (_mainGlow == null) return;
+            if (m_mainGlow == null) return;
 
-            _time += Time.deltaTime;
+            m_time += Time.deltaTime;
 
             // VERY FAST rotation (4.0 rad/s = ~229 deg/s)
             transform.Rotate(0, 0, Time.deltaTime * 229f);
 
             // Very fast pulsing
-            float pulse = 1f + Mathf.Sin(_time * 12f) * 0.18f;
-            _mainGlow.localScale = Vector3.one * _radius * 2f * pulse;
+            float pulse = 1f + Mathf.Sin(m_time * 12f) * 0.18f;
+            m_mainGlow.localScale = Vector3.one * m_radius * 2f * pulse;
 
             // Ring pulses
-            if (_outerRing != null)
+            if (m_outerRing != null)
             {
-                float outerPulse = 1f + Mathf.Sin(_time * 10f) * 0.12f;
-                _outerRing.localScale = Vector3.one * _radius * 2.9f * outerPulse;
+                float outerPulse = 1f + Mathf.Sin(m_time * 10f) * 0.12f;
+                m_outerRing.localScale = Vector3.one * m_radius * 2.9f * outerPulse;
             }
 
-            if (_innerRing != null)
+            if (m_innerRing != null)
             {
-                float innerPulse = 1f + Mathf.Sin(_time * 11f + 0.5f) * 0.14f;
-                _innerRing.localScale = Vector3.one * _radius * 1.88f * innerPulse;
+                float innerPulse = 1f + Mathf.Sin(m_time * 11f + 0.5f) * 0.14f;
+                m_innerRing.localScale = Vector3.one * m_radius * 1.88f * innerPulse;
             }
 
             // Letter counter-rotation
-            if (_letter != null)
+            if (m_letter != null)
             {
-                _letter.rotation = Quaternion.identity;
+                m_letter.rotation = Quaternion.identity;
             }
 
             // Speed lines animation
-            if (_speedLines != null)
+            if (m_speedLines != null)
             {
-                for (int i = 0; i < _speedLines.Length; i++)
+                for (int i = 0; i < m_speedLines.Length; i++)
                 {
-                    if (_speedLines[i] == null) continue;
+                    if (m_speedLines[i] == null) continue;
 
                     // Keep speed lines behind (counter-rotate)
-                    _speedLines[i].rotation = Quaternion.identity;
+                    m_speedLines[i].rotation = Quaternion.identity;
 
                     // Pulse opacity
-                    var sr = _speedLines[i].GetComponent<SpriteRenderer>();
+                    var sr = m_speedLines[i].GetComponent<SpriteRenderer>();
                     if (sr != null)
                     {
-                        float alpha = 0.3f + Mathf.Sin(_time * 15f + i) * 0.2f;
-                        sr.color = new Color(_speedLineColor.r, _speedLineColor.g, _speedLineColor.b, alpha);
+                        float alpha = 0.3f + Mathf.Sin(m_time * 15f + i) * 0.2f;
+                        sr.color = new Color(m_speedLineColor.r, m_speedLineColor.g, m_speedLineColor.b, alpha);
                     }
 
                     // Slight length pulse
                     int pair = i / 2;
                     float[] baseLengths = { 0.375f, 0.315f, 0.255f };
-                    float lengthPulse = baseLengths[pair] * (1f + Mathf.Sin(_time * 18f + i) * 0.15f);
-                    _speedLines[i].localScale = new Vector3(lengthPulse, 0.05f, 1f);
+                    float lengthPulse = baseLengths[pair] * (1f + Mathf.Sin(m_time * 18f + i) * 0.15f);
+                    m_speedLines[i].localScale = new Vector3(lengthPulse, 0.05f, 1f);
                 }
             }
 
             // Rapid orbiting particles (6 rad/s = ~344 deg/s)
-            if (_particles != null)
+            if (m_particles != null)
             {
-                for (int i = 0; i < _particles.Length; i++)
+                for (int i = 0; i < m_particles.Length; i++)
                 {
-                    if (_particles[i] == null) continue;
+                    if (m_particles[i] == null) continue;
 
-                    float angle = _time * 6f + (i / (float)_particles.Length) * Mathf.PI * 2f;
-                    float dist = _radius * 1.5f + Mathf.Sin(_time * 8f + i) * 0.1f;
-                    _particles[i].localPosition = new Vector3(
+                    float angle = m_time * 6f + (i / (float)m_particles.Length) * Mathf.PI * 2f;
+                    float dist = m_radius * 1.5f + Mathf.Sin(m_time * 8f + i) * 0.1f;
+                    m_particles[i].localPosition = new Vector3(
                         Mathf.Cos(angle) * dist,
                         Mathf.Sin(angle) * dist,
                         0
                     );
 
                     // Rapid particle pulse
-                    float pScale = 0.03f + Mathf.Sin(_time * 15f + i * 0.7f) * 0.02f;
-                    _particles[i].localScale = Vector3.one * pScale;
+                    float pScale = 0.03f + Mathf.Sin(m_time * 15f + i * 0.7f) * 0.02f;
+                    m_particles[i].localScale = Vector3.one * pScale;
                 }
             }
         }

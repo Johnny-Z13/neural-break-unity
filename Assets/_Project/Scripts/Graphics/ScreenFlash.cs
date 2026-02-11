@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using NeuralBreak.Core;
+using Z13.Core;
 
 namespace NeuralBreak.Graphics
 {
@@ -13,13 +14,13 @@ namespace NeuralBreak.Graphics
     {
 
         [Header("Settings")]
-        [SerializeField] private float _defaultDuration = 0.1f;
-        [SerializeField] private AnimationCurve _flashCurve = AnimationCurve.EaseInOut(0f, 1f, 1f, 0f);
+        [SerializeField] private float m_defaultDuration = 0.1f;
+        [SerializeField] private AnimationCurve m_flashCurve = AnimationCurve.EaseInOut(0f, 1f, 1f, 0f);
 
         // References
-        private Image _flashImage;
-        private Canvas _canvas;
-        private Coroutine _flashCoroutine;
+        private Image m_flashImage;
+        private Canvas m_canvas;
+        private Coroutine m_flashCoroutine;
 
         private void Awake()
         {
@@ -55,15 +56,15 @@ namespace NeuralBreak.Graphics
         private void SetupFlashUI()
         {
             // Create canvas if we don't have one
-            _canvas = GetComponentInParent<Canvas>();
-            if (_canvas == null)
+            m_canvas = GetComponentInParent<Canvas>();
+            if (m_canvas == null)
             {
                 // Create a dedicated canvas for screen flash
                 var canvasGO = new GameObject("ScreenFlashCanvas");
                 canvasGO.transform.SetParent(transform.parent, false);
-                _canvas = canvasGO.AddComponent<Canvas>();
-                _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                _canvas.sortingOrder = 100; // On top of everything
+                m_canvas = canvasGO.AddComponent<Canvas>();
+                m_canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                m_canvas.sortingOrder = 100; // On top of everything
                 canvasGO.AddComponent<CanvasScaler>();
                 transform.SetParent(canvasGO.transform, false);
             }
@@ -72,19 +73,19 @@ namespace NeuralBreak.Graphics
             var flashGO = new GameObject("FlashImage");
             flashGO.transform.SetParent(transform, false);
 
-            _flashImage = flashGO.AddComponent<Image>();
-            _flashImage.color = new Color(1f, 1f, 1f, 0f);
-            _flashImage.raycastTarget = false;
+            m_flashImage = flashGO.AddComponent<Image>();
+            m_flashImage.color = new Color(1f, 1f, 1f, 0f);
+            m_flashImage.raycastTarget = false;
 
             // Stretch to fill
-            var rect = _flashImage.rectTransform;
+            var rect = m_flashImage.rectTransform;
             rect.anchorMin = Vector2.zero;
             rect.anchorMax = Vector2.one;
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
 
             // Start invisible
-            _flashImage.gameObject.SetActive(false);
+            m_flashImage.gameObject.SetActive(false);
         }
 
         /// <summary>
@@ -92,16 +93,16 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void Flash(Color color, float duration = -1f)
         {
-            if (_flashImage == null) return;
+            if (m_flashImage == null) return;
 
-            if (duration < 0) duration = _defaultDuration;
+            if (duration < 0) duration = m_defaultDuration;
 
-            if (_flashCoroutine != null)
+            if (m_flashCoroutine != null)
             {
-                StopCoroutine(_flashCoroutine);
+                StopCoroutine(m_flashCoroutine);
             }
 
-            _flashCoroutine = StartCoroutine(FlashCoroutine(color, duration));
+            m_flashCoroutine = StartCoroutine(FlashCoroutine(color, duration));
         }
 
         /// <summary>
@@ -130,7 +131,7 @@ namespace NeuralBreak.Graphics
 
         private IEnumerator FlashCoroutine(Color color, float duration)
         {
-            _flashImage.gameObject.SetActive(true);
+            m_flashImage.gameObject.SetActive(true);
 
             float elapsed = 0f;
             Color startColor = color;
@@ -140,16 +141,16 @@ namespace NeuralBreak.Graphics
             {
                 elapsed += Time.unscaledDeltaTime;
                 float t = elapsed / duration;
-                float curveValue = _flashCurve.Evaluate(t);
+                float curveValue = m_flashCurve.Evaluate(t);
 
-                _flashImage.color = Color.Lerp(startColor, endColor, 1f - curveValue);
+                m_flashImage.color = Color.Lerp(startColor, endColor, 1f - curveValue);
 
                 yield return null;
             }
 
-            _flashImage.color = endColor;
-            _flashImage.gameObject.SetActive(false);
-            _flashCoroutine = null;
+            m_flashImage.color = endColor;
+            m_flashImage.gameObject.SetActive(false);
+            m_flashCoroutine = null;
         }
 
         #region Event Handlers

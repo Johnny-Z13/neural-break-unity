@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Collections;
 using NeuralBreak.Core;
+using Z13.Core;
 
 namespace NeuralBreak.Input
 {
@@ -13,39 +14,39 @@ namespace NeuralBreak.Input
     {
 
         [Header("Settings")]
-        [SerializeField] private bool _enableRumble = true;
-        [SerializeField] private float _rumbleIntensityMultiplier = 1f;
+        [SerializeField] private bool m_enableRumble = true;
+        [SerializeField] private float m_rumbleIntensityMultiplier = 1f;
 
         [Header("Hit Feedback")]
-        [SerializeField] private float _smallHitLow = 0.1f;
-        [SerializeField] private float _smallHitHigh = 0.2f;
-        [SerializeField] private float _smallHitDuration = 0.05f;
+        [SerializeField] private float m_smallHitLow = 0.1f;
+        [SerializeField] private float m_smallHitHigh = 0.2f;
+        [SerializeField] private float m_smallHitDuration = 0.05f;
 
-        [SerializeField] private float _mediumHitLow = 0.3f;
-        [SerializeField] private float _mediumHitHigh = 0.4f;
-        [SerializeField] private float _mediumHitDuration = 0.1f;
+        [SerializeField] private float m_mediumHitLow = 0.3f;
+        [SerializeField] private float m_mediumHitHigh = 0.4f;
+        [SerializeField] private float m_mediumHitDuration = 0.1f;
 
-        [SerializeField] private float _largeHitLow = 0.6f;
-        [SerializeField] private float _largeHitHigh = 0.8f;
-        [SerializeField] private float _largeHitDuration = 0.15f;
+        [SerializeField] private float m_largeHitLow = 0.6f;
+        [SerializeField] private float m_largeHitHigh = 0.8f;
+        [SerializeField] private float m_largeHitDuration = 0.15f;
 
         [Header("Player Damage")]
-        [SerializeField] private float _damageLow = 0.5f;
-        [SerializeField] private float _damageHigh = 0.7f;
-        [SerializeField] private float _damageDuration = 0.2f;
+        [SerializeField] private float m_damageLow = 0.5f;
+        [SerializeField] private float m_damageHigh = 0.7f;
+        [SerializeField] private float m_damageDuration = 0.2f;
 
         [Header("Special Events")]
-        [SerializeField] private float _levelUpLow = 0.3f;
-        [SerializeField] private float _levelUpHigh = 0.5f;
-        [SerializeField] private float _levelUpDuration = 0.3f;
+        [SerializeField] private float m_levelUpLow = 0.3f;
+        [SerializeField] private float m_levelUpHigh = 0.5f;
+        [SerializeField] private float m_levelUpDuration = 0.3f;
 
-        [SerializeField] private float _dashLow = 0.2f;
-        [SerializeField] private float _dashHigh = 0.1f;
-        [SerializeField] private float _dashDuration = 0.08f;
+        [SerializeField] private float m_dashLow = 0.2f;
+        [SerializeField] private float m_dashHigh = 0.1f;
+        [SerializeField] private float m_dashDuration = 0.08f;
 
         // State
-        private Coroutine _rumbleCoroutine;
-        private Gamepad _currentGamepad;
+        private Coroutine m_rumbleCoroutine;
+        private Gamepad m_currentGamepad;
 
         private void Start()
         {
@@ -62,7 +63,7 @@ namespace NeuralBreak.Input
         private void Update()
         {
             // Track current gamepad
-            _currentGamepad = Gamepad.current;
+            m_currentGamepad = Gamepad.current;
         }
 
         private void SubscribeToEvents()
@@ -96,25 +97,25 @@ namespace NeuralBreak.Input
             {
                 case EnemyType.DataMite:
                 case EnemyType.Fizzer:
-                    Rumble(_smallHitLow, _smallHitHigh, _smallHitDuration);
+                    Rumble(m_smallHitLow, m_smallHitHigh, m_smallHitDuration);
                     break;
 
                 case EnemyType.ScanDrone:
                 case EnemyType.CrystalShard:
-                    Rumble(_mediumHitLow, _mediumHitHigh, _mediumHitDuration);
+                    Rumble(m_mediumHitLow, m_mediumHitHigh, m_mediumHitDuration);
                     break;
 
                 case EnemyType.ChaosWorm:
                 case EnemyType.UFO:
-                    Rumble(_mediumHitLow * 1.2f, _mediumHitHigh * 1.2f, _mediumHitDuration * 1.5f);
+                    Rumble(m_mediumHitLow * 1.2f, m_mediumHitHigh * 1.2f, m_mediumHitDuration * 1.5f);
                     break;
 
                 case EnemyType.VoidSphere:
-                    Rumble(_largeHitLow, _largeHitHigh, _largeHitDuration);
+                    Rumble(m_largeHitLow, m_largeHitHigh, m_largeHitDuration);
                     break;
 
                 case EnemyType.Boss:
-                    Rumble(_largeHitLow * 1.5f, _largeHitHigh * 1.5f, _largeHitDuration * 2f);
+                    Rumble(m_largeHitLow * 1.5f, m_largeHitHigh * 1.5f, m_largeHitDuration * 2f);
                     break;
             }
         }
@@ -122,40 +123,40 @@ namespace NeuralBreak.Input
         private void OnEnemyDamaged(EnemyDamagedEvent evt)
         {
             // Very light rumble for hits
-            Rumble(_smallHitLow * 0.5f, _smallHitHigh * 0.5f, _smallHitDuration * 0.5f);
+            Rumble(m_smallHitLow * 0.5f, m_smallHitHigh * 0.5f, m_smallHitDuration * 0.5f);
         }
 
         private void OnPlayerDamaged(PlayerDamagedEvent evt)
         {
-            Rumble(_damageLow, _damageHigh, _damageDuration);
+            Rumble(m_damageLow, m_damageHigh, m_damageDuration);
         }
 
         private void OnPlayerDashed(PlayerDashedEvent evt)
         {
-            Rumble(_dashLow, _dashHigh, _dashDuration);
+            Rumble(m_dashLow, m_dashHigh, m_dashDuration);
         }
 
         private void OnPlayerLevelUp(PlayerLevelUpEvent evt)
         {
             // Pulsing rumble for level up
-            StartCoroutine(PulseRumble(_levelUpLow, _levelUpHigh, _levelUpDuration, 3));
+            StartCoroutine(PulseRumble(m_levelUpLow, m_levelUpHigh, m_levelUpDuration, 3));
         }
 
         private void OnPickupCollected(PickupCollectedEvent evt)
         {
             // Light positive feedback
-            Rumble(_smallHitLow, _smallHitHigh * 0.5f, _smallHitDuration);
+            Rumble(m_smallHitLow, m_smallHitHigh * 0.5f, m_smallHitDuration);
         }
 
         private void OnLevelCompleted(LevelCompletedEvent evt)
         {
-            StartCoroutine(PulseRumble(_mediumHitLow, _mediumHitHigh, 0.15f, 4));
+            StartCoroutine(PulseRumble(m_mediumHitLow, m_mediumHitHigh, 0.15f, 4));
         }
 
         private void OnGameOver(GameOverEvent evt)
         {
             // Long dramatic rumble
-            Rumble(_largeHitLow, _largeHitHigh, 0.5f);
+            Rumble(m_largeHitLow, m_largeHitHigh, 0.5f);
         }
 
         /// <summary>
@@ -163,33 +164,33 @@ namespace NeuralBreak.Input
         /// </summary>
         public void Rumble(float lowFrequency, float highFrequency, float duration)
         {
-            if (!_enableRumble || _currentGamepad == null) return;
+            if (!m_enableRumble || m_currentGamepad == null) return;
 
             // Apply multiplier
-            lowFrequency *= _rumbleIntensityMultiplier;
-            highFrequency *= _rumbleIntensityMultiplier;
+            lowFrequency *= m_rumbleIntensityMultiplier;
+            highFrequency *= m_rumbleIntensityMultiplier;
 
             // Clamp values
             lowFrequency = Mathf.Clamp01(lowFrequency);
             highFrequency = Mathf.Clamp01(highFrequency);
 
-            if (_rumbleCoroutine != null)
+            if (m_rumbleCoroutine != null)
             {
-                StopCoroutine(_rumbleCoroutine);
+                StopCoroutine(m_rumbleCoroutine);
             }
-            _rumbleCoroutine = StartCoroutine(RumbleCoroutine(lowFrequency, highFrequency, duration));
+            m_rumbleCoroutine = StartCoroutine(RumbleCoroutine(lowFrequency, highFrequency, duration));
         }
 
         private IEnumerator RumbleCoroutine(float lowFreq, float highFreq, float duration)
         {
-            if (_currentGamepad == null) yield break;
+            if (m_currentGamepad == null) yield break;
 
-            _currentGamepad.SetMotorSpeeds(lowFreq, highFreq);
+            m_currentGamepad.SetMotorSpeeds(lowFreq, highFreq);
 
             yield return new WaitForSecondsRealtime(duration);
 
             StopRumble();
-            _rumbleCoroutine = null;
+            m_rumbleCoroutine = null;
         }
 
         private IEnumerator PulseRumble(float lowFreq, float highFreq, float pulseDuration, int pulseCount)
@@ -206,9 +207,9 @@ namespace NeuralBreak.Input
         /// </summary>
         public void StopRumble()
         {
-            if (_currentGamepad != null)
+            if (m_currentGamepad != null)
             {
-                _currentGamepad.SetMotorSpeeds(0, 0);
+                m_currentGamepad.SetMotorSpeeds(0, 0);
             }
         }
 
@@ -217,7 +218,7 @@ namespace NeuralBreak.Input
         /// </summary>
         public void SetRumbleEnabled(bool enabled)
         {
-            _enableRumble = enabled;
+            m_enableRumble = enabled;
             if (!enabled)
             {
                 StopRumble();
@@ -229,22 +230,22 @@ namespace NeuralBreak.Input
         /// </summary>
         public void SetIntensity(float multiplier)
         {
-            _rumbleIntensityMultiplier = Mathf.Clamp(multiplier, 0f, 2f);
+            m_rumbleIntensityMultiplier = Mathf.Clamp(multiplier, 0f, 2f);
         }
 
         #region Debug
 
         [ContextMenu("Debug: Small Rumble")]
-        private void DebugSmallRumble() => Rumble(_smallHitLow, _smallHitHigh, _smallHitDuration);
+        private void DebugSmallRumble() => Rumble(m_smallHitLow, m_smallHitHigh, m_smallHitDuration);
 
         [ContextMenu("Debug: Medium Rumble")]
-        private void DebugMediumRumble() => Rumble(_mediumHitLow, _mediumHitHigh, _mediumHitDuration);
+        private void DebugMediumRumble() => Rumble(m_mediumHitLow, m_mediumHitHigh, m_mediumHitDuration);
 
         [ContextMenu("Debug: Large Rumble")]
-        private void DebugLargeRumble() => Rumble(_largeHitLow, _largeHitHigh, _largeHitDuration);
+        private void DebugLargeRumble() => Rumble(m_largeHitLow, m_largeHitHigh, m_largeHitDuration);
 
         [ContextMenu("Debug: Damage Rumble")]
-        private void DebugDamageRumble() => Rumble(_damageLow, _damageHigh, _damageDuration);
+        private void DebugDamageRumble() => Rumble(m_damageLow, m_damageHigh, m_damageDuration);
 
         #endregion
     }

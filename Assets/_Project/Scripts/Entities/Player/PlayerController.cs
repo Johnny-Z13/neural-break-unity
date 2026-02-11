@@ -2,6 +2,7 @@ using UnityEngine;
 using NeuralBreak.Core;
 using NeuralBreak.Input;
 using NeuralBreak.Config;
+using Z13.Core;
 
 namespace NeuralBreak.Entities
 {
@@ -16,18 +17,18 @@ namespace NeuralBreak.Entities
         // Note: MMFeedbacks removed
 
         [Header("Dash Trail")]
-        [SerializeField] private TrailRenderer _dashTrail;
-        [SerializeField] private Color _trailStartColor = new Color(0.2f, 0.9f, 1f, 0.8f);
-        [SerializeField] private Color _trailEndColor = new Color(0.2f, 0.9f, 1f, 0f);
-        [SerializeField] private float _trailTime = 0.15f;
-        [SerializeField] private float _trailWidth = 0.5f;
+        [SerializeField] private TrailRenderer m_dashTrail;
+        [SerializeField] private Color m_trailStartColor = new Color(0.2f, 0.9f, 1f, 0.8f);
+        [SerializeField] private Color m_trailEndColor = new Color(0.2f, 0.9f, 1f, 0f);
+        [SerializeField] private float m_trailTime = 0.15f;
+        [SerializeField] private float m_trailWidth = 0.5f;
 
         [Header("Thrust Trail")]
-        [SerializeField] private TrailRenderer _thrustTrail;
-        [SerializeField] private Color _thrustTrailStartColor = new Color(1f, 0.6f, 0.2f, 0.6f);
-        [SerializeField] private Color _thrustTrailEndColor = new Color(1f, 0.4f, 0.1f, 0f);
-        [SerializeField] private float _thrustTrailTime = 0.25f;
-        [SerializeField] private float _thrustTrailWidth = 0.3f;
+        [SerializeField] private TrailRenderer m_thrustTrail;
+        [SerializeField] private Color m_thrustTrailStartColor = new Color(1f, 0.6f, 0.2f, 0.6f);
+        [SerializeField] private Color m_thrustTrailEndColor = new Color(1f, 0.4f, 0.1f, 0f);
+        [SerializeField] private float m_thrustTrailTime = 0.25f;
+        [SerializeField] private float m_thrustTrailWidth = 0.3f;
 
         // Config-driven properties (cached for performance)
         private PlayerConfig Config => ConfigProvider.Player;
@@ -45,71 +46,71 @@ namespace NeuralBreak.Entities
         private ControlScheme CurrentControlScheme => Config.controlScheme;
 
         // Components
-        private Rigidbody2D _rb;
-        private InputManager _input;
+        private Rigidbody2D m_rb;
+        private InputManager m_input;
 
         // Movement state
-        private Vector2 _currentVelocity;
-        private Vector2 _lastMoveDirection = Vector2.up;
-        private Vector2 _aimDirection = Vector2.up; // Smoothed for visuals
-        private Vector2 _rawAimDirection = Vector2.up; // Instant for shooting
-        private float _currentSpeedMultiplier = 1f;
+        private Vector2 m_currentVelocity;
+        private Vector2 m_lastMoveDirection = Vector2.up;
+        private Vector2 m_aimDirection = Vector2.up; // Smoothed for visuals
+        private Vector2 m_rawAimDirection = Vector2.up; // Instant for shooting
+        private float m_currentSpeedMultiplier = 1f;
 
         // Classic rotate controls state
-        private float _currentRotation = 0f; // For ClassicRotate/TankControls
+        private float m_currentRotation = 0f; // For ClassicRotate/TankControls
 
         // Dash state
-        private bool _isDashing;
-        private float _dashTimer;
-        private float _dashCooldownTimer;
-        private Vector2 _dashDirection;
-        private bool _dashReady = true;
+        private bool m_isDashing;
+        private float m_dashTimer;
+        private float m_dashCooldownTimer;
+        private Vector2 m_dashDirection;
+        private bool m_dashReady = true;
 
         // Thrust state
-        private bool _isThrusting;
-        private float _thrustMultiplier = 1f; // Current thrust multiplier (1.0 to ThrustSpeedMultiplier)
+        private bool m_isThrusting;
+        private float m_thrustMultiplier = 1f; // Current thrust multiplier (1.0 to ThrustSpeedMultiplier)
 
         // Aim indicator
-        private GameObject _aimIndicator;
-        private LineRenderer _aimLine;
+        private GameObject m_aimIndicator;
+        private LineRenderer m_aimLine;
 
         // Cached colors to avoid allocations
-        private static readonly Color PlayerColor = new Color(0.2f, 0.9f, 1f);
-        private static readonly Color AimColor = new Color(0.2f, 0.9f, 1f, 0.6f);
+        private static readonly Color s_playerColor = new Color(0.2f, 0.9f, 1f);
+        private static readonly Color s_aimColor = new Color(0.2f, 0.9f, 1f, 0.6f);
 
         // Cached Vector3 for zero-allocation gizmos
-        private Vector3 _cachedGizmoVector;
+        private Vector3 m_cachedGizmoVector;
 
         // Public accessors
-        public Vector2 Position => _rb.position;
-        public Vector2 Velocity => _currentVelocity;
-        public Vector2 FacingDirection => _rawAimDirection; // Raw aim for shooting (no lag)
-        public Vector2 SmoothedAimDirection => _aimDirection; // Smoothed for visual rotation
-        public Vector2 MoveDirection => _lastMoveDirection; // Actual move direction
-        public bool IsDashing => _isDashing;
-        public bool DashReady => _dashCooldownTimer <= 0f;
-        public float DashCooldownPercent => _dashCooldownTimer / DashCooldown;
-        public bool IsThrusting => _isThrusting;
-        public float ThrustPercent => (_thrustMultiplier - 1f) / (ThrustSpeedMultiplier - 1f);
-        public float CurrentSpeed => BaseSpeed * _currentSpeedMultiplier * _thrustMultiplier;
+        public Vector2 Position => m_rb.position;
+        public Vector2 Velocity => m_currentVelocity;
+        public Vector2 FacingDirection => m_rawAimDirection; // Raw aim for shooting (no lag)
+        public Vector2 SmoothedAimDirection => m_aimDirection; // Smoothed for visual rotation
+        public Vector2 MoveDirection => m_lastMoveDirection; // Actual move direction
+        public bool IsDashing => m_isDashing;
+        public bool DashReady => m_dashCooldownTimer <= 0f;
+        public float DashCooldownPercent => m_dashCooldownTimer / DashCooldown;
+        public bool IsThrusting => m_isThrusting;
+        public float ThrustPercent => (m_thrustMultiplier - 1f) / (ThrustSpeedMultiplier - 1f);
+        public float CurrentSpeed => BaseSpeed * m_currentSpeedMultiplier * m_thrustMultiplier;
 
         private void Awake()
         {
-            _rb = GetComponent<Rigidbody2D>();
-            _rb.gravityScale = 0f;
-            _rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+            m_rb = GetComponent<Rigidbody2D>();
+            m_rb.gravityScale = 0f;
+            m_rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         }
 
         private void Start()
         {
-            _input = InputManager.Instance;
+            m_input = InputManager.Instance;
 
-            if (_input != null)
+            if (m_input != null)
             {
-                _input.OnDashPressed += TryDash;
-                _input.OnThrustPressed += OnThrustPressed;
-                _input.OnThrustReleased += OnThrustReleased;
-                _input.SetPlayerTransform(transform);
+                m_input.OnDashPressed += TryDash;
+                m_input.OnThrustPressed += OnThrustPressed;
+                m_input.OnThrustReleased += OnThrustReleased;
+                m_input.SetPlayerTransform(transform);
                 Debug.Log("[PlayerController] InputManager connected successfully");
             }
             else
@@ -140,7 +141,7 @@ namespace NeuralBreak.Entities
             if (sr == null) return;
 
             // Player is a cyan/teal triangle pointing up - use cached color
-            var sprite = Graphics.SpriteGenerator.CreateTriangle(64, PlayerColor, "Player");
+            var sprite = Graphics.SpriteGenerator.CreateTriangle(64, s_playerColor, "Player");
             sr.sprite = sprite;
             sr.color = Color.white;
         }
@@ -148,91 +149,91 @@ namespace NeuralBreak.Entities
         private void SetupDashTrail()
         {
             // Create trail renderer if not assigned
-            if (_dashTrail == null)
+            if (m_dashTrail == null)
             {
-                _dashTrail = GetComponent<TrailRenderer>();
-                if (_dashTrail == null)
+                m_dashTrail = GetComponent<TrailRenderer>();
+                if (m_dashTrail == null)
                 {
-                    _dashTrail = gameObject.AddComponent<TrailRenderer>();
+                    m_dashTrail = gameObject.AddComponent<TrailRenderer>();
                 }
             }
 
             // Configure trail
-            _dashTrail.time = _trailTime;
-            _dashTrail.startWidth = _trailWidth;
-            _dashTrail.endWidth = 0.1f;
-            _dashTrail.startColor = _trailStartColor;
-            _dashTrail.endColor = _trailEndColor;
-            _dashTrail.numCornerVertices = 4;
-            _dashTrail.numCapVertices = 4;
-            _dashTrail.minVertexDistance = 0.1f;
+            m_dashTrail.time = m_trailTime;
+            m_dashTrail.startWidth = m_trailWidth;
+            m_dashTrail.endWidth = 0.1f;
+            m_dashTrail.startColor = m_trailStartColor;
+            m_dashTrail.endColor = m_trailEndColor;
+            m_dashTrail.numCornerVertices = 4;
+            m_dashTrail.numCapVertices = 4;
+            m_dashTrail.minVertexDistance = 0.1f;
 
             // Use default sprites material for trail
-            _dashTrail.material = new Material(Shader.Find("Sprites/Default"));
-            _dashTrail.material.color = Color.white;
+            m_dashTrail.material = new Material(Shader.Find("Sprites/Default"));
+            m_dashTrail.material.color = Color.white;
 
             // Start disabled
-            _dashTrail.emitting = false;
+            m_dashTrail.emitting = false;
         }
 
         private void SetupThrustTrail()
         {
             // Create separate trail renderer for thrust
-            if (_thrustTrail == null)
+            if (m_thrustTrail == null)
             {
                 GameObject thrustTrailObj = new GameObject("ThrustTrail");
                 thrustTrailObj.transform.SetParent(transform);
                 thrustTrailObj.transform.localPosition = Vector3.zero;
-                _thrustTrail = thrustTrailObj.AddComponent<TrailRenderer>();
+                m_thrustTrail = thrustTrailObj.AddComponent<TrailRenderer>();
             }
 
             // Configure thrust trail (orange/flame color)
-            _thrustTrail.time = _thrustTrailTime;
-            _thrustTrail.startWidth = _thrustTrailWidth;
-            _thrustTrail.endWidth = 0.05f;
-            _thrustTrail.startColor = _thrustTrailStartColor;
-            _thrustTrail.endColor = _thrustTrailEndColor;
-            _thrustTrail.numCornerVertices = 4;
-            _thrustTrail.numCapVertices = 4;
-            _thrustTrail.minVertexDistance = 0.05f;
+            m_thrustTrail.time = m_thrustTrailTime;
+            m_thrustTrail.startWidth = m_thrustTrailWidth;
+            m_thrustTrail.endWidth = 0.05f;
+            m_thrustTrail.startColor = m_thrustTrailStartColor;
+            m_thrustTrail.endColor = m_thrustTrailEndColor;
+            m_thrustTrail.numCornerVertices = 4;
+            m_thrustTrail.numCapVertices = 4;
+            m_thrustTrail.minVertexDistance = 0.05f;
 
             // Use default sprites material for trail
-            _thrustTrail.material = new Material(Shader.Find("Sprites/Default"));
-            _thrustTrail.material.color = Color.white;
+            m_thrustTrail.material = new Material(Shader.Find("Sprites/Default"));
+            m_thrustTrail.material.color = Color.white;
 
             // Start disabled
-            _thrustTrail.emitting = false;
+            m_thrustTrail.emitting = false;
         }
 
         private void SetupAimIndicator()
         {
             // Create aim indicator object
-            _aimIndicator = new GameObject("AimIndicator");
-            _aimIndicator.transform.SetParent(transform);
-            _aimIndicator.transform.localPosition = Vector3.zero;
+            m_aimIndicator = new GameObject("AimIndicator");
+            m_aimIndicator.transform.SetParent(transform);
+            m_aimIndicator.transform.localPosition = Vector3.zero;
 
             // Add line renderer for aim line
-            _aimLine = _aimIndicator.AddComponent<LineRenderer>();
-            _aimLine.positionCount = 2;
-            _aimLine.startWidth = 0.08f;
-            _aimLine.endWidth = 0.02f;
-            _aimLine.material = new Material(Shader.Find("Sprites/Default"));
+            m_aimLine = m_aimIndicator.AddComponent<LineRenderer>();
+            m_aimLine.positionCount = 2;
+            m_aimLine.startWidth = 0.08f;
+            m_aimLine.endWidth = 0.02f;
+            m_aimLine.material = new Material(Shader.Find("Sprites/Default"));
 
             // Cyan color matching player - use cached colors
-            _aimLine.startColor = AimColor;
-            _aimLine.endColor = new Color(AimColor.r, AimColor.g, AimColor.b, 0.1f);
-            _aimLine.sortingOrder = 5;
+            m_aimLine.startColor = s_aimColor;
+            m_aimLine.endColor = new Color(s_aimColor.r, s_aimColor.g, s_aimColor.b, 0.1f);
+            m_aimLine.sortingOrder = 5;
 
-            _aimLine.useWorldSpace = true;
+            m_aimLine.useWorldSpace = true;
         }
 
         private void OnDestroy()
         {
-            if (_input != null)
+            if (m_input != null)
             {
-                _input.OnDashPressed -= TryDash;
-                _input.OnThrustPressed -= OnThrustPressed;
-                _input.OnThrustReleased -= OnThrustReleased;
+                m_input.OnDashPressed -= TryDash;
+                m_input.OnThrustPressed -= OnThrustPressed;
+                m_input.OnThrustReleased -= OnThrustReleased;
             }
             EventBus.Unsubscribe<PlayerDiedEvent>(OnPlayerDied);
             EventBus.Unsubscribe<GameStartedEvent>(OnGameStarted);
@@ -250,15 +251,15 @@ namespace NeuralBreak.Entities
             HideAimIndicator();
 
             // Also hide trails
-            if (_dashTrail != null)
+            if (m_dashTrail != null)
             {
-                _dashTrail.emitting = false;
-                _dashTrail.Clear();
+                m_dashTrail.emitting = false;
+                m_dashTrail.Clear();
             }
-            if (_thrustTrail != null)
+            if (m_thrustTrail != null)
             {
-                _thrustTrail.emitting = false;
-                _thrustTrail.Clear();
+                m_thrustTrail.emitting = false;
+                m_thrustTrail.Clear();
             }
         }
 
@@ -267,13 +268,13 @@ namespace NeuralBreak.Entities
         /// </summary>
         public void HideAimIndicator()
         {
-            if (_aimLine != null)
+            if (m_aimLine != null)
             {
-                _aimLine.enabled = false;
+                m_aimLine.enabled = false;
             }
-            if (_aimIndicator != null)
+            if (m_aimIndicator != null)
             {
-                _aimIndicator.SetActive(false);
+                m_aimIndicator.SetActive(false);
             }
         }
 
@@ -282,13 +283,13 @@ namespace NeuralBreak.Entities
         /// </summary>
         public void ShowAimIndicator()
         {
-            if (_aimLine != null)
+            if (m_aimLine != null)
             {
-                _aimLine.enabled = true;
+                m_aimLine.enabled = true;
             }
-            if (_aimIndicator != null)
+            if (m_aimIndicator != null)
             {
-                _aimIndicator.SetActive(true);
+                m_aimIndicator.SetActive(true);
             }
         }
 
@@ -302,7 +303,7 @@ namespace NeuralBreak.Entities
 
         private void FixedUpdate()
         {
-            if (_isDashing)
+            if (m_isDashing)
             {
                 UpdateDash();
             }
@@ -320,13 +321,13 @@ namespace NeuralBreak.Entities
         /// </summary>
         private void UpdateAimDirection()
         {
-            if (_input == null) return;
+            if (m_input == null) return;
 
             // Get aim direction from input manager
-            Vector2 inputAim = _input.GetAimDirection();
+            Vector2 inputAim = m_input.GetAimDirection();
 
             // Different behavior based on control scheme
-            Vector2 targetAim = _rawAimDirection; // Default: maintain last aim
+            Vector2 targetAim = m_rawAimDirection; // Default: maintain last aim
 
             switch (CurrentControlScheme)
             {
@@ -338,7 +339,7 @@ namespace NeuralBreak.Entities
                     {
                         targetAim = inputAim.normalized;
                     }
-                    // else: keep targetAim = _rawAimDirection (maintain last aim)
+                    // else: keep targetAim = m_rawAimDirection (maintain last aim)
                     break;
 
                 case NeuralBreak.Config.ControlScheme.ClassicRotate:
@@ -353,20 +354,20 @@ namespace NeuralBreak.Entities
             }
 
             // Store RAW aim direction for shooting (instant, no lag)
-            _rawAimDirection = targetAim;
+            m_rawAimDirection = targetAim;
 
             // Smooth aim direction for VISUAL rotation only (prevents jittery sprite)
             float aimSmoothing = 25f; // Higher = faster response
-            _aimDirection = Vector2.Lerp(_aimDirection, targetAim, aimSmoothing * Time.deltaTime);
+            m_aimDirection = Vector2.Lerp(m_aimDirection, targetAim, aimSmoothing * Time.deltaTime);
 
             // Ensure directions stay normalized
-            if (_aimDirection.sqrMagnitude > 0.01f)
+            if (m_aimDirection.sqrMagnitude > 0.01f)
             {
-                _aimDirection = _aimDirection.normalized;
+                m_aimDirection = m_aimDirection.normalized;
             }
-            if (_rawAimDirection.sqrMagnitude > 0.01f)
+            if (m_rawAimDirection.sqrMagnitude > 0.01f)
             {
-                _rawAimDirection = _rawAimDirection.normalized;
+                m_rawAimDirection = m_rawAimDirection.normalized;
             }
         }
 
@@ -375,14 +376,14 @@ namespace NeuralBreak.Entities
         /// </summary>
         private void UpdateAimIndicator()
         {
-            if (_aimLine == null) return;
+            if (m_aimLine == null) return;
 
             // Show aim line
             Vector3 start = transform.position;
-            Vector3 end = start + (Vector3)_aimDirection * 2.5f;
+            Vector3 end = start + (Vector3)m_aimDirection * 2.5f;
 
-            _aimLine.SetPosition(0, start);
-            _aimLine.SetPosition(1, end);
+            m_aimLine.SetPosition(0, start);
+            m_aimLine.SetPosition(1, end);
         }
 
         /// <summary>
@@ -396,23 +397,23 @@ namespace NeuralBreak.Entities
             {
                 case NeuralBreak.Config.ControlScheme.TwinStick:
                     // Face aim direction (classic twin-stick)
-                    rotationDirection = _aimDirection;
+                    rotationDirection = m_aimDirection;
                     break;
 
                 case NeuralBreak.Config.ControlScheme.FaceMovement:
                     // Face movement direction (no strafing visual)
-                    rotationDirection = _currentVelocity;
+                    rotationDirection = m_currentVelocity;
                     // Fall back to aim direction if stationary
                     if (rotationDirection.sqrMagnitude < 0.1f)
                     {
-                        rotationDirection = _aimDirection;
+                        rotationDirection = m_aimDirection;
                     }
                     break;
 
                 case NeuralBreak.Config.ControlScheme.ClassicRotate:
                 case NeuralBreak.Config.ControlScheme.TankControls:
                     // Use manual rotation from input
-                    transform.rotation = Quaternion.Euler(0f, 0f, _currentRotation);
+                    transform.rotation = Quaternion.Euler(0f, 0f, m_currentRotation);
                     return; // Early return, rotation is already set
             }
 
@@ -428,11 +429,11 @@ namespace NeuralBreak.Entities
 
         private void UpdateMovement()
         {
-            if (_input == null)
+            if (m_input == null)
             {
                 // Try to get InputManager again if it was null
-                _input = InputManager.Instance;
-                if (_input == null) return;
+                m_input = InputManager.Instance;
+                if (m_input == null) return;
             }
 
             // Route to appropriate control scheme
@@ -458,33 +459,33 @@ namespace NeuralBreak.Entities
         /// </summary>
         private void UpdateMovement_TwinStick()
         {
-            Vector2 inputDir = _input.MoveInput;
-            float targetSpeed = BaseSpeed * _currentSpeedMultiplier * _thrustMultiplier;
+            Vector2 inputDir = m_input.MoveInput;
+            float targetSpeed = BaseSpeed * m_currentSpeedMultiplier * m_thrustMultiplier;
 
             if (inputDir.sqrMagnitude > 0.01f)
             {
                 // Accelerate toward target velocity
                 Vector2 targetVelocity = inputDir.normalized * targetSpeed;
-                _currentVelocity = Vector2.MoveTowards(
-                    _currentVelocity,
+                m_currentVelocity = Vector2.MoveTowards(
+                    m_currentVelocity,
                     targetVelocity,
                     Acceleration * Time.fixedDeltaTime
                 );
 
                 // Track last direction for firing
-                _lastMoveDirection = inputDir.normalized;
+                m_lastMoveDirection = inputDir.normalized;
             }
             else
             {
                 // Decelerate to stop
-                _currentVelocity = Vector2.MoveTowards(
-                    _currentVelocity,
+                m_currentVelocity = Vector2.MoveTowards(
+                    m_currentVelocity,
                     Vector2.zero,
                     Deceleration * Time.fixedDeltaTime
                 );
             }
 
-            _rb.linearVelocity = _currentVelocity;
+            m_rb.linearVelocity = m_currentVelocity;
         }
 
         /// <summary>
@@ -492,16 +493,16 @@ namespace NeuralBreak.Entities
         /// </summary>
         private void UpdateMovement_ClassicRotate()
         {
-            Vector2 inputDir = _input.MoveInput;
-            float targetSpeed = BaseSpeed * _currentSpeedMultiplier * _thrustMultiplier;
+            Vector2 inputDir = m_input.MoveInput;
+            float targetSpeed = BaseSpeed * m_currentSpeedMultiplier * m_thrustMultiplier;
 
             // Rotation from left/right input
             float rotationInput = inputDir.x;
             float rotationSpeed = 180f; // degrees per second
-            _currentRotation -= rotationInput * rotationSpeed * Time.fixedDeltaTime;
+            m_currentRotation -= rotationInput * rotationSpeed * Time.fixedDeltaTime;
 
             // Calculate forward direction from rotation
-            float radians = _currentRotation * Mathf.Deg2Rad;
+            float radians = m_currentRotation * Mathf.Deg2Rad;
             Vector2 forward = new Vector2(Mathf.Sin(radians), Mathf.Cos(radians));
 
             // Movement from forward/back input
@@ -511,29 +512,29 @@ namespace NeuralBreak.Entities
             {
                 // Move in facing direction
                 Vector2 targetVelocity = forward * thrustInput * targetSpeed;
-                _currentVelocity = Vector2.MoveTowards(
-                    _currentVelocity,
+                m_currentVelocity = Vector2.MoveTowards(
+                    m_currentVelocity,
                     targetVelocity,
                     Acceleration * Time.fixedDeltaTime
                 );
 
-                _lastMoveDirection = forward;
+                m_lastMoveDirection = forward;
             }
             else
             {
                 // Decelerate
-                _currentVelocity = Vector2.MoveTowards(
-                    _currentVelocity,
+                m_currentVelocity = Vector2.MoveTowards(
+                    m_currentVelocity,
                     Vector2.zero,
                     Deceleration * Time.fixedDeltaTime
                 );
             }
 
-            _rb.linearVelocity = _currentVelocity;
+            m_rb.linearVelocity = m_currentVelocity;
 
             // Update aim direction to match facing
-            _rawAimDirection = forward;
-            _aimDirection = forward;
+            m_rawAimDirection = forward;
+            m_aimDirection = forward;
         }
 
         /// <summary>
@@ -541,16 +542,16 @@ namespace NeuralBreak.Entities
         /// </summary>
         private void UpdateMovement_TankControls()
         {
-            Vector2 inputDir = _input.MoveInput;
-            float targetSpeed = BaseSpeed * _currentSpeedMultiplier * _thrustMultiplier;
+            Vector2 inputDir = m_input.MoveInput;
+            float targetSpeed = BaseSpeed * m_currentSpeedMultiplier * m_thrustMultiplier;
 
             // Rotation from left/right input
             float rotationInput = inputDir.x;
             float rotationSpeed = 120f; // degrees per second (slightly slower than classic)
-            _currentRotation -= rotationInput * rotationSpeed * Time.fixedDeltaTime;
+            m_currentRotation -= rotationInput * rotationSpeed * Time.fixedDeltaTime;
 
             // Calculate forward direction from rotation
-            float radians = _currentRotation * Mathf.Deg2Rad;
+            float radians = m_currentRotation * Mathf.Deg2Rad;
             Vector2 forward = new Vector2(Mathf.Sin(radians), Mathf.Cos(radians));
 
             // Movement from forward/back input
@@ -560,32 +561,32 @@ namespace NeuralBreak.Entities
             {
                 // Move in facing direction
                 Vector2 targetVelocity = forward * moveInput * targetSpeed;
-                _currentVelocity = Vector2.MoveTowards(
-                    _currentVelocity,
+                m_currentVelocity = Vector2.MoveTowards(
+                    m_currentVelocity,
                     targetVelocity,
                     Acceleration * Time.fixedDeltaTime
                 );
 
-                _lastMoveDirection = forward;
+                m_lastMoveDirection = forward;
             }
             else
             {
                 // Decelerate
-                _currentVelocity = Vector2.MoveTowards(
-                    _currentVelocity,
+                m_currentVelocity = Vector2.MoveTowards(
+                    m_currentVelocity,
                     Vector2.zero,
                     Deceleration * Time.fixedDeltaTime
                 );
             }
 
-            _rb.linearVelocity = _currentVelocity;
+            m_rb.linearVelocity = m_currentVelocity;
 
             // Aim is independent for tank controls (can still aim with mouse/right stick)
         }
 
         private void EnforceBoundary()
         {
-            Vector2 pos = _rb.position;
+            Vector2 pos = m_rb.position;
             Vector2 boundaryForce = Vector2.zero;
 
             // Check each boundary
@@ -610,12 +611,12 @@ namespace NeuralBreak.Entities
             // Apply soft push
             if (boundaryForce != Vector2.zero)
             {
-                _rb.linearVelocity += boundaryForce * Time.fixedDeltaTime * 10f;
+                m_rb.linearVelocity += boundaryForce * Time.fixedDeltaTime * 10f;
 
                 // Hard clamp as last resort
                 pos.x = Mathf.Clamp(pos.x, -ArenaBoundary - 1f, ArenaBoundary + 1f);
                 pos.y = Mathf.Clamp(pos.y, -ArenaBoundary - 1f, ArenaBoundary + 1f);
-                _rb.position = pos;
+                m_rb.position = pos;
             }
         }
 
@@ -625,30 +626,30 @@ namespace NeuralBreak.Entities
 
         private void TryDash()
         {
-            if (_isDashing || _dashCooldownTimer > 0f) return;
+            if (m_isDashing || m_dashCooldownTimer > 0f) return;
             if (GameManager.Instance != null && !GameManager.Instance.IsPlaying) return;
 
             // Use current move input or last direction
-            Vector2 dashDir = _input.HasMoveInput()
-                ? _input.MoveInput.normalized
-                : _lastMoveDirection;
+            Vector2 dashDir = m_input.HasMoveInput()
+                ? m_input.MoveInput.normalized
+                : m_lastMoveDirection;
 
             StartDash(dashDir);
         }
 
         private void StartDash(Vector2 direction)
         {
-            _isDashing = true;
-            _dashTimer = DashDuration;
-            _dashDirection = direction;
-            _dashCooldownTimer = DashCooldown;
-            _dashReady = false;
+            m_isDashing = true;
+            m_dashTimer = DashDuration;
+            m_dashDirection = direction;
+            m_dashCooldownTimer = DashCooldown;
+            m_dashReady = false;
 
             // Enable dash trail
-            if (_dashTrail != null)
+            if (m_dashTrail != null)
             {
-                _dashTrail.Clear();
-                _dashTrail.emitting = true;
+                m_dashTrail.Clear();
+                m_dashTrail.emitting = true;
             }
 
             // Feedback (Feel removed)
@@ -659,43 +660,43 @@ namespace NeuralBreak.Entities
 
         private void UpdateDash()
         {
-            _dashTimer -= Time.fixedDeltaTime;
+            m_dashTimer -= Time.fixedDeltaTime;
 
-            if (_dashTimer <= 0f)
+            if (m_dashTimer <= 0f)
             {
                 EndDash();
                 return;
             }
 
             // Move at dash speed
-            _rb.linearVelocity = _dashDirection * DashSpeed;
-            _currentVelocity = _rb.linearVelocity;
+            m_rb.linearVelocity = m_dashDirection * DashSpeed;
+            m_currentVelocity = m_rb.linearVelocity;
         }
 
         private void EndDash()
         {
-            _isDashing = false;
+            m_isDashing = false;
 
             // Disable dash trail
-            if (_dashTrail != null)
+            if (m_dashTrail != null)
             {
-                _dashTrail.emitting = false;
+                m_dashTrail.emitting = false;
             }
 
             // Reduce velocity after dash
-            _currentVelocity = _dashDirection * (BaseSpeed * 0.5f);
-            _rb.linearVelocity = _currentVelocity;
+            m_currentVelocity = m_dashDirection * (BaseSpeed * 0.5f);
+            m_rb.linearVelocity = m_currentVelocity;
         }
 
         private void UpdateDashCooldown()
         {
-            if (_dashCooldownTimer > 0f)
+            if (m_dashCooldownTimer > 0f)
             {
-                _dashCooldownTimer -= Time.deltaTime;
+                m_dashCooldownTimer -= Time.deltaTime;
 
-                if (_dashCooldownTimer <= 0f && !_dashReady)
+                if (m_dashCooldownTimer <= 0f && !m_dashReady)
                 {
-                    _dashReady = true;
+                    m_dashReady = true;
                     // Feedback (Feel removed)
                 }
             }
@@ -707,16 +708,16 @@ namespace NeuralBreak.Entities
 
         private void OnThrustPressed()
         {
-            if (_isDashing) return;
+            if (m_isDashing) return;
             if (GameManager.Instance != null && !GameManager.Instance.IsPlaying) return;
 
-            _isThrusting = true;
+            m_isThrusting = true;
 
             // Enable thrust trail
-            if (_thrustTrail != null)
+            if (m_thrustTrail != null)
             {
-                _thrustTrail.Clear();
-                _thrustTrail.emitting = true;
+                m_thrustTrail.Clear();
+                m_thrustTrail.emitting = true;
             }
 
             // Publish event
@@ -725,7 +726,7 @@ namespace NeuralBreak.Entities
 
         private void OnThrustReleased()
         {
-            _isThrusting = false;
+            m_isThrusting = false;
 
             // Publish event
             EventBus.Publish(new PlayerThrustEndedEvent());
@@ -733,28 +734,28 @@ namespace NeuralBreak.Entities
 
         private void UpdateThrust()
         {
-            float targetMultiplier = _isThrusting ? ThrustSpeedMultiplier : 1f;
+            float targetMultiplier = m_isThrusting ? ThrustSpeedMultiplier : 1f;
 
-            if (_thrustMultiplier < targetMultiplier)
+            if (m_thrustMultiplier < targetMultiplier)
             {
                 // Accelerating thrust
                 float accelRate = (ThrustSpeedMultiplier - 1f) / ThrustAccelTime;
-                _thrustMultiplier = Mathf.Min(targetMultiplier, _thrustMultiplier + accelRate * Time.deltaTime);
+                m_thrustMultiplier = Mathf.Min(targetMultiplier, m_thrustMultiplier + accelRate * Time.deltaTime);
             }
-            else if (_thrustMultiplier > targetMultiplier)
+            else if (m_thrustMultiplier > targetMultiplier)
             {
                 // Decelerating thrust
                 float decelRate = (ThrustSpeedMultiplier - 1f) / ThrustDecelTime;
-                _thrustMultiplier = Mathf.Max(targetMultiplier, _thrustMultiplier - decelRate * Time.deltaTime);
+                m_thrustMultiplier = Mathf.Max(targetMultiplier, m_thrustMultiplier - decelRate * Time.deltaTime);
             }
 
             // Update thrust trail based on current multiplier
-            if (_thrustTrail != null)
+            if (m_thrustTrail != null)
             {
-                bool shouldEmit = _thrustMultiplier > 1.05f;
-                if (_thrustTrail.emitting != shouldEmit)
+                bool shouldEmit = m_thrustMultiplier > 1.05f;
+                if (m_thrustTrail.emitting != shouldEmit)
                 {
-                    _thrustTrail.emitting = shouldEmit;
+                    m_thrustTrail.emitting = shouldEmit;
                 }
             }
         }
@@ -768,7 +769,7 @@ namespace NeuralBreak.Entities
         /// </summary>
         public void SetSpeedMultiplier(float multiplier)
         {
-            _currentSpeedMultiplier = Mathf.Max(0.1f, multiplier);
+            m_currentSpeedMultiplier = Mathf.Max(0.1f, multiplier);
         }
 
         /// <summary>
@@ -776,7 +777,7 @@ namespace NeuralBreak.Entities
         /// </summary>
         public void AddSpeedBonus(float bonus)
         {
-            _currentSpeedMultiplier += bonus;
+            m_currentSpeedMultiplier += bonus;
         }
 
         /// <summary>
@@ -784,7 +785,7 @@ namespace NeuralBreak.Entities
         /// </summary>
         public void ResetSpeed()
         {
-            _currentSpeedMultiplier = 1f;
+            m_currentSpeedMultiplier = 1f;
         }
 
         #endregion
@@ -796,9 +797,9 @@ namespace NeuralBreak.Entities
         /// </summary>
         public void SetPosition(Vector2 position)
         {
-            _rb.position = position;
-            _currentVelocity = Vector2.zero;
-            _rb.linearVelocity = Vector2.zero;
+            m_rb.position = position;
+            m_currentVelocity = Vector2.zero;
+            m_rb.linearVelocity = Vector2.zero;
         }
 
         /// <summary>
@@ -806,9 +807,9 @@ namespace NeuralBreak.Entities
         /// </summary>
         public void Stop()
         {
-            _currentVelocity = Vector2.zero;
-            _rb.linearVelocity = Vector2.zero;
-            _isDashing = false;
+            m_currentVelocity = Vector2.zero;
+            m_rb.linearVelocity = Vector2.zero;
+            m_isDashing = false;
         }
 
         /// <summary>
@@ -816,7 +817,7 @@ namespace NeuralBreak.Entities
         /// </summary>
         public bool IsInvulnerable()
         {
-            return _isDashing;
+            return m_isDashing;
         }
 
         #endregion
@@ -830,17 +831,17 @@ namespace NeuralBreak.Entities
             Gizmos.color = Color.cyan;
 
             // Zero-allocation: use cached Vector3 and Set() method
-            _cachedGizmoVector.Set(boundary * 2, boundary * 2, 0);
-            Gizmos.DrawWireCube(Vector3.zero, _cachedGizmoVector);
+            m_cachedGizmoVector.Set(boundary * 2, boundary * 2, 0);
+            Gizmos.DrawWireCube(Vector3.zero, m_cachedGizmoVector);
 
             // Draw move direction (yellow)
             Gizmos.color = Color.yellow;
             Vector3 pos = transform.position;
-            Gizmos.DrawLine(pos, pos + (Vector3)_lastMoveDirection * 1.5f);
+            Gizmos.DrawLine(pos, pos + (Vector3)m_lastMoveDirection * 1.5f);
 
             // Draw aim direction (cyan)
             Gizmos.color = Color.cyan;
-            Gizmos.DrawLine(pos, pos + (Vector3)_aimDirection * 2.5f);
+            Gizmos.DrawLine(pos, pos + (Vector3)m_aimDirection * 2.5f);
         }
 
         #endregion

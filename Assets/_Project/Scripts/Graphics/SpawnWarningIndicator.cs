@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using NeuralBreak.Core;
+using Z13.Core;
 
 namespace NeuralBreak.Graphics
 {
@@ -12,26 +13,26 @@ namespace NeuralBreak.Graphics
     public class SpawnWarningIndicator : MonoBehaviour
     {
         [Header("Warning Settings")]
-        [SerializeField] private float _defaultWarningDuration = 0.8f;
-        [SerializeField] private float _bossWarningDuration = 2f;
-        [SerializeField] private int _poolSize = 10;
+        [SerializeField] private float m_defaultWarningDuration = 0.8f;
+        [SerializeField] private float m_bossWarningDuration = 2f;
+        [SerializeField] private int m_poolSize = 10;
 
         [Header("Visual Settings")]
-        [SerializeField] private float _warningRadius = 1.5f;
-        [SerializeField] private float _pulseSpeed = 8f;
-        [SerializeField] private float _pulseMinScale = 0.3f;
-        [SerializeField] private float _pulseMaxScale = 1.2f;
-        [SerializeField] private int _circleSegments = 32;
+        [SerializeField] private float m_warningRadius = 1.5f;
+        [SerializeField] private float m_pulseSpeed = 8f;
+        [SerializeField] private float m_pulseMinScale = 0.3f;
+        [SerializeField] private float m_pulseMaxScale = 1.2f;
+        [SerializeField] private int m_circleSegments = 32;
 
         [Header("Colors by Threat Level")]
-        [SerializeField] private Color _lowThreatColor = new Color(1f, 1f, 0f, 0.6f);     // Yellow
-        [SerializeField] private Color _mediumThreatColor = new Color(1f, 0.5f, 0f, 0.7f); // Orange
-        [SerializeField] private Color _highThreatColor = new Color(1f, 0f, 0f, 0.8f);     // Red
-        [SerializeField] private Color _bossThreatColor = new Color(1f, 0f, 0.5f, 0.9f);   // Magenta
+        [SerializeField] private Color m_lowThreatColor = new Color(1f, 1f, 0f, 0.6f);     // Yellow
+        [SerializeField] private Color m_mediumThreatColor = new Color(1f, 0.5f, 0f, 0.7f); // Orange
+        [SerializeField] private Color m_highThreatColor = new Color(1f, 0f, 0f, 0.8f);     // Red
+        [SerializeField] private Color m_bossThreatColor = new Color(1f, 0f, 0.5f, 0.9f);   // Magenta
 
-        private bool _warningsEnabled = true;
-        private List<WarningInstance> _warningPool = new List<WarningInstance>();
-        private List<WarningInstance> _activeWarnings = new List<WarningInstance>();
+        private bool m_warningsEnabled = true;
+        private List<WarningInstance> m_warningPool = new List<WarningInstance>();
+        private List<WarningInstance> m_activeWarnings = new List<WarningInstance>();
 
         private class WarningInstance
         {
@@ -52,7 +53,7 @@ namespace NeuralBreak.Graphics
             EventBus.Subscribe<EnemySpawnWarningEvent>(OnSpawnWarning);
 
             // Load setting from PlayerPrefs
-            _warningsEnabled = PlayerPrefs.GetInt("NeuralBreak_SpawnWarnings", 1) == 1;
+            m_warningsEnabled = PlayerPrefs.GetInt("NeuralBreak_SpawnWarnings", 1) == 1;
         }
 
         /// <summary>
@@ -60,7 +61,7 @@ namespace NeuralBreak.Graphics
         /// </summary>
         public void SetWarningsEnabled(bool enabled)
         {
-            _warningsEnabled = enabled;
+            m_warningsEnabled = enabled;
             if (!enabled)
             {
                 ClearAllWarnings();
@@ -70,7 +71,7 @@ namespace NeuralBreak.Graphics
         /// <summary>
         /// Check if warnings are enabled
         /// </summary>
-        public bool AreWarningsEnabled => _warningsEnabled;
+        public bool AreWarningsEnabled => m_warningsEnabled;
 
         private void OnDestroy()
         {
@@ -79,11 +80,11 @@ namespace NeuralBreak.Graphics
 
         private void InitializePool()
         {
-            for (int i = 0; i < _poolSize; i++)
+            for (int i = 0; i < m_poolSize; i++)
             {
                 var warning = CreateWarningObject();
                 warning.gameObject.SetActive(false);
-                _warningPool.Add(warning);
+                m_warningPool.Add(warning);
             }
         }
 
@@ -101,7 +102,7 @@ namespace NeuralBreak.Graphics
             outerGO.transform.localPosition = Vector3.zero;
 
             instance.circleRenderer = outerGO.AddComponent<LineRenderer>();
-            ConfigureCircleRenderer(instance.circleRenderer, _warningRadius);
+            ConfigureCircleRenderer(instance.circleRenderer, m_warningRadius);
 
             // Create inner circle (smaller, pulsing opposite)
             var innerGO = new GameObject("InnerCircle");
@@ -109,7 +110,7 @@ namespace NeuralBreak.Graphics
             innerGO.transform.localPosition = Vector3.zero;
 
             instance.innerCircle = innerGO.AddComponent<LineRenderer>();
-            ConfigureCircleRenderer(instance.innerCircle, _warningRadius * 0.5f);
+            ConfigureCircleRenderer(instance.innerCircle, m_warningRadius * 0.5f);
 
             // Create exclamation mark sprite
             var exclamGO = new GameObject("Exclamation");
@@ -136,10 +137,10 @@ namespace NeuralBreak.Graphics
             lr.material = mat;
 
             // Generate circle points
-            lr.positionCount = _circleSegments;
-            for (int i = 0; i < _circleSegments; i++)
+            lr.positionCount = m_circleSegments;
+            for (int i = 0; i < m_circleSegments; i++)
             {
-                float angle = (float)i / _circleSegments * Mathf.PI * 2f;
+                float angle = (float)i / m_circleSegments * Mathf.PI * 2f;
                 float x = Mathf.Cos(angle) * radius;
                 float y = Mathf.Sin(angle) * radius;
                 lr.SetPosition(i, new Vector3(x, y, 0));
@@ -205,14 +206,14 @@ namespace NeuralBreak.Graphics
         public void ShowWarning(Vector3 position, EnemyType enemyType, float duration = 0f)
         {
             // Check if warnings are enabled (but always show boss warnings)
-            if (!_warningsEnabled && enemyType != EnemyType.Boss)
+            if (!m_warningsEnabled && enemyType != EnemyType.Boss)
             {
                 return;
             }
 
             if (duration <= 0)
             {
-                duration = enemyType == EnemyType.Boss ? _bossWarningDuration : _defaultWarningDuration;
+                duration = enemyType == EnemyType.Boss ? m_bossWarningDuration : m_defaultWarningDuration;
             }
 
             // Get warning from pool
@@ -234,12 +235,12 @@ namespace NeuralBreak.Graphics
             warning.exclamationMark.color = warning.color;
 
             warning.gameObject.SetActive(true);
-            _activeWarnings.Add(warning);
+            m_activeWarnings.Add(warning);
         }
 
         private WarningInstance GetPooledWarning()
         {
-            foreach (var warning in _warningPool)
+            foreach (var warning in m_warningPool)
             {
                 if (!warning.isActive)
                 {
@@ -248,10 +249,10 @@ namespace NeuralBreak.Graphics
             }
 
             // Expand pool if needed
-            if (_warningPool.Count < _poolSize * 2)
+            if (m_warningPool.Count < m_poolSize * 2)
             {
                 var newWarning = CreateWarningObject();
-                _warningPool.Add(newWarning);
+                m_warningPool.Add(newWarning);
                 return newWarning;
             }
 
@@ -263,24 +264,24 @@ namespace NeuralBreak.Graphics
             switch (type)
             {
                 case EnemyType.Boss:
-                    return _bossThreatColor;
+                    return m_bossThreatColor;
                 case EnemyType.VoidSphere:
                 case EnemyType.ChaosWorm:
-                    return _highThreatColor;
+                    return m_highThreatColor;
                 case EnemyType.UFO:
                 case EnemyType.CrystalShard:
                 case EnemyType.Fizzer:
-                    return _mediumThreatColor;
+                    return m_mediumThreatColor;
                 default:
-                    return _lowThreatColor;
+                    return m_lowThreatColor;
             }
         }
 
         private void Update()
         {
-            for (int i = _activeWarnings.Count - 1; i >= 0; i--)
+            for (int i = m_activeWarnings.Count - 1; i >= 0; i--)
             {
-                var warning = _activeWarnings[i];
+                var warning = m_activeWarnings[i];
                 warning.elapsed += Time.deltaTime;
 
                 float progress = warning.elapsed / warning.duration;
@@ -290,7 +291,7 @@ namespace NeuralBreak.Graphics
                     // Warning complete
                     warning.isActive = false;
                     warning.gameObject.SetActive(false);
-                    _activeWarnings.RemoveAt(i);
+                    m_activeWarnings.RemoveAt(i);
                     continue;
                 }
 
@@ -302,23 +303,23 @@ namespace NeuralBreak.Graphics
         private void AnimateWarning(WarningInstance warning, float progress)
         {
             // Pulsing scale
-            float pulse = Mathf.Sin(warning.elapsed * _pulseSpeed) * 0.5f + 0.5f;
-            float scale = Mathf.Lerp(_pulseMinScale, _pulseMaxScale, pulse);
+            float pulse = Mathf.Sin(warning.elapsed * m_pulseSpeed) * 0.5f + 0.5f;
+            float scale = Mathf.Lerp(m_pulseMinScale, m_pulseMaxScale, pulse);
 
             warning.circleRenderer.transform.localScale = Vector3.one * scale;
 
             // Inner circle pulses opposite
-            float innerPulse = Mathf.Sin(warning.elapsed * _pulseSpeed + Mathf.PI) * 0.5f + 0.5f;
-            float innerScale = Mathf.Lerp(_pulseMinScale * 0.5f, _pulseMaxScale * 0.6f, innerPulse);
+            float innerPulse = Mathf.Sin(warning.elapsed * m_pulseSpeed + Mathf.PI) * 0.5f + 0.5f;
+            float innerScale = Mathf.Lerp(m_pulseMinScale * 0.5f, m_pulseMaxScale * 0.6f, innerPulse);
             warning.innerCircle.transform.localScale = Vector3.one * innerScale;
 
             // Exclamation bobs and flashes
-            float bob = Mathf.Sin(warning.elapsed * _pulseSpeed * 2f) * 0.1f;
+            float bob = Mathf.Sin(warning.elapsed * m_pulseSpeed * 2f) * 0.1f;
             warning.exclamationMark.transform.localPosition = new Vector3(0, bob, 0);
 
             // Fade in quickly, then pulse brightness
             float alpha = Mathf.Min(1f, progress * 4f); // Quick fade in
-            float brightness = 0.7f + Mathf.Sin(warning.elapsed * _pulseSpeed * 1.5f) * 0.3f;
+            float brightness = 0.7f + Mathf.Sin(warning.elapsed * m_pulseSpeed * 1.5f) * 0.3f;
 
             Color c = warning.color;
             c.a = alpha * brightness;
@@ -347,12 +348,12 @@ namespace NeuralBreak.Graphics
 
         public void ClearAllWarnings()
         {
-            foreach (var warning in _activeWarnings)
+            foreach (var warning in m_activeWarnings)
             {
                 warning.isActive = false;
                 warning.gameObject.SetActive(false);
             }
-            _activeWarnings.Clear();
+            m_activeWarnings.Clear();
         }
     }
 }

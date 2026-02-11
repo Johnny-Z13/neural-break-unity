@@ -1,42 +1,55 @@
 using UnityEngine;
 using System;
-using System.IO;
 using System.Collections.Generic;
+using Z13.Core;
 
 namespace NeuralBreak.Core
 {
     /// <summary>
-    /// Manages saving and loading game state.
+    /// Neural Break save system. Inherits from Z13.Core.SaveSystemBase.
     /// Handles player progress, unlocks, and statistics.
+    ///
+    /// TRUE SINGLETON - Lives in Boot scene, persists across all scenes.
     /// </summary>
-    public class SaveSystem : MonoBehaviour
+    public class SaveSystem : SaveSystemBase<SaveData>, IBootable
     {
         public static SaveSystem Instance { get; private set; }
 
-        [Header("Settings")]
-        [SerializeField] private bool _autoSaveOnGameOver = true;
-        [SerializeField] private float _autoSaveInterval = 60f;
+        [Header("Neural Break Settings")]
+        [SerializeField] private bool m_autoSaveOnGameOver = true;
 
-        public SaveData CurrentSave { get; private set; }
-        public bool HasSaveData => CurrentSave != null && CurrentSave.hasPlayed;
+        public bool HasPlayed => CurrentSave != null && CurrentSave.hasPlayed;
 
-        private const string SAVE_FILE = "neural_break_save.json";
-        private float _lastAutoSave;
+        protected override string SaveFileName => "neural_break_save.json";
+        protected override bool ShouldAutoSave => GameStateManager.Instance != null && GameStateManager.Instance.IsPlaying;
 
-        public event Action<SaveData> OnSaveLoaded;
-        public event Action OnSaveCleared;
-
-        private void Awake()
+        /// <summary>
+        /// Called by BootManager for controlled initialization order.
+        /// </summary>
+        public void Initialize()
         {
+            Instance = this;
+            base.Awake(); // Call base to load save data
+            Debug.Log("[SaveSystem] Initialized via BootManager");
+        }
+
+        protected override void Awake()
+        {
+            // If already initialized by BootManager, skip
+            if (Instance == this) return;
+
+            // Fallback for running main scene directly (development only)
             if (Instance != null && Instance != this)
             {
                 Destroy(gameObject);
                 return;
             }
+
+            // Development fallback - initialize directly
             Instance = this;
             DontDestroyOnLoad(gameObject);
-
-            LoadGame();
+            base.Awake();
+            Debug.LogWarning("[SaveSystem] Initialized via Awake fallback - should use Boot scene in production");
         }
 
         private void Start()
@@ -49,29 +62,11 @@ namespace NeuralBreak.Core
         {
             EventBus.Unsubscribe<GameOverEvent>(OnGameOver);
             EventBus.Unsubscribe<VictoryEvent>(OnVictory);
-
-            if (Instance == this)
-            {
-                Instance = null;
-            }
-        }
-
-        private void Update()
-        {
-            // Auto-save periodically during gameplay
-            if (GameManager.Instance != null && GameManager.Instance.IsPlaying)
-            {
-                if (Time.time - _lastAutoSave > _autoSaveInterval)
-                {
-                    SaveGame();
-                    _lastAutoSave = Time.time;
-                }
-            }
         }
 
         private void OnGameOver(GameOverEvent evt)
         {
-            if (_autoSaveOnGameOver)
+            if (m_autoSaveOnGameOver)
             {
                 UpdateStatsFromGame(evt.finalStats);
                 SaveGame();
@@ -101,152 +96,41 @@ namespace NeuralBreak.Core
 
             // Update records
             if (stats.score > CurrentSave.highScore)
-            {
                 CurrentSave.highScore = stats.score;
-            }
             if (stats.level > CurrentSave.highestLevel)
-            {
                 CurrentSave.highestLevel = stats.level;
-            }
             if (stats.highestCombo > CurrentSave.highestCombo)
-            {
                 CurrentSave.highestCombo = stats.highestCombo;
-            }
             if (stats.highestMultiplier > CurrentSave.highestMultiplier)
-            {
                 CurrentSave.highestMultiplier = stats.highestMultiplier;
-            }
             if (stats.survivedTime > CurrentSave.longestSurvivalTime)
-            {
                 CurrentSave.longestSurvivalTime = stats.survivedTime;
-            }
 
             CurrentSave.lastPlayedDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
         }
 
-        /// <summary>
-        /// Save current game state to file
-        /// </summary>
-        public void SaveGame()
+        protected override void OnBeforeSave()
         {
-            if (CurrentSave == null)
-            {
-                CurrentSave = new SaveData();
-            }
-
             // Update achievement data
             var achievementSystem = FindAnyObjectByType<AchievementSystem>();
             if (achievementSystem != null)
             {
                 CurrentSave.unlockedAchievements = new List<string>(achievementSystem.GetUnlockedAchievementIds());
             }
-
-            try
-            {
-                string json = JsonUtility.ToJson(CurrentSave, true);
-                string path = GetSavePath();
-                File.WriteAllText(path, json);
-                Debug.Log($"[SaveSystem] Game saved to {path}");
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"[SaveSystem] Failed to save: {e.Message}");
-            }
         }
 
-        /// <summary>
-        /// Load game state from file
-        /// </summary>
-        public void LoadGame()
+        public override void ClearSave()
         {
-            string path = GetSavePath();
-
-            if (!File.Exists(path))
-            {
-                Debug.Log("[SaveSystem] No save file found, creating new save");
-                CurrentSave = new SaveData();
-                return;
-            }
-
-            try
-            {
-                string json = File.ReadAllText(path);
-                CurrentSave = JsonUtility.FromJson<SaveData>(json);
-                Debug.Log($"[SaveSystem] Game loaded from {path}");
-
-                OnSaveLoaded?.Invoke(CurrentSave);
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"[SaveSystem] Failed to load: {e.Message}");
-                CurrentSave = new SaveData();
-            }
-        }
-
-        /// <summary>
-        /// Delete save data
-        /// </summary>
-        public void ClearSave()
-        {
-            string path = GetSavePath();
-
-            if (File.Exists(path))
-            {
-                File.Delete(path);
-            }
-
             // Also clear PlayerPrefs data
             PlayerPrefs.DeleteKey("Achievements");
             PlayerPrefs.DeleteKey("HighScores");
             PlayerPrefs.Save();
 
-            CurrentSave = new SaveData();
-            OnSaveCleared?.Invoke();
-
-            Debug.Log("[SaveSystem] Save data cleared");
-        }
-
-        /// <summary>
-        /// Get full path to save file
-        /// </summary>
-        private string GetSavePath()
-        {
-            return Path.Combine(Application.persistentDataPath, SAVE_FILE);
-        }
-
-        /// <summary>
-        /// Export save as string (for cloud backup)
-        /// </summary>
-        public string ExportSave()
-        {
-            if (CurrentSave == null) return "";
-            return JsonUtility.ToJson(CurrentSave);
-        }
-
-        /// <summary>
-        /// Import save from string (for cloud restore)
-        /// </summary>
-        public bool ImportSave(string json)
-        {
-            try
-            {
-                CurrentSave = JsonUtility.FromJson<SaveData>(json);
-                SaveGame();
-                OnSaveLoaded?.Invoke(CurrentSave);
-                return true;
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"[SaveSystem] Import failed: {e.Message}");
-                return false;
-            }
+            base.ClearSave();
         }
 
         #region Unlocks Management
 
-        /// <summary>
-        /// Unlock a ship skin
-        /// </summary>
         public void UnlockShipSkin(string skinId)
         {
             if (CurrentSave == null) CurrentSave = new SaveData();
@@ -259,18 +143,12 @@ namespace NeuralBreak.Core
             }
         }
 
-        /// <summary>
-        /// Check if ship skin is unlocked
-        /// </summary>
         public bool IsShipSkinUnlocked(string skinId)
         {
             if (CurrentSave == null) return false;
             return CurrentSave.unlockedShipSkins.Contains(skinId);
         }
 
-        /// <summary>
-        /// Set selected ship skin
-        /// </summary>
         public void SetSelectedShipSkin(string skinId)
         {
             if (CurrentSave == null) CurrentSave = new SaveData();
@@ -310,7 +188,7 @@ namespace NeuralBreak.Core
     }
 
     /// <summary>
-    /// Serializable save data structure
+    /// Neural Break save data structure
     /// </summary>
     [Serializable]
     public class SaveData

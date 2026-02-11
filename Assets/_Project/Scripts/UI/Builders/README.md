@@ -129,7 +129,7 @@ namespace NeuralBreak.UI.Builders
             // Build UI elements...
 
             // Wire references...
-            SetPrivateField(settingsScreen, "_backButton", backBtn);
+            SetPrivateField(settingsScreen, "m_backButton", backBtn);
 
             return screen.gameObject;
         }
@@ -160,8 +160,8 @@ var healthBar = CreateBar(...);
 var healthText = AddTextComponent(...);
 
 // Wire to component
-SetPrivateField(display, "_healthFill", healthBar.fill);
-SetPrivateField(display, "_healthText", healthText);
+SetPrivateField(display, "m_healthFill", healthBar.fill);
+SetPrivateField(display, "m_healthText", healthText);
 ```
 
 This matches the component's `[SerializeField] private` fields.

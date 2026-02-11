@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using NeuralBreak.Core;
+using Z13.Core;
 
 namespace NeuralBreak.UI
 {
@@ -11,38 +12,38 @@ namespace NeuralBreak.UI
     public class GameOverScreen : ScreenBase
     {
         [Header("Title")]
-        [SerializeField] private TextMeshProUGUI _titleText;
-        [SerializeField] private string _gameOverTitle = "GAME OVER";
-        [SerializeField] private string _victoryTitle = "VICTORY!";
+        [SerializeField] private TextMeshProUGUI m_titleText;
+        [SerializeField] private string m_gameOverTitle = "GAME OVER";
+        [SerializeField] private string m_victoryTitle = "VICTORY!";
 
         [Header("Stats Display")]
-        [SerializeField] private TextMeshProUGUI _finalScoreText;
-        [SerializeField] private TextMeshProUGUI _timeSurvivedText;
-        [SerializeField] private TextMeshProUGUI _enemiesKilledText;
-        [SerializeField] private TextMeshProUGUI _levelReachedText;
-        [SerializeField] private TextMeshProUGUI _highestComboText;
-        [SerializeField] private TextMeshProUGUI _highestMultiplierText;
+        [SerializeField] private TextMeshProUGUI m_finalScoreText;
+        [SerializeField] private TextMeshProUGUI m_timeSurvivedText;
+        [SerializeField] private TextMeshProUGUI m_enemiesKilledText;
+        [SerializeField] private TextMeshProUGUI m_levelReachedText;
+        [SerializeField] private TextMeshProUGUI m_highestComboText;
+        [SerializeField] private TextMeshProUGUI m_highestMultiplierText;
 
         [Header("Buttons")]
-        [SerializeField] private Button _restartButton;
-        [SerializeField] private Button _mainMenuButton;
+        [SerializeField] private Button m_restartButton;
+        [SerializeField] private Button m_mainMenuButton;
 
         // Cached state
-        private bool _isVictory;
+        private bool m_isVictory;
 
         protected override void Awake()
         {
             base.Awake();
 
             // Wire up button events
-            if (_restartButton != null)
+            if (m_restartButton != null)
             {
-                _restartButton.onClick.AddListener(OnRestartClicked);
+                m_restartButton.onClick.AddListener(OnRestartClicked);
             }
 
-            if (_mainMenuButton != null)
+            if (m_mainMenuButton != null)
             {
-                _mainMenuButton.onClick.AddListener(OnMainMenuClicked);
+                m_mainMenuButton.onClick.AddListener(OnMainMenuClicked);
             }
 
             // Subscribe to events
@@ -59,27 +60,27 @@ namespace NeuralBreak.UI
         protected override void OnShow()
         {
             // Ensure first button is selected
-            if (_firstSelected == null && _restartButton != null)
+            if (m_firstSelected == null && m_restartButton != null)
             {
-                _firstSelected = _restartButton;
+                m_firstSelected = m_restartButton;
             }
 
             // Update title based on victory state
-            if (_titleText != null)
+            if (m_titleText != null)
             {
-                _titleText.text = _isVictory ? _victoryTitle : _gameOverTitle;
+                m_titleText.text = m_isVictory ? m_victoryTitle : m_gameOverTitle;
             }
         }
 
         private void OnGameOver(GameOverEvent evt)
         {
-            _isVictory = false;
+            m_isVictory = false;
             UpdateStats(evt.finalStats);
         }
 
         private void OnVictory(VictoryEvent evt)
         {
-            _isVictory = true;
+            m_isVictory = true;
             UpdateStats(evt.finalStats);
         }
 
@@ -87,53 +88,56 @@ namespace NeuralBreak.UI
         {
             if (stats == null) return;
 
-            if (_finalScoreText != null)
+            if (m_finalScoreText != null)
             {
-                _finalScoreText.text = $"FINAL SCORE: {stats.score:N0}";
+                m_finalScoreText.text = $"FINAL SCORE: {stats.score:N0}";
             }
 
-            if (_timeSurvivedText != null)
+            if (m_timeSurvivedText != null)
             {
                 int minutes = Mathf.FloorToInt(stats.survivedTime / 60f);
                 int seconds = Mathf.FloorToInt(stats.survivedTime % 60f);
-                _timeSurvivedText.text = $"TIME: {minutes:00}:{seconds:00}";
+                m_timeSurvivedText.text = $"TIME: {minutes:00}:{seconds:00}";
             }
 
-            if (_enemiesKilledText != null)
+            if (m_enemiesKilledText != null)
             {
-                _enemiesKilledText.text = $"ENEMIES KILLED: {stats.enemiesKilled:N0}";
+                m_enemiesKilledText.text = $"ENEMIES KILLED: {stats.enemiesKilled:N0}";
             }
 
-            if (_levelReachedText != null)
+            if (m_levelReachedText != null)
             {
-                _levelReachedText.text = $"LEVEL REACHED: {stats.level}";
+                m_levelReachedText.text = $"LEVEL REACHED: {stats.level}";
             }
 
-            if (_highestComboText != null)
+            if (m_highestComboText != null)
             {
-                _highestComboText.text = $"HIGHEST COMBO: {stats.highestCombo}x";
+                m_highestComboText.text = $"HIGHEST COMBO: {stats.highestCombo}x";
             }
 
-            if (_highestMultiplierText != null)
+            if (m_highestMultiplierText != null)
             {
-                _highestMultiplierText.text = $"BEST MULTIPLIER: {stats.highestMultiplier:F1}x";
+                m_highestMultiplierText.text = $"BEST MULTIPLIER: {stats.highestMultiplier:F1}x";
             }
         }
 
         private void OnRestartClicked()
         {
+            // Use GameManager if available (handles stats reset), otherwise GameStateManager
             if (GameManager.Instance != null)
             {
-                GameManager.Instance.StartGame(GameManager.Instance.CurrentMode);
+                GameManager.Instance.StartGame(GameStateManager.Instance.CurrentMode);
+            }
+            else
+            {
+                GameStateManager.Instance.StartGame(GameStateManager.Instance.CurrentMode);
             }
         }
 
         private void OnMainMenuClicked()
         {
-            if (GameManager.Instance != null)
-            {
-                GameManager.Instance.ReturnToMenu();
-            }
+            // Use GameStateManager (guaranteed to exist from Boot scene)
+            GameStateManager.Instance.ReturnToMenu();
         }
 
         #region Debug
@@ -141,7 +145,7 @@ namespace NeuralBreak.UI
         [ContextMenu("Debug: Show Game Over")]
         private void DebugGameOver()
         {
-            _isVictory = false;
+            m_isVictory = false;
             var stats = new GameStats
             {
                 score = 125000,
@@ -158,7 +162,7 @@ namespace NeuralBreak.UI
         [ContextMenu("Debug: Show Victory")]
         private void DebugVictory()
         {
-            _isVictory = true;
+            m_isVictory = true;
             var stats = new GameStats
             {
                 score = 999999,
